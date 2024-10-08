@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@layer base {
+  :root {
+    --radius: 0.5rem
+  }
+}
+
+.container-bg{
+  @apply bg-gray-100/70
+}
+a,p,h1,h2,h3,h4,h5,h6,input,div,ul,li{
+  font-family: sans-serif !important;
+}
