@@ -1,19 +1,16 @@
 import { supabase } from '../supabase/supabase-configf';
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-
-// 1. Definir la interfaz para el tipo de usuario
-interface User {
-  username: string;
-  email: string;
-}
-
+import { signUpApi } from "@/api/auth";
+import { User } from '@/types/User';
 // 2. Definir la interfaz para el contexto de autenticación
 interface AuthContextType {
   user: User | null; // Usuario autenticado o null si no hay usuario
-  signIn: (username: string, email: string) => void; 
-  signOut: () => void; 
+  signOut: () => void;
   isAuthenticated: boolean;
-  signInWithGoogle:()=>void;
+  signInWithGoogle: () => void;
+  auth: Boolean,
+  loading: Boolean,
+  SignUp: (name: string, surname: string, email: string, phone: string, birthday: Date, password: string) => Promise<User | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -26,7 +23,6 @@ export const useAuth = (): AuthContextType => {
   return context;
 };
 
-// 5. Definir las propiedades del AuthProvider
 interface AuthProviderProps {
   children: ReactNode;
 }
@@ -34,45 +30,53 @@ interface AuthProviderProps {
 // 6. Crear el proveedor de autenticación
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null); // Estado del usuario
-
+  const [token, setToken] = useState("");
+  const [auth, setAuth] = useState<Boolean>(false);
+  const [loading, setLoading] = useState(true);
   // Función para iniciar sesión
-  const signIn = (username: string, email: string) => {
-    const newUser = { username, email };
-    setUser(newUser);
-    localStorage.setItem('user', JSON.stringify(newUser));
-  };
 
+  const SignUp = async (name: string, surname: string, email: string, phone: string, birthday: Date, password: string) => {
+    try {
+      const res = await signUpApi({name, surname, email, phone, birthday, password});
+      console.log(res)
+      return res.data;
+    } catch (error) {
+      console.log(error)
+    }
+
+  }
   const signOut = () => {
     setUser(null);
     localStorage.removeItem('user');
   };
-  const signInWithGoogle = async() => {
+  const signInWithGoogle = async () => {
     try {
-        const {data,error} = await supabase.auth.signInWithOAuth({
-            provider:"google"
-        })
-        if(error) throw new Error("A ocurrido un error durante la autenticación.");
-        localStorage.setItem("user", JSON.stringify(data))
-        return data;
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google"
+      })
+      if (error) throw new Error("A ocurrido un error durante la autenticación.");
+      localStorage.setItem("user", JSON.stringify(data))
+      return data;
     } catch (error) {
-        console.log(error)
+      console.log(error)
     }
   }
-  useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log("supabase event: ", event);
-        if (session == null) {
-        } else {
-          
-          console.log("data del usuario", session?.user.user_metadata);
-        }
-      }
-    );
-    return () => {
-      authListener.subscription;
-    };
-  }, []);
+
+  // useEffect(() => {
+  //   const { data: authListener } = supabase.auth.onAuthStateChange(
+  //     async (event, session) => {
+  //       console.log("supabase event: ", event);
+  //       if (session == null) {
+  //       } else {
+
+  //         console.log("data del usuario", session?.user.user_metadata);
+  //       }
+  //     }
+  //   );
+  //   return () => {
+  //     authListener.subscription;
+  //   };
+  // }, []);
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
@@ -84,10 +88,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const value = {
     user,
-    signIn,
     signOut,
     isAuthenticated,
-    signInWithGoogle
+    signInWithGoogle,
+    auth,
+    loading,
+    SignUp
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

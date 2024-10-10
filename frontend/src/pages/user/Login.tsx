@@ -2,17 +2,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContextType";
+
 export default function LoginPage() {
   const {signInWithGoogle} = useAuth();
+  
   return (
     <div className="flex flex-col min-h-screen">
 
-      <div className="flex flex-grow">
+      <div className="flex flex-grow  justify-center items-center">
         {/* Left column - Image container */}
         <div className="hidden w-1/2  lg:flex lg:items-center lg:justify-center">
           <div className="relative h-3/4 w-3/4">
             <img
-              src="/placeholder.svg?height=600&width=600"
+              src={"Login"}
               alt="Uniformes ilustración"
             />
           </div>
@@ -43,7 +45,7 @@ export default function LoginPage() {
                 </div>
               </div>
             </div>
-            <form className="space-y-4">
+            <form  className="space-y-4">
               <div>
                 <Label htmlFor="email" className="block text-sm font-medium text-gray-700">
                   Correo electrónico
@@ -70,6 +72,7 @@ export default function LoginPage() {
                   required
                   className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-[#2F93D1]  focus:border-[#2F93D1] focus:z-10 sm:text-sm mt-1"
                   placeholder="contraseña"
+
                 />
               </div>
               <div className="flex items-end justify-end">

@@ -7,6 +7,7 @@ import { Users } from '@/lib/domain/users/Users';
 import { useForm } from 'react-hook-form';
 import Swal from 'sweetalert2';
 import 'sweetalert2/src/sweetalert2.scss';
+import { useAuth } from '@/context/AuthContextType';
 
 export default function SignUpPage() {
   const [password, setPassword] = useState('');
@@ -18,6 +19,7 @@ export default function SignUpPage() {
     number: false,
     special: false,
   });
+  const {SignUp} = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const {
@@ -75,7 +77,7 @@ export default function SignUpPage() {
 
   // Manejador de envío del formulario
   const onSubmit = handleSubmit(async (data: Users) => {
-    if (!validatePasswordContent(password, data.name, data.lastname, data.birthdate.toString())) {
+    if (!validatePasswordContent(password, data.name, data.surname, data.birthdate.toString())) {
       Swal.fire({
         icon: 'error',
         title: 'Error de Contraseña',
@@ -86,7 +88,15 @@ export default function SignUpPage() {
     }
 
     if (Object.values(passwordChecks).every(Boolean)) {
-      console.log('Datos del formulario:', data);
+     
+      try {
+        const res = await SignUp(data.name, data.surname, data.email, data.phone, data.birthdate, data.password);
+        if(res){
+          alert("Regstro exitoso!");
+        }
+      } catch (error) {
+        console.log(error);
+      }
     } else {
       alert('La contraseña no cumple con todos los requisitos de seguridad.');
     }
@@ -140,15 +150,15 @@ export default function SignUpPage() {
                     autoComplete="family-name"
                     className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-[#0099FF] focus:border-[rgb(0,153,255)] focus:z-10 sm:text-sm mt-1"
                     placeholder="apellidos"
-                    {...register("lastname", {
+                    {...register("surname", {
                       required: "El apellido es requerido",
                       minLength: { value: 3, message: "El apellido debe tener al menos 3 caracteres" },
                       maxLength: { value: 50, message: "El apellido no puede tener más de 50 caracteres" },
                       pattern: { value: /^[a-zA-Z\s]+$/, message: "El apellido solo puede contener letras" },
                     })}
-                    onChange={(e) => handleInputChange('lastname', e.target.value)}
+                    onChange={(e) => handleInputChange('surname', e.target.value)}
                   />
-                  {errors.lastname && <span className="text-[10px] text-red-500">{errors.lastname.message}</span>}
+                  {errors.surname && <span className="text-[10px] text-red-500">{errors.surname.message}</span>}
                 </div>
               </div>
               {/* Teléfono y Correo en la misma columna */}
