@@ -1,10 +1,11 @@
 import { supabase } from '../supabase/supabase-configf';
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { signUpApi } from "@/api/auth";
+import { loginApi, signUpApi } from "@/api/auth";
 import { User } from '@/types/User';
 // 2. Definir la interfaz para el contexto de autenticación
 interface AuthContextType {
   user: User | null; // Usuario autenticado o null si no hay usuario
+  login: (email: string, password: string) => Promise<User | null>;
   signOut: () => void;
   isAuthenticated: boolean;
   signInWithGoogle: () => void;
@@ -34,7 +35,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [auth, setAuth] = useState<Boolean>(false);
   const [loading, setLoading] = useState(true);
   // Función para iniciar sesión
-
+  const login = async (email: string, password: string) => {
+    try {
+      const res = await loginApi({ email, password });
+      if (res) {
+        setUser(res.data.user);
+        localStorage.setItem("token", res.data.token);
+        setToken(res.data.token);
+        setAuth(true);
+        return res.data.user;
+      }
+      console.log(res)
+    } catch (error) {
+      console.log(error)
+    }
+  };
   const SignUp = async (name: string, surname: string, email: string, phone: string, birthday: Date, password: string) => {
     try {
       const res = await signUpApi({name, surname, email, phone, birthday, password});
@@ -88,6 +103,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const value = {
     user,
+    login,
     signOut,
     isAuthenticated,
     signInWithGoogle,

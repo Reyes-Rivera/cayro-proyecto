@@ -2,10 +2,28 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContextType";
+import { UserLogin } from "@/types/User";
+import { useState } from "react";
+// import Login from "@/assets/login4.png";
 
 export default function LoginPage() {
+  const {login} = useAuth();
   const {signInWithGoogle} = useAuth();
-  
+  const [data,setData] = useState<UserLogin>({
+    email:"",
+    password:"",
+  });
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    try {
+      const res = await login(data.email,data.password); 
+      if(res){
+        alert("Login successful");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
   return (
     <div className="flex flex-col min-h-screen">
 
@@ -45,7 +63,7 @@ export default function LoginPage() {
                 </div>
               </div>
             </div>
-            <form  className="space-y-4">
+            <form onSubmit={handleLogin} className="space-y-4">
               <div>
                 <Label htmlFor="email" className="block text-sm font-medium text-gray-700">
                   Correo electrónico
@@ -58,6 +76,7 @@ export default function LoginPage() {
                   required
                   className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-[#2F93D1] focus:border-[#2F93D1] focus:z-10 sm:text-sm mt-1"
                   placeholder="correo"
+                  onChange={(e)=> setData({...data,email: (e.target as HTMLInputElement).value})}
                 />
               </div>
               <div>
@@ -72,6 +91,7 @@ export default function LoginPage() {
                   required
                   className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-[#2F93D1]  focus:border-[#2F93D1] focus:z-10 sm:text-sm mt-1"
                   placeholder="contraseña"
+                  onChange={(e)=> setData({...data,password: (e.target as HTMLInputElement).value})}
 
                 />
               </div>
