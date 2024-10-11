@@ -11,7 +11,8 @@ interface AuthContextType {
   signInWithGoogle: () => void;
   auth: Boolean,
   loading: Boolean,
-  SignUp: (name: string, surname: string, email: string, phone: string, birthday: Date, password: string) => Promise<User | null>;
+  SignUp: (name: string, surname: string, email: string, phone: string, birthday: Date, password: string) => Promise<User | null>,
+  error:string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -34,7 +35,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [token, setToken] = useState("");
   const [auth, setAuth] = useState<Boolean>(false);
   const [loading, setLoading] = useState(true);
-  // Función para iniciar sesión
+  const [error, setError] = useState("");
   const login = async (email: string, password: string) => {
     try {
       const res = await loginApi({ email, password });
@@ -45,9 +46,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setAuth(true);
         return res.data.user;
       }
-      console.log(res)
-    } catch (error) {
-      console.log(error)
+    } catch (error:any) {
+      setError(error.response.data.message);
+      setTimeout(() => {
+        setError("");
+      }, 2000);
     }
   };
   const SignUp = async (name: string, surname: string, email: string, phone: string, birthday: Date, password: string) => {
@@ -109,7 +112,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     signInWithGoogle,
     auth,
     loading,
-    SignUp
+    SignUp,
+    error,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

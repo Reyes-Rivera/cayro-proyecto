@@ -7,7 +7,7 @@ import { useState } from "react";
 // import Login from "@/assets/login4.png";
 
 export default function LoginPage() {
-  const {login} = useAuth();
+  const {login,error} = useAuth();
   const {signInWithGoogle} = useAuth();
   const [data,setData] = useState<UserLogin>({
     email:"",
@@ -20,7 +20,7 @@ export default function LoginPage() {
       if(res){
         alert("Login successful");
       }
-    } catch (error) {
+    } catch (error:any) {
       console.log(error);
     }
   };
@@ -95,8 +95,12 @@ export default function LoginPage() {
 
                 />
               </div>
+                {
+                  error.length>0&&(
+                    <p className="text-red-500 text-[12px] text-center">{error}</p>
+                  )
+                }
               <div className="flex items-end justify-end">
-               
                 <div className="text-sm">
                   <a href="/password-recovery" className="font-medium text-[#2F93D1] hover:text-[#007ACC]">
                     ¿Olvidaste tu contraseña?

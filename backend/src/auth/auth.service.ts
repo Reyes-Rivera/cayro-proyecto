@@ -15,8 +15,8 @@ export class AuthService {
   ) { }
   async login(loginDto: LoginDto) {
     const userFound = await this.userModel.findOne({ email: loginDto.email });
-    const { password, ...rest } = userFound.toObject();
     if (!userFound) throw new NotFoundException("Usuario no registrado.");
+    const { password, ...rest } = userFound.toObject();
     const isPasswordValid = await bcrypt.compare(loginDto.password, userFound.password);
     if (!isPasswordValid) {
       throw new HttpException("La contraseña es incorrecta.", HttpStatus.UNAUTHORIZED);
