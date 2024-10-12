@@ -1,4 +1,4 @@
-import { ConflictException, HttpException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
@@ -7,7 +7,7 @@ import { User } from './schemas/User.Schema';
 import { Model } from 'mongoose';
 import * as crypto from 'crypto';
 import * as nodemailer from 'nodemailer';
-import { send } from 'process';
+import axios from 'axios';
 
 @Injectable()
 export class UsersService {
@@ -111,15 +111,44 @@ export class UsersService {
       console.log(error)
     }
   }
-  async create(createUserDto: CreateUserDto) {
-    const userFound = await this.userModel.findOne({ email: createUserDto.email });
-    if (userFound) throw new ConflictException("El correo ya esta en uso.");
+  async isPasswordCompromised(password: string): Promise<boolean> {
+    const hashedPassword = crypto.createHash('sha1').update(password).digest('hex').toUpperCase();
+    const prefix = hashedPassword.slice(0, 5);
+    const suffix = hashedPassword.slice(5);
+    console.log(hashedPassword);
+    try {
+      const response = await axios.get(`https://api.pwnedpasswords.com/range/${prefix}`);
+      const breachedPasswords = response.data.split('\n');
 
-    const hashPassword = await bcrypt.hash(createUserDto.password, 10);
-    const res = new this.userModel({ ...createUserDto, password: hashPassword, active: false });
-    await res.save();
-    this.sendCode(createUserDto.email)
-    return res;
+      for (let entry of breachedPasswords) {
+        const [hashSuffix, count] = entry.split(':');
+        if (hashSuffix === suffix) {
+          return true; // Contraseña comprometida
+        }
+      }
+      return false; // Contraseña segura
+    } catch (error) {
+      console.error('Error verificando contraseña comprometida:', error);
+      return false; // Por precaución, devolver que no está comprometida en caso de error
+    }
+  }
+  async create(createUserDto: CreateUserDto) {
+    try {
+      const userFound = await this.userModel.findOne({ email: createUserDto.email });
+      if (userFound) throw new ConflictException("El correo ya esta en uso.");
+      const compromised = await this.isPasswordCompromised(createUserDto.password);
+      if (compromised) {
+        throw new ConflictException("Esta contraseña ha sido comprometida. Por favor elige una diferente.");
+      }
+      const hashPassword = await bcrypt.hash(createUserDto.password, 10);
+
+      const res = new this.userModel({ ...createUserDto, password: hashPassword, active: false });
+      await res.save();
+      this.sendCode(createUserDto.email);
+      return res;
+    } catch (error) {
+      console.log(error)
+    }
   }
 
   async verifyCode(userEmail: string, code: string) {

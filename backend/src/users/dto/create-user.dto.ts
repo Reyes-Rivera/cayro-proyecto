@@ -33,7 +33,7 @@ export class CreateUserDto {
 
     @IsString()
     @IsNotEmpty()
-    @MinLength(12)
+    @MinLength(8)
     @MaxLength(30)
     password: string;
 
