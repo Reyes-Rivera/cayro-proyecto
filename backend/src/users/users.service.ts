@@ -115,7 +115,6 @@ export class UsersService {
     const hashedPassword = crypto.createHash('sha1').update(password).digest('hex').toUpperCase();
     const prefix = hashedPassword.slice(0, 5);
     const suffix = hashedPassword.slice(5);
-    console.log(hashedPassword);
     try {
       const response = await axios.get(`https://api.pwnedpasswords.com/range/${prefix}`);
       const breachedPasswords = response.data.split('\n');

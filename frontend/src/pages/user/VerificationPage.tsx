@@ -54,11 +54,7 @@ export default function VerificationPage() {
     const code = verificationCode.join('');
     setIsSubmitting(true)
     const response = await verifyCode(emailToVerify, code);
-    if (response.message === 'Code verified successfully!') {
-      setIsVerificationPending(false); // Deshabilitar la verificación pendiente
-      localStorage.removeItem('isVerificationPending');
-      localStorage.removeItem('emailToVerify'); // Limpiar localStorage después de la verificación
-      setIsVerified(true);
+    if (response) {
       Swal.fire({
         icon: 'success',
         title: '¡Verificación Exitosa!',
@@ -66,8 +62,12 @@ export default function VerificationPage() {
         confirmButtonColor: '#2F93D1',
       });
       setTimeout(() => {
-        navigate('/login'); // Redirigir después de un pequeño delay
+        navigate('/login');
       }, 2000);// Redirigir a la página principal después de la verificación
+      setIsVerificationPending(false); // Deshabilitar la verificación pendiente
+      localStorage.removeItem('isVerificationPending');
+      localStorage.removeItem('emailToVerify'); // Limpiar localStorage después de la verificación
+      setIsVerified(true);
     } else {
       setMessage(response.message);
       setTimeout(() => {
