@@ -18,8 +18,7 @@ const NavBarUser = () => {
                 <img
                   src={Logo}
                   alt="Cayro Uniformes"
-                  width={96}
-                  height={32}
+                  className='w-32'
                 />
               </div>
             </div>
@@ -67,11 +66,6 @@ const NavBarUser = () => {
               </NavLink>
               <NavLink
                 to="/login"
-                // className={({ isActive }) =>
-                //   isActive
-                //     ? "border-[#2F93D1] inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                //     : "border-transparent text-gray-500 hover:border-[#2F93D1] hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                // }
                 className={" bg-[#2F93D1] text-white p-1 rounded-md"}
               >
                 Iniciar sesión

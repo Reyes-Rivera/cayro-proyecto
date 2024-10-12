@@ -1,18 +1,23 @@
 import { supabase } from '../supabase/supabase-configf';
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { loginApi, signUpApi } from "@/api/auth";
+import { loginApi, signUpApi, verifyCodeApi } from "@/api/auth"; // Asegúrate de tener la función `verifyCodeApi`
 import { User } from '@/types/User';
-// 2. Definir la interfaz para el contexto de autenticación
+
 interface AuthContextType {
   user: User | null; // Usuario autenticado o null si no hay usuario
   login: (email: string, password: string) => Promise<User | null>;
   signOut: () => void;
   isAuthenticated: boolean;
   signInWithGoogle: () => void;
-  auth: Boolean,
-  loading: Boolean,
-  SignUp: (name: string, surname: string, email: string, phone: string, birthday: Date, password: string) => Promise<User | null>,
-  error:string;
+  auth: Boolean;
+  loading: Boolean;
+  SignUp: (name: string, surname: string, email: string, phone: string, birthday: Date, password: string) => Promise<User | null>;
+  verifyCode: (email: string, code: string) => Promise<any>; // Nueva función para la verificación del código
+  error: string;
+  emailToVerify: string | null; // Nuevo estado para almacenar el correo que está siendo verificado
+  isVerificationPending: boolean; // Estado para saber si se requiere la verificación del código
+  setEmailToVerify: (email: string | null) => void;
+  setIsVerificationPending: (pending: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,13 +34,20 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-// 6. Crear el proveedor de autenticación
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null); // Estado del usuario
-  const [token, setToken] = useState("");
+  const [token, setToken] = useState<string>("");
   const [auth, setAuth] = useState<Boolean>(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [emailToVerify, setEmailToVerify] = useState<string | null>(() => {
+    return localStorage.getItem('emailToVerify') || null; // Recupera el email desde localStorage si existe
+  });
+  const [isVerificationPending, setIsVerificationPending] = useState<boolean>(() => {
+    return localStorage.getItem('isVerificationPending') === 'true'; // Recupera el estado de verificación desde localStorage
+  });
+
+  // Función para iniciar sesión
   const login = async (email: string, password: string) => {
     try {
       const res = await loginApi({ email, password });
@@ -46,55 +58,76 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setAuth(true);
         return res.data.user;
       }
-    } catch (error:any) {
-      setError(error.response.data.message);
+    } catch (error: any) {
+      setError(error.response?.data?.message || "Error desconocido al iniciar sesión.");
       setTimeout(() => {
         setError("");
       }, 2000);
     }
   };
+
+  // Función para registrar un nuevo usuario
   const SignUp = async (name: string, surname: string, email: string, phone: string, birthday: Date, password: string) => {
     try {
-      const res = await signUpApi({name, surname, email, phone, birthday, password});
-      console.log(res)
-      return res.data;
-    } catch (error) {
-      console.log(error)
+      const res = await signUpApi({ name, surname, email, phone, birthday, password });
+      if (res) {
+        setEmailToVerify(email); // Establecer el correo que será verificado
+        setIsVerificationPending(true); // Indicar que el usuario necesita verificar su correo
+        localStorage.setItem('emailToVerify', email); // Guardar en localStorage para persistencia
+        localStorage.setItem('isVerificationPending', 'true');
+      }
+      return res?.data;
+    } catch (error: any) {
+      setError(error.response?.data?.message || "Error desconocido al registrar.");
+      setTimeout(() => {
+        setError("");
+      }, 2000);
     }
+  };
 
-  }
+  // Función para la verificación del código
+  const verifyCode = async (email: string, code: string) => {
+    try {
+      const res = await verifyCodeApi(email, code); // Llamada a la API para verificar el código
+      if (res){
+        setIsVerificationPending(false); // Marcar como verificado
+        setEmailToVerify(null); // Limpiar el correo verificado
+        localStorage.removeItem('emailToVerify'); // Eliminar del localStorage
+        localStorage.removeItem('isVerificationPending'); // Eliminar del localStorage
+      }
+      return res;
+    } catch (error: any) {
+      console.log()
+      setError(error.response?.data?.message || "Error desconocido al verificar el código.");
+      setTimeout(() => {
+        setError("");
+      }, 2000);
+      return { message: error.response.data.message };
+    }
+  };
+
   const signOut = () => {
     setUser(null);
     localStorage.removeItem('user');
+    setEmailToVerify(null);
+    setIsVerificationPending(false);
+    localStorage.removeItem('emailToVerify');
+    localStorage.removeItem('isVerificationPending');
   };
+
   const signInWithGoogle = async () => {
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google"
-      })
-      if (error) throw new Error("A ocurrido un error durante la autenticación.");
-      localStorage.setItem("user", JSON.stringify(data))
+      });
+      if (error) throw new Error("Ha ocurrido un error durante la autenticación.");
+      localStorage.setItem("user", JSON.stringify(data));
       return data;
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
-  }
+  };
 
-  // useEffect(() => {
-  //   const { data: authListener } = supabase.auth.onAuthStateChange(
-  //     async (event, session) => {
-  //       console.log("supabase event: ", event);
-  //       if (session == null) {
-  //       } else {
-
-  //         console.log("data del usuario", session?.user.user_metadata);
-  //       }
-  //     }
-  //   );
-  //   return () => {
-  //     authListener.subscription;
-  //   };
-  // }, []);
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
@@ -105,6 +138,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const isAuthenticated = user !== null;
 
   const value = {
+    setIsVerificationPending,
     user,
     login,
     signOut,
@@ -113,7 +147,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     auth,
     loading,
     SignUp,
+    verifyCode, // Añadir la función de verificación al contexto
     error,
+    emailToVerify,
+    isVerificationPending,
+    setEmailToVerify, // Setter para actualizar `emailToVerify`
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

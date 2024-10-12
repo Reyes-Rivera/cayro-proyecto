@@ -12,6 +12,18 @@ export class UsersController {
     return this.usersService.create(createUserDto);
   }
 
+  @Post("resend-code")
+  async reSendCode(@Body() body: {email:string}) {
+    const {email} = body;
+    return this.usersService.sendCode(email);
+  }
+
+  @Post("verify-code")
+  async verifyCode(@Body() body:{email:string,code:string}) {
+    const {email,code} = body;
+    return this.usersService.verifyCode(email,code)
+  }
+
   @Get()
   findAll() {
     return this.usersService.findAll();

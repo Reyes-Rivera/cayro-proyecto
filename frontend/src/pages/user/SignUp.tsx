@@ -8,7 +8,7 @@ import { useForm } from 'react-hook-form';
 import Swal from 'sweetalert2';
 import 'sweetalert2/src/sweetalert2.scss';
 import { useAuth } from '@/context/AuthContextType';
-
+import { useNavigate } from 'react-router-dom';
 export default function SignUpPage() {
   const [password, setPassword] = useState('');
   const [passwordStrength, setPasswordStrength] = useState(0);
@@ -40,7 +40,7 @@ export default function SignUpPage() {
     setPasswordChecks(checks);
     setPasswordStrength(Object.values(checks).filter(Boolean).length * 20);
   }, [password]);
-
+  const navigate = useNavigate();
   // Obtener color del progreso según la fortaleza
   const getStrengthColor = (strength: any) => {
     if (strength <= 20) return 'bg-red-500';
@@ -74,7 +74,18 @@ export default function SignUpPage() {
       (birthdate ? !lowercasePassword.includes(birthdate.replace(/-/g, '')) : true)
     );
   };
+  const validateAge = (birthdate: Date): boolean => {
+    const today = new Date();
+    const birthDate = new Date(birthdate);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
 
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+
+    return age >= 18;
+  };
   // Manejador de envío del formulario
   const onSubmit = handleSubmit(async (data: Users) => {
     if (!validatePasswordContent(password, data.name, data.surname, data.birthdate.toString())) {
@@ -92,7 +103,7 @@ export default function SignUpPage() {
       try {
         const res = await SignUp(data.name, data.surname, data.email, data.phone, data.birthdate, data.password);
         if(res){
-          alert("Regstro exitoso!");
+          navigate("/verification-code");
         }
       } catch (error) {
         console.log(error);
@@ -208,7 +219,10 @@ export default function SignUpPage() {
                   id="fecha-nacimiento"
                   type="date"
                   className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-[#0099FF] focus:border-[#0099FF] focus:z-10 sm:text-sm mt-1"
-                  {...register("birthdate", { required: "La fecha de nacimiento es requerida" })}
+                  {...register("birthdate", {
+                    required: "La fecha de nacimiento es requerida",
+                    validate: (value) => validateAge(value) || "Debes tener al menos 18 años para registrarte.",
+                  })}
                   onChange={(e) => handleInputChange('birthdate', e.target.value)}
                 />
                 {errors.birthdate && <span className="text-[10px] text-red-500">{errors.birthdate.message}</span>}
