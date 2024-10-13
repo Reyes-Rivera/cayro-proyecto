@@ -31,10 +31,10 @@ export class CreateUserDto {
     @Transform(({ value }) => new Date(value)) 
     birthday: Date;
 
-    @IsString()
     @IsNotEmpty()
+    @IsString()
     @MinLength(8)
-    @MaxLength(30)
+    @MaxLength(50)
     password: string;
 
     @IsBoolean()

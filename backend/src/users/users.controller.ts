@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { PasswordUpdate, UpdateUserDto } from './dto/update-user.dto';
 
 @Controller('users')
 export class UsersController {
@@ -22,6 +22,11 @@ export class UsersController {
   async verifyCode(@Body() body:{email:string,code:string}) {
     const {email,code} = body;
     return this.usersService.verifyCode(email,code)
+  }
+
+  @Patch("change-password/:id")
+  async changePassword(@Param("id")id:string, @Body()updatePass:PasswordUpdate ) {
+    return this.usersService.updatePassword(id,updatePass);
   }
 
   @Get()

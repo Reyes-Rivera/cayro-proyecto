@@ -18,6 +18,7 @@ interface AuthContextType {
   isVerificationPending: boolean; // Estado para saber si se requiere la verificación del código
   setEmailToVerify: (email: string | null) => void;
   setIsVerificationPending: (pending: boolean) => void;
+  errorTimer: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -40,6 +41,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [auth, setAuth] = useState<Boolean>(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [errorTimer, setErrorTimer] = useState("");
   const [emailToVerify, setEmailToVerify] = useState<string | null>(() => {
     return localStorage.getItem('emailToVerify') || null; // Recupera el email desde localStorage si existe
   });
@@ -59,10 +61,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return res.data.user;
       }
     } catch (error: any) {
-      setError(error.response?.data?.message || "Error desconocido al iniciar sesión.");
-      setTimeout(() => {
-        setError("");
-      }, 2000);
+      if (error.response?.data?.message.includes('Cuenta bloqueada temporalmente')) {
+        setErrorTimer(error.response?.data?.message);
+      } else {
+        setError(error.response?.data?.message || "Error desconocido al iniciar sesión.");
+        setTimeout(() => {
+          setError("");
+        }, 2000);
+      }
+
     }
   };
 
@@ -89,7 +96,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const verifyCode = async (email: string, code: string) => {
     try {
       const res = await verifyCodeApi(email, code); // Llamada a la API para verificar el código
-      if (res){
+      if (res) {
         setIsVerificationPending(false); // Marcar como verificado
         setEmailToVerify(null); // Limpiar el correo verificado
         localStorage.removeItem('emailToVerify'); // Eliminar del localStorage
@@ -151,7 +158,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     error,
     emailToVerify,
     isVerificationPending,
-    setEmailToVerify, // Setter para actualizar `emailToVerify`
+    setEmailToVerify,
+    errorTimer // Setter para actualizar `emailToVerify`
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

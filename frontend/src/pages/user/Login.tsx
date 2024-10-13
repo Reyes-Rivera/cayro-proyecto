@@ -1,29 +1,70 @@
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContextType";
 import { UserLogin } from "@/types/User";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 // import Login from "@/assets/login4.png";
 
 export default function LoginPage() {
-  const {login,error} = useAuth();
-  const {signInWithGoogle} = useAuth();
-  const [data,setData] = useState<UserLogin>({
-    email:"",
-    password:"",
+  const { login, error, errorTimer } = useAuth();
+  const { signInWithGoogle } = useAuth();
+  const [data, setData] = useState<UserLogin>({
+    email: "",
+    password: "",
   });
+  const [lockoutTime, setLockoutTime] = useState(0);
+  const [err, setErr] = useState('')
+  useEffect(() => {
+    let timer: NodeJS.Timeout
+    if (lockoutTime > 0) {
+      timer = setInterval(() => {
+        setLockoutTime(prevTime => prevTime - 1)
+      }, 1000)
+    }
+    return () => clearInterval(timer)
+  }, [lockoutTime]);
+
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const res = await login(data.email,data.password); 
-      if(res){
+      const res = await login(data.email, data.password);
+      if (res) {
         alert("Login successful");
       }
-    } catch (error:any) {
-      console.log(error);
+    } catch (error: any) {
+      console.log(error)
     }
   };
+  useEffect(() => {
+    if (errorTimer.includes('Cuenta bloqueada temporalmente')) {
+      // Primero intentamos obtener tanto minutos como segundos
+      const timeMatch = errorTimer.match(/(\d+) minutos? y (\d+) segundos/);
+
+      // Si solo hay segundos, también intentamos obtener solo segundos
+      const timeMatch2 = errorTimer.match(/(\d+) segundos/);
+
+      if (timeMatch) {
+        // Si coincide la expresión de minutos y segundos
+        const minutes = parseInt(timeMatch[1], 10);
+        const seconds = parseInt(timeMatch[2], 10);
+        setLockoutTime(minutes * 60 + seconds);
+      } else if (timeMatch2) {
+        // Si solo coincide la expresión de segundos
+        const seconds = parseInt(timeMatch2[1], 10);
+        setLockoutTime(seconds);
+      }
+    } else {
+      setErr('Ocurrió un error inesperado. Por favor, inténtalo de nuevo.');
+    }
+  }, [errorTimer]);
+
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60)
+    const remainingSeconds = seconds % 60
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
+  }
   return (
     <div className="flex flex-col min-h-screen">
 
@@ -76,7 +117,7 @@ export default function LoginPage() {
                   required
                   className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-[#2F93D1] focus:border-[#2F93D1] focus:z-10 sm:text-sm mt-1"
                   placeholder="correo"
-                  onChange={(e)=> setData({...data,email: (e.target as HTMLInputElement).value})}
+                  onChange={(e) => setData({ ...data, email: (e.target as HTMLInputElement).value })}
                 />
               </div>
               <div>
@@ -91,15 +132,26 @@ export default function LoginPage() {
                   required
                   className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-[#2F93D1]  focus:border-[#2F93D1] focus:z-10 sm:text-sm mt-1"
                   placeholder="contraseña"
-                  onChange={(e)=> setData({...data,password: (e.target as HTMLInputElement).value})}
+                  onChange={(e) => setData({ ...data, password: (e.target as HTMLInputElement).value })}
 
                 />
               </div>
-                {
-                  error.length>0&&(
-                    <p className="text-red-500 text-[12px] text-center">{error}</p>
-                  )
-                }
+              {
+                error.length > 0 && (
+                  <p className="text-red-500 text-[12px] text-center">{error}</p>
+                )
+              }
+              {lockoutTime > 0 && (
+                <Alert variant="destructive" className="mt-4">
+                  <AlertTitle>Error</AlertTitle>
+                  <AlertDescription>
+                    <p>
+                      Cuenta bloqueada temporalmente. Inténtalo de nuevo en : <span className="font-bold">{formatTime(lockoutTime)}</span>
+                    </p>
+
+                  </AlertDescription>
+                </Alert>
+              )}
               <div className="flex items-end justify-end">
                 <div className="text-sm">
                   <a href="/password-recovery" className="font-medium text-[#2F93D1] hover:text-[#007ACC]">
@@ -107,10 +159,11 @@ export default function LoginPage() {
                   </a>
                 </div>
               </div>
-              <Button type="submit" className="w-full bg-[#2F93D1] hover:bg-[#007ACC] focus:ring-[#2F93D1] text-white">
+              <Button type="submit" className="w-full bg-[#2F93D1] hover:bg-[#007ACC] focus:ring-[#2F93D1] text-white" disabled={lockoutTime > 0}>
                 Iniciar sesión
               </Button>
             </form>
+
             <p className="mt-2 text-center text-sm text-gray-600">
               ¿No tienes una cuenta?{' '}
               <a href="/sign-up" className="font-medium text-[#2F93D1] hover:text-[#007ACC]">
@@ -121,7 +174,7 @@ export default function LoginPage() {
         </div>
       </div>
 
-     
+
     </div>
   )
 }

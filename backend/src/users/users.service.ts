@@ -1,6 +1,6 @@
 import { BadRequestException, ConflictException, HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { PasswordUpdate, UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './schemas/User.Schema';
@@ -141,9 +141,10 @@ export class UsersService {
       }
       const hashPassword = await bcrypt.hash(createUserDto.password, 10);
 
-      const res = new this.userModel({ ...createUserDto, password: hashPassword, active: false });
+      const res = new this.userModel({ ...createUserDto, password: hashPassword, active: false});
+      res.passwordsHistory.push({password: hashPassword,createdAt: new Date()});
       await res.save();
-      this.sendCode(createUserDto.email);
+      // this.sendCode(createUserDto.email);
       return res;
     } catch (error) {
       console.log(error)
@@ -172,7 +173,53 @@ export class UsersService {
     return { message: 'Codigo verificado exitosamente!' };
 
   }
+  async updatePassword(id: string, updatePasswordDto: PasswordUpdate) {
+    try {
+      const userFound = await this.userModel.findById(id);
 
+      if (!userFound) throw new NotFoundException("El usuario no se encuentra registrado.");
+
+      const compromised = await this.isPasswordCompromised(updatePasswordDto.password);
+      if (compromised) {
+        throw new ConflictException("Esta contraseña ha sido comprometida. Por favor elige una diferente.");
+      };
+      const isMatch = bcrypt.compareSync(updatePasswordDto.currentPassword, userFound.password);
+
+      if (!isMatch) {
+        throw new ConflictException("La contraseña actual es incorrecta, por favor intenta de nuevo.");
+      }
+
+      const isInHistory = userFound.passwordsHistory.some(entry =>
+        bcrypt.compareSync(updatePasswordDto.password, entry.password)
+      );
+      if (isInHistory) {
+        throw new ConflictException('No puedes reutilizar contraseñas anteriores.');
+      }
+
+      const hashPassword = await bcrypt.hash(updatePasswordDto.password, 10);
+
+      const currentDate = new Date();
+      const newPasswordExpiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
+
+      userFound.password = hashPassword;
+      userFound.passwordSetAt = currentDate;
+      userFound.passwordExpiresAt = newPasswordExpiresAt;
+
+      userFound.passwordsHistory.push({
+        password: hashPassword,
+        createdAt: currentDate
+      });
+
+      
+      if (userFound.passwordsHistory.length > 5) {
+        userFound.passwordsHistory.shift(); 
+      }
+      await userFound.save();
+      return userFound;
+    } catch (error) {
+      console.log(error)
+    }
+  }
   findAll() {
     return `This action returns all users`;
   }
