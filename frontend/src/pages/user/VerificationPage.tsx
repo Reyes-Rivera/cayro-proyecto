@@ -15,18 +15,13 @@ export default function VerificationPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isVerified, setIsVerified] = useState(false)
   const [error, setError] = useState('')
-  const { verifyCode, emailToVerify, isVerificationPending, setIsVerificationPending } = useAuth();
+  const { verifyCode, verifyCodeAuth, emailToVerify, isVerificationPending, setIsVerificationPending } = useAuth();
 
   const [message, setMessage] = useState('');
 
   const navigate = useNavigate();
 
-  // useEffect(() => {
-  //   if (!isVerificationPending || !emailToVerify) {
-  //     // Si no hay verificación pendiente o no hay correo, redirigir
-  //     navigate('/login');
-  //   }
-  // }, [isVerificationPending, emailToVerify, history]);
+
   const handleCodeChange = (index: number, value: string) => {
     const newCode = [...verificationCode]
     newCode[index] = value
@@ -53,27 +48,58 @@ export default function VerificationPage() {
     }
     const code = verificationCode.join('');
     setIsSubmitting(true)
-    const response = await verifyCode(emailToVerify, code);
-    if (response) {
-      Swal.fire({
-        icon: 'success',
-        title: '¡Verificación Exitosa!',
-        text: 'Tu código ha sido verificado correctamente. Serás redirigido en breve.',
-        confirmButtonColor: '#2F93D1',
-      });
-      setTimeout(() => {
-        navigate('/login');
-      }, 2000);// Redirigir a la página principal después de la verificación
-      setIsVerificationPending(false); // Deshabilitar la verificación pendiente
-      localStorage.removeItem('isVerificationPending');
-      localStorage.removeItem('emailToVerify'); // Limpiar localStorage después de la verificación
-      setIsVerified(true);
-    } else {
-      setMessage(response.message);
-      setTimeout(() => {
-        setMessage("");
-      }, 2000);
-      setError('Código de verificación incorrecto. Por favor, inténtelo de nuevo.')
+
+    if (location.pathname === '/verification-code') {
+      console.log("Hola")
+      const response = await await verifyCode(emailToVerify, code);
+      if (response.status === 201) {
+        Swal.fire({
+          icon: 'success',
+          title: '¡Verificación Exitosa!',
+          text: 'Tu código ha sido verificado correctamente. Serás redirigido en breve.',
+          confirmButtonColor: '#2F93D1',
+        });
+        setTimeout(() => {
+          navigate('/login');
+        }, 2000);// Redirigir a la página principal después de la verificación
+        setIsVerificationPending(false); // Deshabilitar la verificación pendiente
+        localStorage.removeItem('isVerificationPending');
+        localStorage.removeItem('emailToVerify'); // Limpiar localStorage después de la verificación
+        setIsVerified(true);
+      } else {
+        setMessage(response?.response?.data?.message);
+        setTimeout(() => {
+          setMessage("");
+        }, 2000);
+        setError('Código de verificación incorrecto. Por favor, inténtelo de nuevo.')
+      }
+    }
+
+    if (location.pathname === '/verification-code-auth') {
+      const response = await await verifyCodeAuth(emailToVerify, code);
+      if (response.status === 201) {
+        console.log("first")
+        Swal.fire({
+          icon: 'success',
+          title: '¡Verificación Exitosa2!',
+          text: 'Tu código ha sido verificado correctamente. Serás redirigido en breve.',
+          confirmButtonColor: '#2F93D1',
+        });
+        setTimeout(() => {
+          setIsVerificationPending(false); // Deshabilitar la verificación pendiente
+          localStorage.removeItem('isVerificationPending');
+          localStorage.removeItem('emailToVerify'); // Limpiar localStorage después de la verificación
+          setIsVerified(true);
+          navigate('/');
+        }, 2000);// Redirigir a la página principal después de la verificación
+
+      } else {
+        setMessage(response?.response?.data?.message);
+        setTimeout(() => {
+          setMessage("");
+        }, 2000);
+        setError('Código de verificación incorrecto. Por favor, inténtelo de nuevo.')
+      }
     }
     setError('')
     setIsSubmitting(false)

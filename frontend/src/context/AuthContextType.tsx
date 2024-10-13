@@ -1,6 +1,6 @@
 import { supabase } from '../supabase/supabase-configf';
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { loginApi, signUpApi, verifyCodeApi } from "@/api/auth"; // Asegúrate de tener la función `verifyCodeApi`
+import { loginApi, signUpApi, verifyCodeApi, verifyCodeApiAuth } from "@/api/auth"; // Asegúrate de tener la función `verifyCodeApi`
 import { User } from '@/types/User';
 
 interface AuthContextType {
@@ -12,13 +12,14 @@ interface AuthContextType {
   auth: Boolean;
   loading: Boolean;
   SignUp: (name: string, surname: string, email: string, phone: string, birthday: Date, password: string) => Promise<User | null>;
-  verifyCode: (email: string, code: string) => Promise<any>; // Nueva función para la verificación del código
+  verifyCode: (email: string, code: string) => Promise<any>; 
   error: string;
   emailToVerify: string | null; // Nuevo estado para almacenar el correo que está siendo verificado
   isVerificationPending: boolean; // Estado para saber si se requiere la verificación del código
   setEmailToVerify: (email: string | null) => void;
   setIsVerificationPending: (pending: boolean) => void;
   errorTimer: string;
+  verifyCodeAuth: (email: string, code: string) => Promise<any>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -54,11 +55,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const res = await loginApi({ email, password });
       if (res) {
-        setUser(res.data.user);
-        localStorage.setItem("token", res.data.token);
-        setToken(res.data.token);
-        setAuth(true);
-        return res.data.user;
+        setEmailToVerify(email); // Establecer el correo que será verificado
+        setIsVerificationPending(true); // Indicar que el usuario necesita verificar su correo
+        localStorage.setItem('emailToVerify', email); // Guardar en localStorage para persistencia
+        localStorage.setItem('isVerificationPending', 'true');
+        return res.data;
       }
     } catch (error: any) {
       if (error.response?.data?.message.includes('Cuenta bloqueada temporalmente')) {
@@ -78,8 +79,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const res = await signUpApi({ name, surname, email, phone, birthday, password });
       if (res) {
-        setEmailToVerify(email); // Establecer el correo que será verificado
-        setIsVerificationPending(true); // Indicar que el usuario necesita verificar su correo
+        // setEmailToVerify(email); // Establecer el correo que será verificado
+        // setIsVerificationPending(true); // Indicar que el usuario necesita verificar su correo
         localStorage.setItem('emailToVerify', email); // Guardar en localStorage para persistencia
         localStorage.setItem('isVerificationPending', 'true');
       }
@@ -96,7 +97,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const verifyCode = async (email: string, code: string) => {
     try {
       const res = await verifyCodeApi(email, code); // Llamada a la API para verificar el código
-      if (res) {
+      if (res.status === 201) {
         setIsVerificationPending(false); // Marcar como verificado
         setEmailToVerify(null); // Limpiar el correo verificado
         localStorage.removeItem('emailToVerify'); // Eliminar del localStorage
@@ -109,10 +110,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setTimeout(() => {
         setError("");
       }, 2000);
-      return { message: error.response.data.message };
+      return error;
     }
   };
 
+  const verifyCodeAuth = async (email: string, code: string) => {
+    try {
+      const res = await verifyCodeApiAuth(email, code);
+      if (res.status === 201) {
+        setEmailToVerify(null);
+        setUser(res.data.user);
+        localStorage.setItem("token", res.data.token);
+        setToken(res.data.token);
+        setAuth(true);
+      }
+      return res;
+    } catch (error: any) {
+      console.log()
+      setError(error.response?.data?.message || "Error desconocido al verificar el código.");
+      setTimeout(() => {
+        setError("");
+      }, 2000);
+      return error;
+    }
+  };
   const signOut = () => {
     setUser(null);
     localStorage.removeItem('user');
@@ -159,7 +180,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     emailToVerify,
     isVerificationPending,
     setEmailToVerify,
-    errorTimer // Setter para actualizar `emailToVerify`
+    verifyCodeAuth,
+    errorTimer// Setter para actualizar `emailToVerify`
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

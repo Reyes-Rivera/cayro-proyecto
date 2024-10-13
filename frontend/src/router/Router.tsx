@@ -19,6 +19,7 @@ const AppRoutes = () => {
                 <Route path='/password-recovery' element={<PasswordRecoveryPage/>}/>
                 <Route element={<ProtectedRouterVerification/>}>
                   <Route path="/verification-code" element={<VerificationPage/>}/>
+                  <Route path="/verification-code-auth" element={<VerificationPage/>}/>
                 </Route>
             </Routes>
         </div>

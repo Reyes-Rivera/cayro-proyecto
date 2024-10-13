@@ -11,8 +11,20 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response) {
     const result = await this.authService.login(loginDto);
-    res.setHeader('Authorization', `Bearer ${result.token}`);
     return result;
+  }
+
+  @Post("verify-code")
+  async verifyCode(@Body() body:{email:string,code:string}) {
+    const {email,code} = body;
+    return this.authService.verifyCode(email,code)
+  }
+
+  
+  @Post("resend-code")
+  async reSendCode(@Body() body: {email:string}) {
+    const {email} = body;
+    return this.authService.sendCode(email);
   }
   
 }

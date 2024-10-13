@@ -1,3 +1,4 @@
+import { resendCodeApi } from "@/api/auth";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -5,10 +6,12 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContextType";
 import { UserLogin } from "@/types/User";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 // import Login from "@/assets/login4.png";
 
 export default function LoginPage() {
   const { login, error, errorTimer } = useAuth();
+  const navigate = useNavigate();
   const { signInWithGoogle } = useAuth();
   const [data, setData] = useState<UserLogin>({
     email: "",
@@ -30,8 +33,14 @@ export default function LoginPage() {
     e.preventDefault();
     try {
       const res = await login(data.email, data.password);
+      console.log(res);
       if (res) {
-        alert("Login successful");
+        if (res?.role === "USER" && res.active === false) {
+          await resendCodeApi({ email: res.email });
+          navigate("/verification-code");
+        } else {
+          navigate("/verification-code-auth");
+        }
       }
     } catch (error: any) {
       console.log(error)

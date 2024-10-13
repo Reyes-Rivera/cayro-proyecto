@@ -144,7 +144,7 @@ export class UsersService {
       const res = new this.userModel({ ...createUserDto, password: hashPassword, active: false});
       res.passwordsHistory.push({password: hashPassword,createdAt: new Date()});
       await res.save();
-      // this.sendCode(createUserDto.email);
+      this.sendCode(createUserDto.email);
       return res;
     } catch (error) {
       console.log(error)

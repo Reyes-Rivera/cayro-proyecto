@@ -50,6 +50,9 @@ export class User {
 
     @Prop({ trim: true })
     active?: boolean;
+
+    @Prop({default:"USER"})
+    role?: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
