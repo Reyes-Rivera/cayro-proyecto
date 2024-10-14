@@ -81,7 +81,7 @@ export default function VerificationPage() {
         console.log("first")
         Swal.fire({
           icon: 'success',
-          title: '¡Verificación Exitosa2!',
+          title: '¡Verificación Exitosa!',
           text: 'Tu código ha sido verificado correctamente. Serás redirigido en breve.',
           confirmButtonColor: '#2F93D1',
         });
