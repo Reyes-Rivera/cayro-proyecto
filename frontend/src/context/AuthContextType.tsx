@@ -51,7 +51,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return localStorage.getItem('isVerificationPending') === 'true'; // Recupera el estado de verificación desde localStorage
   });
 
-  // Función para iniciar sesión
   const login = async (email: string, password: string) => {
     try {
       const res = await loginApi({ email, password });
@@ -75,7 +74,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Función para registrar un nuevo usuario
   const SignUp = async (name: string, surname: string, email: string, phone: string, birthday: Date, password: string) => {
     try {
       const res = await signUpApi({ name, surname, email, phone, birthday, password });
@@ -93,11 +91,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }, 2000);
     }
   };
-
-  // Función para la verificación del código
   const verifyCode = async (email: string, code: string) => {
     try {
-      const res = await verifyCodeApi(email, code); // Llamada a la API para verificar el código
+      const res = await verifyCodeApi(email, code);
       if (res.status === 201) {
         setIsVerificationPending(false); // Marcar como verificado
         setEmailToVerify(null); // Limpiar el correo verificado
@@ -123,7 +119,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(res.data.user);
         localStorage.setItem("token", res.data.token);
         setToken(res.data.token);
+        setLoading(true);
         setAuth(true);
+        setUser(res.data);
+        setTimeout(() => {
+          setLoading(false)
+        }, 2000);
       }
       return res;
     } catch (error: any) {

@@ -74,11 +74,9 @@ export default function VerificationPage() {
         setError('Código de verificación incorrecto. Por favor, inténtelo de nuevo.')
       }
     }
-
     if (location.pathname === '/verification-code-auth') {
       const response = await await verifyCodeAuth(emailToVerify, code);
       if (response.status === 201) {
-        console.log("first")
         Swal.fire({
           icon: 'success',
           title: '¡Verificación Exitosa!',
@@ -86,12 +84,12 @@ export default function VerificationPage() {
           confirmButtonColor: '#2F93D1',
         });
         setTimeout(() => {
-          setIsVerificationPending(false); // Deshabilitar la verificación pendiente
+          setIsVerificationPending(false); 
           localStorage.removeItem('isVerificationPending');
-          localStorage.removeItem('emailToVerify'); // Limpiar localStorage después de la verificación
+          localStorage.removeItem('emailToVerify');
           setIsVerified(true);
           navigate('/user-profile');
-        }, 2000);// Redirigir a la página principal después de la verificación
+        }, 1000);
 
       } else {
         setMessage(response?.response?.data?.message);

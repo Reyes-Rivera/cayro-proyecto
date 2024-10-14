@@ -47,7 +47,6 @@ export default function LoginPage() {
     }
     try {
       const res = await login(data.email, data.password);
-      console.log(res);
       if (res) {
         if (res?.role === "USER" && res.active === false) {
           await resendCodeApi({ email: res.email });

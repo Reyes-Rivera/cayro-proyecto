@@ -5,7 +5,7 @@ import { Loader2 } from 'lucide-react'
 const ProtectedRouterAdmin = () => {
     const { auth, loading, user } = useAuth();
     if (loading) {
-        return <div className="w-full h-full flex justify-center items-center">
+        return <div className="w-full h-screen flex justify-center items-center">
            <Loader2 className="w-12 h-12 text-[#0099FF] animate-spin mb-4" />
         </div>
     }
