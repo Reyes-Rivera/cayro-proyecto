@@ -7,10 +7,13 @@ import { useAuth } from "@/context/AuthContextType";
 import { UserLogin } from "@/types/User";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-// import Login from "@/assets/login4.png";
+import Swal from 'sweetalert2';
+import 'sweetalert2/src/sweetalert2.scss';
+import ReCAPTCHA from 'react-google-recaptcha';
 
 export default function LoginPage() {
   const { login, error, errorTimer } = useAuth();
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const navigate = useNavigate();
   const { signInWithGoogle } = useAuth();
   const [data, setData] = useState<UserLogin>({
@@ -28,11 +31,23 @@ export default function LoginPage() {
     }
     return () => clearInterval(timer)
   }, [lockoutTime]);
-
+  const handleCaptchaChange = (token: string | null) => {
+    setCaptchaToken(token); // Actualizamos el token cuando el CAPTCHA se resuelve
+  };
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!captchaToken) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en el envio.',
+        text: 'Por favor, verifica que no eres un robot.',
+        confirmButtonColor: '#2F93D1',
+      });
+      return;
+    }
     try {
       const res = await login(data.email, data.password);
+      console.log(res);
       if (res) {
         if (res?.role === "USER" && res.active === false) {
           await resendCodeApi({ email: res.email });
@@ -166,6 +181,13 @@ export default function LoginPage() {
                     ¿Olvidaste tu contraseña?
                   </a>
                 </div>
+              </div>
+              <div className="flex justify-center w-full">
+
+                <ReCAPTCHA
+                  sitekey="6LcQmmAqAAAAAB-vTcQpxCB295czh3OW41MYmKoc"
+                  onChange={handleCaptchaChange} // Se llama cuando el usuario completa el CAPTCHA
+                />
               </div>
               <Button type="submit" className="w-full bg-[#2F93D1] hover:bg-[#007ACC] focus:ring-[#2F93D1] text-white" disabled={lockoutTime > 0}>
                 Iniciar sesión
