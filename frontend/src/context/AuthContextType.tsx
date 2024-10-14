@@ -1,18 +1,19 @@
 import { supabase } from '../supabase/supabase-configf';
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { loginApi, signUpApi, verifyCodeApi, verifyCodeApiAuth } from "@/api/auth"; // Asegúrate de tener la función `verifyCodeApi`
+import { loginApi, logOutApi, signUpApi, verifyCodeApi, verifyCodeApiAuth, verifyToken } from "@/api/auth"; // Asegúrate de tener la función `verifyCodeApi`
 import { User } from '@/types/User';
+import Cookies from 'js-cookie';
 
 interface AuthContextType {
   user: User | null; // Usuario autenticado o null si no hay usuario
   login: (email: string, password: string) => Promise<User | null>;
-  signOut: () => void;
+  signOut: () => Promise<any>;
   isAuthenticated: boolean;
   signInWithGoogle: () => void;
   auth: Boolean;
   loading: Boolean;
   SignUp: (name: string, surname: string, email: string, phone: string, birthday: Date, password: string) => Promise<User | null>;
-  verifyCode: (email: string, code: string) => Promise<any>; 
+  verifyCode: (email: string, code: string) => Promise<any>;
   error: string;
   emailToVerify: string | null; // Nuevo estado para almacenar el correo que está siendo verificado
   isVerificationPending: boolean; // Estado para saber si se requiere la verificación del código
@@ -38,7 +39,7 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null); // Estado del usuario
-  const [token, setToken] = useState<string>("");
+  const [token, setToken] = useState<any>("");
   const [auth, setAuth] = useState<Boolean>(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -134,13 +135,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return error;
     }
   };
-  const signOut = () => {
-    setUser(null);
-    localStorage.removeItem('user');
-    setEmailToVerify(null);
-    setIsVerificationPending(false);
-    localStorage.removeItem('emailToVerify');
-    localStorage.removeItem('isVerificationPending');
+  const signOut = async() => {
+    const res = await logOutApi();
+    if(res){
+      setUser(null);
+      setAuth(false);
+      return true;
+    }
+    return false;
   };
 
   const signInWithGoogle = async () => {
@@ -155,13 +157,37 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log(error);
     }
   };
-
-  useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+  const verifyAuth = async () => {
+    const token = Cookies.get('token');
+    setLoading(true);
+    if (!token) {
+      setUser(null);
+      setAuth(false);
+      setLoading(false);
     }
+    try {
+      const res = await verifyToken(token);
+      if (res) {
+        setUser(res.data);
+        setAuth(true);
+        setLoading(false);
+        setToken(token);
+      } else {
+        setLoading(false);
+        setAuth(false);
+        setUser(null);
+      }
+    } catch (error) {
+      console.log(error);
+      setUser(null);
+      setAuth(false);
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+   verifyAuth();
   }, []);
+  
 
   const isAuthenticated = user !== null;
 

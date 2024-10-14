@@ -1,4 +1,4 @@
-import { ConflictException, ForbiddenException, HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, HttpException, HttpStatus, Injectable, NotFoundException, Request } from '@nestjs/common';
 import { LoginDto } from './dto/login-auth.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from 'src/users/schemas/User.Schema';
@@ -58,9 +58,23 @@ export class AuthService {
     }
 
     this.codes.delete(userEmail);
+    let expiresIn: any;
+    switch (userFound.role) {
+      case Role.ADMIN:
+        expiresIn = '8h'; // Por ejemplo, 7 días para administradores
+        break;
+      case Role.USER:
+        expiresIn = '1d'; // 1 día para usuarios regulares
+        break;
+      case Role.EMPLOYEE:
+        expiresIn = '4h'; // 1 hora para invitados
+        break;
+      default:
+        expiresIn = '1h'; // Valor por defecto
+    }
     const { password, ...rest } = userFound.toObject();
     const payload = { sub: userFound._id, role: Role.USER };
-    const token = this.jwtSvc.sign(payload);
+    const token = this.jwtSvc.sign(payload, { expiresIn });
     return { user: { ...rest, role: Role.USER }, token }
 
   }
@@ -173,10 +187,34 @@ export class AuthService {
 
     userFound.loginAttempts = 0;
     await userFound.save();
-    if(userFound.role === Role.USER && userFound.active === true){
+    if (userFound.role === Role.USER && userFound.active === true) {
       this.sendCode(loginDto.email);
     }
     const { password, ...rest } = userFound.toObject();
     return { ...rest }
+  }
+
+  async verifyToken(@Request() request,) {
+    try {
+      const user = await this.userModel.findById(request.sub);
+      // const admin = !user && await this.adminModel.findById(request.sub);
+      // const employee = !user && !admin && await this.profesorModel.findById(request.sub);
+
+      // if (user || admin || employee) {
+      if (user ) {
+        // const entity = user || admin || employee;
+        const entity = user;
+        const { password, ...rest } = entity.toObject();
+        // return { ...rest, role: user ? Role.ALUMNO : admin ? Role.ADMIN : Role.employee, };
+        return { ...rest, role: Role.USER  };
+      }
+      throw new NotFoundException("El usuario no se encuentra registrado");
+
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException('Error interno del servidor', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 }

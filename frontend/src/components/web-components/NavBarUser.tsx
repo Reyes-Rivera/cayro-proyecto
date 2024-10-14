@@ -1,12 +1,35 @@
-import { Menu, X } from 'lucide-react';
+import { ChevronDown, LogOut, Menu, User, X } from 'lucide-react';
 import Logo from "../../assets/Logo.png";
 import { Button } from "@/components/ui/button";
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContextType';
+import Swal from 'sweetalert2';
+import 'sweetalert2/src/sweetalert2.scss';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { useNavigate } from 'react-router-dom';
 
 const NavBarUser = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
+  const { auth, user, signOut } = useAuth();
+  const handleLogout = async () => {
+    const res = await signOut();
+    if (res) {
+      Swal.fire({
+        icon: 'success',
+        title: 'Sesión cerrada.',
+        text: 'La se sesión se ha cerrado correctamente.',
+        confirmButtonColor: '#2F93D1',
+      });
+      navigate("/login");
+      return;
+    }
+  }
+  const navigate= useNavigate();
+  const handleGoToProfile = () => {
+    navigate("/user-profile");
+  }
   return (
     <div>
       <nav className="bg-white shadow-sm">
@@ -64,12 +87,50 @@ const NavBarUser = () => {
               >
                 Contacto
               </NavLink>
-              <NavLink
-                to="/login"
-                className={" bg-[#2F93D1] text-white p-1 rounded-md"}
-              >
-                Iniciar sesión
-              </NavLink>
+
+              {
+                auth ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="flex items-center space-x-2">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src="/placeholder.svg?height=32&width=32" alt="Avatar" />
+                          <AvatarFallback>JD</AvatarFallback>
+                        </Avatar>
+                        <span className="hidden md:inline-block">Juan Pérez</span>
+                        <ChevronDown className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem>
+                        <User className="mr-2 h-4 w-4" />
+                        <span
+                          className='cursor-pointer w-full'
+                         onClick={handleGoToProfile}
+                        >
+                         Pefil
+                        </span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span
+                          className='cursor-pointer w-full'
+                         onClick={handleLogout}
+                        >
+                         Cerrar sesión
+                        </span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <NavLink
+                    to="/login"
+                    className={" bg-[#2F93D1] text-white p-1 rounded-md"}
+                  >
+                    Iniciar sesión
+                  </NavLink>
+                )
+              }
             </div>
             {/* Mobile Menu Button */}
             <div className="-mr-2 flex items-center sm:hidden">

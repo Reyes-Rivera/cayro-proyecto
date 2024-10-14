@@ -1,17 +1,17 @@
-import { useEffect, useState } from 'react'
-import { Loader2, Send, RefreshCw } from 'lucide-react'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useEffect, useState } from 'react';
+import { Loader2, Send, RefreshCw } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from '@/context/AuthContextType';
 import { useNavigate } from 'react-router-dom';
-import { resendCodeApi } from '@/api/auth'
+import { resendCodeApi } from '@/api/auth';
 import Swal from 'sweetalert2';
 import 'sweetalert2/src/sweetalert2.scss';
 
 export default function VerificationPage() {
-  const [verificationCode, setVerificationCode] = useState(['', '', '', '', '', ''])
+  const [verificationCode, setVerificationCode] = useState(['', '', '', '', '', '']);
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isVerified, setIsVerified] = useState(false)
   const [error, setError] = useState('')
@@ -90,7 +90,7 @@ export default function VerificationPage() {
           localStorage.removeItem('isVerificationPending');
           localStorage.removeItem('emailToVerify'); // Limpiar localStorage después de la verificación
           setIsVerified(true);
-          navigate('/');
+          navigate('/user-profile');
         }, 2000);// Redirigir a la página principal después de la verificación
 
       } else {

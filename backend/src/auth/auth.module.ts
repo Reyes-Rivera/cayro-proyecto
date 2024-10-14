@@ -11,7 +11,6 @@ import { UsersModule } from 'src/users/users.module';
     JwtModule.register({
       global:true,
       secret: "fhf fhslxo ahs",
-      signOptions: { expiresIn: '1h' },
     }),
     MongooseModule.forFeature([
       {name:User.name,schema:UserSchema}
