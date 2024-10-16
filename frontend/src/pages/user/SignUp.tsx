@@ -3,7 +3,7 @@ import { Check, Eye, EyeOff } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Users } from '@/lib/domain/users/Users';
+import { User } from '@/types/User';
 import { useForm } from 'react-hook-form';
 import Swal from 'sweetalert2';
 import 'sweetalert2/src/sweetalert2.scss';
@@ -26,7 +26,7 @@ export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const { register, handleSubmit, setValue, clearErrors, formState: { errors } } = useForm<Users>();
+  const { register, handleSubmit, setValue, clearErrors, formState: { errors } } = useForm<User>();
 
   const navigate = useNavigate();
 
@@ -75,7 +75,7 @@ export default function SignUpPage() {
   };
 
   // Manejador para limpiar errores al escribir
-  const handleInputChange = (field: keyof Users, value: string) => {
+  const handleInputChange = (field: keyof User, value: string) => {
     setValue(field, value); // Actualiza el valor del campo en el formulario
     clearErrors(field); // Limpia los errores del campo si el usuario escribe
   };
@@ -105,8 +105,8 @@ export default function SignUpPage() {
   };
 
   // Manejador de envío del formulario
-  const onSubmit = handleSubmit(async (data: Users) => {
-    if (!validatePasswordContent(password, data.name, data.surname, data.birthdate.toString())) {
+  const onSubmit = handleSubmit(async (data: User) => {
+    if (!validatePasswordContent(password, data.name, data.surname, data.birthday.toString())) {
       Swal.fire({
         icon: 'error',
         title: 'Error de Contraseña',
@@ -118,7 +118,7 @@ export default function SignUpPage() {
 
     if (Object.values(passwordChecks).every(Boolean)) {
       try {
-        const res = await SignUp(data.name, data.surname, data.email, data.phone, data.birthdate, data.password);
+        const res = await SignUp(data.name, data.surname, data.email, data.phone, data.birthday, data.password);
         if (res) {
           navigate("/verification-code");
         }
@@ -220,16 +220,16 @@ export default function SignUpPage() {
               <div>
                 <Label htmlFor="fecha-nacimiento" className="block text-sm font-medium text-gray-700">Fecha de nacimiento</Label>
                 <Input
-                  {...register("birthdate", {
+                  {...register("birthday", {
                     required: "La fecha de nacimiento es requerida",
                     validate: (value) => validateAge(value) || "Debes tener al menos 18 años para registrarte.",
                   })}
-                  onChange={(e) => handleInputChange('birthdate', e.target.value)}
+                  onChange={(e) => handleInputChange('birthday', e.target.value)}
                   id="fecha-nacimiento"
                   type="date"
                   className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-[#0099FF] focus:border-[#0099FF] focus:z-10 sm:text-sm mt-1"
                 />
-                {errors.birthdate && <span className="text-[10px] text-red-500">{errors.birthdate.message}</span>}
+                {errors.birthday && <span className="text-[10px] text-red-500">{errors.birthday.message}</span>}
               </div>
 
               {/* Contraseña */}

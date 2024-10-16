@@ -39,7 +39,6 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null); // Estado del usuario
-  const [token, setToken] = useState<any>("");
   const [auth, setAuth] = useState<Boolean>(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -117,7 +116,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setEmailToVerify(null);
         setUser(res.data.user);
         localStorage.setItem("token", res.data.token);
-        setToken(res.data.token);
         setLoading(true);
         setAuth(true);
         setUser(res.data);
@@ -169,7 +167,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(res.data);
         setAuth(true);
         setLoading(false);
-        setToken(token);
       } else {
         setLoading(false);
         setAuth(false);

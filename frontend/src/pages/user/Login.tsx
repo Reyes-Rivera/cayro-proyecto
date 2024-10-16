@@ -21,7 +21,6 @@ export default function LoginPage() {
     password: "",
   });
   const [lockoutTime, setLockoutTime] = useState(0);
-  const [err, setErr] = useState('')
   useEffect(() => {
     let timer: NodeJS.Timeout
     if (lockoutTime > 0) {
@@ -78,7 +77,7 @@ export default function LoginPage() {
         setLockoutTime(seconds);
       }
     } else {
-      setErr('Ocurrió un error inesperado. Por favor, inténtalo de nuevo.');
+      
     }
   }, [errorTimer]);
 

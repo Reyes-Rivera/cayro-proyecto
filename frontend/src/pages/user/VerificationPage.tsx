@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import {  useState } from 'react';
 import { Loader2, Send, RefreshCw } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,7 @@ export default function VerificationPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isVerified, setIsVerified] = useState(false)
   const [error, setError] = useState('')
-  const { verifyCode, verifyCodeAuth, emailToVerify, isVerificationPending, setIsVerificationPending } = useAuth();
+  const { verifyCode, verifyCodeAuth, emailToVerify, setIsVerificationPending } = useAuth();
 
   const [message, setMessage] = useState('');
 

@@ -17,9 +17,10 @@ export interface User {
     email: string;
     phone: string;
     birthday: Date;
-    password?: string;
+    password: string;
     gender?: string;
     direction?: Direction[];
     active?: boolean;
     role?: string;
+    confirmPassword?:string
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
   User,
   Lock,
@@ -7,7 +7,6 @@ import {
   CreditCard,
   Bell,
   Menu,
-  X
 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -28,18 +27,7 @@ import AddressesTab from './AddressesTab'
 export default function UserDashboard() {
   const [activeTab, setActiveTab] = useState('profile')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [isMobileView, setIsMobileView] = useState(false)
-
-  useEffect(() => {
-    const checkMobileView = () => {
-      setIsMobileView(window.innerWidth < 768)
-    }
-
-    checkMobileView()
-    window.addEventListener('resize', checkMobileView)
-
-    return () => window.removeEventListener('resize', checkMobileView)
-  }, [])
+  
 
   const renderTabContent = () => {
     switch (activeTab) {
