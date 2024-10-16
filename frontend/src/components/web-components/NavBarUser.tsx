@@ -97,7 +97,7 @@ const NavBarUser = () => {
                           <AvatarImage src="/placeholder.svg?height=32&width=32" alt="Avatar" />
                           <AvatarFallback>JD</AvatarFallback>
                         </Avatar>
-                        <span className="hidden md:inline-block">Juan Pérez</span>
+                        <span className="hidden md:inline-block">{user?.name}</span>
                         <ChevronDown className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>

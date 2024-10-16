@@ -78,8 +78,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const res = await signUpApi({ name, surname, email, phone, birthday, password });
       if (res) {
-        // setEmailToVerify(email); // Establecer el correo que será verificado
-        // setIsVerificationPending(true); // Indicar que el usuario necesita verificar su correo
+        setEmailToVerify(email); // Establecer el correo que será verificado
+        setIsVerificationPending(true); // Indicar que el usuario necesita verificar su correo
         localStorage.setItem('emailToVerify', email); // Guardar en localStorage para persistencia
         localStorage.setItem('isVerificationPending', 'true');
       }
