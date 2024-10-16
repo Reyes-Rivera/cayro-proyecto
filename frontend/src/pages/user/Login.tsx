@@ -183,7 +183,7 @@ export default function LoginPage() {
               <div className="flex justify-center w-full">
 
                 <ReCAPTCHA
-                  sitekey="6LcQmmAqAAAAAB-vTcQpxCB295czh3OW41MYmKoc"
+                  sitekey="6Lc_k2MqAAAAAB19xvWE6_otNt4WRJBDfJpeo-EC"
                   onChange={handleCaptchaChange} // Se llama cuando el usuario completa el CAPTCHA
                 />
               </div>
