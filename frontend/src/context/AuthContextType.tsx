@@ -102,7 +102,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       return res;
     } catch (error: any) {
-      console.log()
       setError(error.response?.data?.message || "Error desconocido al verificar el código.");
       setTimeout(() => {
         setError("");
@@ -128,7 +127,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       return res;
     } catch (error: any) {
-      console.log()
       setError(error.response?.data?.message || "Error desconocido al verificar el código.");
       setTimeout(() => {
         setError("");
@@ -155,7 +153,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem("user", JSON.stringify(data));
       return data;
     } catch (error) {
-      console.log(error);
     }
   };
   const verifyAuth = async () => {
@@ -179,7 +176,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(null);
       }
     } catch (error) {
-      console.log(error);
       setUser(null);
       setAuth(false);
       setLoading(false);
