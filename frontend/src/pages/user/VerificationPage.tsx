@@ -50,7 +50,6 @@ export default function VerificationPage() {
     setIsSubmitting(true)
 
     if (location.pathname === '/verification-code') {
-      console.log("Hola")
       const response = await await verifyCode(emailToVerify, code);
       if (response.status === 201) {
         Swal.fire({

@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import Swal from 'sweetalert2';
 import 'sweetalert2/src/sweetalert2.scss';
 import ReCAPTCHA from 'react-google-recaptcha';
+import img from "@/assets/login.png";
 
 export default function LoginPage() {
   const { login, error, errorTimer } = useAuth();
@@ -31,7 +32,7 @@ export default function LoginPage() {
     return () => clearInterval(timer)
   }, [lockoutTime]);
   const handleCaptchaChange = (token: string | null) => {
-    setCaptchaToken(token); // Actualizamos el token cuando el CAPTCHA se resuelve
+    setCaptchaToken(token);
   };
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -60,24 +61,21 @@ export default function LoginPage() {
   };
   useEffect(() => {
     if (errorTimer.includes('Cuenta bloqueada temporalmente')) {
-      // Primero intentamos obtener tanto minutos como segundos
+
       const timeMatch = errorTimer.match(/(\d+) minutos? y (\d+) segundos/);
 
-      // Si solo hay segundos, también intentamos obtener solo segundos
       const timeMatch2 = errorTimer.match(/(\d+) segundos/);
 
       if (timeMatch) {
-        // Si coincide la expresión de minutos y segundos
         const minutes = parseInt(timeMatch[1], 10);
         const seconds = parseInt(timeMatch[2], 10);
         setLockoutTime(minutes * 60 + seconds);
       } else if (timeMatch2) {
-        // Si solo coincide la expresión de segundos
         const seconds = parseInt(timeMatch2[1], 10);
         setLockoutTime(seconds);
       }
     } else {
-      
+
     }
   }, [errorTimer]);
 
@@ -91,13 +89,17 @@ export default function LoginPage() {
 
       <div className="flex flex-grow  justify-center items-center">
         {/* Left column - Image container */}
-        <div className="hidden w-1/2  lg:flex lg:items-center lg:justify-center">
-          <div className="relative h-3/4 w-3/4">
+        <div className="hidden w-1/2 flex-col  lg:flex lg:items-center lg:justify-center">
+          <div className="relative h-3/4 w-3/4 flex flex-col justify-center items-center">
             <img
-              src={"Login"}
+              src={img}
               alt="Uniformes ilustración"
             />
+            <p className="text-3xl font-bold text-gray-900 text-center mb-4">Bienvenido a Cayro Uniformes</p>
+            <p className="text-center text-gray-500">Accede a tu cuenta para gestionar tus pedidos, ver tu historial de compras y mucho más.</p>
+
           </div>
+
         </div>
 
         {/* Right column - Form container */}
@@ -106,7 +108,7 @@ export default function LoginPage() {
             <div className="text-center">
 
               <h2 className=" text-3xl font-bold text-gray-900">
-                Iniciar sesión en Cayro
+                Iniciar sesión
               </h2>
             </div>
             <Button onClick={signInWithGoogle} variant="outline" className="w-full">

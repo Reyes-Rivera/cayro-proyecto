@@ -9,6 +9,7 @@ import Swal from 'sweetalert2';
 import 'sweetalert2/src/sweetalert2.scss';
 import { useAuth } from '@/context/AuthContextType';
 import { useNavigate } from 'react-router-dom';
+import img from "@/assets/signup.png";
 
 export default function SignUpPage() {
   const [password, setPassword] = useState('');
@@ -22,10 +23,9 @@ export default function SignUpPage() {
     noSequential: false,
   });
 
-  const { SignUp } = useAuth();
+  const { SignUp, error } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
   const { register, handleSubmit, setValue, clearErrors, formState: { errors } } = useForm<User>();
 
   const navigate = useNavigate();
@@ -53,7 +53,7 @@ export default function SignUpPage() {
 
     // Verifica si la contraseña contiene alguno de los patrones comunes
     return commonPatterns.some(pattern => password.includes(pattern)) ||
-           sequentialPatternRegex.test(password);
+      sequentialPatternRegex.test(password);
   };
 
   // Obtener color del progreso según la fortaleza
@@ -122,8 +122,13 @@ export default function SignUpPage() {
         if (res) {
           navigate("/verification-code");
         }
-      } catch (error) {
-        console.log(error);
+      } catch (error: any) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error en el servidor.',
+          text: 'Algo salió mal, por favor intenta más tarde.',
+          confirmButtonColor: '#2F93D1',
+        });
       }
     } else {
       Swal.fire({
@@ -332,7 +337,11 @@ export default function SignUpPage() {
                 </div>
                 {errors.confirmPassword && <span className="text-red-500 text-[10px]">{errors.confirmPassword.message}</span>}
               </div>
-
+              {
+                error.length > 0 && (
+                  <p className="text-red-500 text-[12px] text-center">{error}</p>
+                )
+              }
               <Button type="submit" className="w-full bg-[#2F93D1] hover:bg-[#007ACC] focus:ring-[#0099FF] text-white">
                 Crear cuenta
               </Button>
@@ -377,7 +386,9 @@ export default function SignUpPage() {
         {/* Columna derecha */}
         <div className="hidden w-1/2 lg:flex lg:items-center lg:justify-center">
           <div className="relative h-3/4 w-3/4">
-            <img src="/placeholder.svg?height=600&width=600" alt="Uniformes ilustración" />
+            <img src={img} alt="Uniformes ilustración" />
+            <p className="text-3xl font-bold text-gray-900 text-center mb-4">Únete a Cayro Uniformes</p>
+            <p className="text-center text-gray-500">Crea tu cuenta para acceder a ofertas exclusivas, seguimiento de pedidos y mucho más.</p>
           </div>
         </div>
       </div>

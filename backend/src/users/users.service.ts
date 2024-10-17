@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, HttpException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { PasswordUpdate, UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
@@ -134,20 +134,25 @@ export class UsersService {
   async create(createUserDto: CreateUserDto) {
     try {
       const userFound = await this.userModel.findOne({ email: createUserDto.email });
-      if (userFound) throw new ConflictException("El correo ya esta en uso.");
+      if (userFound) {
+        throw new ConflictException("El correo ya esta en uso.");
+      }
       const compromised = await this.isPasswordCompromised(createUserDto.password);
       if (compromised) {
         throw new ConflictException("Esta contraseña ha sido comprometida. Por favor elige una diferente.");
       }
       const hashPassword = await bcrypt.hash(createUserDto.password, 10);
 
-      const res = new this.userModel({ ...createUserDto, password: hashPassword, active: false});
-      res.passwordsHistory.push({password: hashPassword,createdAt: new Date()});
+      const res = new this.userModel({ ...createUserDto, password: hashPassword, active: false });
+      res.passwordsHistory.push({ password: hashPassword, createdAt: new Date() });
       await res.save();
       this.sendCode(createUserDto.email);
       return res;
     } catch (error) {
-      console.log(error)
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException('Error interno del servidor', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -210,9 +215,9 @@ export class UsersService {
         createdAt: currentDate
       });
 
-      
+
       if (userFound.passwordsHistory.length > 5) {
-        userFound.passwordsHistory.shift(); 
+        userFound.passwordsHistory.shift();
       }
       await userFound.save();
       return userFound;
