@@ -6,6 +6,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { User, UserSchema } from 'src/users/schemas/User.Schema';
 import { UsersModule } from 'src/users/users.module';
 import { ConfigModule } from '@nestjs/config';
+import { Employee, EmployeeSchema } from 'src/employees/schemas/Eployee.schema';
 @Module({
   imports:[
     ConfigModule.forRoot(),
@@ -14,7 +15,9 @@ import { ConfigModule } from '@nestjs/config';
       secret: "fhf fhslxo ahs",
     }),
     MongooseModule.forFeature([
-      {name:User.name,schema:UserSchema}
+      {name:User.name,schema:UserSchema},
+    { name: Employee.name, schema: EmployeeSchema },
+
     ]),
     UsersModule
   ],

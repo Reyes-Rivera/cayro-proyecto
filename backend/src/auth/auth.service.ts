@@ -9,12 +9,14 @@ import { Role } from './roles/role.enum';
 import { UsersService } from 'src/users/users.service';
 import * as crypto from 'crypto';
 import * as nodemailer from 'nodemailer';
+import { Employee } from 'src/employees/schemas/Eployee.schema';
 
 @Injectable()
 export class AuthService {
   private codes = new Map<string, { code: string; expires: number }>();
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
+    @InjectModel(Employee.name) private employeeModel: Model<Employee>,
     private jwtSvc: JwtService,
     private readonly usersService: UsersService,
   ) { }
@@ -26,7 +28,7 @@ export class AuthService {
         user: 'cayrouniformes38@gmail.com',
         pass: 'qewd ahzb vplo arua'
       },
-      tls:{
+      tls: {
         rejectUnauthorized: false,
       }
     });
@@ -49,8 +51,13 @@ export class AuthService {
   async verifyCode(userEmail: string, code: string) {
 
     const record = this.codes.get(userEmail);
-    const userFound = await this.userModel.findOne({ email: userEmail });
-    if (!userFound) throw new NotFoundException("El usuario no se encuentra registrado o su cuenta esta inactiva.");
+    let userFound = await this.userModel.findOne({ email: userEmail,active:true });
+    if (!userFound) {
+      userFound = await this.employeeModel.findOne({ email: userEmail });
+      if (!userFound) {
+        throw new NotFoundException("Usuario o empleado no registrado.");
+      }
+    }
 
     if (!record || record.expires < Date.now()) {
       throw new ConflictException('El codigo ha expirado o es invalido.');
@@ -76,9 +83,9 @@ export class AuthService {
         expiresIn = '1h'; // Valor por defecto
     }
     const { password, ...rest } = userFound.toObject();
-    const payload = { sub: userFound._id, role: Role.USER };
+    const payload = { sub: userFound._id, role: userFound.role };
     const token = this.jwtSvc.sign(payload, { expiresIn });
-    return { user: { ...rest, role: Role.USER }, token }
+    return { user: { ...rest, role: userFound.role }, token }
 
   }
   async sendCode(email: string) {
@@ -151,67 +158,87 @@ export class AuthService {
     }
   }
   async login(loginDto: LoginDto) {
-    const userFound = await this.userModel.findOne({ email: loginDto.email });
-    if (!userFound) throw new NotFoundException("Usuario no registrado.");
+    // Buscar al usuario en la colección de usuarios
+    let userFound = await this.userModel.findOne({ email: loginDto.email });
 
-    if (userFound.lockUntil > new Date()) {
+    // Si no se encuentra en la colección de usuarios, buscar en la colección de empleados
+    if (!userFound) {
+      userFound = await this.employeeModel.findOne({ email: loginDto.email });
+      if (!userFound) {
+        throw new NotFoundException("Usuario o empleado no registrado.");
+      }
+    }
+
+    // Verificar si la cuenta está bloqueada temporalmente
+    if (userFound.lockUntil && userFound.lockUntil > new Date()) {
       const now = new Date();
-      const timeDifference = userFound.lockUntil.getTime() - now.getTime(); // Diferencia en milisegundos
+      const timeDifference = userFound.lockUntil.getTime() - now.getTime();
 
       // Calcular los minutos y segundos restantes
-      const minutesRemaining = Math.floor(timeDifference / (1000 * 60)); // Convertir a minutos
-      const secondsRemaining = Math.floor((timeDifference % (1000 * 60)) / 1000); // Restante en segundos
+      const minutesRemaining = Math.floor(timeDifference / (1000 * 60));
+      const secondsRemaining = Math.floor((timeDifference % (1000 * 60)) / 1000);
 
       // Construir el mensaje dinámico
       let formattedMessage = '';
       if (minutesRemaining > 0) {
         formattedMessage = `${minutesRemaining} minutos y ${secondsRemaining} segundos`;
       } else {
-        formattedMessage = `${secondsRemaining} segundos`; // Solo mostrar segundos si los minutos son 0
+        formattedMessage = `${secondsRemaining} segundos`;
       }
       throw new ForbiddenException('Cuenta bloqueada temporalmente. Inténtalo de nuevo en ' + formattedMessage);
     }
+
+    // Verificar si la contraseña es válida
     const isPasswordValid = await bcrypt.compare(loginDto.password, userFound.password);
 
     if (!isPasswordValid) {
       userFound.loginAttempts = (userFound.loginAttempts || 0) + 1;
 
-      if (userFound.loginAttempts === 3) userFound.lockUntil = new Date(Date.now() + 5 * 60 * 1000);
+      // Bloquear la cuenta por 5 minutos después de 3 intentos fallidos
+      if (userFound.loginAttempts === 3) {
+        userFound.lockUntil = new Date(Date.now() + 5 * 60 * 1000);
+      }
 
+      // Bloquear la cuenta por 10 minutos después de 5 intentos fallidos y reiniciar los intentos
       if (userFound.loginAttempts === 5) {
         userFound.lockUntil = new Date(Date.now() + 10 * 60 * 1000);
         userFound.loginAttempts = 0;
       }
 
       await userFound.save();
-
       throw new HttpException("La contraseña es incorrecta.", HttpStatus.UNAUTHORIZED);
     }
 
+    // Resetear los intentos de inicio de sesión después de un inicio exitoso
     userFound.loginAttempts = 0;
     await userFound.save();
+
+    // Enviar código de verificación si es un usuario regular activo
     if (userFound.role === Role.USER && userFound.active === true) {
-      const res = await this.sendCode(loginDto.email);
-      console.log(res);
-      
+      await this.sendCode(loginDto.email);
     }
+    if(userFound.role === Role.ADMIN || userFound.role === Role.EMPLOYEE){
+      await this.sendCode(loginDto.email);
+    }
+    // Eliminar la contraseña antes de devolver la información del usuario o empleado
     const { password, ...rest } = userFound.toObject();
-    return { ...rest }
+    return { ...rest };
   }
+
 
   async verifyToken(@Request() request,) {
     try {
       const user = await this.userModel.findById(request.sub);
-      // const admin = !user && await this.adminModel.findById(request.sub);
+      const admin = !user && await this.employeeModel.findById(request.sub);
       // const employee = !user && !admin && await this.profesorModel.findById(request.sub);
 
-      // if (user || admin || employee) {
-      if (user ) {
-        // const entity = user || admin || employee;
-        const entity = user;
+      if (user || admin ) {
+      // if (user) {
+        const entity = user || admin;
+        // const entity = user;
         const { password, ...rest } = entity.toObject();
-        // return { ...rest, role: user ? Role.ALUMNO : admin ? Role.ADMIN : Role.employee, };
-        return { ...rest, role: Role.USER  };
+        return { ...rest };
+        // return { ...rest, role: Role.USER };
       }
       throw new NotFoundException("El usuario no se encuentra registrado");
 

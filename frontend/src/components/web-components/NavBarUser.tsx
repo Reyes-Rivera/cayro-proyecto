@@ -28,7 +28,12 @@ const NavBarUser = () => {
   }
   const navigate= useNavigate();
   const handleGoToProfile = () => {
-    navigate("/user-profile");
+    if(user?.role === "ADMIN"){
+      navigate("/admin-profile");
+    }
+    if(user?.role === "USER"){
+      navigate("/user-profile");
+    }
   }
   return (
     <div>

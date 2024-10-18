@@ -49,6 +49,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return localStorage.getItem('isVerificationPending') === 'true'; // Recupera el estado de verificación desde localStorage
   });
 
+  console.log(user)
+
   const login = async (email: string, password: string) => {
     try {
       const res = await loginApi({ email, password });

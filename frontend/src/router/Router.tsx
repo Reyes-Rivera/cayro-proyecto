@@ -7,8 +7,10 @@ import PasswordRecoveryPage from "@/pages/user/PasswordRecoveryPage";
 import VerificationPage from "@/pages/user/VerificationPage";
 import ProtectedRouterVerification from "@/utils/ProtectedRouteCode";
 import UserDashboard from "@/pages/user/dashboard/UserDashboard";
-import ProtectedRouterAdmin from "@/utils/ProtectedRRouterUser";
 import PasswordResetPage from "@/pages/user/PasswordResetPage";
+import ProtectedRouterUser from "@/utils/ProtectedRRouterUser";
+import ProtectedRouterAdmin from "@/utils/ProtectedRouterAdmin";
+import AdminDashboard from "@/pages/employees/dashboard-admin/AdminDashboard";
 const AppRoutes = () => {
   return (
     <>
@@ -20,10 +22,17 @@ const AppRoutes = () => {
                 <Route path='/sign-up' element={<SignUpPage/>}/>
                 <Route path='/login' element={<LoginPage/>}/>
                 <Route path='/password-recovery' element={<PasswordRecoveryPage/>}/>
-                  <Route path="/reset-password/:token" element={<PasswordResetPage/>}/>
+                <Route path="/reset-password/:token" element={<PasswordResetPage/>}/>
+
+              
                 <Route element={<ProtectedRouterAdmin/>}>
+                  <Route path="/admin-profile" element={<AdminDashboard/>}/>
+                </Route>
+
+                <Route element={<ProtectedRouterUser/>}>
                   <Route path="/user-profile" element={<UserDashboard/>}/>
                 </Route>
+
                 <Route element={<ProtectedRouterVerification/>}>
                   <Route path="/verification-code" element={<VerificationPage/>}/>
                   <Route path="/verification-code-auth" element={<VerificationPage/>}/>

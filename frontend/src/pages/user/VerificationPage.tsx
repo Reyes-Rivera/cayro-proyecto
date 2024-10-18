@@ -1,4 +1,4 @@
-import {  useState } from 'react';
+import { useState } from 'react';
 import { Loader2, Send, RefreshCw } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +6,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from '@/context/AuthContextType';
 import { useNavigate } from 'react-router-dom';
-import { resendCodeApi } from '@/api/auth';
+import { resendCodeApi, resendCodeApiAuth } from '@/api/auth';
 import Swal from 'sweetalert2';
 import 'sweetalert2/src/sweetalert2.scss';
 
@@ -83,7 +83,7 @@ export default function VerificationPage() {
           confirmButtonColor: '#2F93D1',
         });
         setTimeout(() => {
-          setIsVerificationPending(false); 
+          setIsVerificationPending(false);
           localStorage.removeItem('isVerificationPending');
           localStorage.removeItem('emailToVerify');
           setIsVerified(true);
@@ -104,22 +104,44 @@ export default function VerificationPage() {
 
   const handleResendCode = async () => {
     try {
-      const res = await resendCodeApi({ email: emailToVerify });
-      if (res) {
-        Swal.fire({
-          icon: 'success',
-          title: 'Código reenviado',
-          text: 'Se ha enviado un nuevo código de verificación.',
-          confirmButtonColor: '#2F93D1',
-        });
-      } else {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error al reenviar',
-          text: 'Algo salió mal, intente más tarde.',
-          confirmButtonColor: '#2F93D1',
-        });
+      if (location.pathname === '/verification-code') {
+        const res = await resendCodeApi({ email: emailToVerify });
+        if (res) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Código reenviado',
+            text: 'Se ha enviado un nuevo código de verificación.',
+            confirmButtonColor: '#2F93D1',
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error al reenviar',
+            text: 'Algo salió mal, intente más tarde.',
+            confirmButtonColor: '#2F93D1',
+          });
+        }
       }
+
+      if (location.pathname === '/verification-code-auth') {
+        const res = await resendCodeApiAuth({ email: emailToVerify });
+        if (res) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Código reenviado',
+            text: 'Se ha enviado un nuevo código de verificación.',
+            confirmButtonColor: '#2F93D1',
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error al reenviar',
+            text: 'Algo salió mal, intente más tarde.',
+            confirmButtonColor: '#2F93D1',
+          });
+        }
+      }
+
     } catch (error) {
       console.error(error);
       Swal.fire({
