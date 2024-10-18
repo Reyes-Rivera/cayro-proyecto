@@ -5,7 +5,7 @@ export const verifyToken = () => axios.get("/auth/verifyToken", {
    withCredentials: true,
 });
 
-export const loginApi = (data:UserLogin) => axios.post("/auth/login",data);
+export const loginApi = (data:UserLogin) => axios.post("/auth/login",data,{withCredentials: true});
 
 export const logOutApi = () => axios.post("/auth/logout");
 
@@ -18,3 +18,4 @@ export const verifyCodeApiAuth  = (email:string,code:string) => axios.post("/aut
 export const resendCodeApi  = (email:any) => axios.post("/users/resend-code",email);
 
 export const resendCodeApiAuth  = (email:any) => axios.post("/auth/resend-code",email);
+

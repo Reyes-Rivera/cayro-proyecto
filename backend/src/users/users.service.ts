@@ -23,8 +23,11 @@ export class UsersService {
       service: 'gmail',
       auth: {
         user: 'cayrouniformes38@gmail.com',
-        pass: 'wmye lboq uzjw kbtv'
-      }
+        pass: 'qewd ahzb vplo arua'
+      },
+      tls: {
+        rejectUnauthorized: false, // Asegúrate de que no haya problemas de certificado TLS
+      },
     });
 
     var mailOptions = {
