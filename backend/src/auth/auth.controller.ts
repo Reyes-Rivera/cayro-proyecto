@@ -28,9 +28,9 @@ export class AuthController {
 
     // Configura la cookie con el token JWT
     res.setHeader('Set-Cookie', cookie.serialize('token', result.token, {
-      httpOnly: false,
+      httpOnly:   true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'none',
       maxAge: 60 * 60 * 24 * 7,
       path: '/',
     }));
@@ -56,6 +56,7 @@ export class AuthController {
   ) {
     return this.authService.verifyToken(request.user);
   }
+
   @Post("resend-code")
   async reSendCode(@Body() body: { email: string }) {
     const { email } = body;

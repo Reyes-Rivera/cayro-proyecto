@@ -2,7 +2,6 @@ import { supabase } from '../supabase/supabase-configf';
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { loginApi, logOutApi, signUpApi, verifyCodeApi, verifyCodeApiAuth, verifyToken } from "@/api/auth"; // Asegúrate de tener la función `verifyCodeApi`
 import { User } from '@/types/User';
-import Cookies from 'js-cookie';
 
 interface AuthContextType {
   user: User | null; // Usuario autenticado o null si no hay usuario
@@ -84,7 +83,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       return res?.data;
     } catch (error: any) {
-      setError(error.response?.data?.message || "Error desconocido al registrar.");
+      const errorMsg = error.response?.data?.message || "Error desconocido al registrar.";
+      setError(errorMsg);
       setTimeout(() => {
         setError("");
       }, 2000);
@@ -132,9 +132,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return error;
     }
   };
-  const signOut = async() => {
+  const signOut = async () => {
     const res = await logOutApi();
-    if(res){
+    if (res) {
       setUser(null);
       setAuth(false);
       return true;
@@ -154,15 +154,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
   const verifyAuth = async () => {
-    const token = Cookies.get('token');
     setLoading(true);
-    if (!token) {
-      setUser(null);
-      setAuth(false);
-      setLoading(false);
-    }
     try {
-      const res = await verifyToken(token);
+      const res = await verifyToken();
       if (res) {
         setUser(res.data);
         setAuth(true);
@@ -179,9 +173,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
   useEffect(() => {
-   verifyAuth();
+    verifyAuth();
   }, []);
-  
+
 
   const isAuthenticated = user !== null;
 

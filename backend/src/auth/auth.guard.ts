@@ -1,79 +1,51 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
+import * as cookie from 'cookie'; // Importar para leer cookies
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(private jwtService: JwtService) {}
+
   async canActivate(
     context: ExecutionContext,
   ): Promise<boolean> {
+    const request = context.switchToHttp().getRequest<Request>();
 
-    const request = context.switchToHttp().getRequest();
-
-    const token = this.extractTokenFromHeader(request);
+    // Extraer el token desde las cookies
+    const token = this.extractTokenFromCookie(request);
 
     if (!token) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('Token no encontrado');
     }
 
     try {
       const payload = await this.jwtService.verifyAsync(
         token,
         {
-          secret: "fhf fhslxo ahs"
+          secret: process.env.JWT_SECRET || "fhf fhslxo ahs", // Usa el secret que tengas configurado
         }
       );
       
+      // Guardar el payload en el request para su uso posterior
       request['user'] = payload;
     } catch {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('Token inválido');
     }
 
     return true;
   }
 
-  private extractTokenFromHeader(request: Request): string | undefined {
-    const [type, token] = request.headers.authorization?.split(' ') ?? [];
-    return type === 'Bearer' ? token : undefined;
-  }
-}
+  private extractTokenFromCookie(request: Request): string | undefined {
+    const cookies = request.headers.cookie;
 
-
-export class AuthGuardAdmin implements CanActivate {
-  constructor(private jwtService: JwtService) {}
-  async canActivate(
-    context: ExecutionContext,
-  ): Promise<boolean> {
-
-    const request = context.switchToHttp().getRequest();
-
-    const token = this.extractTokenFromHeader(request);
-
-    if (!token) {
-      throw new UnauthorizedException();
+    // Si no hay cookies, devuelve undefined
+    if (!cookies) {
+      return undefined;
     }
 
-    try {
-      const payload = await this.jwtService.verifyAsync(
-        token,
-        {
-          secret: "loksjd-jslsia-losl"
-        }
-      );
-      // 💡 We're assigning the payload to the request object here
-      // so that we can access it in our route handlers
-      request['user'] = payload;
-    } catch {
-      throw new UnauthorizedException();
-    }
-    // console.log(request.headers.authorization);
-
-    return true;
-  }
-
-  private extractTokenFromHeader(request: Request): string | undefined {
-    const [type, token] = request.headers.authorization?.split(' ') ?? [];
-    return type === 'Bearer' ? token : undefined;
+    // Parsear las cookies y buscar el token
+    const parsedCookies = cookie.parse(cookies);
+    return parsedCookies['token']; // El nombre de la cookie con el JWT
   }
 }

@@ -1,10 +1,8 @@
 import { User, UserLogin } from "@/types/User";
 import axios from "./axios";
 
-export const verifyToken = (token:any) => axios.get("/auth/verifyToken", {
-    headers: {
-        "Authorization": `Bearer ${token}`
-    }
+export const verifyToken = () => axios.get("/auth/verifyToken", {
+   withCredentials: true,
 });
 
 export const loginApi = (data:UserLogin) => axios.post("/auth/login",data);

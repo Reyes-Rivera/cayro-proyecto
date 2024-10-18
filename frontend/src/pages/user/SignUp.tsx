@@ -76,21 +76,20 @@ export default function SignUpPage() {
 
   // Manejador para limpiar errores al escribir
   const handleInputChange = (field: keyof User, value: string) => {
-    setValue(field, value); // Actualiza el valor del campo en el formulario
-    clearErrors(field); // Limpia los errores del campo si el usuario escribe
+    setValue(field, value);
+    clearErrors(field);
   };
 
-  // Validar que la contraseña no contenga partes del nombre o la fecha de nacimiento
   const validatePasswordContent = (password: string, name: string, lastname: string, birthdate: string): boolean => {
     const lowercasePassword = password.toLowerCase();
+    const birthYear = birthdate ? new Date(birthdate).getFullYear().toString() : '';
     return (
       !lowercasePassword.includes(name.toLowerCase()) &&
       !lowercasePassword.includes(lastname.toLowerCase()) &&
-      (birthdate ? !lowercasePassword.includes(birthdate.replace(/-/g, '')) : true)
+      (birthYear ? !lowercasePassword.includes(birthYear) : true)
     );
   };
 
-  // Validar que el usuario tenga al menos 18 años
   const validateAge = (birthdate: Date): boolean => {
     const today = new Date();
     const birthDate = new Date(birthdate);
@@ -158,7 +157,7 @@ export default function SignUpPage() {
                       required: "El nombre es requerido",
                       minLength: { value: 3, message: "El nombre debe tener al menos 3 caracteres" },
                       maxLength: { value: 30, message: "El nombre no puede tener más de 30 caracteres" },
-                      pattern: { value: /^[a-zA-Z\s]+$/, message: "El nombre solo puede contener letras" },
+                      pattern: { value: /^[a-zA-ZÀ-ÿ\u00f1\u00d1\s]+$/, message: "El nombre solo puede contener letras" },
                     })}
                     onChange={(e) => handleInputChange('name', e.target.value)}
                     id="nombre"
@@ -175,7 +174,7 @@ export default function SignUpPage() {
                       required: "El apellido es requerido",
                       minLength: { value: 3, message: "El apellido debe tener al menos 3 caracteres" },
                       maxLength: { value: 50, message: "El apellido no puede tener más de 50 caracteres" },
-                      pattern: { value: /^[a-zA-Z\s]+$/, message: "El apellido solo puede contener letras" },
+                      pattern: { value: /^[a-zA-ZÀ-ÿ\u00f1\u00d1\s]+$/, message: "El apellido solo puede contener letras" },
                     })}
                     onChange={(e) => handleInputChange('surname', e.target.value)}
                     id="apellidos"
