@@ -8,12 +8,14 @@ import { Model } from 'mongoose';
 import * as crypto from 'crypto';
 import * as nodemailer from 'nodemailer';
 import axios from 'axios';
-
+import { JwtService } from '@nestjs/jwt';
+import { Role } from 'src/auth/roles/role.enum';
 @Injectable()
 export class UsersService {
   private codes = new Map<string, { code: string; expires: number }>();
   constructor(
-    @InjectModel(User.name) private userModel: Model<User>
+    @InjectModel(User.name) private userModel: Model<User>,
+    private jwtSvc: JwtService
 
   ) {
 
@@ -225,6 +227,78 @@ export class UsersService {
       console.log(error)
     }
   }
+  async recoverPassword(email: string) {
+    try {
+      const userFound = await this.userModel.findOne({ email });
+      if (!userFound) throw new NotFoundException(`El correo ${email} no se encuentra registrado.`);
+      const payload = { sub: userFound._id, role: Role.USER };
+      const token = this.jwtSvc.sign(payload, { expiresIn: "5m" });
+      const currentYear = new Date().getFullYear();
+      const html = `
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Recupera tu contraseña de tu cuenta en Cayro</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+                <tr>
+                    <td align="center" >
+                        <img src="https://res.cloudinary.com/dhhv8l6ti/image/upload/v1728748461/logo.png" alt="Cayro Uniformes" style="display: block; width: 150px; max-width: 100%; height: auto;">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 0px 30px;">
+                        <h1 style="color: #333333; font-size: 24px; margin-bottom: 20px; text-align: center;">Verifica tu cuenta de Cayro</h1>
+                        <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
+                            Hola,
+                        </p>
+                        <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
+                            Si has solicitado recuperar tu contraseña, por favor utiliza el siguiente enlace para restablecerla:
+                        </p>
+
+                        <div style="background-color: #f0f0f0; border-radius: 4px; padding: 20px; text-align: center; margin-bottom: 20px;">
+                            <a href="http://localhost:5173/change-password/${token}" style="font-size: 32px; font-weight: bold; color: #0099FF;">Recuperar contraseña</a>
+                        </div>
+                        <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
+                            Si no has solicitado esta recuperación, por favor ignora este correo.
+                        </p>
+                        <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
+                            Este enlace expirará en 5 minutos por razones de seguridad.
+                        </p>
+                        <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
+                            Si tienes alguna pregunta, no dudes en contactarnos.
+                        </p>
+                        <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
+                            Saludos,<br>
+                            El equipo de Cayro Uniformes
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="background-color: #27272A; padding: 20px 30px;">
+                        <p style="color: #ffffff; font-size: 14px; line-height: 1.5; margin: 0; text-align: center;">
+                            © ${currentYear} Cayro Uniformes. Todos los derechos reservados.
+                        </p>
+                        <p style="color: #ffffff; font-size: 14px; line-height: 1.5; margin: 10px 0 0; text-align: center;">
+                            <a href="#" style="color: #ffffff; text-decoration: none;">Política de Privacidad</a> | 
+                            <a href="#" style="color: #ffffff; text-decoration: none;">Términos de Servicio</a>
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </body>
+        </html>
+      `
+      this.sendEmail(email,"Recuperar contraseña",html);
+      return { message: "Codigo de verificación enviado." }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
   findAll() {
     return `This action returns all users`;
   }

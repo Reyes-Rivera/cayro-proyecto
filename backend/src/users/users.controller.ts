@@ -31,6 +31,14 @@ export class UsersController {
     return this.usersService.updatePassword(id,updatePass);
   }
 
+  @Post("recover-password")
+  async recoverPassword( @Body() body:{email:string}) {
+    console.log(body)
+    const {email} = body;
+    console.log(email)
+    return this.usersService.recoverPassword(email);
+  }
+
   @Get()
   findAll() {
     return this.usersService.findAll();
