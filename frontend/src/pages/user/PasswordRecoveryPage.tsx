@@ -14,13 +14,13 @@ export default function PasswordRecoveryPage() {
   const [email, setEmail] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
-  console.log(email)
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const res = await recoverPassword({email});
-      console.log(res)
-      if(res){
+      setIsSubmitting(true)
+      const res = await recoverPassword({ email });
+      if (res) {
+        setIsSubmitted(true);
         Swal.fire({
           icon: 'success',
           title: 'Recuperación de contraseña.',
@@ -28,7 +28,7 @@ export default function PasswordRecoveryPage() {
           confirmButtonColor: '#2F93D1',
         });
         return;
-      }else{
+      } else {
         Swal.fire({
           icon: 'error',
           title: 'Algo salio mal.',
@@ -37,23 +37,19 @@ export default function PasswordRecoveryPage() {
         });
         return;
       }
-      
-
-    } catch (error) {
-       Swal.fire({
+    } catch (error:any) {
+      console.log(error.response.data.message);
+      Swal.fire({
         icon: 'error',
-        title: 'Error en el servidor.',
-        text: 'Por favo, intentalo más tarde.',
+        title: 'Error al enviar.',
+        text: error.response.data.message,
         confirmButtonColor: '#2F93D1',
       });
-    
+
     }
-    e.preventDefault()
-    setIsSubmitting(true)
-    // Simular una llamada a la API
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    
     setIsSubmitting(false)
-    setIsSubmitted(true)
+    
   }
 
   return (

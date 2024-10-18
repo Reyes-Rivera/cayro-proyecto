@@ -8,6 +8,7 @@ import VerificationPage from "@/pages/user/VerificationPage";
 import ProtectedRouterVerification from "@/utils/ProtectedRouteCode";
 import UserDashboard from "@/pages/user/dashboard/UserDashboard";
 import ProtectedRouterAdmin from "@/utils/ProtectedRRouterUser";
+import PasswordResetPage from "@/pages/user/PasswordResetPage";
 const AppRoutes = () => {
   return (
     <>
@@ -19,6 +20,7 @@ const AppRoutes = () => {
                 <Route path='/sign-up' element={<SignUpPage/>}/>
                 <Route path='/login' element={<LoginPage/>}/>
                 <Route path='/password-recovery' element={<PasswordRecoveryPage/>}/>
+                  <Route path="/reset-password/:token" element={<PasswordResetPage/>}/>
                 <Route element={<ProtectedRouterAdmin/>}>
                   <Route path="/user-profile" element={<UserDashboard/>}/>
                 </Route>

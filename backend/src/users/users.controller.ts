@@ -33,10 +33,14 @@ export class UsersController {
 
   @Post("recover-password")
   async recoverPassword( @Body() body:{email:string}) {
-    console.log(body)
     const {email} = body;
-    console.log(email)
     return this.usersService.recoverPassword(email);
+  }
+
+  @Post("reset-password/:token")
+  async restorePassword(@Param("token")token:any, @Body() body:{password:string}) {
+    const {password} = body;
+    return this.usersService.restorePassword(password,token);
   }
 
   @Get()

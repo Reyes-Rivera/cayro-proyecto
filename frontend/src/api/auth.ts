@@ -20,3 +20,5 @@ export const resendCodeApi  = (email:any) => axios.post("/users/resend-code",ema
 export const resendCodeApiAuth  = (email:any) => axios.post("/auth/resend-code",email);
 
 export const recoverPassword  = (email:any) => axios.post("/users/recover-password",email);
+
+export const restorePassword  = (token:any,password:any) => axios.post(`/users/reset-password/${token}`,password);

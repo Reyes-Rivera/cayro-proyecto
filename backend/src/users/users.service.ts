@@ -225,7 +225,7 @@ export class UsersService {
         userFound.passwordsHistory.shift();
       }
       await userFound.save();
-      return userFound;
+      return {message:"Contraseña actualizada."};
     } catch (error) {
       console.log(error)
     }
@@ -263,7 +263,7 @@ export class UsersService {
                         </p>
 
                         <div style="background-color: #f0f0f0; border-radius: 4px; padding: 20px; text-align: center; margin-bottom: 20px;">
-                            <a href="http://localhost:5173/change-password/${token}" style="font-size: 32px; font-weight: bold; color: #0099FF;">Recuperar contraseña</a>
+                            <a href="http://localhost:5173/reset-password/${token}" style="font-size: 32px; font-weight: bold; color: #0099FF;">Recuperar contraseña</a>
                         </div>
                         <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
                             Si no has solicitado esta recuperación, por favor ignora este correo.
@@ -295,12 +295,87 @@ export class UsersService {
         </body>
         </html>
       `
-      this.sendEmail(email,"Recuperar contraseña",html);
+      this.sendEmail(email, "Recuperar contraseña", html);
       return { message: "Codigo de verificación enviado." }
     } catch (error) {
-      console.log(error)
+      console.log(error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException('Error interno del servidor', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+
+
+
+  async restorePassword(password: string, token: any) {
+    try {
+      const decoded = this.jwtSvc.verify(token, { secret: process.env.JWT_SECRET_REST_PASS });
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const userFound = await this.userModel.findById(decoded.sub);
+      if (!userFound) throw new NotFoundException("El usuario no existe.");
+      // Extraer nombre, apellido y año de nacimiento
+      const validatePasswordContent = (password: string, name: string, lastname: string, birthdate: Date): boolean => {
+        const lowercasePassword = password.toLowerCase();
+        const lowercaseName = name.toLowerCase();
+        const lowercaseLastname = lastname.toLowerCase();
+
+        // Extraer el año de nacimiento si existe
+        const birthYear = birthdate ? new Date(birthdate).getFullYear().toString() : '';
+
+        return (
+          !lowercasePassword.includes(lowercaseName) &&  // Verificar si el nombre no está en la contraseña
+          !lowercasePassword.includes(lowercaseLastname) &&  // Verificar si el apellido no está en la contraseña
+          (birthYear ? !lowercasePassword.includes(birthYear) : true)  // Verificar el año si está presente
+        );
+      };
+
+      const isValidPassword = validatePasswordContent(password, userFound.name, userFound.surname, userFound.birthday);
+      if (!isValidPassword) {
+        throw new ConflictException("La contraseña no puede contener el nombre, apellido o año de nacimiento.");
+      }
+      if (userFound._id == decoded.sub) {
+        const compromised = await this.isPasswordCompromised(password);
+        if (compromised) {
+          throw new ConflictException("Esta contraseña ha sido comprometida. Por favor elige una diferente.");
+        };
+
+        const isInHistory = userFound.passwordsHistory.some(entry =>
+          bcrypt.compareSync(password, entry.password)
+        );
+        if (isInHistory) {
+          throw new ConflictException('No puedes reutilizar contraseñas anteriores.');
+        }
+
+        const currentDate = new Date();
+        const newPasswordExpiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
+
+        userFound.password = hashedPassword;
+        userFound.passwordSetAt = currentDate;
+        userFound.passwordExpiresAt = newPasswordExpiresAt;
+
+        userFound.passwordsHistory.push({
+          password: hashedPassword,
+          createdAt: currentDate
+        });
+
+        if (userFound.passwordsHistory.length > 5) {
+          userFound.passwordsHistory.shift();
+        }
+        await userFound.save();
+        return {message:"Contraseña actualizada."};
+      }
+    } catch (error) {
+      if (error.name === 'TokenExpiredError') {
+        throw new ConflictException('El token ha expirado. Solicita un nuevo enlace para restablecer tu contraseña.');
+      }
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException('Error interno del servidor', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
 
   findAll() {
     return `This action returns all users`;

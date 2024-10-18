@@ -191,7 +191,9 @@ export class AuthService {
     userFound.loginAttempts = 0;
     await userFound.save();
     if (userFound.role === Role.USER && userFound.active === true) {
-      this.sendCode(loginDto.email);
+      const res = await this.sendCode(loginDto.email);
+      console.log(res);
+      
     }
     const { password, ...rest } = userFound.toObject();
     return { ...rest }
