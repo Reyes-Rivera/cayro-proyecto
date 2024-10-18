@@ -10,27 +10,32 @@ import { UsersService } from 'src/users/users.service';
 import * as crypto from 'crypto';
 import * as nodemailer from 'nodemailer';
 import { Employee } from 'src/employees/schemas/Eployee.schema';
+import * as postmark from 'postmark';
 
 @Injectable()
 export class AuthService {
+  private client: postmark.ServerClient;
+  
   private codes = new Map<string, { code: string; expires: number }>();
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(Employee.name) private employeeModel: Model<Employee>,
     private jwtSvc: JwtService,
     private readonly usersService: UsersService,
-  ) { }
-
+  ) { 
+    this.client = new postmark.ServerClient(process.env.POSTMARK_API_KEY)
+  }
+  
   async sendEmail(correo, subject, html) {
     var transporter = nodemailer.createTransport({
       service: 'gmail',
+      port:587,
+      secure: false,
       auth: {
         user: 'cayrouniformes38@gmail.com',
         pass: 'qewd ahzb vplo arua'
       },
-      tls: {
-        rejectUnauthorized: false,
-      }
+      
     });
 
     var mailOptions = {

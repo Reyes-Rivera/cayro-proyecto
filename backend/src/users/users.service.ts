@@ -27,9 +27,7 @@ export class UsersService {
         user: 'cayrouniformes38@gmail.com',
         pass: 'qewd ahzb vplo arua'
       },
-      tls: {
-        rejectUnauthorized: false, // Asegúrate de que no haya problemas de certificado TLS
-      },
+      
     });
 
     var mailOptions = {
