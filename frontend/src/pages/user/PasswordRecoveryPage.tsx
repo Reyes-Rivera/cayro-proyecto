@@ -6,13 +6,48 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import img from "../../assets/password-update.png";
-import { Link } from "react-router-dom"
+import { Link } from "react-router-dom";
+import Swal from 'sweetalert2';
+import 'sweetalert2/src/sweetalert2.scss';
+import { recoverPassword } from '@/api/auth';
 export default function PasswordRecoveryPage() {
   const [email, setEmail] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
-
+  console.log(email)
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    try {
+      const res = await recoverPassword({email});
+      console.log(res)
+      if(res){
+        Swal.fire({
+          icon: 'success',
+          title: 'Recuperación de contraseña.',
+          text: 'Se ha enviado un correo con las instrucciones para la recuperación de su contraseña.',
+          confirmButtonColor: '#2F93D1',
+        });
+        return;
+      }else{
+        Swal.fire({
+          icon: 'error',
+          title: 'Algo salio mal.',
+          text: 'Por favor, intentalo más tarde.',
+          confirmButtonColor: '#2F93D1',
+        });
+        return;
+      }
+      
+
+    } catch (error) {
+       Swal.fire({
+        icon: 'error',
+        title: 'Error en el servidor.',
+        text: 'Por favo, intentalo más tarde.',
+        confirmButtonColor: '#2F93D1',
+      });
+    
+    }
     e.preventDefault()
     setIsSubmitting(true)
     // Simular una llamada a la API
