@@ -12,8 +12,8 @@ import 'sweetalert2/src/sweetalert2.scss';
 import { recoverPassword } from '@/api/auth';
 export default function PasswordRecoveryPage() {
   const [email, setEmail] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isSubmitted, setIsSubmitted] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {

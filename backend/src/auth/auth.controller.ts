@@ -9,6 +9,11 @@ import { AuthGuard } from './auth.guard';
 export class AuthController {
   constructor(private readonly authService: AuthService) { }
 
+  @Get('csrf-token')
+  getCsrfToken(@Req() request: Request) {
+    return { csrfToken: request.csrfToken() };
+  }
+
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response) {
@@ -28,7 +33,7 @@ export class AuthController {
 
     // Configura la cookie con el token JWT
     res.setHeader('Set-Cookie', cookie.serialize('token', result.token, {
-      httpOnly:   true,
+      httpOnly:   false,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'none',
       maxAge: 60 * 60 * 24 * 7,

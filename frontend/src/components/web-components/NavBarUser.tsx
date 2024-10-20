@@ -9,35 +9,39 @@ import 'sweetalert2/src/sweetalert2.scss';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useNavigate } from 'react-router-dom';
+import { ThemeToggle } from "@/components/web-components/ThemeToggle";
 
 const NavBarUser = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { auth, user, signOut } = useAuth();
+  const navigate = useNavigate();
+
   const handleLogout = async () => {
     const res = await signOut();
     if (res) {
       Swal.fire({
         icon: 'success',
         title: 'Sesión cerrada.',
-        text: 'La se sesión se ha cerrado correctamente.',
+        text: 'La sesión se ha cerrado correctamente.',
         confirmButtonColor: '#2F93D1',
       });
       navigate("/login");
       return;
     }
   }
-  const navigate= useNavigate();
+
   const handleGoToProfile = () => {
-    if(user?.role === "ADMIN"){
+    if (user?.role === "ADMIN") {
       navigate("/admin-profile");
     }
-    if(user?.role === "USER"){
+    if (user?.role === "USER") {
       navigate("/user-profile");
     }
   }
+
   return (
     <div>
-      <nav className="bg-white shadow-sm">
+      <nav className="bg-gray-50 shadow-sm dark:bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
@@ -46,7 +50,7 @@ const NavBarUser = () => {
                 <img
                   src={Logo}
                   alt="Cayro Uniformes"
-                  className='w-32'
+                  className="w-32 dark:filter dark:drop-shadow-white"
                 />
               </div>
             </div>
@@ -56,8 +60,8 @@ const NavBarUser = () => {
                 to="/"
                 className={({ isActive }) =>
                   isActive
-                    ? "border-[#2F93D1] text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                    : "border-transparent text-gray-500 hover:border-[#2F93D1] hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                    ? "border-[#2F93D1] text-gray-700 dark:text-gray-100 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                    : "border-transparent text-gray-500 dark:text-gray-300 hover:border-[#2F93D1] hover:text-gray-700 dark:hover:text-gray-100 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
                 }
               >
                 Inicio
@@ -66,82 +70,54 @@ const NavBarUser = () => {
                 to="/productos"
                 className={({ isActive }) =>
                   isActive
-                    ? "border-[#2F93D1] text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                    : "border-transparent text-gray-500 hover:border-[#2F93D1] hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                    ? "border-[#2F93D1] text-gray-700 dark:text-gray-100 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                    : "border-transparent text-gray-500 dark:text-gray-300 hover:border-[#2F93D1] hover:text-gray-700 dark:hover:text-gray-100 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
                 }
               >
                 Productos
               </NavLink>
-              <NavLink
-                to="/sobre-nosotros"
-                className={({ isActive }) =>
-                  isActive
-                    ? "border-[#2F93D1] text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                    : "border-transparent text-gray-500 hover:border-[#2F93D1] hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                }
-              >
-                Sobre Nosotros
-              </NavLink>
-              <NavLink
-                to="/contacto"
-                className={({ isActive }) =>
-                  isActive
-                    ? "border-[#2F93D1] text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                    : "border-transparent text-gray-500 hover:border-[#2F93D1] hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                }
-              >
-                Contacto
-              </NavLink>
 
-              {
-                auth ? (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="flex items-center space-x-2">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src="/placeholder.svg?height=32&width=32" alt="Avatar" />
-                          <AvatarFallback>JD</AvatarFallback>
-                        </Avatar>
-                        <span className="hidden md:inline-block">{user?.name}</span>
-                        <ChevronDown className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>
-                        <User className="mr-2 h-4 w-4" />
-                        <span
-                          className='cursor-pointer w-full'
-                         onClick={handleGoToProfile}
-                        >
-                         Pefil
-                        </span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <LogOut className="mr-2 h-4 w-4" />
-                        <span
-                          className='cursor-pointer w-full'
-                         onClick={handleLogout}
-                        >
-                         Cerrar sesión
-                        </span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                ) : (
-                  <NavLink
-                    to="/login"
-                    className={" bg-[#2F93D1] text-white p-1 rounded-md"}
-                  >
-                    Iniciar sesión
-                  </NavLink>
-                )
-              }
+              {auth ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="flex items-center space-x-2">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src="/placeholder.svg?height=32&width=32" alt="Avatar" />
+                        <AvatarFallback>JD</AvatarFallback>
+                      </Avatar>
+                      <span className="hidden md:inline-block text-gray-700 dark:text-gray-100">{user?.name}</span>
+                      <ChevronDown className="h-4 w-4 text-gray-700 dark:text-gray-100" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="dark:bg-gray-800">
+                    <DropdownMenuItem>
+                      <User className="mr-2 h-4 w-4 text-gray-700 dark:text-gray-100" />
+                      <span className="cursor-pointer w-full text-gray-700 dark:text-gray-100" onClick={handleGoToProfile}>
+                        Perfil
+                      </span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <LogOut className="mr-2 h-4 w-4 text-gray-700 dark:text-gray-100" />
+                      <span className="cursor-pointer w-full text-gray-700 dark:text-gray-100" onClick={handleLogout}>
+                        Cerrar sesión
+                      </span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <NavLink to="/login" className="bg-[#2F93D1] text-white dark:text-gray-100 p-1 rounded-md">
+                  Iniciar sesión
+                </NavLink>
+              )}
+              <ThemeToggle />
             </div>
             {/* Mobile Menu Button */}
-            <div className="-mr-2 flex items-center sm:hidden">
+            <div className=" flex items-center sm:hidden gap-3">
+              <ThemeToggle />
+
               <Button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#2F93D1] bg-transparent"
+                className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 dark:text-gray-100 hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#2F93D1] bg-transparent dark:bg-slate-950"
               >
                 <span className="sr-only">Abrir menú principal</span>
                 {isMenuOpen ? (
@@ -159,34 +135,51 @@ const NavBarUser = () => {
           <div className="pt-2 pb-3 space-y-1">
             <NavLink
               to="/"
-              className="border-transparent text-gray-500 hover:bg-gray-50 hover:border-[#2F93D1] hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+              className="border-transparent text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-[#2F93D1] hover:text-gray-700 dark:hover:text-gray-100 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
             >
               Inicio
             </NavLink>
             <NavLink
               to="/productos"
-              className="border-transparent text-gray-500 hover:bg-gray-50 hover:border-[#2F93D1] hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+              className="border-transparent text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-[#2F93D1] hover:text-gray-700 dark:hover:text-gray-100 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
             >
               Productos
             </NavLink>
-            <NavLink
-              to="/sobre-nosotros"
-              className="border-transparent text-gray-500 hover:bg-gray-50 hover:border-[#2F93D1] hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
-            >
-              Sobre Nosotros
-            </NavLink>
-            <NavLink
-              to="/contacto"
-              className="border-transparent text-gray-500 hover:bg-gray-50 hover:border-[#2F93D1] hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
-            >
-              Contacto
-            </NavLink>
-            <NavLink
-              to="/login"
-              className="border-transparent text-gray-500 hover:bg-gray-50 hover:border-[#2F93D1] hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
-            >
-              Login
-            </NavLink>
+
+
+            {auth ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center space-x-2">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src="/placeholder.svg?height=32&width=32" alt="Avatar" />
+                      <AvatarFallback>JD</AvatarFallback>
+                    </Avatar>
+                    <span className="hidden md:inline-block text-gray-700 dark:text-gray-100">{user?.name}</span>
+                    <ChevronDown className="h-4 w-4 text-gray-700 dark:text-gray-100" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="dark:bg-gray-800">
+                  <DropdownMenuItem>
+                    <User className="mr-2 h-4 w-4 text-gray-700 dark:text-gray-100" />
+                    <span className="cursor-pointer w-full text-gray-700 dark:text-gray-100" onClick={handleGoToProfile}>
+                      Perfil
+                    </span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <LogOut className="mr-2 h-4 w-4 text-gray-700 dark:text-gray-100" />
+                    <span className="cursor-pointer w-full text-gray-700 dark:text-gray-100" onClick={handleLogout}>
+                      Cerrar sesión
+                    </span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <NavLink to="/login" className="border-transparent text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-[#2F93D1] hover:text-gray-700 dark:hover:text-gray-100 block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                Iniciar sesión
+              </NavLink>
+            )}
+
           </div>
         </div>
       </nav>

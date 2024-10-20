@@ -47,7 +47,7 @@ export class Employee {
     gender: string;
 
     @Prop({trim:true,required:true })
-    role: string;
+    role: Role;
 }
 
 export const EmployeeSchema = SchemaFactory.createForClass(Employee);

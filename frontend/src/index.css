@@ -1,15 +1,40 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 @layer base {
   :root {
-    --radius: 0.5rem
+    --radius: 0.5rem;
   }
-}
+  @layer utilities {
+    .drop-shadow-white {
+      filter: drop-shadow(0 4px 4px rgba(216, 204, 204, 0.966)); /* Ajusta los valores según lo que prefieras */
+    }
+  }
+  
+  /* Estilos para modo claro */
+  body {
+    @apply bg-gray-100 text-gray-900;
+  }
 
-.container-bg{
-  @apply bg-gray-100/70
-}
-a,p,h1,h2,h3,h4,h5,h6,input,div,ul,li{
-  font-family: sans-serif !important;
+  /* Estilos para modo oscuro */
+  .dark body {
+    @apply bg-gray-900 text-gray-100;
+  }
+
+  .container-bg {
+    @apply bg-gray-100/70 dark:bg-gray-800/70;
+  }
+
+  a, p, h1, h2, h3, h4, h5, h6, input, div, ul, li {
+    font-family: sans-serif !important;
+  }
+
+  .bg-blue-cayro {
+    background-color: #2F93D1;
+  }
+
+  .text {
+    color: #2F93D1;
+  }
 }

@@ -1,4 +1,4 @@
-import { ConflictException, ForbiddenException, HttpException, HttpStatus, Injectable, NotFoundException, Request } from '@nestjs/common';
+import { ConflictException, ForbiddenException, HttpException, HttpStatus, Injectable, InternalServerErrorException, NotFoundException, Request } from '@nestjs/common';
 import { LoginDto } from './dto/login-auth.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from 'src/users/schemas/User.Schema';
@@ -11,6 +11,7 @@ import * as crypto from 'crypto';
 import * as nodemailer from 'nodemailer';
 import { Employee } from 'src/employees/schemas/Eployee.schema';
 import * as postmark from 'postmark';
+import { UserActivity } from 'src/user-activity/schema/UserActivitySchema';
 
 @Injectable()
 export class AuthService {
@@ -20,6 +21,7 @@ export class AuthService {
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(Employee.name) private employeeModel: Model<Employee>,
+    @InjectModel(UserActivity.name) private userActivityModel: Model<UserActivity>,
     private jwtSvc: JwtService,
     private readonly usersService: UsersService,
   ) { 
@@ -29,8 +31,6 @@ export class AuthService {
   async sendEmail(correo, subject, html) {
     var transporter = nodemailer.createTransport({
       service: 'gmail',
-      port:587,
-      secure: false,
       auth: {
         user: 'cayrouniformes38@gmail.com',
         pass: 'qewd ahzb vplo arua'
@@ -44,14 +44,19 @@ export class AuthService {
       subject: subject,
       html: html
     };
-
-    transporter.sendMail(mailOptions, function (error, info) {
-      if (error) {
-        console.log(error);
-      } else {
-        return ({ status: 'success' });
-      }
-    });
+    try {
+      await transporter.sendMail(mailOptions);
+    } catch (error) {
+      console.log(error)
+      throw new InternalServerErrorException("Error al enviar el correo de recuperación,");
+    }
+    // transporter.sendMail(mailOptions, function (error, info) {
+    //   if (error) {
+    //     console.log(error);
+    //   } else {
+    //     return ({ status: 'success' });
+    //   }
+    // });
   }
   async verifyCode(userEmail: string, code: string) {
 
@@ -76,20 +81,25 @@ export class AuthService {
     let expiresIn: any;
     switch (userFound.role) {
       case Role.ADMIN:
-        expiresIn = '8h'; // Por ejemplo, 7 días para administradores
+        expiresIn = '8h';
         break;
       case Role.USER:
-        expiresIn = '1d'; // 1 día para usuarios regulares
+        expiresIn = '1d'; 
         break;
       case Role.EMPLOYEE:
-        expiresIn = '4h'; // 1 hora para invitados
+        expiresIn = '4h'; 
         break;
       default:
-        expiresIn = '1h'; // Valor por defecto
+        expiresIn = '1h'; 
     }
     const { password, ...rest } = userFound.toObject();
     const payload = { sub: userFound._id, role: userFound.role };
     const token = this.jwtSvc.sign(payload, { expiresIn });
+    const res = new this.userActivityModel({
+      email:userFound.email,
+      action:"Inicio de sesión."
+    });
+    await res.save();
     return { user: { ...rest, role: userFound.role }, token }
 
   }
@@ -166,7 +176,6 @@ export class AuthService {
     // Buscar al usuario en la colección de usuarios
     let userFound = await this.userModel.findOne({ email: loginDto.email });
 
-    // Si no se encuentra en la colección de usuarios, buscar en la colección de empleados
     if (!userFound) {
       userFound = await this.employeeModel.findOne({ email: loginDto.email });
       if (!userFound) {
@@ -201,11 +210,21 @@ export class AuthService {
 
       // Bloquear la cuenta por 5 minutos después de 3 intentos fallidos
       if (userFound.loginAttempts === 3) {
+        const res = new this.userActivityModel({
+          email:loginDto.email,
+          action:"Cuenta bloqueada por 5 minutos."
+        })
+        await res.save();
         userFound.lockUntil = new Date(Date.now() + 5 * 60 * 1000);
       }
 
       // Bloquear la cuenta por 10 minutos después de 5 intentos fallidos y reiniciar los intentos
       if (userFound.loginAttempts === 5) {
+        const res = new this.userActivityModel({
+          email:loginDto.email,
+          action:"Cuenta bloqueada por 10 minutos."
+        })
+        await res.save();
         userFound.lockUntil = new Date(Date.now() + 10 * 60 * 1000);
         userFound.loginAttempts = 0;
       }

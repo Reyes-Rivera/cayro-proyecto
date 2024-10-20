@@ -11,6 +11,7 @@ import PasswordResetPage from "@/pages/user/PasswordResetPage";
 import ProtectedRouterUser from "@/utils/ProtectedRRouterUser";
 import ProtectedRouterAdmin from "@/utils/ProtectedRouterAdmin";
 import AdminDashboard from "@/pages/employees/dashboard-admin/AdminDashboard";
+import HomePage from "@/pages/web/HomePage";
 const AppRoutes = () => {
   return (
     <>
@@ -19,6 +20,8 @@ const AppRoutes = () => {
         </div>
         <div className="mt-12 container-bg">
             <Routes>
+
+                <Route path='/' element={<HomePage/>}/>
                 <Route path='/sign-up' element={<SignUpPage/>}/>
                 <Route path='/login' element={<LoginPage/>}/>
                 <Route path='/password-recovery' element={<PasswordRecoveryPage/>}/>

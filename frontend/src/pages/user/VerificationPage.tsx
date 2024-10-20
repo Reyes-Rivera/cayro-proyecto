@@ -87,7 +87,13 @@ export default function VerificationPage() {
           localStorage.removeItem('isVerificationPending');
           localStorage.removeItem('emailToVerify');
           setIsVerified(true);
-          navigate('/user-profile');
+          if(response.data.role === "ADMIN"){
+            navigate('/admin-profile');
+          }
+          if(response.data.role === "USER"){
+
+            navigate('/user-profile');
+          }
         }, 1000);
 
       } else {
@@ -154,7 +160,7 @@ export default function VerificationPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-100">
+    <div className="flex flex-col min-h-screen ">
 
       {/* Main Content */}
       <div className="flex-grow flex items-center justify-center px-4 sm:px-6 lg:px-8">

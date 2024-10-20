@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, HttpException, HttpStatus, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { PasswordUpdate, UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
@@ -10,13 +10,14 @@ import * as nodemailer from 'nodemailer';
 import axios from 'axios';
 import { JwtService } from '@nestjs/jwt';
 import { Role } from 'src/auth/roles/role.enum';
+import { UserActivity } from 'src/user-activity/schema/UserActivitySchema';
 @Injectable()
 export class UsersService {
   private codes = new Map<string, { code: string; expires: number }>();
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
+    @InjectModel(UserActivity.name) private userActivityModel: Model<UserActivity>,
     private jwtSvc: JwtService
-
   ) {
 
   }
@@ -27,7 +28,7 @@ export class UsersService {
         user: 'cayrouniformes38@gmail.com',
         pass: 'qewd ahzb vplo arua'
       },
-      
+
     });
 
     var mailOptions = {
@@ -36,14 +37,14 @@ export class UsersService {
       subject: subject,
       html: html
     };
-
-    transporter.sendMail(mailOptions, function (error, info) {
-      if (error) {
-        console.log(error);
-      } else {
-        return ({ status: 'success' });
-      }
-    });
+    try {
+      await transporter.sendMail(mailOptions);
+      console.log("codigo enviado")
+    } catch (error) {
+      console.log(error)
+      throw new InternalServerErrorException("Error al enviar el correo de recuperación,");
+    }
+    
   }
   async sendCode(email: string) {
     try {
@@ -223,7 +224,12 @@ export class UsersService {
         userFound.passwordsHistory.shift();
       }
       await userFound.save();
-      return {message:"Contraseña actualizada."};
+      const res = new this.userActivityModel({
+        email:userFound.email,
+        action:"Cambio de contraseña.",
+      })
+      await res.save();
+      return { message: "Contraseña actualizada." };
     } catch (error) {
       console.log(error)
     }
@@ -304,8 +310,6 @@ export class UsersService {
     }
   }
 
-
-
   async restorePassword(password: string, token: any) {
     try {
       const decoded = this.jwtSvc.verify(token, { secret: process.env.JWT_SECRET_REST_PASS });
@@ -361,7 +365,12 @@ export class UsersService {
           userFound.passwordsHistory.shift();
         }
         await userFound.save();
-        return {message:"Contraseña actualizada."};
+        const res = new this.userActivityModel({
+          email:userFound.email,
+          action:"Recuperación de contraseña.",
+        })
+        await res.save();
+        return { message: "Contraseña actualizada." };
       }
     } catch (error) {
       if (error.name === 'TokenExpiredError') {

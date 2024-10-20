@@ -7,16 +7,18 @@ import { User, UserSchema } from 'src/users/schemas/User.Schema';
 import { UsersModule } from 'src/users/users.module';
 import { ConfigModule } from '@nestjs/config';
 import { Employee, EmployeeSchema } from 'src/employees/schemas/Eployee.schema';
+import { UserActivity, UserActivitySchema } from 'src/user-activity/schema/UserActivitySchema';
 @Module({
-  imports:[
+  imports: [
     ConfigModule.forRoot(),
     JwtModule.register({
-      global:true,
+      global: true,
       secret: "fhf fhslxo ahs",
     }),
     MongooseModule.forFeature([
-      {name:User.name,schema:UserSchema},
-    { name: Employee.name, schema: EmployeeSchema },
+      { name: User.name, schema: UserSchema },
+      { name: Employee.name, schema: EmployeeSchema },
+      { name: UserActivity.name, schema: UserActivitySchema },
 
     ]),
     UsersModule
@@ -24,4 +26,4 @@ import { Employee, EmployeeSchema } from 'src/employees/schemas/Eployee.schema';
   controllers: [AuthController],
   providers: [AuthService],
 })
-export class AuthModule {}
+export class AuthModule { }
