@@ -6,6 +6,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from './auth/auth.module';
 import { EmployeesModule } from './employees/employees.module';
 import { UserActivityModule } from './user-activity/user-activity.module';
+import { RegulatoryDocumentModule } from './regulatory-document/regulatory-document.module';
+import { CompanyProfileModule } from './company-profile/company-profile.module';
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -14,6 +16,8 @@ import { UserActivityModule } from './user-activity/user-activity.module';
     AuthModule,
     EmployeesModule,
     UserActivityModule,
+    RegulatoryDocumentModule,
+    CompanyProfileModule,
   ],
   controllers: [],
   providers: [AppService],
