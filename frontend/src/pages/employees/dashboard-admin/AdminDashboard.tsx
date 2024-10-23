@@ -1,14 +1,16 @@
 import { useState } from 'react'
-import { User, Settings, Menu, File } from 'lucide-react'
+import { User, Menu, File, Briefcase, Settings } from 'lucide-react' // Añadir icono de empresa
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 
 // Componentes para las diferentes pestañas
 import PrivacyPolicies from './PrivacyPolicies'
-// import TermsConditions from './TermsConditions'
-// import LegalDisclaimer from './LegalDisclaimer'
 import UserProfile from './AdminProfile'
+import ProfileCompany from './ProfileCompany' // Importar el componente de perfil de la empresa
+import TemrsPage from './TermsPage'
+import BoundaryPage from './Boundary'
+import Configuration from './Configuration' // Importar el componente de configuración
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('profile')
@@ -21,10 +23,10 @@ export default function AdminDashboard() {
       switch (documentTab) {
         case 'privacy':
           return <PrivacyPolicies />
-        // case 'terms':
-        //   return <TermsConditions />
-        // case 'disclaimer':
-        //   return <LegalDisclaimer />
+        case 'terms':
+          return <TemrsPage />
+        case 'disclaimer':
+          return <BoundaryPage />
         default:
           return <PrivacyPolicies />
       }
@@ -33,6 +35,10 @@ export default function AdminDashboard() {
     switch (activeTab) {
       case 'profile':
         return <UserProfile />
+      case 'company': // Nueva pestaña para el perfil de la empresa
+        return <ProfileCompany />
+      case 'settings': // Pestaña de configuración
+        return <Configuration />
       default:
         return <UserProfile />
     }
@@ -67,6 +73,17 @@ export default function AdminDashboard() {
                   >
                     <User className="mr-2 h-5 w-5" />
                     Perfil del Administrador
+                  </Button>
+                  <Button
+                    variant={activeTab === 'company' ? 'secondary' : 'ghost'} // Nueva opción
+                    className={`w-full justify-start ${activeTab === 'company' ? 'bg-blue-500 dark:bg-blue-600 text-white' : 'text-gray-900 dark:text-gray-100'}`}
+                    onClick={() => {
+                      setActiveTab('company')
+                      setIsMobileMenuOpen(false) // Cierra el menú al seleccionar una opción
+                    }}
+                  >
+                    <Briefcase className="mr-2 h-5 w-5" />
+                    Perfil de la Empresa
                   </Button>
                   <Button
                     variant={activeTab === 'policies' ? 'secondary' : 'ghost'}
@@ -108,6 +125,14 @@ export default function AdminDashboard() {
                   Perfil del Administrador
                 </Button>
                 <Button
+                  variant={activeTab === 'company' ? 'secondary' : 'ghost'}
+                  className={`w-full justify-start ${activeTab === 'company' ? 'bg-blue-500 dark:bg-blue-600 text-white' : 'text-gray-900 dark:text-gray-100'}`}
+                  onClick={() => setActiveTab('company')}
+                >
+                  <Briefcase className="mr-2 h-5 w-5" />
+                  Perfil de la Empresa
+                </Button>
+                <Button
                   variant={activeTab === 'policies' ? 'secondary' : 'ghost'}
                   className={`w-full justify-start ${activeTab === 'policies' ? 'bg-blue-500 dark:bg-blue-600 text-white' : 'text-gray-900 dark:text-gray-100'}`}
                   onClick={() => setActiveTab('policies')}
@@ -130,7 +155,7 @@ export default function AdminDashboard() {
           {/* Contenido principal */}
           <div className="flex-1 mt-6 md:mt-0 md:ml-6">
             {activeTab === 'policies' && (
-              <div className="mb-4 flex flex-wrap  md:justify-start md:space-x-4">
+              <div className="mb-4 flex flex-wrap md:justify-start md:space-x-4">
                 <Button
                   variant={documentTab === 'privacy' ? 'secondary' : 'ghost'}
                   onClick={() => setDocumentTab('privacy')}
@@ -179,7 +204,8 @@ function getTabTitle(tab: string, documentTab: string) {
 
   switch (tab) {
     case 'profile': return 'Perfil del Administrador'
-    case 'settings': return 'Configuración del Sistema'
+    case 'company': return 'Perfil de la Empresa' // Nueva pestaña
+    case 'settings': return 'Configuración del Sistema' // Nueva pestaña
     default: return 'Perfil del Administrador'
   }
 }
@@ -196,7 +222,8 @@ function getTabDescription(tab: string, documentTab: string) {
 
   switch (tab) {
     case 'profile': return 'Gestiona tu información personal y de acceso'
-    case 'settings': return 'Configura los ajustes del sistema'
+    case 'company': return 'Gestiona el perfil público de tu empresa' // Descripción del perfil de la empresa
+    case 'settings': return 'Configura los ajustes del sistema' // Descripción para la configuración
     default: return 'Gestiona tu información personal y de acceso'
   }
 }

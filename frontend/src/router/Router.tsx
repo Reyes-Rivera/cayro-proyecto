@@ -12,7 +12,16 @@ import ProtectedRouterUser from "@/utils/ProtectedRRouterUser";
 import ProtectedRouterAdmin from "@/utils/ProtectedRouterAdmin";
 import AdminDashboard from "@/pages/employees/dashboard-admin/AdminDashboard";
 import HomePage from "@/pages/web/HomePage";
+import { useEffect } from "react";
+import { getCompanyInfoApi } from "@/api/company";
 const AppRoutes = () => {
+  useEffect(()=>{
+    const getInfoPage = async() => {
+        const res = getCompanyInfoApi();
+        document.title = (await res).data[0]?.title;
+    };
+    getInfoPage();
+  },[]);
   return (
     <>
         <div className="fixed w-full z-50 top-0">

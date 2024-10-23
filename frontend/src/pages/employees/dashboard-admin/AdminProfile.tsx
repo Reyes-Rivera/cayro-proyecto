@@ -18,22 +18,16 @@ export default function AdminProfile() {
                     </Avatar>
                     <div>
                         <h3 className="text-xl font-semibold">{user?.name} {user?.surname}</h3>
-                        <p className="text-gray-500">{user?.email}</p>
                         <p className="text-gray-500">{user?.role}</p>
                     </div>
                 </div>
                 <Separator className="my-4" />
                 <div className="space-y-4">
-                    <div>
-                        <h4 className="text-sm font-medium">Biografía</h4>
-                        <p className="text-sm text-gray-500">
-                            Administrador experimentado con más de 10 años en gestión de sistemas y políticas de privacidad.
-                        </p>
-                    </div>
+                    
                     <div>
                         <h4 className="text-sm font-medium">Información de Contacto</h4>
-                        <p className="text-sm text-gray-500">Teléfono: +34 123 456 789</p>
-                        <p className="text-sm text-gray-500">Oficina: Madrid, España</p>
+                        <p className="text-sm text-gray-500">Teléfono: {user?.phone}</p>
+                        <p className="text-sm text-gray-500">Correo: {user?.email}</p>
                     </div>
                 </div>
             </CardContent>

@@ -1,7 +1,6 @@
 import { ChevronDown, LogOut, Menu, User, X } from 'lucide-react';
-import Logo from "../../assets/Logo.png";
 import { Button } from "@/components/ui/button";
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContextType';
 import Swal from 'sweetalert2';
@@ -10,11 +9,13 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useNavigate } from 'react-router-dom';
 import { ThemeToggle } from "@/components/web-components/ThemeToggle";
+import { getCompanyInfoApi } from '@/api/company';
 
 const NavBarUser = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { auth, user, signOut } = useAuth();
   const navigate = useNavigate();
+  const [logo, setLogo] = useState();
 
   const handleLogout = async () => {
     const res = await signOut();
@@ -38,7 +39,13 @@ const NavBarUser = () => {
       navigate("/user-profile");
     }
   }
-
+  useEffect(() => {
+    const getInfoPage = async () => {
+      const res = getCompanyInfoApi();
+      setLogo((await res).data[0].logoUrl);
+    };
+    getInfoPage();
+  }, []);
   return (
     <div>
       <nav className="bg-gray-50 shadow-sm dark:bg-gray-900">
@@ -48,7 +55,7 @@ const NavBarUser = () => {
               {/* Logo */}
               <div className="flex-shrink-0">
                 <img
-                  src={Logo}
+                  src={logo}
                   alt="Cayro Uniformes"
                   className="w-32 dark:filter dark:drop-shadow-white"
                 />
@@ -66,16 +73,7 @@ const NavBarUser = () => {
               >
                 Inicio
               </NavLink>
-              <NavLink
-                to="/productos"
-                className={({ isActive }) =>
-                  isActive
-                    ? "border-[#2F93D1] text-gray-700 dark:text-gray-100 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                    : "border-transparent text-gray-500 dark:text-gray-300 hover:border-[#2F93D1] hover:text-gray-700 dark:hover:text-gray-100 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                }
-              >
-                Productos
-              </NavLink>
+
 
               {auth ? (
                 <DropdownMenu>
@@ -139,12 +137,7 @@ const NavBarUser = () => {
             >
               Inicio
             </NavLink>
-            <NavLink
-              to="/productos"
-              className="border-transparent text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-[#2F93D1] hover:text-gray-700 dark:hover:text-gray-100 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
-            >
-              Productos
-            </NavLink>
+
 
 
             {auth ? (

@@ -1,9 +1,7 @@
-import { Types } from "mongoose";
-
 export interface SocialLinks {
     platform: string;
     url: string;
-    _id?: Types.ObjectId;
+    _id?: string;
 }
 export interface ContactInfo {
     email: string;
@@ -15,13 +13,14 @@ export interface Audit {
     adminId: string;
     date: Date;
 }
-export class CompanyProfile {
+export interface CompanyProfile {
     title: string;
     slogan: string;
     socialLinks: SocialLinks[];
     logoUrl: string;
     contactInfo: ContactInfo
     auditLog: Audit[];
+    _id: string;
 }
 
 

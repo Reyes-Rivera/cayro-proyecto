@@ -6,6 +6,7 @@ import { User, UserSchema } from './schemas/User.Schema';
 import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { UserActivity, UserActivitySchema } from 'src/user-activity/schema/UserActivitySchema';
+import { Configuration, ConfigurationSchema } from 'src/configuration/schema/schemaconfig';
 
 @Module({
   imports: [ConfigModule.forRoot(), JwtModule.register({
@@ -14,6 +15,10 @@ import { UserActivity, UserActivitySchema } from 'src/user-activity/schema/UserA
   }), ConfigModule.forRoot(), MongooseModule.forFeature([
     { name: User.name, schema: UserSchema },
     { name: UserActivity.name, schema: UserActivitySchema },
+    {
+      name:Configuration.name,
+      schema:ConfigurationSchema
+    }
   ])],
   controllers: [UsersController],
   providers: [UsersService],

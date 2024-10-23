@@ -22,5 +22,6 @@ export interface User {
     direction?: Direction[];
     active?: boolean;
     role?: string;
-    confirmPassword?:string
+    confirmPassword?:string,
+    _id?: string;
 }

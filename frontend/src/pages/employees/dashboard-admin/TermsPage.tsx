@@ -10,9 +10,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Trash2, Edit, History, Eye, Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DocumentTypeInter, Status } from '@/types/Documents';
-import { activePolicyApi, createPolicysApi, deletePolicysApi, policiesApi, policiesHistoriApi, updatePolicysApi } from '@/api/policy';
 import Swal from 'sweetalert2';
 import 'sweetalert2/src/sweetalert2.scss';
+import { activeTermsApi, createTermsApi, deleteTermsApi, termsApi, termsHistoriApi, updateTermsApi } from '@/api/terms';
 
 interface RegulatoryDocument {
   title: string;
@@ -35,7 +35,7 @@ interface RegulatoryDocumentUpdate {
   effectiveDate: string;
 }
 
-export default function PrivacyPolicies() {
+export default function TemrsPage() {
   const [editingDocument, setEditingDocument] = useState<RegulatoryDocument | null>(null);
   const [documents, setDocuments] = useState<RegulatoryDocument[]>([]);
   const [lastId, setLasId] = useState<any>();
@@ -43,43 +43,38 @@ export default function PrivacyPolicies() {
   const [selectedDocument, setSelectedDocument] = useState<RegulatoryDocument | null>(null);
   const [showAllHistory, setShowAllHistory] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  // Usar react-hook-form
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<RegulatoryDocumentUpdate>();
-  // Validación de la fecha
+
   const validateDate = (value: string) => {
     const today = new Date();
-    // Remover el componente de tiempo de 'today'
-    today.setHours(0, 0, 0, 0); // Establecer la hora en 00:00:00
+    today.setHours(0, 0, 0, 0);
     const selectedDate = new Date(value);
-
-    // Compara solo las fechas, sin la hora
     if (selectedDate >= today) {
-      return true;  // Fecha válida
+      return true;
     } else {
-      return "La fecha debe ser hoy o en el futuro";  // Mensaje de error
+      return "La fecha debe ser hoy o en el futuro";
     }
   };
 
   useEffect(() => {
     const index = documentsHistory.length;
-    setLasId(documentsHistory[index]?._id)
+    setLasId(documentsHistory[index]?._id);
   }, [setDocumentsHistory])
   useEffect(() => {
-    const getAllPolicies = async () => {
-      const res = await policiesApi();
-      const resHistori = await policiesHistoriApi();
+    const getAllTerms = async () => {
+      const res = await termsApi();
+      const resHistori = await termsHistoriApi();
       setDocumentsHistory(resHistori.data);
       setDocuments(res.data);
     }
-    getAllPolicies();
+    getAllTerms();
   }, []);
 
   const onSubmit = handleSubmit(async (data: RegulatoryDocumentUpdate) => {
     try {
-
       if (editingDocument) {
         setIsLoading(true);
-        const res = await updatePolicysApi({
+        const res = await updateTermsApi({
           title: data.title,
           content: data.content,
           effectiveDate: data.effectiveDate
@@ -89,14 +84,14 @@ export default function PrivacyPolicies() {
           Swal.fire({
             icon: 'success',
             title: 'Exito.',
-            text: 'Politica editada correctamente.',
+            text: 'Documento editado correctamente.',
             confirmButtonColor: '#2F93D1',
           });
         }
         setIsLoading(false);
       } else {
         setIsLoading(true);
-        const res = await createPolicysApi({
+        const res = await createTermsApi({
           title: data.title,
           content: data.content,
           effectiveDate: data.effectiveDate
@@ -106,7 +101,7 @@ export default function PrivacyPolicies() {
           Swal.fire({
             icon: 'success',
             title: 'Exito.',
-            text: 'Politica editada correctamente.',
+            text: 'Documento agregado correctamente.',
             confirmButtonColor: '#2F93D1',
           });
         }
@@ -124,7 +119,7 @@ export default function PrivacyPolicies() {
       );
       const newDocument: RegulatoryDocument = {
         ...data,
-        version: documents.length + 2,
+        version: documents.length + 1,
         createdAt: new Date(),
         updatedAt: new Date(),
         isDeleted: false,
@@ -132,7 +127,7 @@ export default function PrivacyPolicies() {
         status: Status.current,
         previousVersionId: lastId,
         effectiveDate: new Date(data.effectiveDate),
-        type: DocumentTypeInter.policy
+        type: DocumentTypeInter.terms
       };
       setDocuments([...updatedDocuments, newDocument]);
       setDocumentsHistory([...updatedDocumentsHistory, newDocument]);
@@ -163,12 +158,12 @@ export default function PrivacyPolicies() {
   const deleteDocument = async (id: any) => {
     try {
       setIsLoading(true);
-      const res = await deletePolicysApi(id);
+      const res = await deleteTermsApi(id);
       if (res) {
         Swal.fire({
           icon: 'success',
           title: 'Eliminado',
-          text: 'La politica fue eliminada, aun puedes verla en el historial.',
+          text: 'La docuemnto eliminado, aun puedes verla en el historial.',
           confirmButtonColor: '#2F93D1',
         });
       }
@@ -210,13 +205,13 @@ export default function PrivacyPolicies() {
   const activateDocument = async (document: RegulatoryDocument) => {
     try {
       setIsLoading(true);
-      const res = await activePolicyApi(document._id);
+      const res = await activeTermsApi(document._id);
       if (res) {
         setIsLoading(false);
         Swal.fire({
           icon: 'success',
-          title: 'Política Activada',
-          text: 'La política ha sido activada correctamente.',
+          title: 'Docuemnto activado.',
+          text: 'Los terminos y condiciones seleccionados fueron avtivados correctamente.',
           confirmButtonColor: '#2F93D1',
         });
         const finalDocuments = documents.map(doc =>
@@ -248,7 +243,7 @@ export default function PrivacyPolicies() {
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: 'No se pudo activar la política. Inténtalo más tarde.',
+        text: 'No se pudo activar el documento. Inténtalo más tarde.',
         confirmButtonColor: '#2F93D1',
       });
     }
@@ -256,7 +251,6 @@ export default function PrivacyPolicies() {
   return (
     <>
       <Card>
-        
         <CardContent>
           <div className="mb-4">
             <h3 className="text-lg font-semibold mb-2">{editingDocument ? 'Modificar Documento Regulatorio' : 'Agregar Nuevo Documento Regulatorio'}</h3>

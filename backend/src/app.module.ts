@@ -8,6 +8,7 @@ import { EmployeesModule } from './employees/employees.module';
 import { UserActivityModule } from './user-activity/user-activity.module';
 import { RegulatoryDocumentModule } from './regulatory-document/regulatory-document.module';
 import { CompanyProfileModule } from './company-profile/company-profile.module';
+import { ConfigurationModule } from './configuration/configuration.module';
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -18,6 +19,7 @@ import { CompanyProfileModule } from './company-profile/company-profile.module';
     UserActivityModule,
     RegulatoryDocumentModule,
     CompanyProfileModule,
+    ConfigurationModule,
   ],
   controllers: [],
   providers: [AppService],

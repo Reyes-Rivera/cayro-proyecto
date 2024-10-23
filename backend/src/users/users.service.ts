@@ -11,12 +11,14 @@ import axios from 'axios';
 import { JwtService } from '@nestjs/jwt';
 import { Role } from 'src/auth/roles/role.enum';
 import { UserActivity } from 'src/user-activity/schema/UserActivitySchema';
+import { Configuration } from 'src/configuration/schema/schemaconfig';
 @Injectable()
 export class UsersService {
   private codes = new Map<string, { code: string; expires: number }>();
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(UserActivity.name) private userActivityModel: Model<UserActivity>,
+    @InjectModel(Configuration.name) private configuration: Model<Configuration>,
     private jwtSvc: JwtService
   ) {
 
@@ -236,6 +238,8 @@ export class UsersService {
   }
   async recoverPassword(email: string) {
     try {
+      const configInfo = await this.configuration.find();
+
       const userFound = await this.userModel.findOne({ email });
       if (!userFound) throw new NotFoundException(`El correo ${email} no se encuentra registrado.`);
       const payload = { sub: userFound._id, role: Role.USER };
@@ -260,27 +264,26 @@ export class UsersService {
                     <td style="padding: 0px 30px;">
                         <h1 style="color: #333333; font-size: 24px; margin-bottom: 20px; text-align: center;">Verifica tu cuenta de Cayro</h1>
                         <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                            Hola,
+                            ${configInfo[0].emailResetPass.title}
                         </p>
                         <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                            Si has solicitado recuperar tu contraseña, por favor utiliza el siguiente enlace para restablecerla:
+                        ${configInfo[0].emailResetPass.maininstruction}
                         </p>
 
                         <div style="background-color: #f0f0f0; border-radius: 4px; padding: 20px; text-align: center; margin-bottom: 20px;">
-                            <a href="http://localhost:5173/reset-password/${token}" style="font-size: 32px; font-weight: bold; color: #0099FF;">Recuperar contraseña</a>
+                            <a href="https://cayro.netlify.app/reset-password/${token}" style="font-size: 32px; font-weight: bold; color: #0099FF;">Recuperar contraseña</a>
                         </div>
                         <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                            Si no has solicitado esta recuperación, por favor ignora este correo.
+                        ${configInfo[0].emailResetPass.secondaryinstruction}
                         </p>
                         <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                            Este enlace expirará en 5 minutos por razones de seguridad.
+                        ${configInfo[0].emailResetPass.expirationtime}
                         </p>
                         <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                            Si tienes alguna pregunta, no dudes en contactarnos.
+                        ${configInfo[0].emailResetPass.finalMessage}
                         </p>
                         <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                            Saludos,<br>
-                            El equipo de Cayro Uniformes
+                        ${configInfo[0].emailResetPass.signature}
                         </p>
                     </td>
                 </tr>

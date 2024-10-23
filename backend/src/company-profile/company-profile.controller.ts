@@ -15,8 +15,10 @@ export class CompanyProfileController {
   }
 
   @Get()
-  findAll() {
-    return this.companyProfileService.findAll();
+  async findAll() {
+    const res = await this.companyProfileService.findAll();
+    if(!res) throw new ConflictException("No se encuentan registros aun.");
+    return res;
   }
 
   @Get(':id')
@@ -24,10 +26,12 @@ export class CompanyProfileController {
     return this.companyProfileService.findOne(+id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCompanyProfileDto: UpdateCompanyProfileDto,adminId) {
+  @Patch(':id/:adminId')
+  update(@Param('id') id: string,@Param("adminId") adminId:string, @Body() updateCompanyProfileDto: UpdateCompanyProfileDto) {
     return this.companyProfileService.update(id, updateCompanyProfileDto,adminId);
   }
+
+  
 
   @Delete(':id')
   remove(@Param('id') id: string) {

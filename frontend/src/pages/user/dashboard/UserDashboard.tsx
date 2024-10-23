@@ -1,15 +1,15 @@
 import { useState } from 'react'
-import { User, Lock, ShoppingBag, MapPin, CreditCard, Bell, Menu } from 'lucide-react'
+import { User, Menu } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 // Componentes para las diferentes pestañas
 import ProfileTab from './ProfileTab'
-import PasswordTab from './PasswordTab'
-import OrdersTab from './OrdersTab'
-import AddressesTab from './AddressesTab'
-import { Label } from '@/components/ui/label'
+// import PasswordTab from './PasswordTab'
+// import OrdersTab from './OrdersTab'
+// import AddressesTab from './AddressesTab'
+// import { Label } from '@/components/ui/label'
 // import PaymentTab from './PaymentTab'
 // import PreferencesTab from './PreferencesTab'
 
@@ -21,16 +21,16 @@ export default function UserDashboard() {
     switch (activeTab) {
       case 'profile':
         return <ProfileTab />
-      case 'password':
-        return <PasswordTab />
-      case 'orders':
-        return <OrdersTab />
-      case 'addresses':
-        return <AddressesTab />
-      case 'payment':
-        return <PaymentTab />
-      case 'preferences':
-        return <PreferencesTab />
+      // case 'password':
+      //   return <PasswordTab />
+      // case 'orders':
+      //   return <OrdersTab />
+      // case 'addresses':
+      //   return <AddressesTab />
+      // case 'payment':
+      //   return <PaymentTab />
+      // case 'preferences':
+      //   return <PreferencesTab />
       default:
         return <ProfileTab />
     }
@@ -68,7 +68,7 @@ export default function UserDashboard() {
                     <User className="mr-2 h-5 w-5" />
                     Perfil
                   </Button>
-                  <Button
+                  {/* <Button
                     variant={activeTab === 'password' ? 'secondary' : 'ghost'}
                     className={`w-full justify-start ${activeTab === 'password' ? 'bg-blue-500 dark:bg-blue-600 text-white' : 'text-gray-900 dark:text-gray-100'}`}
                     onClick={() => {
@@ -122,7 +122,7 @@ export default function UserDashboard() {
                   >
                     <Bell className="mr-2 h-5 w-5" />
                     Preferencias
-                  </Button>
+                  </Button> */}
                 </nav>
               </SheetContent>
             </Sheet>
@@ -138,9 +138,9 @@ export default function UserDashboard() {
                   onClick={() => setActiveTab('profile')}
                 >
                   <User className="mr-2 h-5 w-5" />
-                  Perfil
+                  Perfil del usuario
                 </Button>
-                <Button
+                {/* <Button
                   variant={activeTab === 'password' ? 'secondary' : 'ghost'}
                   className={`w-full justify-start ${activeTab === 'password' ? 'bg-blue-500 dark:bg-blue-600 text-white' : 'text-gray-900 dark:text-gray-100'}`}
                   onClick={() => setActiveTab('password')}
@@ -179,7 +179,7 @@ export default function UserDashboard() {
                 >
                   <Bell className="mr-2 h-5 w-5" />
                   Preferencias
-                </Button>
+                </Button> */}
               </div>
             </div>
           </div>
@@ -227,90 +227,90 @@ function getTabDescription(tab: string) {
 }
 
 
-function PaymentTab() {
-  const paymentMethods = [
-    { id: 1, type: 'Visa', last4: '4567', expiry: '12/24' },
-    { id: 2, type: 'MasterCard', last4: '8901', expiry: '06/25' },
-  ];
+// function PaymentTab() {
+//   const paymentMethods = [
+//     { id: 1, type: 'Visa', last4: '4567', expiry: '12/24' },
+//     { id: 2, type: 'MasterCard', last4: '8901', expiry: '06/25' },
+//   ];
 
-  return (
-    <div className="space-y-4">
-      {paymentMethods.map((method) => (
-        <Card
-          key={method.id}
-          className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 shadow-md dark:shadow-lg"
-        >
-          <CardHeader className="border-b border-gray-200 dark:border-gray-700">
-            <CardTitle className="text-gray-900 dark:text-white">
-              {method.type} terminada en {method.last4}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-gray-700 dark:text-gray-300">
-            <p>Expira: {method.expiry}</p>
-            <div className="mt-2 space-x-2">
-              <Button
-                variant="outline"
-                className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-              >
-                Editar
-              </Button>
-              <Button
-                variant="outline"
-                className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-              >
-                Eliminar
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-      <Button className="w-full bg-[#2F93D1] dark:bg-blue-600 hover:bg-blue-500 dark:hover:bg-blue-700 text-white">
-        Agregar nuevo método de pago
-      </Button>
-    </div>
-  );
-}
+//   return (
+//     <div className="space-y-4">
+//       {paymentMethods.map((method) => (
+//         <Card
+//           key={method.id}
+//           className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 shadow-md dark:shadow-lg"
+//         >
+//           <CardHeader className="border-b border-gray-200 dark:border-gray-700">
+//             <CardTitle className="text-gray-900 dark:text-white">
+//               {method.type} terminada en {method.last4}
+//             </CardTitle>
+//           </CardHeader>
+//           <CardContent className="text-gray-700 dark:text-gray-300">
+//             <p>Expira: {method.expiry}</p>
+//             <div className="mt-2 space-x-2">
+//               <Button
+//                 variant="outline"
+//                 className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+//               >
+//                 Editar
+//               </Button>
+//               <Button
+//                 variant="outline"
+//                 className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+//               >
+//                 Eliminar
+//               </Button>
+//             </div>
+//           </CardContent>
+//         </Card>
+//       ))}
+//       <Button className="w-full bg-[#2F93D1] dark:bg-blue-600 hover:bg-blue-500 dark:hover:bg-blue-700 text-white">
+//         Agregar nuevo método de pago
+//       </Button>
+//     </div>
+//   );
+// }
 
 
-function PreferencesTab() {
-  return (
-    <form className="space-y-4 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md dark:shadow-lg">
-      <div className="flex items-center space-x-2 text-gray-700 dark:text-gray-200">
-        <input
-          type="checkbox"
-          id="email-notifications"
-          className="form-checkbox text-[#2F93D1] dark:text-blue-600"
-        />
-        <Label htmlFor="email-notifications" className="cursor-pointer">
-          Recibir notificaciones por correo electrónico
-        </Label>
-      </div>
-      <div className="flex items-center space-x-2 text-gray-700 dark:text-gray-200">
-        <input
-          type="checkbox"
-          id="sms-notifications"
-          className="form-checkbox text-[#2F93D1] dark:text-blue-600"
-        />
-        <Label htmlFor="sms-notifications" className="cursor-pointer">
-          Recibir notificaciones por SMS
-        </Label>
-      </div>
-      <div className="flex items-center space-x-2 text-gray-700 dark:text-gray-200">
-        <input
-          type="checkbox"
-          id="marketing-emails"
-          className="form-checkbox text-[#2F93D1] dark:text-blue-600"
-        />
-        <Label htmlFor="marketing-emails" className="cursor-pointer">
-          Recibir correos de marketing y ofertas especiales
-        </Label>
-      </div>
-      <Button
-        type="submit"
-        className="w-full bg-[#2F93D1] dark:bg-blue-600 hover:bg-blue-500 dark:hover:bg-blue-700 text-white"
-      >
-        Guardar preferencias
-      </Button>
-    </form>
-  );
-}
+// function PreferencesTab() {
+//   return (
+//     <form className="space-y-4 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md dark:shadow-lg">
+//       <div className="flex items-center space-x-2 text-gray-700 dark:text-gray-200">
+//         <input
+//           type="checkbox"
+//           id="email-notifications"
+//           className="form-checkbox text-[#2F93D1] dark:text-blue-600"
+//         />
+//         <Label htmlFor="email-notifications" className="cursor-pointer">
+//           Recibir notificaciones por correo electrónico
+//         </Label>
+//       </div>
+//       <div className="flex items-center space-x-2 text-gray-700 dark:text-gray-200">
+//         <input
+//           type="checkbox"
+//           id="sms-notifications"
+//           className="form-checkbox text-[#2F93D1] dark:text-blue-600"
+//         />
+//         <Label htmlFor="sms-notifications" className="cursor-pointer">
+//           Recibir notificaciones por SMS
+//         </Label>
+//       </div>
+//       <div className="flex items-center space-x-2 text-gray-700 dark:text-gray-200">
+//         <input
+//           type="checkbox"
+//           id="marketing-emails"
+//           className="form-checkbox text-[#2F93D1] dark:text-blue-600"
+//         />
+//         <Label htmlFor="marketing-emails" className="cursor-pointer">
+//           Recibir correos de marketing y ofertas especiales
+//         </Label>
+//       </div>
+//       <Button
+//         type="submit"
+//         className="w-full bg-[#2F93D1] dark:bg-blue-600 hover:bg-blue-500 dark:hover:bg-blue-700 text-white"
+//       >
+//         Guardar preferencias
+//       </Button>
+//     </form>
+//   );
+// }
