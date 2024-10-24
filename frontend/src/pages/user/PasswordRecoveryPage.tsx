@@ -37,7 +37,7 @@ export default function PasswordRecoveryPage() {
         });
         return;
       }
-    } catch (error:any) {
+    } catch (error: any) {
       console.log(error.response.data.message);
       Swal.fire({
         icon: 'error',
@@ -47,53 +47,53 @@ export default function PasswordRecoveryPage() {
       });
 
     }
-    
+
     setIsSubmitting(false)
-    
+
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-gray-100 dark:bg-gray-900">
 
       {/* Main Content */}
       <div className="flex-grow flex items-center justify-center px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl w-full">
-          <Card className="shadow-2xl">
+          <Card className="shadow-2xl dark:bg-gray-800 dark:text-gray-200">
             <CardContent className="p-0">
               <div className="md:flex">
                 {/* Left column - Image */}
-                <div className="md:w-1/2 bg-gray-100 p-8 flex flex-col justify-center items-center rounded-l-lg">
-                  <div className="bg-white rounded-full p-2">
+                <div className="md:w-1/2 bg-gray-100 dark:bg-gray-700 p-8 flex flex-col justify-center items-center rounded-l-lg">
+                  <div className="bg-white dark:bg-gray-800 rounded-full p-2">
                     <img
                       src={img}
                       alt="Recuperación de contraseña"
-
-                      className=" w-36 h-36 p-2 object-contain"
+                      className="w-36 h-36 p-2 object-contain"
                     />
                   </div>
-                  <h2 className="text-3xl font-bold mb-4 text-center">Recupera el acceso a tu cuenta</h2>
-                  <p className="text-center mb-4">No te preocupes, te ayudaremos a recuperar tu contraseña en unos sencillos pasos.</p>
+                  <h2 className="text-3xl font-bold mb-4 text-center dark:text-white">Recupera el acceso a tu cuenta</h2>
+                  <p className="text-center mb-4 text-gray-600 dark:text-gray-300">No te preocupes, te ayudaremos a recuperar tu contraseña en unos sencillos pasos.</p>
                 </div>
 
                 {/* Right column - Form */}
                 <div className="md:w-1/2 p-8">
                   <CardHeader>
-                    <CardTitle className="text-2xl font-bold text-center text-gray-800">
+                    <CardTitle className="text-2xl font-bold text-center text-gray-800 dark:text-white">
                       Recupera tu contraseña
                     </CardTitle>
-                    <CardDescription className="text-center text-gray-600">
+                    <CardDescription className="text-center text-gray-600 dark:text-gray-400">
                       Ingresa tu correo electrónico y te enviaremos las instrucciones para restablecer tu contraseña.
                     </CardDescription>
                   </CardHeader>
+
                   {!isSubmitted ? (
                     <form className="space-y-6" onSubmit={handleSubmit}>
                       <div>
-                        <Label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                        <Label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
                           Correo electrónico
                         </Label>
                         <div className="mt-1 relative rounded-md shadow-sm">
                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Mail className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                            <Mail className="h-5 w-5 text-gray-400 dark:text-gray-300" aria-hidden="true" />
                           </div>
                           <Input
                             id="email"
@@ -101,7 +101,7 @@ export default function PasswordRecoveryPage() {
                             type="email"
                             autoComplete="email"
                             required
-                            className="pl-10 block w-full rounded-md border-gray-300 focus:ring-[#2F93D1] focus:border-[#2F93D1]"
+                            className="pl-10 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 focus:ring-[#2F93D1] focus:border-[#2F93D1]"
                             placeholder="tu@ejemplo.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
@@ -129,16 +129,17 @@ export default function PasswordRecoveryPage() {
                       </div>
                     </form>
                   ) : (
-                    <Alert className="mt-6">
-                      <Mail className="h-4 w-4" />
-                      <AlertTitle>Instrucciones enviadas</AlertTitle>
-                      <AlertDescription>
+                    <Alert className="mt-6 bg-gray-50 dark:bg-gray-800 dark:border-gray-700 text-gray-800 dark:text-gray-200">
+                      <Mail className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                      <AlertTitle className="dark:text-gray-200">Instrucciones enviadas</AlertTitle>
+                      <AlertDescription className="dark:text-gray-400">
                         Hemos enviado las instrucciones para restablecer tu contraseña a {email}. Por favor, revisa tu bandeja de entrada y sigue los pasos indicados.
                       </AlertDescription>
                     </Alert>
                   )}
+
                   <div className="mt-6 text-sm text-center">
-                    <Link to={"/login"} className="font-medium text-[#2F93D1] hover:text-[#007ACC] flex items-center justify-center">
+                    <Link to={"/login"} className="font-medium text-[#2F93D1] hover:text-[#007ACC] dark:text-blue-500 dark:hover:text-blue-400 flex items-center justify-center">
                       <ArrowLeft className="mr-2 h-4 w-4" /> Volver a iniciar sesión
                     </Link>
                   </div>
@@ -148,8 +149,7 @@ export default function PasswordRecoveryPage() {
           </Card>
         </div>
       </div>
-
-
     </div>
+
   )
 }

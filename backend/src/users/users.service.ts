@@ -278,7 +278,7 @@ export class UsersService {
                         </p>
 
                         <div style="background-color: #f0f0f0; border-radius: 4px; padding: 20px; text-align: center; margin-bottom: 20px;">
-                            <a href="https://cayro.netlify.app/${token}" style="font-size: 32px; font-weight: bold; color: #0099FF;">Recuperar contraseña</a>
+                            <a href="https://cayro.netlify.app/reset-password/${token}" style="font-size: 32px; font-weight: bold; color: #0099FF;">Recuperar contraseña</a>
                         </div>
                         <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
                         ${configInfo[0].emailResetPass.secondaryinstruction}

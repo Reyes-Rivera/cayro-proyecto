@@ -112,9 +112,9 @@ export default function PasswordResetPage() {
     });
 
     return (
-        <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row items-center justify-center p-4 md:p-0">
+        <div className="min-h-screen dark:bg-gray-900 flex flex-col md:flex-row items-center justify-center p-4 md:p-0">
             <Card className="w-full max-w-md md:max-w-4xl flex flex-col md:flex-row shadow-lg">
-                <CardContent className="p-6 md:w-1/2 flex flex-col justify-center">
+                <CardContent className="p-6 md:w-1/2 flex flex-col justify-center dark:bg-gray-800">
                     <CardHeader className="p-0 mb-6">
                         <CardTitle className="text-2xl font-bold">Restablecer contraseña</CardTitle>
                         <CardDescription>Crea una nueva contraseña para tu cuenta</CardDescription>
@@ -122,7 +122,7 @@ export default function PasswordResetPage() {
                     {!isSubmitted ? (
                         <form onSubmit={onSubmit} className="space-y-4">
                             <div>
-                                <Label htmlFor="password" className="block text-sm font-medium text-gray-700">Contraseña</Label>
+                                <Label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Contraseña</Label>
                                 <div className="relative">
                                     <Input
                                         {...register("password", { required: "La contraseña es requerida" })}
@@ -134,9 +134,7 @@ export default function PasswordResetPage() {
                                             clearErrors("password");
                                         }}
                                         autoComplete="new-password"
-                                        className="appearance-none rounded-md relative block w-full px-3 py-2 border 
-                                        border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none 
-                                        focus:ring-[#0099FF] focus:border-[#0099FF] focus:z-10 sm:text-sm mt-1"
+                                        className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 placeholder-gray-500 dark:text-gray-200 focus:outline-none focus:ring-[#0099FF] focus:border-[#0099FF] focus:z-10 sm:text-sm mt-1"
                                         placeholder="contraseña"
                                     />
                                     <button
@@ -199,7 +197,7 @@ export default function PasswordResetPage() {
                                 )}
                             </div>
                             <div>
-                                <Label htmlFor="password-confirm" className="block text-sm font-medium text-gray-700">
+                                <Label htmlFor="password-confirm" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
                                     Confirmar contraseña
                                 </Label>
                                 <div className="relative">
@@ -211,10 +209,7 @@ export default function PasswordResetPage() {
                                         id="password-confirm"
                                         type={showConfirmPassword ? 'text' : 'password'}
                                         autoComplete="new-password"
-                                        className={`appearance-none rounded-md relative block w-full px-3 py-2 border
-                                             placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-[#0099FF] 
-                                             focus:z-10 sm:text-sm mt-1`
-                                        }
+                                        className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 placeholder-gray-500 dark:text-gray-200 focus:outline-none focus:ring-[#0099FF] focus:border-[#0099FF] focus:z-10 sm:text-sm mt-1"
                                         placeholder="Confirmar contraseña"
                                     />
                                     <button
@@ -253,7 +248,7 @@ export default function PasswordResetPage() {
                         </Alert>
                     )}
                 </CardContent>
-                <div className="md:w-1/2 bg-gray-200 p-6 flex flex-col justify-center items-center text-center">
+                <div className="md:w-1/2 bg-gray-200 dark:bg-gray-700 p-6 flex flex-col justify-center items-center text-center">
                     <div className="mb-6">
                         <ShieldCheck className="h-24 w-24 text-primary" />
                     </div>

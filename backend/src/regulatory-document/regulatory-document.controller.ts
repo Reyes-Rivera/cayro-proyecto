@@ -10,12 +10,14 @@ export class RegulatoryDocumentController {
   constructor(private readonly regulatoryDocumentService: RegulatoryDocumentService) { }
 
   @Post("policy")
+  @Auth([Role.ADMIN])
   async createPolicy(@Body() createRegulatoryDocumentDto: CreateRegulatoryDocumentDto) {
     const res = await this.regulatoryDocumentService.createPolicy(createRegulatoryDocumentDto);
     if (!res) throw new ConflictException("Algo salio mal al registrar, intentalo mas tarde.")
     return res;
   }
   @Post("terms")
+  @Auth([Role.ADMIN])
   async createTerms(@Body() createRegulatoryDocumentDto: CreateRegulatoryDocumentDto) {
     const res = await this.regulatoryDocumentService.createTerms(createRegulatoryDocumentDto);
     if (!res) throw new ConflictException("Algo salio mal al registrar, intentalo mas tarde.")
@@ -23,6 +25,7 @@ export class RegulatoryDocumentController {
   }
 
   @Post("boundary")
+  @Auth([Role.ADMIN])
   async createBoundary(@Body() createRegulatoryDocumentDto: CreateRegulatoryDocumentDto) {
     const res = await this.regulatoryDocumentService.createBoundary(createRegulatoryDocumentDto);
     if (!res) throw new ConflictException("Algo salio mal al registrar, intentalo mas tarde.")
@@ -80,6 +83,7 @@ export class RegulatoryDocumentController {
   }
 
   @Put('update-policy/:id')
+  @Auth([Role.ADMIN])
   async updatePolicy(@Param('id') id: string, @Body() updateRegulatoryDocumentDto: UpdateRegulatoryDocumentDto) {
     const res = await this.regulatoryDocumentService.updatePolicy(id, updateRegulatoryDocumentDto);
     if (!res) throw new ConflictException("Algo salio mal al actualizar la politica, intentalo mas tarde.")
@@ -87,6 +91,7 @@ export class RegulatoryDocumentController {
   }
 
   @Put('update-terms/:id')
+  @Auth([Role.ADMIN])
   async updateTemrs(@Param('id') id: string, @Body() updateRegulatoryDocumentDto: UpdateRegulatoryDocumentDto) {
     const res = await this.regulatoryDocumentService.updateTerms(id, updateRegulatoryDocumentDto);
     if (!res) throw new ConflictException("Algo salio mal al actualizar, intentalo mas tarde.")
@@ -94,6 +99,7 @@ export class RegulatoryDocumentController {
   }
 
   @Put('update-boundary/:id')
+  @Auth([Role.ADMIN])
   async updateBoundary(@Param('id') id: string, @Body() updateRegulatoryDocumentDto: UpdateRegulatoryDocumentDto) {
     const res = await this.regulatoryDocumentService.updateBoundary(id, updateRegulatoryDocumentDto);
     if (!res) throw new ConflictException("Algo salio mal al actualizar, intentalo mas tarde.")
@@ -101,6 +107,7 @@ export class RegulatoryDocumentController {
   }
 
   @Delete('remove-policy/:id')
+  @Auth([Role.ADMIN])
   async removePolicy(@Param('id') id: string) {
     const res = await this.regulatoryDocumentService.removePolicy(id);
     if (!res) throw new ConflictException("Algo salio mal al eliminar la politica, intentalo mas tarde.")
@@ -108,6 +115,7 @@ export class RegulatoryDocumentController {
   }
 
   @Delete('remove-terms/:id')
+  @Auth([Role.ADMIN])
   async removeTerms(@Param('id') id: string) {
     const res = await this.regulatoryDocumentService.removeTerms(id);
     if (!res) throw new ConflictException("Algo salio mal al eliminar el documento, intentalo mas tarde.")
@@ -115,6 +123,7 @@ export class RegulatoryDocumentController {
   }
 
   @Delete('remove-boundary/:id')
+  @Auth([Role.ADMIN])
   async removeBoundary(@Param('id') id: string) {
     const res = await this.regulatoryDocumentService.removeBoundary(id);
     if (!res) throw new ConflictException("Algo salio mal al eliminar el documento, intentalo mas tarde.")
@@ -122,6 +131,7 @@ export class RegulatoryDocumentController {
   }
 
   @Patch('active-policy/:id')
+  @Auth([Role.ADMIN])
   async activePolicy(@Param('id') id: string) {
     const res = await this.regulatoryDocumentService.activePolicy(id);
     if (!res) throw new ConflictException("Algo salio mal al activar la politica, intentalo mas tarde.")
@@ -129,12 +139,14 @@ export class RegulatoryDocumentController {
   }
 
   @Patch('active-terms/:id')
+  @Auth([Role.ADMIN])
   async activeTerms(@Param('id') id: string) {
     const res = await this.regulatoryDocumentService.activeTerms(id);
     if (!res) throw new ConflictException("Algo salio mal al activar los terminos y condiciones, intentalo mas tarde.")
     return res;
   }
-  @Patch('active-boundary/:id')
+  @Patch('active-boundary/:id') 
+  @Auth([Role.ADMIN])
   async activeBoundary(@Param('id') id: string) {
     const res = await this.regulatoryDocumentService.activeBoundary(id);
     if (!res) throw new ConflictException("Algo salio mal al activar el documento, intentalo mas tarde.")
