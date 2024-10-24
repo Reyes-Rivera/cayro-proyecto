@@ -49,6 +49,8 @@ const AppRoutes = () => {
                   <Route path="/verification-code" element={<VerificationPage/>}/>
                   <Route path="/verification-code-auth" element={<VerificationPage/>}/>
                 </Route>
+                <Route path="*" element={<HomePage/>}/>
+
             </Routes>
         </div>
         <div className="w-full">

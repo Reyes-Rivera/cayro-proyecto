@@ -43,6 +43,13 @@ export class UsersController {
     return this.usersService.restorePassword(password,token);
   }
 
+  @Post('lock')
+async lockUser(@Body() body: {  days: number,email: string; }){
+  const { email, days } = body;
+  const res = await this.usersService.blockUser(days,email);
+  return res;
+}
+
   @Get()
   findAll() {
     return this.usersService.findAll();

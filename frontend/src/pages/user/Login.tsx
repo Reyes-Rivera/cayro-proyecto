@@ -19,7 +19,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { signInWithGoogle } = useAuth();
+  // const { signInWithGoogle } = useAuth();
   const [data, setData] = useState<UserLogin>({
     email: "",
     password: "",
@@ -42,15 +42,15 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // if (!captchaToken) {
-    //   Swal.fire({
-    //     icon: 'error',
-    //     title: 'Error en el envio.',
-    //     text: 'Por favor, verifica que no eres un robot.',
-    //     confirmButtonColor: '#2F93D1',
-    //   });
-    //   return;
-    // }
+    if (!captchaToken) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en el envio.',
+        text: 'Por favor, verifica que no eres un robot.',
+        confirmButtonColor: '#2F93D1',
+      });
+      return;
+    }
     try {
       setIsLoading(true);
       const res = await login(data.email, data.password);
@@ -118,7 +118,7 @@ export default function LoginPage() {
                 Iniciar sesión
               </h2>
             </div>
-            <Button onClick={signInWithGoogle} variant="outline" className="w-full">
+            {/* <Button onClick={signInWithGoogle} variant="outline" className="w-full">
               <svg className="w-5 h-5 mr-2" viewBox="0 0 21 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <g clipPath="url(#clip0_13183_10121)">
                   <path d="M20.3081 10.2303C20.3081 9.55056 20.253 8.86711 20.1354 8.19836H10.7031V12.0492H16.1046C15.8804 13.2911 15.1602 14.3898 14.1057 15.0879V17.5866H17.3282C19.2205 15.8449 20.3081 13.2728 20.3081 10.2303Z" fill="#3F83F8" />
@@ -145,7 +145,7 @@ export default function LoginPage() {
                   </span>
                 </div>
               </div>
-            </div>
+            </div> */}
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
                 <Label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">

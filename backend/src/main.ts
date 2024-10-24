@@ -13,7 +13,7 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
   const port = process.env.PORT || 5000;
   app.use(cookieParser());
-  app.use(csurf({ cookie: true }));
+  // app.use(csurf({ cookie: true }));
   await app.listen(port);
 }
 bootstrap();

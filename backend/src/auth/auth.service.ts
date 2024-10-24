@@ -12,6 +12,7 @@ import * as nodemailer from 'nodemailer';
 import { Employee } from 'src/employees/schemas/Eployee.schema';
 import * as postmark from 'postmark';
 import { UserActivity } from 'src/user-activity/schema/UserActivitySchema';
+import { Configuration } from 'src/configuration/schema/schemaconfig';
 
 @Injectable()
 export class AuthService {
@@ -22,6 +23,7 @@ export class AuthService {
     @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(Employee.name) private employeeModel: Model<Employee>,
     @InjectModel(UserActivity.name) private userActivityModel: Model<UserActivity>,
+    @InjectModel(Configuration.name) private configurationModel: Model<Configuration>,
     private jwtSvc: JwtService,
     private readonly usersService: UsersService,
   ) { 
@@ -105,9 +107,12 @@ export class AuthService {
   }
   async sendCode(email: string) {
     try {
+      const configInfo = await this.configurationModel.find();
+      const timeToken = parseInt(configInfo[0].timeTokenEmail);
+      const expirationTime = Date.now() + timeToken * 60000; 
       const verificationCode = crypto.randomInt(100000, 999999).toString();
       //5 minutes 
-      this.codes.set(email, { code: verificationCode, expires: Date.now() + 300000 });
+      this.codes.set(email, { code: verificationCode, expires: expirationTime });
       const currentYear = new Date().getFullYear(); // Obtener el año actual
       const html = `
         <!DOCTYPE html>
@@ -126,28 +131,27 @@ export class AuthService {
                 </tr>
                 <tr>
                     <td style="padding: 0px 30px;">
-                        <h1 style="color: #333333; font-size: 24px; margin-bottom: 20px; text-align: center;">Verifica tu cuenta de Cayro</h1>
+                        <h1 style="color: #333333; font-size: 24px; margin-bottom: 20px; text-align: center;">${configInfo[0].emailLogin.title} </h1>
                         <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                            Hola,
+                            ${configInfo[0].emailLogin.greeting} 
                         </p>
                         <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                            Para completar tu autentidicación, por favor utiliza el siguiente código de verificación:
+                            ${configInfo[0].emailLogin.maininstruction} 
                         </p>
                         <div style="background-color: #f0f0f0; border-radius: 4px; padding: 20px; text-align: center; margin-bottom: 20px;">
                             <span style="font-size: 32px; font-weight: bold; color: #0099FF; letter-spacing: 5px;">${verificationCode}</span>
                         </div>
                         <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                            Ingresa este código en la página de verificación para verificar tu autentificación. Si no has solicitado esta verificación, por favor ignora este correo.
+                            ${configInfo[0].emailLogin.secondaryinstruction} 
                         </p>
                         <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                            Este código expirará en 5 minutos por razones de seguridad.
+                            ${configInfo[0].emailLogin.expirationtime} 
                         </p>
                         <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                            Si tienes alguna pregunta, no dudes en contactarnos.
+                            ${configInfo[0].emailLogin.finalMessage} 
                         </p>
                         <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                            Saludos,<br>
-                            El equipo de Cayro Uniformes
+                            ${configInfo[0].emailLogin.signature} 
                         </p>
                     </td>
                 </tr>
@@ -175,6 +179,7 @@ export class AuthService {
   async login(loginDto: LoginDto) {
     // Buscar al usuario en la colección de usuarios
     let userFound = await this.userModel.findOne({ email: loginDto.email });
+    const configInfo = await this.configurationModel.find();
 
     if (!userFound) {
       userFound = await this.employeeModel.findOne({ email: loginDto.email });
@@ -209,23 +214,23 @@ export class AuthService {
       userFound.loginAttempts = (userFound.loginAttempts || 0) + 1;
 
       // Bloquear la cuenta por 5 minutos después de 3 intentos fallidos
-      if (userFound.loginAttempts === 3) {
+      // if (userFound.loginAttempts === 5) {
+      //   const res = new this.userActivityModel({
+      //     email:loginDto.email,
+      //     action:"Cuenta bloqueada por 5 minutos."
+      //   })
+      //   await res.save();
+      //   userFound.lockUntil = new Date(Date.now() + 5 * 60 * 1000);
+      // }
+
+      // Bloquear la cuenta por 10 minutos después de 5 intentos fallidos y reiniciar los intentos
+      if (userFound.loginAttempts === configInfo[0].attemptsLogin ) {
         const res = new this.userActivityModel({
           email:loginDto.email,
           action:"Cuenta bloqueada por 5 minutos."
         })
         await res.save();
         userFound.lockUntil = new Date(Date.now() + 5 * 60 * 1000);
-      }
-
-      // Bloquear la cuenta por 10 minutos después de 5 intentos fallidos y reiniciar los intentos
-      if (userFound.loginAttempts === 5) {
-        const res = new this.userActivityModel({
-          email:loginDto.email,
-          action:"Cuenta bloqueada por 10 minutos."
-        })
-        await res.save();
-        userFound.lockUntil = new Date(Date.now() + 10 * 60 * 1000);
         userFound.loginAttempts = 0;
       }
 

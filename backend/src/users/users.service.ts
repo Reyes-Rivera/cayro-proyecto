@@ -50,9 +50,12 @@ export class UsersService {
   }
   async sendCode(email: string) {
     try {
+      const configInfo = await this.configuration.find();
+      const timeToken = parseInt(configInfo[0].timeTokenEmail);
+      const expirationTime = Date.now() + timeToken * 60000; 
       const verificationCode = crypto.randomInt(100000, 999999).toString();
       //5 minutes 
-      this.codes.set(email, { code: verificationCode, expires: Date.now() + 300000 });
+      this.codes.set(email, { code: verificationCode, expires: expirationTime });
       const currentYear = new Date().getFullYear(); // Obtener el año actual
       const html = `
         <!DOCTYPE html>
@@ -71,28 +74,29 @@ export class UsersService {
                 </tr>
                 <tr>
                     <td style="padding: 0px 30px;">
-                        <h1 style="color: #333333; font-size: 24px; margin-bottom: 20px; text-align: center;">Verifica tu cuenta de Cayro</h1>
+                        <h1 style="color: #333333; font-size: 24px; margin-bottom: 20px; text-align: center;">
+                         ${configInfo[0].emailVerificationInfo.title} 
+                        </h1>
                         <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                            Hola,
+                            ${configInfo[0].emailVerificationInfo.greeting} 
                         </p>
                         <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                            Gracias por registrarte en Cayro Uniformes. Para completar tu registro, por favor utiliza el siguiente código de verificación:
+                            ${configInfo[0].emailVerificationInfo.maininstruction} 
                         </p>
                         <div style="background-color: #f0f0f0; border-radius: 4px; padding: 20px; text-align: center; margin-bottom: 20px;">
                             <span style="font-size: 32px; font-weight: bold; color: #0099FF; letter-spacing: 5px;">${verificationCode}</span>
                         </div>
                         <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                            Ingresa este código en la página de verificación para activar tu cuenta. Si no has solicitado esta verificación, por favor ignora este correo.
+                            ${configInfo[0].emailVerificationInfo.secondaryinstruction} 
                         </p>
                         <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                            Este código expirará en 5 minutos por razones de seguridad.
+                            ${configInfo[0].emailVerificationInfo.expirationtime} 
                         </p>
                         <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                            Si tienes alguna pregunta, no dudes en contactarnos.
+                            ${configInfo[0].emailVerificationInfo.finalMessage} 
                         </p>
                         <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                            Saludos,<br>
-                            El equipo de Cayro Uniformes
+                           ${configInfo[0].emailVerificationInfo.signature} 
                         </p>
                     </td>
                 </tr>
@@ -241,9 +245,10 @@ export class UsersService {
       const configInfo = await this.configuration.find();
 
       const userFound = await this.userModel.findOne({ email });
+
       if (!userFound) throw new NotFoundException(`El correo ${email} no se encuentra registrado.`);
       const payload = { sub: userFound._id, role: Role.USER };
-      const token = this.jwtSvc.sign(payload, { expiresIn: "5m" });
+      const token = this.jwtSvc.sign(payload, { expiresIn: `${configInfo[0].timeTokenEmail}m` });
       const currentYear = new Date().getFullYear();
       const html = `
         <!DOCTYPE html>
@@ -262,16 +267,18 @@ export class UsersService {
                 </tr>
                 <tr>
                     <td style="padding: 0px 30px;">
-                        <h1 style="color: #333333; font-size: 24px; margin-bottom: 20px; text-align: center;">Verifica tu cuenta de Cayro</h1>
+                        <h1 style="color: #333333; font-size: 24px; margin-bottom: 20px; text-align: center;">
+                        ${configInfo[0].emailResetPass.title} 
+                        </h1>
                         <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                            ${configInfo[0].emailResetPass.title}
+                            ${configInfo[0].emailResetPass.greeting}
                         </p>
                         <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
                         ${configInfo[0].emailResetPass.maininstruction}
                         </p>
 
                         <div style="background-color: #f0f0f0; border-radius: 4px; padding: 20px; text-align: center; margin-bottom: 20px;">
-                            <a href="https://cayro.netlify.app/reset-password/${token}" style="font-size: 32px; font-weight: bold; color: #0099FF;">Recuperar contraseña</a>
+                            <a href="https://cayro.netlify.app/${token}" style="font-size: 32px; font-weight: bold; color: #0099FF;">Recuperar contraseña</a>
                         </div>
                         <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
                         ${configInfo[0].emailResetPass.secondaryinstruction}
@@ -386,7 +393,15 @@ export class UsersService {
     }
   }
 
-
+  async blockUser (days:number,email:string){
+    const userFound = await this.userModel.findOne({email});
+    if (!userFound) {
+      throw new NotFoundException('Usuario no encontrado.');
+    }
+    userFound.lockUntil = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+    const res = await userFound.save();
+    return res;
+  }
   findAll() {
     return `This action returns all users`;
   }

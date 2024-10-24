@@ -8,10 +8,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Edit, X, Check } from 'lucide-react'
 import Swal from 'sweetalert2'
 import 'sweetalert2/dist/sweetalert2.min.css'
-import { getCompanyConfig, updateCompanyConfig } from '@/api/company'
+import { blockedUsersApi, getBlockedUsers, getCompanyConfig, updateCompanyConfig } from '@/api/company'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-
+export interface BlockedUser{
+  email: string,
+  count:number,
+}
 export interface emailData {
   title: string;
   greeting: string;
@@ -39,7 +42,9 @@ export default function Configuration() {
   const [isEditingLogin, setIsEditingLogin] = useState(false);
   const [isEditingPass, setIsEditingPass] = useState(false);
   const [isEditingUsers, setIsEditingUsers] = useState(false);
-  const [periodoSeleccionado, setPeriodoSeleccionado] = useState("dia");
+  const [periodoSeleccionado, setPeriodoSeleccionado] = useState("day");
+  const [daysBlocked, setDaysBlocked] = useState(0);
+  const [blockedUsers, setBlockedUsers] = useState([]);
 
   const [formData, setFormData] = useState<Configuration | null>(null);
   const handleInputChange = (
@@ -75,6 +80,8 @@ export default function Configuration() {
   useEffect(() => {
     const getConfig = async () => {
       const res = await getCompanyConfig();
+      const getBlockedUsrsRes = await getBlockedUsers(periodoSeleccionado);
+      setBlockedUsers(getBlockedUsrsRes.data);
       setConfigInfo(res.data[0]);
       setFormData(res.data[0]); // Inicializa el formulario con los valores traídos de la API
     };
@@ -84,19 +91,19 @@ export default function Configuration() {
   const handleUpdate = async () => {
     try {
       // Hacer una copia de formData y luego eliminar el campo _id
-      const formDataCopy = { 
-        ...formData, 
-        attemptsLogin: formData?.attemptsLogin ? parseInt(formData.attemptsLogin.toString()) : undefined 
+      const formDataCopy = {
+        ...formData,
+        attemptsLogin: formData?.attemptsLogin ? parseInt(formData.attemptsLogin.toString()) : undefined
       };
-      
+
       if (formDataCopy && formDataCopy._id) {
         delete formDataCopy._id; // Elimina el campo _id
       }
       console.log(formDataCopy)
-  
+
       const res = await updateCompanyConfig(formDataCopy, configInfo?._id);
       console.log(formDataCopy, configInfo?._id);
-  
+
       if (res) {
         Swal.fire({
           icon: 'success',
@@ -116,8 +123,41 @@ export default function Configuration() {
       console.log(error);
     }
   };
-  
-  
+
+  const handleSearchBlockUsers = async() => {
+    try {
+      const res = await getBlockedUsers(periodoSeleccionado);
+      setBlockedUsers(res.data);
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error.',
+        text: 'Algo salió mal, intente de nuevo más tarde.',
+        confirmButtonColor: '#2F93D1',
+      });
+    }
+  };
+
+  const handleBlockUser = async(email:string) => {
+    try {
+      const res = await blockedUsersApi({days:daysBlocked,email});
+      if(res){
+        Swal.fire({
+          icon: 'success',
+          title: 'Bloqueadado.',
+          text: `El usuario ha sido bloqueado por ${daysBlocked}`,
+          confirmButtonColor: '#2F93D1',
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error.',
+        text: 'Algo salió mal, intente de nuevo más tarde.',
+        confirmButtonColor: '#2F93D1',
+      });
+    }
+  };
   return (
     <div className="container mx-auto p-4">
       <Card className="w-full max-w-4xl mx-auto">
@@ -127,10 +167,10 @@ export default function Configuration() {
         <CardContent>
           <div className="space-y-6">
             <Tabs defaultValue="usuarios" className="w-full">
-              <TabsList className="grid w-full grid-cols-1 md:grid-cols-3">
+              <TabsList className="grid w-full grid-cols-2 md:mb-0 mb-10 md:grid-cols-3 gap-2">
                 <TabsTrigger value="usuarios">Gestión de Usuarios</TabsTrigger>
                 <TabsTrigger value="configuracion">Configuración General</TabsTrigger>
-                <TabsTrigger value="mensajes">Mensajes de Verificación</TabsTrigger>
+                <TabsTrigger className='col-span-2 md:col-span-1' value="mensajes">Mensajes de Verificación</TabsTrigger>
               </TabsList>
               {/* Gestión de Usuarios */}
               {/* Gestión de Usuarios */}
@@ -141,42 +181,71 @@ export default function Configuration() {
                     <Select
                       value={periodoSeleccionado}
                       onValueChange={setPeriodoSeleccionado}
-                      disabled={!isEditingUsers}
+
                     >
                       <SelectTrigger className="w-full md:w-[180px]">
                         <SelectValue placeholder="Seleccionar periodo" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="dia">Día específico</SelectItem>
-                        <SelectItem value="semana">Semana actual</SelectItem>
-                        <SelectItem value="mes">Mes actual</SelectItem>
+                        <SelectItem value="day">Hoy</SelectItem>
+                        <SelectItem value="week">Semana actual</SelectItem>
+                        <SelectItem value="month">Mes actual</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button className="w-full md:w-auto" disabled={isEditingUsers}>Buscar</Button>
+                    <Button onClick={handleSearchBlockUsers} className="w-full md:w-auto">Buscar</Button>
                   </div>
                 </div>
 
                 <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Usuario</TableHead>
-                        <TableHead>Fecha de Bloqueo</TableHead>
-                        <TableHead>Número de Bloqueos</TableHead>
-                        <TableHead>Acción</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      <TableRow>
-                        <TableCell>usuario@ejemplo.com</TableCell>
-                        <TableCell>2023-05-15</TableCell>
-                        <TableCell>5</TableCell>
-                        <TableCell>
-                          <Button variant="destructive" size="sm" disabled={!isEditingUsers}>Bloquear</Button>
-                        </TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
+                  {
+                    blockedUsers.length < 0 ? (
+                      <>
+                        <div className="flex justify-center items-center h-full">
+                          <p>No hay usuarios bloqueados todavia.</p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Usuario</TableHead>
+                              <TableHead>Número de Bloqueos</TableHead>
+                              <TableHead>Bloquear por dias</TableHead>
+                              <TableHead>Acción</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {
+                              blockedUsers.map((user:BlockedUser,i) => (
+                                <TableRow id={i.toString()}>
+                                  <TableCell>{user.email}</TableCell>
+                                  <TableCell>{user.count}</TableCell>
+                                  <TableCell>
+                                    <Input
+                                      
+                                      id="days-blocked"
+                                      type="number"
+                                      placeholder="0"
+                                      disabled={!isEditingUsers}
+                                      onChange={(e) => setDaysBlocked(parseInt(e.target.value))}
+                                    />
+                                  </TableCell>
+                                  <TableCell>
+                                    <Button onClick={()=>handleBlockUser(user.email)} variant="destructive" size="sm" disabled={!isEditingUsers}>Bloquear</Button>
+                                  </TableCell>
+                                </TableRow>
+                              ))
+                            }
+
+                          </TableBody>
+                        </Table>
+
+                      </>
+
+                    )
+                  }
+
                 </div>
                 {!isEditingUsers ? (
                   <Button onClick={() => setIsEditingUsers(true)} variant="outline" size="sm">
@@ -189,10 +258,7 @@ export default function Configuration() {
                       <X className="h-4 w-4 mr-2" />
                       Cancelar
                     </Button>
-                    <Button onClick={() => handleUpdate} variant="default" size="sm">
-                      <Check className="h-4 w-4 mr-2" />
-                      Guardar
-                    </Button>
+                    
                   </>
                 )}
               </TabsContent>
@@ -213,7 +279,7 @@ export default function Configuration() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="tiempo-vida-token-login">Tiempo de vida de los tokens (en minutos):</Label>
+                  <Label htmlFor="tiempo-vida-token-login">Tiempo de vida de los tokens de verificación (en minutos):</Label>
                   <Input
                     id="tiempo-vida-token-login"
                     type="number"
@@ -246,51 +312,65 @@ export default function Configuration() {
               {/* Mensajes */}
               <TabsContent value="mensajes" className="space-y-6">
                 <Tabs defaultValue="verificacion-correo">
-                  <TabsList className="grid w-full grid-cols-1 md:grid-cols-3">
+                  <TabsList className="grid w-full grid-cols-2 md:mb-0 mb-10 md:grid-cols-3 gap-2">
                     <TabsTrigger value="verificacion-correo">Verificación de Correo</TabsTrigger>
                     <TabsTrigger value="login">Login</TabsTrigger>
-                    <TabsTrigger value="recuperar-contrasena">Recuperar Contraseña</TabsTrigger>
+                    <TabsTrigger value="recuperar-contrasena" className='col-span-2 md:col-span-1'>Recuperar Contraseña</TabsTrigger>
                   </TabsList>
 
                   {/* Verificación de Correo */}
                   <TabsContent value="verificacion-correo" className="space-y-4">
+                    <Label htmlFor="emailVerificationTitle">Título del correo</Label>
                     <Input
+                      id="emailVerificationTitle"
                       placeholder="Título del correo"
                       value={formData?.emailVerificationInfo.title}
                       onChange={(e) => handleInputChange(e, 'emailVerificationInfo', 'title')}
                       disabled={!isEditingEmail}
                     />
+                    <Label htmlFor="emailVerificationGreeting">Saludo</Label>
                     <Input
+                      id="emailVerificationGreeting"
                       placeholder="Saludo"
                       value={formData?.emailVerificationInfo.greeting}
                       onChange={(e) => handleInputChange(e, 'emailVerificationInfo', 'greeting')}
                       disabled={!isEditingEmail}
                     />
+                    <Label htmlFor="emailVerificationMain">Instrucción principal</Label>
                     <Textarea
+                      id="emailVerificationMain"
                       placeholder="Instrucción principal"
                       value={formData?.emailVerificationInfo.maininstruction}
                       onChange={(e) => handleInputChange(e, 'emailVerificationInfo', 'maininstruction')}
                       disabled={!isEditingEmail}
                     />
+                    <Label htmlFor="emailVerificationSecondary">Instrucción secundaria</Label>
                     <Textarea
+                      id="emailVerificationSecondary"
                       placeholder="Instrucción secundaria"
                       value={formData?.emailVerificationInfo.secondaryinstruction}
                       onChange={(e) => handleInputChange(e, 'emailVerificationInfo', 'secondaryinstruction')}
                       disabled={!isEditingEmail}
                     />
+                    <Label htmlFor="emailVerificationExpiration">Tiempo de expiración</Label>
                     <Input
+                      id="emailVerificationExpiration"
                       placeholder="Tiempo de expiración"
                       value={formData?.emailVerificationInfo.expirationtime}
                       onChange={(e) => handleInputChange(e, 'emailVerificationInfo', 'expirationtime')}
                       disabled={!isEditingEmail}
                     />
+                    <Label htmlFor="emailVerificationFinalMessage">Mensaje final</Label>
                     <Textarea
+                      id="emailVerificationFinalMessage"
                       placeholder="Mensaje final"
                       value={formData?.emailVerificationInfo.finalMessage}
                       onChange={(e) => handleInputChange(e, 'emailVerificationInfo', 'finalMessage')}
                       disabled={!isEditingEmail}
                     />
+                    <Label htmlFor="emailVerificationSignature">Firma</Label>
                     <Input
+                      id="emailVerificationSignature"
                       placeholder="Firma"
                       value={formData?.emailVerificationInfo.signature}
                       onChange={(e) => handleInputChange(e, 'emailVerificationInfo', 'signature')}
@@ -307,7 +387,7 @@ export default function Configuration() {
                           <X className="h-4 w-4 mr-2" />
                           Cancelar
                         </Button>
-                        <Button  type='button' onClick={handleUpdate} variant="default" size="sm">
+                        <Button type='button' onClick={handleUpdate} variant="default" size="sm">
                           <Check className="h-4 w-4 mr-2" />
                           Guardar
                         </Button>
@@ -317,43 +397,57 @@ export default function Configuration() {
 
                   {/* Login */}
                   <TabsContent value="login" className="space-y-4">
+                    <Label htmlFor="emailLoginTitle">Título del correo</Label>
                     <Input
+                      id="emailLoginTitle"
                       placeholder="Título del correo"
                       value={formData?.emailLogin.title}
                       onChange={(e) => handleInputChange(e, 'emailLogin', 'title')}
                       disabled={!isEditingLogin}
                     />
+                    <Label htmlFor="emailLoginGreeting">Saludo</Label>
                     <Input
+                      id="emailLoginGreeting"
                       placeholder="Saludo"
                       value={formData?.emailLogin.greeting}
                       onChange={(e) => handleInputChange(e, 'emailLogin', 'greeting')}
                       disabled={!isEditingLogin}
                     />
+                    <Label htmlFor="emailLoginMain">Instrucción principal</Label>
                     <Textarea
+                      id="emailLoginMain"
                       placeholder="Instrucción principal"
                       value={formData?.emailLogin.maininstruction}
                       onChange={(e) => handleInputChange(e, 'emailLogin', 'maininstruction')}
                       disabled={!isEditingLogin}
                     />
+                    <Label htmlFor="emailLoginSecondary">Instrucción secundaria</Label>
                     <Textarea
+                      id="emailLoginSecondary"
                       placeholder="Instrucción secundaria"
                       value={formData?.emailLogin.secondaryinstruction}
                       onChange={(e) => handleInputChange(e, 'emailLogin', 'secondaryinstruction')}
                       disabled={!isEditingLogin}
                     />
+                    <Label htmlFor="emailLoginExpiration">Tiempo de expiración</Label>
                     <Input
+                      id="emailLoginExpiration"
                       placeholder="Tiempo de expiración"
                       value={formData?.emailLogin.expirationtime}
                       onChange={(e) => handleInputChange(e, 'emailLogin', 'expirationtime')}
                       disabled={!isEditingLogin}
                     />
+                    <Label htmlFor="emailLoginFinalMessage">Mensaje final</Label>
                     <Textarea
+                      id="emailLoginFinalMessage"
                       placeholder="Mensaje final"
                       value={formData?.emailLogin.finalMessage}
                       onChange={(e) => handleInputChange(e, 'emailLogin', 'finalMessage')}
                       disabled={!isEditingLogin}
                     />
+                    <Label htmlFor="emailLoginSignature">Firma</Label>
                     <Input
+                      id="emailLoginSignature"
                       placeholder="Firma"
                       value={formData?.emailLogin.signature}
                       onChange={(e) => handleInputChange(e, 'emailLogin', 'signature')}
@@ -370,7 +464,7 @@ export default function Configuration() {
                           <X className="h-4 w-4 mr-2" />
                           Cancelar
                         </Button>
-                        <Button  type='button' onClick={handleUpdate} variant="default" size="sm">
+                        <Button type='button' onClick={handleUpdate} variant="default" size="sm">
                           <Check className="h-4 w-4 mr-2" />
                           Guardar
                         </Button>
@@ -380,43 +474,57 @@ export default function Configuration() {
 
                   {/* Recuperar Contraseña */}
                   <TabsContent value="recuperar-contrasena" className="space-y-4">
+                    <Label htmlFor="emailResetPassTitle">Título del correo</Label>
                     <Input
+                      id="emailResetPassTitle"
                       placeholder="Título del correo"
                       value={formData?.emailResetPass.title}
                       onChange={(e) => handleInputChange(e, 'emailResetPass', 'title')}
                       disabled={!isEditingPass}
                     />
+                    <Label htmlFor="emailResetPassGreeting">Saludo</Label>
                     <Input
+                      id="emailResetPassGreeting"
                       placeholder="Saludo"
                       value={formData?.emailResetPass.greeting}
                       onChange={(e) => handleInputChange(e, 'emailResetPass', 'greeting')}
                       disabled={!isEditingPass}
                     />
+                    <Label htmlFor="emailResetPassMain">Instrucción principal</Label>
                     <Textarea
+                      id="emailResetPassMain"
                       placeholder="Instrucción principal"
                       value={formData?.emailResetPass.maininstruction}
                       onChange={(e) => handleInputChange(e, 'emailResetPass', 'maininstruction')}
                       disabled={!isEditingPass}
                     />
+                    <Label htmlFor="emailResetPassSecondary">Instrucción secundaria</Label>
                     <Textarea
+                      id="emailResetPassSecondary"
                       placeholder="Instrucción secundaria"
                       value={formData?.emailResetPass.secondaryinstruction}
                       onChange={(e) => handleInputChange(e, 'emailResetPass', 'secondaryinstruction')}
                       disabled={!isEditingPass}
                     />
+                    <Label htmlFor="emailResetPassExpiration">Tiempo de expiración</Label>
                     <Input
+                      id="emailResetPassExpiration"
                       placeholder="Tiempo de expiración"
                       value={formData?.emailResetPass.expirationtime}
                       onChange={(e) => handleInputChange(e, 'emailResetPass', 'expirationtime')}
                       disabled={!isEditingPass}
                     />
+                    <Label htmlFor="emailResetPassFinalMessage">Mensaje final</Label>
                     <Textarea
+                      id="emailResetPassFinalMessage"
                       placeholder="Mensaje final"
                       value={formData?.emailResetPass.finalMessage}
                       onChange={(e) => handleInputChange(e, 'emailResetPass', 'finalMessage')}
                       disabled={!isEditingPass}
                     />
+                    <Label htmlFor="emailResetPassSignature">Firma</Label>
                     <Input
+                      id="emailResetPassSignature"
                       placeholder="Firma"
                       value={formData?.emailResetPass.signature}
                       onChange={(e) => handleInputChange(e, 'emailResetPass', 'signature')}
@@ -433,7 +541,7 @@ export default function Configuration() {
                           <X className="h-4 w-4 mr-2" />
                           Cancelar
                         </Button>
-                        <Button  type='button' onClick={handleUpdate} variant="default" size="sm">
+                        <Button type='button' onClick={handleUpdate} variant="default" size="sm">
                           <Check className="h-4 w-4 mr-2" />
                           Guardar
                         </Button>
@@ -442,6 +550,7 @@ export default function Configuration() {
                   </TabsContent>
                 </Tabs>
               </TabsContent>
+
             </Tabs>
           </div>
         </CardContent>

@@ -361,7 +361,7 @@ export default function SignUpPage() {
             </form>
 
             {/* Registro con Google */}
-            <div className="text-center mt-4">
+            {/* <div className="text-center mt-4">
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
@@ -385,7 +385,7 @@ export default function SignUpPage() {
                   </defs>
                 </svg>
               </Button>
-            </div>
+            </div> */}
 
             <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-300">
               ¿Ya tienes una cuenta?{' '}

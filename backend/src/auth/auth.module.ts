@@ -8,6 +8,7 @@ import { UsersModule } from 'src/users/users.module';
 import { ConfigModule } from '@nestjs/config';
 import { Employee, EmployeeSchema } from 'src/employees/schemas/Eployee.schema';
 import { UserActivity, UserActivitySchema } from 'src/user-activity/schema/UserActivitySchema';
+import { Configuration, ConfigurationSchema } from 'src/configuration/schema/schemaconfig';
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -19,6 +20,7 @@ import { UserActivity, UserActivitySchema } from 'src/user-activity/schema/UserA
       { name: User.name, schema: UserSchema },
       { name: Employee.name, schema: EmployeeSchema },
       { name: UserActivity.name, schema: UserActivitySchema },
+      { name: Configuration.name, schema: ConfigurationSchema },
 
     ]),
     UsersModule
