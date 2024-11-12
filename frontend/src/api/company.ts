@@ -7,6 +7,13 @@ export const getCompanyInfoApi = async () => {
     return res;
 };
 
+export const getAuditsApi = async () => {
+    const res = await axios.get(`/company-profile/audit-log/6716a25e3d494e62ce117768`, {
+        withCredentials: true
+    });
+    return res;
+};
+
 export const getBlockedUsers = async (data:any) => {
     const res = await axios.get(`/user-activity/blocked?period=${data}`, {
         withCredentials: true

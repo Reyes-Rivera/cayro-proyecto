@@ -5,10 +5,13 @@ import { InjectModel } from '@nestjs/mongoose';
 import { DocumentRegulatory } from './schemas/RegulatoryDocumentSchema';
 import { Model } from 'mongoose';
 import { DocumentTypeInter, Status } from "./entities/enums";
+import { Employee } from 'src/employees/schemas/Eployee.schema';
 
 @Injectable()
 export class RegulatoryDocumentService {
-  constructor(@InjectModel(DocumentRegulatory.name) private documentRegulatory: Model<DocumentRegulatory>) { }
+  constructor(
+    @InjectModel(DocumentRegulatory.name) private documentRegulatory: Model<DocumentRegulatory>,
+  ) { }
 
   async createPolicy(createRegulatoryDocumentDto: CreateRegulatoryDocumentDto) {
     const policyFound = await this.documentRegulatory
@@ -165,7 +168,35 @@ export class RegulatoryDocumentService {
     return res;
   }
 
-  
+  async findCurrentPolicy() {
+    const res = await this.documentRegulatory.find({
+        isDeleted: false,
+        type: DocumentTypeInter.policy,
+        isCurrentVersion: true,
+    });
+    return res[0] ; // Devolver el primer elemento o `null` si no existe
+  }
+
+  async findCurrentTerms() {
+    const res = await this.documentRegulatory.find({
+        isDeleted: false,
+        type: DocumentTypeInter.terms,
+        isCurrentVersion: true,
+    });
+    return res[0] ; // Devolver el primer elemento o `null` si no existe
+  }
+
+  async findCurrentBoundary() {
+    const res = await this.documentRegulatory.find({
+        isDeleted: false,
+        type: DocumentTypeInter.boundary,
+        isCurrentVersion: true,
+    });
+    return res[0];
+  }
+
+
+
   async updatePolicy(id: string, updateRegulatoryDocumentDto: UpdateRegulatoryDocumentDto) {
     const lastPolicy = await this.documentRegulatory
       .findOne({ type: DocumentTypeInter.policy })
@@ -279,7 +310,7 @@ export class RegulatoryDocumentService {
 
   async activePolicy(id: string) {
 
-    await this.documentRegulatory.updateMany({ isDeleted: false,type:DocumentTypeInter.policy }, { isCurrentVersion: false, status: Status.not_current });
+    await this.documentRegulatory.updateMany({ isDeleted: false, type: DocumentTypeInter.policy }, { isCurrentVersion: false, status: Status.not_current });
     const policyFound = await this.documentRegulatory.findById(id);
     policyFound.isDeleted = false;
     policyFound.isCurrentVersion = true;
@@ -291,7 +322,7 @@ export class RegulatoryDocumentService {
   }
 
   async activeTerms(id: string) {
-    await this.documentRegulatory.updateMany({ isDeleted: false,type:DocumentTypeInter.terms }, { isCurrentVersion: false, status: Status.not_current });
+    await this.documentRegulatory.updateMany({ isDeleted: false, type: DocumentTypeInter.terms }, { isCurrentVersion: false, status: Status.not_current });
     const docFound = await this.documentRegulatory.findById(id);
     docFound.isDeleted = false;
     docFound.isCurrentVersion = true;
@@ -303,7 +334,7 @@ export class RegulatoryDocumentService {
   }
 
   async activeBoundary(id: string) {
-    await this.documentRegulatory.updateMany({ isDeleted: false,type:DocumentTypeInter.boundary }, { isCurrentVersion: false, status: Status.not_current });
+    await this.documentRegulatory.updateMany({ isDeleted: false, type: DocumentTypeInter.boundary }, { isCurrentVersion: false, status: Status.not_current });
     const docFound = await this.documentRegulatory.findById(id);
     docFound.isDeleted = false;
     docFound.isCurrentVersion = true;

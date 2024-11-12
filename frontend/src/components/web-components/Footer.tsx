@@ -1,21 +1,25 @@
 import { getCompanyInfoApi } from "@/api/company";
 import { useEffect, useState } from "react";
-interface Socialdata{
+import { Link } from "react-router-dom";
+interface Socialdata {
     platform: string;
     url: string;
 }
 const Footer = () => {
     const [socialMedias, setSocialMedias] = useState([]);
-    
+    const [slogan, setSlogan] = useState("");
+    const [name, setName] = useState("");
     useEffect(() => {
         const getInfoCompany = async () => {
             const res = await getCompanyInfoApi();
+            setSlogan(res.data[0]?.slogan);
+            setName(res.data[0]?.title);
             setSocialMedias(res.data[0].socialLinks); // Asegúrate de que esto devuelve un array
         };
         getInfoCompany();
     }, []);
 
-    const renderSocialIcon = (platform:any) => {
+    const renderSocialIcon = (platform: any) => {
         switch (platform) {
             case 'facebook':
                 return (
@@ -43,22 +47,48 @@ const Footer = () => {
     return (
         <>
             <footer className="bg-zinc-800">
-                <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 md:flex md:items-center md:justify-between lg:px-8">
-                    <div className="flex justify-center space-x-6 md:order-2">
-                        {socialMedias.map((social:Socialdata, index) => (
-                            <a key={index} href={social.url} className="text-gray-400 hover:text-gray-500" target="_blank" rel="noopener noreferrer">
-                                <span className="sr-only">{social.platform}</span>
-                                {renderSocialIcon(social.platform)}
-                            </a>
-                        ))}
-                    </div>
-                    <div className="mt-8 md:mt-0 md:order-1">
-                        <p className="text-center text-base text-gray-400">
-                            &copy; {new Date().getFullYear().toString()} Cayro Uniformes. Todos los derechos reservados.
-                        </p>
+                <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+                    <div className="flex gap-4 flex-col items-center md:flex-row md:justify-between">
+                        {/* Sección de enlaces de redes sociales */}
+                        <div className="flex justify-center space-x-6 order-3 md:order-3 ">
+                            {socialMedias.map((social: Socialdata, index) => (
+                                <a
+                                    key={index}
+                                    href={social.url}
+                                    className="text-gray-400 hover:text-gray-500"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    <span className="sr-only">{social.platform}</span>
+                                    {renderSocialIcon(social.platform)}
+                                </a>
+                            ))}
+                        </div>
+
+                        {/* Sección de derechos reservados */}
+                        <div className="text-center text-base text-gray-400 order-1 md:order-1">
+                            &copy; {new Date().getFullYear().toString()} {name}  {slogan} Todos los derechos reservados.
+                        </div>
+
+                        {/* Sección de enlaces de políticas */}
+                        <div className="flex flex-col items-center  order-2 md:order-2 justify-center">
+                            <Link className="text-base text-gray-400 hover:text-gray-500" to="/policies">
+                                Políticas de privacidad
+                            </Link>
+                            <Link className="text-base text-gray-400 hover:text-gray-500" to="/terms">
+                                Términos y condiciones
+                            </Link>
+                            <Link className="text-base text-gray-400 hover:text-gray-500" to="/legal">
+                                Deslinde legal
+                            </Link>
+                            <Link className="text-base text-gray-400 hover:text-gray-500" to="/contact">
+                                Contacto
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </footer>
+
         </>
     );
 };

@@ -37,7 +37,7 @@ export default function SignUpPage() {
       uppercase: /[A-Z]/.test(password),
       lowercase: /[a-z]/.test(password),
       number: /[0-9]/.test(password),
-      special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+      special: /[!@#$%^&*(),.?":{}|]/.test(password),
       noSequential: !containsSequentialPatterns(password), // Validar patrones secuenciales
     };
     setPasswordChecks(checks);
@@ -145,7 +145,7 @@ export default function SignUpPage() {
     }
   });
   return (
-    <div className="flex flex-col dark:bg-gray-900">
+    <div className="flex flex-col dark:bg-gray-900 min-h-screen">
       <div className="flex flex-grow">
         <div className="w-full lg:w-1/2 flex items-center justify-center p-10">
           <div className="w-full max-w-md space-y-6 bg-white dark:bg-gray-800 dark:text-gray-100 p-8 rounded-xl shadow-lg">
@@ -198,7 +198,7 @@ export default function SignUpPage() {
                   <Input
                     {...register("email", {
                       required: "El correo electrónico es requerido",
-                      pattern: { value: /^\S+@\S+\.\S+$/, message: "El correo electrónico no es válido" },
+                      pattern: { value: /^(?!.*[<>])^\S+@\S+\.\S+$/, message: "El correo electrónico no es válido" },
                     })}
                     onChange={(e) => handleInputChange('email', e.target.value)}
                     id="email"
@@ -246,7 +246,14 @@ export default function SignUpPage() {
                 <Label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Contraseña</Label>
                 <div className="relative">
                   <Input
-                    {...register("password", { required: "La contraseña es requerida" })}
+                    {...register("password", {
+                      required: "La contraseña es requerida",
+                      pattern: {
+                        value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|])(?!.*[<>]).{8,}$/,
+                        message: 'Introduce caracteres especiales como !@#$%^&*(),.?":{}|'
+                      }
+
+                    })}
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     value={password}

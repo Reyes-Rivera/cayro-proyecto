@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { User, Menu, File, Briefcase, Settings } from 'lucide-react' // Añadir icono de empresa
+import { User, Menu, File, Briefcase, Settings, BookOpenText } from 'lucide-react' // Añadir icono de empresa
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -11,6 +11,7 @@ import ProfileCompany from './ProfileCompany' // Importar el componente de perfi
 import TemrsPage from './TermsPage'
 import BoundaryPage from './Boundary'
 import Configuration from './Configuration' // Importar el componente de configuración
+import AuditLogView from './AuditLogView'
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('profile')
@@ -39,6 +40,8 @@ export default function AdminDashboard() {
         return <ProfileCompany />
       case 'settings': // Pestaña de configuración
         return <Configuration />
+      case 'audits': // Pestaña de configuración
+        return <AuditLogView />
       default:
         return <UserProfile />
     }
@@ -107,6 +110,17 @@ export default function AdminDashboard() {
                     <Settings className="mr-2 h-5 w-5" />
                     Configuración
                   </Button>
+                  <Button
+                    variant={activeTab === 'audits' ? 'secondary' : 'ghost'}
+                    className={`w-full justify-start ${activeTab === 'audits' ? 'bg-blue-500 dark:bg-blue-600 text-white' : 'text-gray-900 dark:text-gray-100'}`}
+                    onClick={() => {
+                      setActiveTab('audits')
+                      setIsMobileMenuOpen(false)
+                    }}
+                  >
+                    <BookOpenText className="mr-2 h-5 w-5" />
+                    Auditoria
+                  </Button>
                 </nav>
               </SheetContent>
             </Sheet>
@@ -147,6 +161,14 @@ export default function AdminDashboard() {
                 >
                   <Settings className="mr-2 h-5 w-5" />
                   Configuración
+                </Button>
+                <Button
+                  variant={activeTab === 'audits' ? 'secondary' : 'ghost'}
+                  className={`w-full justify-start ${activeTab === 'audits' ? 'bg-blue-500 dark:bg-blue-600 text-white' : 'text-gray-900 dark:text-gray-100'}`}
+                  onClick={() => setActiveTab('audits')}
+                >
+                  <BookOpenText className="mr-2 h-5 w-5" />
+                  Auditoria
                 </Button>
               </div>
             </div>
@@ -205,7 +227,8 @@ function getTabTitle(tab: string, documentTab: string) {
   switch (tab) {
     case 'profile': return 'Perfil del Administrador'
     case 'company': return 'Perfil de la Empresa' // Nueva pestaña
-    case 'settings': return 'Configuración del Sistema' // Nueva pestaña
+    case 'settings': return 'Configuración del Sistema'
+     case 'audits': return 'Registro de auditoria.'
     default: return 'Perfil del Administrador'
   }
 }
@@ -223,7 +246,8 @@ function getTabDescription(tab: string, documentTab: string) {
   switch (tab) {
     case 'profile': return 'Gestiona tu información personal y de acceso'
     case 'company': return 'Gestiona el perfil público de tu empresa' // Descripción del perfil de la empresa
-    case 'settings': return 'Configura los ajustes del sistema' // Descripción para la configuración
+    case 'settings': return 'Configura los ajustes del sistema' 
+    case 'audits': return 'Observa quienes han realizados cambios a los datos de la empresa.' 
     default: return 'Gestiona tu información personal y de acceso'
   }
 }

@@ -1,8 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import img from "@/assets/heroimg.png";
+import { useNavigate } from "react-router-dom";
 
 export default function HomePage() {
+  const navigate = useNavigate();
+  const handleContact = () => {
+    navigate("/contact");
+  }
   return (
     <div className="min-h-screen flex flex-col bg-gray-100 dark:bg-gray-900">
       {/* Hero Section */}
@@ -20,7 +25,9 @@ export default function HomePage() {
                 <Button className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-cayro hover:bg-blue-500 md:py-4 md:text-lg md:px-10">
                   Ver catálogo
                 </Button>
-                <Button variant="outline" className="w-full flex items-center justify-center px-8 py-3 border text-base font-medium rounded-md text-gray-900 dark:text-gray-100 md:py-4 md:text-lg md:px-10">
+                <Button
+                onClick={handleContact}
+                variant="outline" className="w-full flex items-center justify-center px-8 py-3 border text-base font-medium rounded-md text-gray-900 dark:text-gray-100 md:py-4 md:text-lg md:px-10">
                   Contactar
                 </Button>
               </div>

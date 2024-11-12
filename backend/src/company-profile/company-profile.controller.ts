@@ -35,6 +35,11 @@ export class CompanyProfileController {
     return this.companyProfileService.update(id, updateCompanyProfileDto, adminId);
   }
 
+  @Get('/audit-log/:id')
+  async getAuditLog(@Param('id') id: string) {
+    return this.companyProfileService.getAudit(id);
+  }
+
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.companyProfileService.remove(+id);

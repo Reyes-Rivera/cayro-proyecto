@@ -157,6 +157,8 @@ export default function LoginPage() {
                   type="email"
                   autoComplete="email"
                   required
+                  pattern="^[^<>]+@[^<>]+\.[^<>]+$"
+                  title="El correo electrónico no es válido y no debe contener los símbolos < o >"
                   className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-[#2F93D1] focus:border-[#2F93D1] focus:z-10 sm:text-sm mt-1"
                   placeholder="correo"
                   onChange={(e) => setData({ ...data, email: (e.target as HTMLInputElement).value })}
@@ -171,6 +173,8 @@ export default function LoginPage() {
                     name="password"
                     autoComplete="current-password"
                     required
+                    pattern="^[^<>]+$"
+                    title="No se permiten los símbolos < o >"
                     className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-[#2F93D1] focus:border-[#2F93D1] focus:z-10 sm:text-sm mt-1"
                     placeholder="contraseña"
                     onChange={(e) => setData({ ...data, password: (e.target as HTMLInputElement).value })}
@@ -215,16 +219,16 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 className="w-full bg-[#2F93D1] hover:bg-[#007ACC] focus:ring-[#2F93D1] text-white dark:bg-[#007ACC] dark:hover:bg-[#2F93D1] dark:focus:ring-[#2F93D1]"
-                disabled={lockoutTime > 0||isLoading}
+                disabled={lockoutTime > 0 || isLoading}
               >
                 {
-                  isLoading?(
+                  isLoading ? (
                     <Loader2 className="animate-spin mr-2 h-4 w-4" />
-                  ):(
+                  ) : (
                     <p >Iniciar sesión</p>
                   )
                 }
-                
+
               </Button>
             </form>
 

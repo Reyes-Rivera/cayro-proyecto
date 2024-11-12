@@ -184,7 +184,7 @@ export class AuthService {
     if (!userFound) {
       userFound = await this.employeeModel.findOne({ email: loginDto.email });
       if (!userFound) {
-        throw new NotFoundException("Usuario o empleado no registrado.");
+        throw new NotFoundException("Usuario no registrado.");
       }
     }
 

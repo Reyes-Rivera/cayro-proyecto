@@ -14,6 +14,10 @@ import AdminDashboard from "@/pages/employees/dashboard-admin/AdminDashboard";
 import HomePage from "@/pages/web/HomePage";
 import { useEffect } from "react";
 import { getCompanyInfoApi } from "@/api/company";
+import Policies from "@/pages/web/RegulatoryDocuments/Policies";
+import Terms from "@/pages/web/RegulatoryDocuments/Terms";
+import LegalBoundary from "@/pages/web/RegulatoryDocuments/LegalBoundary";
+import Contact from "@/pages/web/Contact";
 const AppRoutes = () => {
   useEffect(()=>{
     const getInfoPage = async() => {
@@ -31,6 +35,10 @@ const AppRoutes = () => {
             <Routes>
 
                 <Route path='/' element={<HomePage/>}/>
+                <Route path='/policies' element={<Policies/>}/>
+                <Route path='/terms' element={<Terms/>}/>
+                <Route path='/legal' element={<LegalBoundary/>}/>
+                <Route path='/contact' element={<Contact/>}/>
                 <Route path='/sign-up' element={<SignUpPage/>}/>
                 <Route path='/login' element={<LoginPage/>}/>
                 <Route path='/password-recovery' element={<PasswordRecoveryPage/>}/>

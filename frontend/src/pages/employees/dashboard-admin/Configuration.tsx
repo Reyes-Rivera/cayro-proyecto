@@ -11,9 +11,9 @@ import 'sweetalert2/dist/sweetalert2.min.css'
 import { blockedUsersApi, getBlockedUsers, getCompanyConfig, updateCompanyConfig } from '@/api/company'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-export interface BlockedUser{
+export interface BlockedUser {
   email: string,
-  count:number,
+  count: number,
 }
 export interface emailData {
   title: string;
@@ -124,7 +124,7 @@ export default function Configuration() {
     }
   };
 
-  const handleSearchBlockUsers = async() => {
+  const handleSearchBlockUsers = async () => {
     try {
       const res = await getBlockedUsers(periodoSeleccionado);
       setBlockedUsers(res.data);
@@ -138,10 +138,10 @@ export default function Configuration() {
     }
   };
 
-  const handleBlockUser = async(email:string) => {
+  const handleBlockUser = async (email: string) => {
     try {
-      const res = await blockedUsersApi({days:daysBlocked,email});
-      if(res){
+      const res = await blockedUsersApi({ days: daysBlocked, email });
+      if (res) {
         Swal.fire({
           icon: 'success',
           title: 'Bloqueadado.',
@@ -159,18 +159,18 @@ export default function Configuration() {
     }
   };
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto sm:p-4">
       <Card className="w-full max-w-4xl mx-auto">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold">Configuración de Seguridad y Mensajes</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">Configuración de Seguridad y Mensajes</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
             <Tabs defaultValue="usuarios" className="w-full">
               <TabsList className="grid w-full grid-cols-2 md:mb-0 mb-10 md:grid-cols-3 gap-2">
-                <TabsTrigger value="usuarios">Gestión de Usuarios</TabsTrigger>
+                <TabsTrigger value="usuarios">Usuarios</TabsTrigger>
                 <TabsTrigger value="configuracion">Configuración General</TabsTrigger>
-                <TabsTrigger className='col-span-2 md:col-span-1' value="mensajes">Mensajes de Verificación</TabsTrigger>
+                <TabsTrigger className='col-span-2 md:col-span-1' value="mensajes">Correos</TabsTrigger>
               </TabsList>
               {/* Gestión de Usuarios */}
               {/* Gestión de Usuarios */}
@@ -217,13 +217,13 @@ export default function Configuration() {
                           </TableHeader>
                           <TableBody>
                             {
-                              blockedUsers.map((user:BlockedUser,i) => (
+                              blockedUsers.map((user: BlockedUser, i) => (
                                 <TableRow id={i.toString()}>
                                   <TableCell>{user.email}</TableCell>
                                   <TableCell>{user.count}</TableCell>
                                   <TableCell>
                                     <Input
-                                      
+                                      min={1}
                                       id="days-blocked"
                                       type="number"
                                       placeholder="0"
@@ -232,7 +232,7 @@ export default function Configuration() {
                                     />
                                   </TableCell>
                                   <TableCell>
-                                    <Button onClick={()=>handleBlockUser(user.email)} variant="destructive" size="sm" disabled={!isEditingUsers}>Bloquear</Button>
+                                    <Button onClick={() => handleBlockUser(user.email)} variant="destructive" size="sm" disabled={!isEditingUsers}>Bloquear</Button>
                                   </TableCell>
                                 </TableRow>
                               ))
@@ -258,7 +258,7 @@ export default function Configuration() {
                       <X className="h-4 w-4 mr-2" />
                       Cancelar
                     </Button>
-                    
+
                   </>
                 )}
               </TabsContent>
@@ -269,6 +269,7 @@ export default function Configuration() {
                   <Label htmlFor="intentos-limite">Número de intentos de acceso límite:</Label>
                   <Input
                     defaultValue={configInfo?.attemptsLogin}
+                    min={1}
                     id="intentos-limite"
                     type="number"
                     placeholder="Ej: 5"
@@ -283,6 +284,7 @@ export default function Configuration() {
                   <Input
                     id="tiempo-vida-token-login"
                     type="number"
+                    min={1}
                     placeholder="Ej: 120"
                     disabled={!isEditingGeneral}
                     value={formData?.timeTokenLogin}
@@ -322,6 +324,7 @@ export default function Configuration() {
                   <TabsContent value="verificacion-correo" className="space-y-4">
                     <Label htmlFor="emailVerificationTitle">Título del correo</Label>
                     <Input
+                      required
                       id="emailVerificationTitle"
                       placeholder="Título del correo"
                       value={formData?.emailVerificationInfo.title}
@@ -330,6 +333,7 @@ export default function Configuration() {
                     />
                     <Label htmlFor="emailVerificationGreeting">Saludo</Label>
                     <Input
+                      required
                       id="emailVerificationGreeting"
                       placeholder="Saludo"
                       value={formData?.emailVerificationInfo.greeting}
@@ -338,6 +342,7 @@ export default function Configuration() {
                     />
                     <Label htmlFor="emailVerificationMain">Instrucción principal</Label>
                     <Textarea
+                      required
                       id="emailVerificationMain"
                       placeholder="Instrucción principal"
                       value={formData?.emailVerificationInfo.maininstruction}
@@ -346,6 +351,7 @@ export default function Configuration() {
                     />
                     <Label htmlFor="emailVerificationSecondary">Instrucción secundaria</Label>
                     <Textarea
+                      required
                       id="emailVerificationSecondary"
                       placeholder="Instrucción secundaria"
                       value={formData?.emailVerificationInfo.secondaryinstruction}
@@ -354,6 +360,7 @@ export default function Configuration() {
                     />
                     <Label htmlFor="emailVerificationExpiration">Tiempo de expiración</Label>
                     <Input
+                      required
                       id="emailVerificationExpiration"
                       placeholder="Tiempo de expiración"
                       value={formData?.emailVerificationInfo.expirationtime}
@@ -362,6 +369,7 @@ export default function Configuration() {
                     />
                     <Label htmlFor="emailVerificationFinalMessage">Mensaje final</Label>
                     <Textarea
+                      required
                       id="emailVerificationFinalMessage"
                       placeholder="Mensaje final"
                       value={formData?.emailVerificationInfo.finalMessage}
@@ -370,6 +378,7 @@ export default function Configuration() {
                     />
                     <Label htmlFor="emailVerificationSignature">Firma</Label>
                     <Input
+                      required
                       id="emailVerificationSignature"
                       placeholder="Firma"
                       value={formData?.emailVerificationInfo.signature}
@@ -399,6 +408,7 @@ export default function Configuration() {
                   <TabsContent value="login" className="space-y-4">
                     <Label htmlFor="emailLoginTitle">Título del correo</Label>
                     <Input
+                      required
                       id="emailLoginTitle"
                       placeholder="Título del correo"
                       value={formData?.emailLogin.title}
@@ -407,6 +417,7 @@ export default function Configuration() {
                     />
                     <Label htmlFor="emailLoginGreeting">Saludo</Label>
                     <Input
+                      required
                       id="emailLoginGreeting"
                       placeholder="Saludo"
                       value={formData?.emailLogin.greeting}
@@ -415,6 +426,7 @@ export default function Configuration() {
                     />
                     <Label htmlFor="emailLoginMain">Instrucción principal</Label>
                     <Textarea
+                      required
                       id="emailLoginMain"
                       placeholder="Instrucción principal"
                       value={formData?.emailLogin.maininstruction}
@@ -423,6 +435,7 @@ export default function Configuration() {
                     />
                     <Label htmlFor="emailLoginSecondary">Instrucción secundaria</Label>
                     <Textarea
+                      required
                       id="emailLoginSecondary"
                       placeholder="Instrucción secundaria"
                       value={formData?.emailLogin.secondaryinstruction}
@@ -431,6 +444,7 @@ export default function Configuration() {
                     />
                     <Label htmlFor="emailLoginExpiration">Tiempo de expiración</Label>
                     <Input
+                      required
                       id="emailLoginExpiration"
                       placeholder="Tiempo de expiración"
                       value={formData?.emailLogin.expirationtime}
@@ -439,6 +453,7 @@ export default function Configuration() {
                     />
                     <Label htmlFor="emailLoginFinalMessage">Mensaje final</Label>
                     <Textarea
+                      required
                       id="emailLoginFinalMessage"
                       placeholder="Mensaje final"
                       value={formData?.emailLogin.finalMessage}
@@ -447,6 +462,7 @@ export default function Configuration() {
                     />
                     <Label htmlFor="emailLoginSignature">Firma</Label>
                     <Input
+                      required
                       id="emailLoginSignature"
                       placeholder="Firma"
                       value={formData?.emailLogin.signature}
@@ -476,6 +492,7 @@ export default function Configuration() {
                   <TabsContent value="recuperar-contrasena" className="space-y-4">
                     <Label htmlFor="emailResetPassTitle">Título del correo</Label>
                     <Input
+                      required
                       id="emailResetPassTitle"
                       placeholder="Título del correo"
                       value={formData?.emailResetPass.title}
@@ -484,6 +501,7 @@ export default function Configuration() {
                     />
                     <Label htmlFor="emailResetPassGreeting">Saludo</Label>
                     <Input
+                      required
                       id="emailResetPassGreeting"
                       placeholder="Saludo"
                       value={formData?.emailResetPass.greeting}
@@ -492,6 +510,7 @@ export default function Configuration() {
                     />
                     <Label htmlFor="emailResetPassMain">Instrucción principal</Label>
                     <Textarea
+                      required
                       id="emailResetPassMain"
                       placeholder="Instrucción principal"
                       value={formData?.emailResetPass.maininstruction}
@@ -500,6 +519,7 @@ export default function Configuration() {
                     />
                     <Label htmlFor="emailResetPassSecondary">Instrucción secundaria</Label>
                     <Textarea
+                      required
                       id="emailResetPassSecondary"
                       placeholder="Instrucción secundaria"
                       value={formData?.emailResetPass.secondaryinstruction}
@@ -508,6 +528,7 @@ export default function Configuration() {
                     />
                     <Label htmlFor="emailResetPassExpiration">Tiempo de expiración</Label>
                     <Input
+                      required
                       id="emailResetPassExpiration"
                       placeholder="Tiempo de expiración"
                       value={formData?.emailResetPass.expirationtime}
@@ -516,6 +537,7 @@ export default function Configuration() {
                     />
                     <Label htmlFor="emailResetPassFinalMessage">Mensaje final</Label>
                     <Textarea
+                      required
                       id="emailResetPassFinalMessage"
                       placeholder="Mensaje final"
                       value={formData?.emailResetPass.finalMessage}
@@ -524,6 +546,7 @@ export default function Configuration() {
                     />
                     <Label htmlFor="emailResetPassSignature">Firma</Label>
                     <Input
+                      required
                       id="emailResetPassSignature"
                       placeholder="Firma"
                       value={formData?.emailResetPass.signature}

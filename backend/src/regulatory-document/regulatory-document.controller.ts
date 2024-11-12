@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ConflictException, Put, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ConflictException, Put, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { RegulatoryDocumentService } from './regulatory-document.service';
 import { CreateRegulatoryDocumentDto } from './dto/create-regulatory-document.dto';
 import { UpdateRegulatoryDocumentDto } from './dto/update-regulatory-document.dto';
@@ -8,7 +8,6 @@ import { Role } from 'src/auth/roles/role.enum';
 @Controller('regulatory-document')
 export class RegulatoryDocumentController {
   constructor(private readonly regulatoryDocumentService: RegulatoryDocumentService) { }
-
   @Post("policy")
   @Auth([Role.ADMIN])
   async createPolicy(@Body() createRegulatoryDocumentDto: CreateRegulatoryDocumentDto) {
@@ -36,7 +35,28 @@ export class RegulatoryDocumentController {
   @Get("policy")
   async findAllPolicies() {
     const res = await this.regulatoryDocumentService.findAllPolicies();
-    if(!res) throw new NotFoundException("No hay politicas todavia.");
+    if (!res) throw new NotFoundException("No hay politicas todavia.");
+    return res;
+  }
+
+  @Get("current-policy")
+  async findCurrentPolicy() {
+    const res = await this.regulatoryDocumentService.findCurrentPolicy();
+    if (!res) throw new NotFoundException("No hay politicas todavia.");
+    return res;
+  }
+
+  @Get("current-term")
+  async findCurrentTerms() {
+    const res = await this.regulatoryDocumentService.findCurrentTerms();
+    if (!res) throw new NotFoundException("No hay politicas todavia.");
+    return res;
+  }
+
+  @Get("current-boundary")
+  async findCurrentBoundary() {
+    const res = await this.regulatoryDocumentService.findCurrentBoundary();
+    if (!res) throw new NotFoundException("No hay politicas todavia.");
     return res;
   }
 
@@ -44,7 +64,7 @@ export class RegulatoryDocumentController {
   @Get("terms")
   async findAllTerms() {
     const res = await this.regulatoryDocumentService.findAllTerms();
-    if(!res) throw new NotFoundException("No hay terminos y condiciones todavia.");
+    if (!res) throw new NotFoundException("No hay terminos y condiciones todavia.");
     return res;
   }
 
@@ -52,28 +72,28 @@ export class RegulatoryDocumentController {
   @Get("boundary")
   async findAllBoundaries() {
     const res = await this.regulatoryDocumentService.findAllBoundaries();
-    if(!res) throw new NotFoundException("No hay terminos y condiciones todavia.");
+    if (!res) throw new NotFoundException("No hay terminos y condiciones todavia.");
     return res;
   }
 
   @Get("policy-history")
   async findAllPoliciesHistory() {
     const res = await this.regulatoryDocumentService.findAllPoliciesHistory();
-    if(!res) throw new NotFoundException("No hay politicas todavia.");
+    if (!res) throw new NotFoundException("No hay politicas todavia.");
     return res;
   }
 
   @Get("terms-history")
   async findAllTermsHistory() {
     const res = await this.regulatoryDocumentService.findAllTermsHistory();
-    if(!res) throw new NotFoundException("No hay terminos y condiciones todavia.");
+    if (!res) throw new NotFoundException("No hay terminos y condiciones todavia.");
     return res;
   }
 
   @Get("boundary-history")
   async findAllBoundaryHistory() {
     const res = await this.regulatoryDocumentService.findAllBoundariesHistory();
-    if(!res) throw new NotFoundException("No hay docuemntos todavia.");
+    if (!res) throw new NotFoundException("No hay docuemntos todavia.");
     return res;
   }
 
@@ -145,11 +165,13 @@ export class RegulatoryDocumentController {
     if (!res) throw new ConflictException("Algo salio mal al activar los terminos y condiciones, intentalo mas tarde.")
     return res;
   }
-  @Patch('active-boundary/:id') 
+  @Patch('active-boundary/:id')
   @Auth([Role.ADMIN])
   async activeBoundary(@Param('id') id: string) {
     const res = await this.regulatoryDocumentService.activeBoundary(id);
     if (!res) throw new ConflictException("Algo salio mal al activar el documento, intentalo mas tarde.")
     return res;
   }
+
+
 }

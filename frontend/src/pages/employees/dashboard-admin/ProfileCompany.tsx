@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { companyInfoUpdateApi, getCompanyInfoApi } from "@/api/company";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CompanyProfile, ContactInfo, SocialLinks } from "@/types/CompanyInfo";
-import { Upload, Unlock, RefreshCw, PlusCircle } from 'lucide-react';
+import { Upload, Unlock, RefreshCw, X, PlusCircle, Save } from 'lucide-react';
 import { useAuth } from "@/context/AuthContextType";
 import Swal from 'sweetalert2';
 import 'sweetalert2/src/sweetalert2.scss';
@@ -119,6 +120,16 @@ export default function ProfileCompany() {
       return;
     }
 
+    if (!updatedTitle || updatedTitle.length > 20) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en el envio.',
+        text: 'El título debe tener mas de 20 caracteres.',
+        confirmButtonColor: '#2F93D1',
+      });
+      return;
+    }
+
     try {
       const res = await companyInfoUpdateApi({
         title: updatedTitle,
@@ -152,7 +163,15 @@ export default function ProfileCompany() {
       });
       return;
     }
-
+    if (!updatedSlogan || updatedSlogan.length > 50) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en el envio.',
+        text: 'El eslogan debe tener mas de 50 caracteres.',
+        confirmButtonColor: '#2F93D1',
+      });
+      return;
+    }
     try {
       const res = await companyInfoUpdateApi({
         slogan: updatedSlogan,
@@ -294,12 +313,12 @@ export default function ProfileCompany() {
     try {
       const res = await companyInfoUpdateApi({
         socialLinks: updatedSocialLinks.map((link, idx) => ({
-          _id: link._id, 
-          platform: idx === index ? updatedLink.platform : link.platform, 
+          _id: link._id,
+          platform: idx === index ? updatedLink.platform : link.platform,
           url: idx === index ? updatedLink.url : link.url,
         }))
       }, companyInfo?._id, user?._id);
-  
+
       if (res) {
         Swal.fire({
           icon: 'success',
@@ -319,16 +338,46 @@ export default function ProfileCompany() {
     }
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setImage(e.target.files[0]);
-      setIsUpload(true);
+  function handleImageChange(event: any) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) {
+      return;
     }
-  };
 
+    const maxSize = 2 * 1024 * 1024; // 2 MB
+    const validTypes = ['image/png', 'image/jpeg'];
+
+    if (file.size > maxSize) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en el envío.',
+        text: 'La imagen debe ser de 2 MB o menos.',
+        confirmButtonColor: '#2F93D1',
+      });
+      return;
+    }
+
+    // Validar el tipo de archivo
+    if (!validTypes.includes(file.type)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Formato no válido',
+        text: 'La imagen debe ser en formato PNG o JPEG.',
+        confirmButtonColor: '#2F93D1',
+      });
+      return;
+    }
+
+    // Si pasa todas las validaciones, se establece la imagen
+    setImage(file);
+  }
+
+  const handleCancelImg = () => {
+    setImageUrl(null);
+    setIsUpload(false);
+  }
   const uploadImageToCloudinary = async () => {
     if (!image) return;
-
     const formData = new FormData();
     formData.append('file', image);
     const uploadPreset = "ml_default";
@@ -344,6 +393,7 @@ export default function ProfileCompany() {
       if (res.ok) {
         setImageUrl(data.secure_url);
         console.log('Imagen subida:', data.secure_url);
+        setIsUpload(true);
       } else {
         console.error('Error en la subida:', data.error?.message);
       }
@@ -359,9 +409,9 @@ export default function ProfileCompany() {
   }, [image]);
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
+    <div className="max-w-4xl mx-auto sm:p-4">
       <Tabs defaultValue="informacion-general" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:mb-0 mb-10">
           <TabsTrigger value="informacion-general">Información General</TabsTrigger>
           <TabsTrigger value="contacto">Contacto</TabsTrigger>
           <TabsTrigger value="redes-sociales">Redes Sociales</TabsTrigger>
@@ -383,7 +433,7 @@ export default function ProfileCompany() {
                   type="file"
                   id="logo-upload"
                   className="hidden"
-                  accept="image/*"
+                  accept="image/png, image/jpeg"
                   onChange={handleImageChange}
                 />
                 {!isUpload ? (
@@ -392,10 +442,16 @@ export default function ProfileCompany() {
                     Cambiar Logo
                   </Button>
                 ) : (
-                  <Button onClick={handleSaveImg} type="button" variant="default">
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Actualizar Logo
-                  </Button>
+                  <div className="flex flex-wrap gap-3">
+                    <Button onClick={handleSaveImg} type="button" variant="default">
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Actualizar Logo
+                    </Button>
+                    <Button onClick={handleCancelImg} type="button" variant="destructive">
+                      <X className="h-4 w-4 mr-2" />
+                      Cancelar
+                    </Button>
+                  </div>
                 )}
               </div>
 
@@ -601,15 +657,15 @@ export default function ProfileCompany() {
               <CardTitle>Redes Sociales</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <ScrollArea className="space-y-4">
                 {/* Mostrar las redes sociales existentes */}
                 {updatedSocialLinks.map((link, index) => (
-                  <div key={index} className="flex items-center space-x-2">
+                  <div key={index} className="flex justify-center  items-center mb-2 gap-2">
                     {editingSocialLinks[index] ? (
                       <>
                         {/* Campo editable para la plataforma */}
                         <input
-                        required
+                          required
                           type="text"
                           value={link.platform}
                           onChange={(e) => {
@@ -621,18 +677,20 @@ export default function ProfileCompany() {
                           placeholder="Plataforma"
                         />
                         {/* Campo editable para la URL */}
-                        <input
-                        required
-                          type="url"
-                          value={link.url}
-                          onChange={(e) => {
-                            const newLinks = [...updatedSocialLinks];
-                            newLinks[index].url = e.target.value;
-                            setUpdatedSocialLinks(newLinks);
-                          }}
-                          className="flex-1 p-2 bg-gray-100 dark:bg-gray-800 rounded"
-                          placeholder="URL"
-                        />
+                        <div className="truncate">
+                          <input
+                            required
+                            type="url"
+                            value={link.url}
+                            onChange={(e) => {
+                              const newLinks = [...updatedSocialLinks];
+                              newLinks[index].url = e.target.value;
+                              setUpdatedSocialLinks(newLinks);
+                            }}
+                            className="flex-1 p-2  bg-gray-100 dark:bg-gray-800 rounded"
+                            placeholder="URL"
+                          />
+                        </div>
                       </>
                     ) : (
                       <>
@@ -640,7 +698,7 @@ export default function ProfileCompany() {
                         <div className="flex-1 p-2 bg-gray-100 dark:bg-gray-800 rounded">
                           {link.platform}
                         </div>
-                        <div className="flex-1 p-2 bg-gray-100 dark:bg-gray-800 rounded">
+                        <div className="flex-1 p-2 bg-gray-100 dark:bg-gray-800 rounded truncate">
                           {link.url}
                         </div>
                       </>
@@ -648,18 +706,22 @@ export default function ProfileCompany() {
 
                     {/* Botón para desbloquear/guardar/cancelar */}
                     {editingSocialLinks[index] ? (
-                      <>
+                      <div className="flex">
                         <Button
                           type="button"
-                          variant="default"
+                          className="bg-blue-300/40"
+                          variant="outline"
+                          size="icon"
                           onClick={() => handleSocialMedia(index)}
                         >
-                          Guardar
+                          <Save className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" onClick={handleCancelEdit}>
-                          Cancelar
+                        <Button type="button"
+                          variant="destructive"
+                          size="icon" onClick={handleCancelEdit}>
+                          <X className="h-4 w-4" />
                         </Button>
-                      </>
+                      </div>
                     ) : (
                       <Button
                         type="button"
@@ -689,7 +751,8 @@ export default function ProfileCompany() {
                 >
                   <PlusCircle className="mr-2 h-4 w-4" /> Agregar Red Social
                 </Button>
-              </div>
+                <ScrollBar orientation="horizontal" />
+              </ScrollArea>
             </CardContent>
           </Card>
         </TabsContent>

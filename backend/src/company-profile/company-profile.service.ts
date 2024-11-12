@@ -5,10 +5,14 @@ import { InjectModel } from '@nestjs/mongoose';
 import { CompanyProfile } from './schema/CompanySchema';
 import mongoose, { Model, Types } from 'mongoose';
 import { Audit, ContactInfo, SocialLinks } from './entities/company-profile.entity';
+import { Employee } from 'src/employees/schemas/Eployee.schema';
 
 @Injectable()
 export class CompanyProfileService {
-  constructor(@InjectModel(CompanyProfile.name) private companyProfile: Model<CompanyProfile>) { }
+  constructor(
+    @InjectModel(CompanyProfile.name) private companyProfile: Model<CompanyProfile>,
+    @InjectModel(Employee.name) private employeeProfile: Model<Employee>
+  ) { }
 
   // Crear un nuevo perfil de empresa
   create(createCompanyProfileDto: CreateCompanyProfileDto) {
@@ -163,6 +167,28 @@ export class CompanyProfileService {
 
     return updatedProfile;
   }
+  async getAudit(companyProfileId: string) {
+
+    const companyProfile = await this.companyProfile.findById(companyProfileId).exec();
+    if (!companyProfile) {
+      throw new NotFoundException('Perfil de compañía no encontrado');
+    }
+
+    const auditLogWithAdminInfo = await Promise.all(
+      companyProfile.auditLog.map(async (audit) => {
+        const admin = await this.employeeProfile.findOne({ _id: audit.adminId }).exec();
+        return {
+          action: audit.action,
+          date: audit.date,
+          userName: admin ? `${admin.name} ${admin.surname}` : 'Admin eliminado.',
+        };
+      })
+    );
+    auditLogWithAdminInfo.sort((a, b) => b.date.getTime() - a.date.getTime());
+    return auditLogWithAdminInfo;
+  }
+
+
 
   remove(id: number) {
     return `This action removes a #${id} companyProfile`;

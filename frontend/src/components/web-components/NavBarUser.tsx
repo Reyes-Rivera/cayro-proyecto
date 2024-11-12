@@ -52,12 +52,11 @@ const NavBarUser = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              {/* Logo */}
-              <div className="flex-shrink-0">
+              <div className="flex-shrink-0 w-28 h-28 flex justify-start">
                 <img
                   src={logo}
                   alt="Cayro Uniformes"
-                  className="w-32 dark:filter dark:drop-shadow-white"
+                  className=" object-contain dark:filter dark:drop-shadow-white"
                 />
               </div>
             </div>
@@ -73,8 +72,6 @@ const NavBarUser = () => {
               >
                 Inicio
               </NavLink>
-
-
               {auth ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -112,7 +109,6 @@ const NavBarUser = () => {
             {/* Mobile Menu Button */}
             <div className=" flex items-center sm:hidden gap-3">
               <ThemeToggle />
-
               <Button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 dark:text-gray-100 hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#2F93D1] bg-transparent dark:bg-slate-950"
