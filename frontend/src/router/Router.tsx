@@ -18,6 +18,7 @@ import Policies from "@/pages/web/RegulatoryDocuments/Policies";
 import Terms from "@/pages/web/RegulatoryDocuments/Terms";
 import LegalBoundary from "@/pages/web/RegulatoryDocuments/LegalBoundary";
 import Contact from "@/pages/web/Contact";
+import ProductDetails from "@/pages/web/ProductDetails";
 const AppRoutes = () => {
   useEffect(()=>{
     const getInfoPage = async() => {
@@ -41,6 +42,7 @@ const AppRoutes = () => {
                 <Route path='/contact' element={<Contact/>}/>
                 <Route path='/sign-up' element={<SignUpPage/>}/>
                 <Route path='/login' element={<LoginPage/>}/>
+                <Route path='/product-details' element={<ProductDetails/>}/>
                 <Route path='/password-recovery' element={<PasswordRecoveryPage/>}/>
                 <Route path="/reset-password/:token" element={<PasswordResetPage/>}/>
 

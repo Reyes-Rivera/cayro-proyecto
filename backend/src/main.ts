@@ -6,7 +6,8 @@ import * as csurf from 'csurf';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors({
-    origin: ["https://cayro.netlify.app","http://localhost:5173"],
+    origin: ["https://cayro.netlify.app","http://localhost:5173","http://localhost","https://cayro-uniformes.com:8080","https://cayro-uniformes.com"],
+    // origin: ["https://cayro.netlify.app","http://localhost:5173"],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
@@ -14,6 +15,6 @@ async function bootstrap() {
   const port = process.env.PORT || 5000;
   app.use(cookieParser());
   // app.use(csurf({ cookie: true }));
-  await app.listen(port);
+  await app.listen(port,"0.0.0.0");
 }
 bootstrap();

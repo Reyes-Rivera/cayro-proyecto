@@ -2,11 +2,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import img from "@/assets/heroimg.png";
 import { useNavigate } from "react-router-dom";
-
+import sudadera from "@/assets/sudadera.png";
 export default function HomePage() {
   const navigate = useNavigate();
   const handleContact = () => {
     navigate("/contact");
+  }
+  const handleProductDetails = (i:number) => {
+    if(i===0){
+      navigate("/product-details");
+    };
   }
   return (
     <div className="min-h-screen flex flex-col bg-gray-100 dark:bg-gray-900">
@@ -44,25 +49,31 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-extrabold text-gray-900 dark:text-gray-100 mb-8">Productos destacados</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map((product) => (
+            {[1, 2, 3].map((product,i) => (
               <Card key={product} className="bg-white dark:bg-gray-700">
-                <CardHeader>
+                <CardHeader className="h-72">
                   <img
-                    src={`/placeholder.svg?height=200&width=300&text=Producto ${product}`}
+                    src={`${i === 0 ? sudadera: ""}`}
                     alt={`Producto ${product}`}
-                    width={300}
-                    height={200}
-                    className="rounded-t-lg w-full h-auto"
+                    
+                    className="rounded-t-lg  w-52 m-auto"
                   />
                 </CardHeader>
                 <CardContent>
-                  <CardTitle className="text-gray-900 dark:text-gray-100">Uniforme Profesional {product}</CardTitle>
+                  <CardTitle className="text-gray-900 dark:text-gray-100">
+                    {
+                      i===0 ? "Sudadera Good Vibes" :`Uniforme Profesional ${product}`
+                    }
+                  </CardTitle>
                   <CardDescription className="text-gray-500 dark:text-gray-300">
-                    Descripción breve del uniforme y sus características principales.
+                    {
+                      i===0 ?"Mezcla de algodón suave y duradera para mayor confort, ajuste regular con bolsillo tipo canguro y cordones en la capucha." :"Descripción breve del uniforme y sus características principales."
+                    }
+                    
                   </CardDescription>
                 </CardContent>
                 <CardFooter>
-                  <Button className="w-full">Ver detalles</Button>
+                  <Button className="w-full" onClick={()=>handleProductDetails(i)}>Ver detalles</Button>
                 </CardFooter>
               </Card>
             ))}

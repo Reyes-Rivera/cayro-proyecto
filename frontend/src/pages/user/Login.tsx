@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContextType";
 import { UserLogin } from "@/types/User";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate,NavLink } from "react-router-dom";
 import Swal from 'sweetalert2';
 import 'sweetalert2/src/sweetalert2.scss';
 import ReCAPTCHA from 'react-google-recaptcha';
@@ -205,9 +205,9 @@ export default function LoginPage() {
               )}
               <div className="flex items-end justify-end">
                 <div className="text-sm">
-                  <a href="/password-recovery" className="font-medium text-[#2F93D1] hover:text-[#007ACC] dark:text-[#2F93D1] dark:hover:text-[#007ACC]">
+                  <NavLink to="/password-recovery" className="font-medium text-[#2F93D1] hover:text-[#007ACC] dark:text-[#2F93D1] dark:hover:text-[#007ACC]">
                     ¿Olvidaste tu contraseña?
-                  </a>
+                  </NavLink>
                 </div>
               </div>
               <div className="flex justify-center w-full">
@@ -234,9 +234,9 @@ export default function LoginPage() {
 
             <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
               ¿No tienes una cuenta?{' '}
-              <a href="/sign-up" className="font-medium text-[#2F93D1] hover:text-[#007ACC] dark:text-[#2F93D1] dark:hover:text-[#007ACC]">
+              <NavLink to="/sign-up" className="font-medium text-[#2F93D1] hover:text-[#007ACC] dark:text-[#2F93D1] dark:hover:text-[#007ACC]">
                 Regístrate
-              </a>
+              </NavLink>
             </p>
           </div>
         </div>

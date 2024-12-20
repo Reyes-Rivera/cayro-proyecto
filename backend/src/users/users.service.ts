@@ -46,13 +46,13 @@ export class UsersService {
       console.log(error)
       throw new InternalServerErrorException("Error al enviar el correo de recuperación,");
     }
-    
+
   }
   async sendCode(email: string) {
     try {
       const configInfo = await this.configuration.find();
       const timeToken = parseInt(configInfo[0].timeTokenEmail);
-      const expirationTime = Date.now() + timeToken * 60000; 
+      const expirationTime = Date.now() + timeToken * 60000;
       const verificationCode = crypto.randomInt(100000, 999999).toString();
       //5 minutes 
       this.codes.set(email, { code: verificationCode, expires: expirationTime });
@@ -231,8 +231,8 @@ export class UsersService {
       }
       await userFound.save();
       const res = new this.userActivityModel({
-        email:userFound.email,
-        action:"Cambio de contraseña.",
+        email: userFound.email,
+        action: "Cambio de contraseña.",
       })
       await res.save();
       return { message: "Contraseña actualizada." };
@@ -242,83 +242,82 @@ export class UsersService {
   }
   async recoverPassword(email: string) {
     try {
-      const configInfo = await this.configuration.find();
+        const configInfo = await this.configuration.find();
+        const userFound = await this.userModel.findOne({ email });
+        if (!userFound) throw new NotFoundException(`El correo ${email} no se encuentra registrado.`);
 
-      const userFound = await this.userModel.findOne({ email });
+        // Crear payload y generar token con tiempo de expiración
+        const payload = { sub: userFound._id, role: Role.USER };
+        const expirationTime = configInfo[0]?.timeTokenEmail || 10; // Tiempo en minutos o valor predeterminado
+        const token = this.jwtSvc.sign(payload, { expiresIn: `${expirationTime}m` });
 
-      if (!userFound) throw new NotFoundException(`El correo ${email} no se encuentra registrado.`);
-      const payload = { sub: userFound._id, role: Role.USER };
-      const token = this.jwtSvc.sign(payload, { expiresIn: `${configInfo[0].timeTokenEmail}m` });
-      const currentYear = new Date().getFullYear();
-      const html = `
-        <!DOCTYPE html>
-        <html lang="es">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Recupera tu contraseña de tu cuenta en Cayro</title>
-        </head>
-        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
-            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
-                <tr>
-                    <td align="center" >
-                        <img src="https://res.cloudinary.com/dhhv8l6ti/image/upload/v1728748461/logo.png" alt="Cayro Uniformes" style="display: block; width: 150px; max-width: 100%; height: auto;">
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding: 0px 30px;">
-                        <h1 style="color: #333333; font-size: 24px; margin-bottom: 20px; text-align: center;">
-                        ${configInfo[0].emailResetPass.title} 
-                        </h1>
-                        <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                            ${configInfo[0].emailResetPass.greeting}
-                        </p>
-                        <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                        ${configInfo[0].emailResetPass.maininstruction}
-                        </p>
+        // Contenido del correo de recuperación
+        const currentYear = new Date().getFullYear();
+        const html = `
+          <!DOCTYPE html>
+          <html lang="es">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Recupera tu contraseña de tu cuenta en Cayro</title>
+          </head>
+          <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+                  <tr>
+                      <td align="center">
+                          <img src="https://res.cloudinary.com/dhhv8l6ti/image/upload/v1728748461/logo.png" alt="Cayro Uniformes" style="display: block; width: 150px; max-width: 100%; height: auto;">
+                      </td>
+                  </tr>
+                  <tr>
+                      <td style="padding: 0px 30px;">
+                          <h1 style="color: #333333; font-size: 24px; margin-bottom: 20px; text-align: center;">
+                          ${configInfo[0]?.emailResetPass?.title || "Recuperación de Contraseña"} 
+                          </h1>
+                          <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
+                              ${configInfo[0]?.emailResetPass?.greeting || "Hola,"}
+                          </p>
+                          <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
+                          ${configInfo[0]?.emailResetPass?.maininstruction || "Para recuperar tu contraseña, haz clic en el enlace siguiente:"}
+                          </p>
 
-                        <div style="background-color: #f0f0f0; border-radius: 4px; padding: 20px; text-align: center; margin-bottom: 20px;">
-                            <a href="https://cayro.netlify.app/reset-password/${token}" style="font-size: 32px; font-weight: bold; color: #0099FF;">Recuperar contraseña</a>
-                        </div>
-                        <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                        ${configInfo[0].emailResetPass.secondaryinstruction}
-                        </p>
-                        <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                        ${configInfo[0].emailResetPass.expirationtime}
-                        </p>
-                        <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                        ${configInfo[0].emailResetPass.finalMessage}
-                        </p>
-                        <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                        ${configInfo[0].emailResetPass.signature}
-                        </p>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="background-color: #27272A; padding: 20px 30px;">
-                        <p style="color: #ffffff; font-size: 14px; line-height: 1.5; margin: 0; text-align: center;">
-                            © ${currentYear} Cayro Uniformes. Todos los derechos reservados.
-                        </p>
-                        <p style="color: #ffffff; font-size: 14px; line-height: 1.5; margin: 10px 0 0; text-align: center;">
-                            <a href="#" style="color: #ffffff; text-decoration: none;">Política de Privacidad</a> | 
-                            <a href="#" style="color: #ffffff; text-decoration: none;">Términos de Servicio</a>
-                        </p>
-                    </td>
-                </tr>
-            </table>
-        </body>
-        </html>
-      `
-      this.sendEmail(email, "Recuperar contraseña", html);
-      return { message: "Codigo de verificación enviado." }
+                          <div style="background-color: #f0f0f0; border-radius: 4px; padding: 20px; text-align: center; margin-bottom: 20px;">
+                              <a href="https://cayro.netlify.app/reset-password/${token}" style="font-size: 32px; font-weight: bold; color: #0099FF;">Recuperar contraseña</a>
+                          </div>
+                          <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
+                          ${configInfo[0]?.emailResetPass?.secondaryinstruction || "Si no solicitaste esta acción, ignora este mensaje."}
+                          </p>
+                          <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
+                          ${configInfo[0]?.emailResetPass?.expirationtime || "Este enlace expira en 10 minutos."}
+                          </p>
+                          <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
+                          ${configInfo[0]?.emailResetPass?.finalMessage || "Gracias, Cayro Uniformes"}
+                          </p>
+                      </td>
+                  </tr>
+                  <tr>
+                      <td style="background-color: #27272A; padding: 20px 30px;">
+                          <p style="color: #ffffff; font-size: 14px; line-height: 1.5; margin: 0; text-align: center;">
+                              © ${currentYear} Cayro Uniformes. Todos los derechos reservados.
+                          </p>
+                      </td>
+                  </tr>
+              </table>
+          </body>
+          </html>
+        `;
+
+        // Enviar el correo electrónico
+        await this.sendEmail(email, "Recuperar contraseña", html);
+        return { message: "Correo de recuperación enviado." };
     } catch (error) {
-      console.log(error);
-      if (error instanceof HttpException) {
-        throw error;
-      }
-      throw new HttpException('Error interno del servidor', HttpStatus.INTERNAL_SERVER_ERROR);
+        console.log(error);
+        if (error instanceof HttpException) {
+            throw error;
+        }
+        throw new HttpException('Error interno del servidor', HttpStatus.INTERNAL_SERVER_ERROR);
     }
-  }
+}
+
 
   async restorePassword(password: string, token: any) {
     try {
@@ -376,8 +375,8 @@ export class UsersService {
         }
         await userFound.save();
         const res = new this.userActivityModel({
-          email:userFound.email,
-          action:"Recuperación de contraseña.",
+          email: userFound.email,
+          action: "Recuperación de contraseña.",
         })
         await res.save();
         return { message: "Contraseña actualizada." };
@@ -393,8 +392,8 @@ export class UsersService {
     }
   }
 
-  async blockUser (days:number,email:string){
-    const userFound = await this.userModel.findOne({email});
+  async blockUser(days: number, email: string) {
+    const userFound = await this.userModel.findOne({ email });
     if (!userFound) {
       throw new NotFoundException('Usuario no encontrado.');
     }

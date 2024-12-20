@@ -10,6 +10,7 @@ import 'sweetalert2/src/sweetalert2.scss';
 import { useAuth } from '@/context/AuthContextType';
 import { useNavigate } from 'react-router-dom';
 import img from "@/assets/signup.png";
+import { NavLink } from 'react-router-dom';
 
 export default function SignUpPage() {
   const [password, setPassword] = useState('');
@@ -396,9 +397,9 @@ export default function SignUpPage() {
 
             <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-300">
               ¿Ya tienes una cuenta?{' '}
-              <a href="/login" className="font-medium text-[#2F93D1] hover:text-[#007ACC]">
+              <NavLink to="/login" className="font-medium text-[#2F93D1] hover:text-[#007ACC]">
                 Inicia sesión
-              </a>
+              </NavLink>
             </p>
           </div>
         </div>

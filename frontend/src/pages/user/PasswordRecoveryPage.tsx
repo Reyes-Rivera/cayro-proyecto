@@ -19,6 +19,7 @@ export default function PasswordRecoveryPage() {
     try {
       setIsSubmitting(true)
       const res = await recoverPassword({ email });
+      console.log(res);
       if (res) {
         setIsSubmitted(true);
         Swal.fire({
