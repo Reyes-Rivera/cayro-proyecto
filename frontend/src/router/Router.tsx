@@ -11,7 +11,7 @@ import PasswordResetPage from "@/pages/user/PasswordResetPage";
 import ProtectedRouterUser from "@/utils/ProtectedRRouterUser";
 import ProtectedRouterAdmin from "@/utils/ProtectedRouterAdmin";
 import AdminDashboard from "@/pages/employees/dashboard-admin/AdminDashboard";
-import HomePage from "@/pages/web/HomePage";
+import HomePage from "@/pages/web/Home/HomePage";
 import { useEffect } from "react";
 import { getCompanyInfoApi } from "@/api/company";
 import Policies from "@/pages/web/RegulatoryDocuments/Policies";
@@ -19,6 +19,7 @@ import Terms from "@/pages/web/RegulatoryDocuments/Terms";
 import LegalBoundary from "@/pages/web/RegulatoryDocuments/LegalBoundary";
 import Contact from "@/pages/web/Contact";
 import ProductDetails from "@/pages/web/ProductDetails";
+import ProductsSection from "@/pages/web/products/ProductsSection";
 const AppRoutes = () => {
   useEffect(()=>{
     const getInfoPage = async() => {
@@ -32,7 +33,7 @@ const AppRoutes = () => {
         <div className="fixed w-full z-50 top-0">
            <NavBarUser/> 
         </div>
-        <div className="mt-12 container-bg">
+        <div className="container-bg">
             <Routes>
 
                 <Route path='/' element={<HomePage/>}/>
@@ -42,6 +43,7 @@ const AppRoutes = () => {
                 <Route path='/contact' element={<Contact/>}/>
                 <Route path='/sign-up' element={<SignUpPage/>}/>
                 <Route path='/login' element={<LoginPage/>}/>
+                <Route path='/products' element={<ProductsSection/>}/>
                 <Route path='/product-details' element={<ProductDetails/>}/>
                 <Route path='/password-recovery' element={<PasswordRecoveryPage/>}/>
                 <Route path="/reset-password/:token" element={<PasswordResetPage/>}/>

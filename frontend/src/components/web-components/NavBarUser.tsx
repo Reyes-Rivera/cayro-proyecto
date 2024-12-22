@@ -1,4 +1,4 @@
-import { ChevronDown, LogOut, Menu, User, X } from 'lucide-react';
+import { ChevronDown, LogOut, Menu, Sun, Moon, User, X } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
@@ -8,7 +8,6 @@ import 'sweetalert2/src/sweetalert2.scss';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useNavigate } from 'react-router-dom';
-import { ThemeToggle } from "@/components/web-components/ThemeToggle";
 import { getCompanyInfoApi } from '@/api/company';
 
 const NavBarUser = () => {
@@ -16,159 +15,188 @@ const NavBarUser = () => {
   const { auth, user, signOut } = useAuth();
   const navigate = useNavigate();
   const [logo, setLogo] = useState();
+  const [darkMode, setDarkMode] = useState(false);
+  const [scrolled, setScrolled] = useState(false); // Estado para detectar el scroll
 
   const handleLogout = async () => {
     const res = await signOut();
     if (res) {
       Swal.fire({
         icon: 'success',
-        title: 'Sesión cerrada.',
+        title: 'Sesión cerrada',
         text: 'La sesión se ha cerrado correctamente.',
         confirmButtonColor: '#2F93D1',
       });
       navigate("/login");
-      return;
     }
-  }
+  };
 
   const handleGoToProfile = () => {
-    if (user?.role === "ADMIN") {
-      navigate("/admin-profile");
+    navigate(user?.role === "ADMIN" ? "/admin-profile" : "/user-profile");
+  };
+
+  const toggleTheme = () => {
+    const htmlElement = document.documentElement;
+    if (htmlElement.classList.contains('dark')) {
+      htmlElement.classList.remove('dark');
+      setDarkMode(false);
+      localStorage.setItem('theme', 'light');
+    } else {
+      htmlElement.classList.add('dark');
+      setDarkMode(true);
+      localStorage.setItem('theme', 'dark');
     }
-    if (user?.role === "USER") {
-      navigate("/user-profile");
-    }
-  }
+  };
+
   useEffect(() => {
     const getInfoPage = async () => {
-      const res = getCompanyInfoApi();
-      setLogo((await res).data[0].logoUrl);
+      const res = await getCompanyInfoApi();
+      setLogo(res?.data?.[0]?.logoUrl);
     };
     getInfoPage();
+
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    if (savedTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+      setDarkMode(true);
+    }
+
+    // Escuchar el scroll y actualizar el estado
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 0);
+    };
+    window.addEventListener('scroll', handleScroll);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
   }, []);
+
   return (
-    <div>
-      <nav className="bg-gray-50 shadow-sm dark:bg-gray-900">
+    <div className={`sticky top-0 z-50 transition-colors duration-300 ${scrolled ? 'bg-white shadow-md dark:bg-gray-900' : 'bg-transparent'}`}>
+      <nav className="">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
+          <div className="flex justify-between items-center h-14">
+            {/* LOGO */}
             <div className="flex items-center">
-              <div className="flex-shrink-0 w-28 h-28 flex justify-start">
+              <NavLink to="/" className="flex-shrink-0">
                 <img
                   src={logo}
-                  alt="Cayro Uniformes"
-                  className=" object-contain dark:filter dark:drop-shadow-white"
+                  alt="Logo"
+                  className="h-28 w-auto object-contain dark:filter dark:drop-shadow-white"
+                  loading="lazy"
                 />
-              </div>
+              </NavLink>
             </div>
+
             {/* Desktop Menu */}
-            <div className="hidden sm:flex sm:items-center sm:space-x-8 ml-auto">
+            <div className="hidden sm:flex sm:items-center sm:space-x-6 ml-auto">
               <NavLink
                 to="/"
                 className={({ isActive }) =>
                   isActive
-                    ? "border-[#2F93D1] text-gray-700 dark:text-gray-100 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                    : "border-transparent text-gray-500 dark:text-gray-300 hover:border-[#2F93D1] hover:text-gray-700 dark:hover:text-gray-100 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                    ? "text-[#2F93D1] border-b-2 border-[#2F93D1]"
+                    : "text-gray-700 dark:text-gray-300 hover:text-[#2F93D1] transition-all"
                 }
               >
                 Inicio
               </NavLink>
+              <NavLink
+                to="/products"
+                className={({ isActive }) =>
+                  isActive
+                    ? "text-[#2F93D1] border-b-2 border-[#2F93D1]"
+                    : "text-gray-700 dark:text-gray-300 hover:text-[#2F93D1] transition-all"
+                }
+              >
+                Productos
+              </NavLink>
+
               {auth ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="flex items-center space-x-2">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src="/placeholder.svg?height=32&width=32" alt="Avatar" />
+                        <AvatarImage src="/placeholder.svg" alt="Avatar" />
                         <AvatarFallback>JD</AvatarFallback>
                       </Avatar>
-                      <span className="hidden md:inline-block text-gray-700 dark:text-gray-100">{user?.name}</span>
-                      <ChevronDown className="h-4 w-4 text-gray-700 dark:text-gray-100" />
+                      <span className="hidden md:inline-block">{user?.name}</span>
+                      <ChevronDown className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="dark:bg-gray-800">
-                    <DropdownMenuItem>
-                      <User className="mr-2 h-4 w-4 text-gray-700 dark:text-gray-100" />
-                      <span className="cursor-pointer w-full text-gray-700 dark:text-gray-100" onClick={handleGoToProfile}>
-                        Perfil
-                      </span>
+                    <DropdownMenuItem onClick={handleGoToProfile}>
+                      <User className="mr-2 h-4 w-4" />
+                      Perfil
                     </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <LogOut className="mr-2 h-4 w-4 text-gray-700 dark:text-gray-100" />
-                      <span className="cursor-pointer w-full text-gray-700 dark:text-gray-100" onClick={handleLogout}>
-                        Cerrar sesión
-                      </span>
+                    <DropdownMenuItem onClick={handleLogout}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Cerrar sesión
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <NavLink to="/login" className="bg-[#2F93D1] text-white dark:text-gray-100 p-1 rounded-md">
+                <NavLink to="/login" className="bg-[#2F93D1] text-white px-4 py-2 rounded-lg hover:bg-[#2578A8]">
                   Iniciar sesión
                 </NavLink>
               )}
-              <ThemeToggle />
-            </div>
-            {/* Mobile Menu Button */}
-            <div className=" flex items-center sm:hidden gap-3">
-              <ThemeToggle />
-              <Button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 dark:text-gray-100 hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#2F93D1] bg-transparent dark:bg-slate-950"
+
+              <button 
+                onClick={toggleTheme} 
+                className="p-2 rounded-full bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 transition-all"
               >
-                <span className="sr-only">Abrir menú principal</span>
-                {isMenuOpen ? (
-                  <X className="block h-6 w-6" aria-hidden="true" />
-                ) : (
-                  <Menu className="block h-6 w-6" aria-hidden="true" />
-                )}
-              </Button>
+                {darkMode ? <Sun className="h-6 w-6 text-yellow-500" /> : <Moon className="h-6 w-6 text-gray-900" />}
+              </button>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <div className="flex items-center sm:hidden">
+              <button 
+                onClick={toggleTheme} 
+                className="p-2 rounded-full bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 transition-all"
+              >
+                {darkMode ? <Sun className="h-6 w-6 text-yellow-500" /> : <Moon className="h-6 w-6 text-gray-900" />}
+              </button>
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="p-2 rounded-md text-gray-500 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-800"
+              >
+                {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Mobile menu, show/hide based on menu state */}
+        {/* Mobile Menu */}
         <div className={`sm:hidden ${isMenuOpen ? 'block' : 'hidden'}`}>
-          <div className="pt-2 pb-3 space-y-1">
-            <NavLink
-              to="/"
-              className="border-transparent text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-[#2F93D1] hover:text-gray-700 dark:hover:text-gray-100 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
-            >
+          <div className="space-y-1 pt-2 pb-3">
+            <NavLink to="/" className="block px-4 py-2 text-gray-700 dark:text-white">
               Inicio
             </NavLink>
-
-
+            <NavLink to="/products" className="block px-4 py-2 text-gray-700 dark:text-white">
+              Productos
+            </NavLink>
 
             {auth ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center space-x-2">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src="/placeholder.svg?height=32&width=32" alt="Avatar" />
-                      <AvatarFallback>JD</AvatarFallback>
-                    </Avatar>
-                    <span className="hidden md:inline-block text-gray-700 dark:text-gray-100">{user?.name}</span>
-                    <ChevronDown className="h-4 w-4 text-gray-700 dark:text-gray-100" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="dark:bg-gray-800">
-                  <DropdownMenuItem>
-                    <User className="mr-2 h-4 w-4 text-gray-700 dark:text-gray-100" />
-                    <span className="cursor-pointer w-full text-gray-700 dark:text-gray-100" onClick={handleGoToProfile}>
-                      Perfil
-                    </span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <LogOut className="mr-2 h-4 w-4 text-gray-700 dark:text-gray-100" />
-                    <span className="cursor-pointer w-full text-gray-700 dark:text-gray-100" onClick={handleLogout}>
-                      Cerrar sesión
-                    </span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <>
+                <button
+                  onClick={handleGoToProfile}
+                  className="block px-4 py-2 text-gray-700 dark:text-white"
+                >
+                  Perfil
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="block px-4 py-2 text-gray-700 dark:text-white"
+                >
+                  Cerrar sesión
+                </button>
+              </>
             ) : (
-              <NavLink to="/login" className="border-transparent text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-[#2F93D1] hover:text-gray-700 dark:hover:text-gray-100 block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+              <NavLink to="/login" className="block px-4 py-2 text-gray-700 dark:text-white">
                 Iniciar sesión
               </NavLink>
             )}
-
           </div>
         </div>
       </nav>
