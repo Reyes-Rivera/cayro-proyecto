@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import img from "@/assets/sudadera-removebg-preview.png";
-
+import playera from "@/assets/470524508_1114544320459967_8053404278450786658_n-removebg-preview.png"
 export default function ProductsSection() {
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
@@ -30,8 +30,8 @@ export default function ProductsSection() {
     }));
 
     const filteredProducts = allProducts.filter((product) =>
-        (product.name.toLowerCase().includes(activeSearchTerm.toLowerCase()) ||
-            product.subCategory.toLowerCase().includes(activeSearchTerm.toLowerCase()))
+    (product.name.toLowerCase().includes(activeSearchTerm.toLowerCase()) ||
+        product.subCategory.toLowerCase().includes(activeSearchTerm.toLowerCase()))
     );
 
     const itemsPerPage = 12;
@@ -70,7 +70,7 @@ export default function ProductsSection() {
     return (
         <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
             {/* Encabezado */}
-            <header className="relative py-12 sm:py-16 bg-gradient-to-r from-blue-500 via-blue-400 to-blue-300 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 text-white overflow-hidden">
+            <header className="relative py-12 sm:py-16 bg-gradient-to-r from-blue-500 via-blue-400 to-blue-300 dark:from-gray-800 dark:via-gray-700 dark:to-gray-600 text-white overflow-hidden">
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                     <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight">
                         Descubre Cayro Uniformes
@@ -94,9 +94,36 @@ export default function ProductsSection() {
                             <Search className="w-5 h-5" />
                         </button>
                     </div>
+
+                    {/* Sección de personalización */}
+
                 </div>
             </header>
 
+            <div className="relative  bg-gradient-to-r from-white via-gray-50 to-white dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 rounded-lg shadow-lg p-8 sm:px-32   flex flex-col sm:flex-row items-center justify-between gap-6 ">
+                <div className="text-center sm:text-left ">
+                    <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white">
+                        ¿Quieres algo único?
+                    </h2>
+                    <p className="mt-2 text-sm sm:text-lg text-gray-600 dark:text-gray-300">
+                        Diseña tus uniformes personalizados para darle un toque especial que represente tu estilo.
+                    </p>
+                    <Button
+                        className="mt-4 bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400 px-6 py-3 rounded-lg font-semibold transition-transform transform hover:scale-105"
+                    >
+                        Personalizar ahora
+                    </Button>
+                </div>
+
+                {/* Ícono decorativo */}
+                <div className="w-24 h-24 sm:w-32 sm:h-32 flex items-center justify-center bg-blue-100 dark:bg-gray-700 rounded-full shadow-lg">
+                    <img
+                        src={playera}
+                        alt="Personalización"
+                        className="w-32 sm:w-32 sm:h-32 object-contain"
+                    />
+                </div>
+            </div>
             {/* Carrusel de categorías */}
             <div className="flex items-center py-6 px-4 sm:px-8 bg-gray-100 dark:bg-gray-800 relative overflow-hidden">
                 <button

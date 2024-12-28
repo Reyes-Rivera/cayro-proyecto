@@ -85,10 +85,10 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
-      <div className="flex flex-col-reverse lg:flex-row max-w-6xl w-full bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-hidden">
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900 p-5">
+      <div className="flex flex-col-reverse md:flex-row max-w-6xl w-full bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-hidden">
         {/* Columna Izquierda */}
-        <div className="hidden lg:flex lg:flex-col lg:justify-center bg-gradient-to-r from-blue-500 via-blue-400 to-blue-300 dark:bg-gradient-to-r dark:from-gray-800 dark:via-gray-900 dark:to-gray-900 text-white w-full lg:w-1/2 p-10">
+        <div className="hidden md:flex md:flex-col lg:justify-center bg-gradient-to-r from-blue-500 via-blue-400 to-blue-300 dark:bg-gradient-to-r dark:from-gray-800 dark:via-gray-900 dark:to-gray-900 text-white w-full lg:w-1/2 p-10">
           <h2 className="text-4xl font-extrabold mb-4">
             Bienvenido a <span className="text-blue-100">Cayro Uniformes</span>
           </h2>

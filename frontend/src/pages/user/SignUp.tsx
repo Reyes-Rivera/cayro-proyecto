@@ -145,12 +145,10 @@ export default function SignUpPage() {
     }
   });
   return (
-    <div className="relative flex p-28 flex-col dark:bg-gray-900 bg-gray-50 min-h-screen  transition-colors duration-300 overflow-hidden pt-14">
+    <div className="relative flex lg:p-16 p-5 flex-col dark:bg-gray-900 bg-gray-50 min-h-screen  transition-colors duration-300 overflow-hidden  w-full">
 
-      <div className="flex flex-grow  shadow-lg rounded-lg max:h-[600px]">
-
-
-        <div className="hidden dark:bg-gradient-to-r dark:from-gray-800 dark:via-gray-900 dark:to-gray-900 lg:flex lg:flex-col lg:justify-center bg-gradient-to-r from-blue-500 to-blue-400 text-white w-full lg:w-1/2 p-10 rounded-lg">
+      <div className="flex flex-grow w-full  shadow-lg rounded-lg max:h-[600px]">
+        <div className="hidden dark:bg-gradient-to-r dark:from-gray-800 dark:via-gray-900 dark:to-gray-900 md:flex md:flex-col lg:justify-center bg-gradient-to-r from-blue-500 to-blue-400 text-white w-full md:w-1/2 p-10 rounded-lg">
           <h2 className="text-4xl font-extrabold mb-4">
             Bienvenido a <span className="text-blue-100">Cayro Uniformes</span>
           </h2>
@@ -180,14 +178,14 @@ export default function SignUpPage() {
           </div>
         </div>
         {/* Columna derecha */}
-        <div className="w-full  lg:w-1/2 flex items-center justify-center dark:bg-gray-900">
-          <div className="w-full max-w-md space-y-6 bg-gray-50 dark:bg-gray-900 dark:text-gray-100 p-8 rounded-xl ">
+        <div className="w-full  md:w-1/2 flex items-center justify-center dark:bg-gray-900">
+          <div className="w-full  space-y-6 bg-gray-50 dark:bg-gray-900 dark:text-gray-100 p-8 rounded-xl ">
             <div className="text-center">
               <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 leading-tight">Crea tu cuenta en Cayro</h2>
             </div>
             <form onSubmit={onSubmit} className="space-y-4 z-50">
               {/* Nombre y Apellido */}
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid sm:grid-cols-2 gap-2 grid-cols-1">
                 <div>
                   <Label htmlFor="nombre" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nombre</Label>
                   <Input
@@ -225,7 +223,7 @@ export default function SignUpPage() {
               </div>
 
               {/* Teléfono y Correo */}
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid sm:grid-cols-2 gap-2 grid-cols-1">
                 <div>
                   <Label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Correo electrónico</Label>
                   <Input
@@ -399,9 +397,6 @@ export default function SignUpPage() {
                 }
               </Button>
             </form>
-
-
-
             <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-300">
               ¿Ya tienes una cuenta?{' '}
               <NavLink to="/login" className="font-medium text-[#2F93D1] hover:text-[#007ACC]">
