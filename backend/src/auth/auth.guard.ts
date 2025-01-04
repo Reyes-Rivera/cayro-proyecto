@@ -14,7 +14,6 @@ export class AuthGuard implements CanActivate {
 
     // Extraer el token desde las cookies
     const token = this.extractTokenFromCookie(request);
-    console.log(token);
     if (!token) {
       throw new UnauthorizedException('Token no encontrado');
     }

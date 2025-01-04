@@ -147,30 +147,14 @@ model Audit {
   admin     Employee       @relation(fields: [adminId], references: [id])
 }
 
-model SocialLinks {
-  id        Int                  @id @default(autoincrement())
-  platform  String
-  url       String
-  companies CompanySocialLinks[]
-}
-
 model CompanyProfile {
-  id          Int                  @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   title       String
   slogan      String
   logoUrl     String
   contactInfo Json
   auditLog    Audit[]
-  socialLinks CompanySocialLinks[]
-  createdAt   DateTime             @default(now())
-  updatedAt   DateTime             @updatedAt
-}
-
-model CompanySocialLinks {
-  companyId    Int
-  socialLinkId Int
-  company      CompanyProfile @relation(fields: [companyId], references: [id])
-  socialLink   SocialLinks    @relation(fields: [socialLinkId], references: [id])
-
-  @@id([companyId, socialLinkId])
+  socialLinks Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

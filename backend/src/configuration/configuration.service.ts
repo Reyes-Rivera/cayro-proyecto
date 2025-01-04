@@ -12,9 +12,9 @@ export class ConfigurationService {
       timeTokenLogin: data.timeTokenLogin,
       timeTokenEmail: data.timeTokenEmail,
       attemptsLogin: data.attemptsLogin,
-      emailVerificationInfo: data.emailVerificationInfo, // No uses JSON.stringify
-      emailLogin: data.emailLogin, // No uses JSON.stringify
-      emailResetPass: data.emailResetPass, // No uses JSON.stringify
+      emailVerificationInfo: data.emailVerificationInfo,
+      emailLogin: data.emailLogin, 
+      emailResetPass: data.emailResetPass,
     };
   
     return this.prismaService.configuration.create({
@@ -32,27 +32,28 @@ export class ConfigurationService {
     updateConfigurationDto: UpdateConfigurationDto,
   ): Promise<Configuration> {
     try {
-      // Filtrar campos undefined
+      // Filtrar campos undefined sin transformar objetos a JSON
       const updateData = Object.entries(updateConfigurationDto)
         .filter(([_, value]) => value !== undefined)
         .reduce((acc, [key, value]) => {
-          acc[key] = typeof value === 'object' ? JSON.stringify(value) : value;
+          acc[key] = value; // Pasar el valor tal como está
           return acc;
         }, {});
-
+  
       const existingConfig = await this.prismaService.configuration.update({
         where: { id: id },
         data: updateData,
       });
-
+  
       if (!existingConfig) {
         throw new NotFoundException(`Configuration with ID ${id} not found`);
       }
-
+  
       return existingConfig;
     } catch (error) {
       console.error('Error updating configuration:', error);
       throw new Error('An error occurred while updating the configuration');
     }
   }
+  
 }

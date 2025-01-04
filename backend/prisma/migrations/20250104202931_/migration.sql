@@ -123,33 +123,17 @@ CREATE TABLE `Audit` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `SocialLinks` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `platform` VARCHAR(191) NOT NULL,
-    `url` VARCHAR(191) NOT NULL,
-
-    PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
 CREATE TABLE `CompanyProfile` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `title` VARCHAR(191) NOT NULL,
     `slogan` VARCHAR(191) NOT NULL,
     `logoUrl` VARCHAR(191) NOT NULL,
     `contactInfo` JSON NOT NULL,
+    `socialLinks` JSON NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
     PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
-CREATE TABLE `CompanySocialLinks` (
-    `companyId` INTEGER NOT NULL,
-    `socialLinkId` INTEGER NOT NULL,
-
-    PRIMARY KEY (`companyId`, `socialLinkId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
@@ -187,12 +171,6 @@ ALTER TABLE `Audit` ADD CONSTRAINT `Audit_companyId_fkey` FOREIGN KEY (`companyI
 
 -- AddForeignKey
 ALTER TABLE `Audit` ADD CONSTRAINT `Audit_adminId_fkey` FOREIGN KEY (`adminId`) REFERENCES `Employee`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `CompanySocialLinks` ADD CONSTRAINT `CompanySocialLinks_companyId_fkey` FOREIGN KEY (`companyId`) REFERENCES `CompanyProfile`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `CompanySocialLinks` ADD CONSTRAINT `CompanySocialLinks_socialLinkId_fkey` FOREIGN KEY (`socialLinkId`) REFERENCES `SocialLinks`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `_UserAddresses` ADD CONSTRAINT `_UserAddresses_A_fkey` FOREIGN KEY (`A`) REFERENCES `Address`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

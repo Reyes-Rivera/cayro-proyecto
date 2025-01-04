@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { ConfigurationService } from './configuration.service';
 import { CreateConfigurationDto } from './dto/create-configuration.dto';
 import { UpdateConfigurationDto } from './dto/update-configuration.dto';
@@ -7,7 +15,7 @@ import { Role } from 'src/auth/roles/role.enum';
 
 @Controller('configuration')
 export class ConfigurationController {
-  constructor(private readonly configurationService: ConfigurationService) { }
+  constructor(private readonly configurationService: ConfigurationService) {}
 
   @Post()
   // @Auth([Role.ADMIN])
@@ -22,8 +30,13 @@ export class ConfigurationController {
 
   @Patch(':id')
   // @Auth([Role.ADMIN])
-  async update(@Param('id') id: string, @Body() updateConfigurationDto: UpdateConfigurationDto) {
-    console.log(updateConfigurationDto)
-    return await this.configurationService.update(Number(id), updateConfigurationDto);
+  async update(
+    @Param('id') id: string,
+    @Body() updateConfigurationDto: UpdateConfigurationDto,
+  ) {
+    return await this.configurationService.update(
+      Number(id),
+      updateConfigurationDto,
+    );
   }
 }
