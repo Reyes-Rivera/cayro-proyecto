@@ -8,10 +8,10 @@ export interface emailData{
     signature:string;
 }
 export class Configuration {
-    timeTokenLogin: string;
-    timeTokenEmail: string;
+    timeTokenLogin: number;
+    timeTokenEmail: number;
     attemptsLogin:number;
-    emailVerificationInfo:emailData;
-    emailLogin:emailData;
-    emailResetPass:emailData;
+    emailVerificationInfo:emailData[];
+    emailLogin:emailData[];
+    emailResetPass:emailData[];
 }

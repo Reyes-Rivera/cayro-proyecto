@@ -1,71 +1,51 @@
-import { IsString, IsNumber, ValidateNested, IsNotEmpty, MinLength, MaxLength } from 'class-validator';
+import { IsArray, IsInt, IsNotEmpty, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class EmailDataDto {
-  @IsString()
-  @MinLength(1)
-  @MaxLength(100)
+  @IsNotEmpty()
   title: string;
 
-  @IsString()
-  @MinLength(1)
-  @MaxLength(100)
+  @IsNotEmpty()
   greeting: string;
 
-  @IsString()
-  @MinLength(1)
-  @MaxLength(500)
+  @IsNotEmpty()
   maininstruction: string;
 
-  @IsString()
-  @MinLength(1)
-  @MaxLength(500)
+  @IsNotEmpty()
   secondaryinstruction: string;
 
-  @IsString()
-  @MinLength(1)
-  @MaxLength(200)
+  @IsNotEmpty()
   expirationtime: string;
 
-  @IsString()
-  @MinLength(1)
-  @MaxLength(500)
+  @IsNotEmpty()
   finalMessage: string;
 
-  @IsString()
-  @MinLength(1)
-  @MaxLength(200)
+  @IsNotEmpty()
   signature: string;
 }
 
-
-// Ahora el DTO para Configuration
 export class CreateConfigurationDto {
-  @IsString()
-  @IsNotEmpty()
-  @MinLength(1)
-  @MaxLength(10)
-  timeTokenLogin: string;
+  @IsInt()
+  timeTokenLogin: number;
 
-  @IsString()
-  @IsNotEmpty()
-  @MinLength(1)
-  @MaxLength(10)
-  timeTokenEmail: string;
+  @IsInt()
+  timeTokenEmail: number;
 
-  @IsNumber()
-  @IsNotEmpty()
+  @IsInt()
   attemptsLogin: number;
 
-  @ValidateNested()
-  @Type(() => EmailDataDto) 
-  emailVerificationInfo: EmailDataDto;
+  // @IsArray()
+  // @ValidateNested({ each: true })
+  // @Type(() => EmailDataDto)
+  emailVerificationInfo: [];
 
-  @ValidateNested()
-  @Type(() => EmailDataDto)
-  emailLogin: EmailDataDto;
+  // @IsArray()
+  // @ValidateNested({ each: true })
+  // @Type(() => EmailDataDto)
+  emailLogin: [];
 
-  @ValidateNested()
-  @Type(() => EmailDataDto)
-  emailResetPass: EmailDataDto;
+  // @IsArray()
+  // @ValidateNested({ each: true })
+  // @Type(() => EmailDataDto)
+  emailResetPass: [];
 }

@@ -1,13 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { CreateUserActivityDto } from './dto/create-user-activity.dto';
 import { UpdateUserActivityDto } from './dto/update-user-activity.dto';
-import { UserActivity } from './schema/UserActivitySchema';
-import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class UserActivityService {
-  constructor(@InjectModel(UserActivity.name) private userActivityModel: Model<UserActivity>) { }
+  constructor(private prismaService:PrismaService) { }
   async getBlockedUsersByPeriod(period: 'day' | 'week' | 'month'): Promise<{ email: string; count: number }[]> {
     const now = new Date();
     let startDate: Date;
@@ -20,29 +19,27 @@ export class UserActivityService {
     } else {
       startDate = new Date(now.getFullYear(), now.getMonth(), 1); // Inicio de mes
     }
-
-    // Realizar la agregación para agrupar por email y contar los bloqueos
-    return this.userActivityModel.aggregate([
-      {
-        $match: {
-          action: 'Cuenta bloqueada por 5 minutos.',
-          date: { $gte: startDate }, // Filtrar por fecha de inicio del periodo
+    const result = await this.prismaService.userActivity.groupBy({
+      by: ['email'], // Agrupamos por el campo 'email'
+      where: {
+        action: 'Cuenta bloqueada por 5 minutos.',
+        date: {
+          gte: startDate, // startDate es la fecha de inicio del período
         },
       },
-      {
-        $group: {
-          _id: '$email', // Agrupar por correo electrónico
-          count: { $sum: 1 }, // Contar las ocurrencias de bloqueo
-        },
+      _count: {
+        email: true, // Contamos las ocurrencias de bloqueos por email
       },
-      {
-        $project: {
-          _id: 0, // No mostrar el campo _id
-          email: '$_id', // Renombrar _id a email
-          count: 1, // Mostrar el conteo
-        },
-      },
-    ]).exec();
+    });
+    
+    // Mapear el resultado al formato esperado
+    const formattedResult = result.map((item) => ({
+      email: item.email,
+      count: item._count.email,
+    }));
+    
+    return formattedResult;
+    
   }
 
   create(createUserActivityDto: CreateUserActivityDto) {

@@ -18,6 +18,5 @@ export class CreateCompanyProfileDto {
     @MinLength(4)
     @MaxLength(200)
     logoUrl: string;
-    contactInfo: ContactInfo
-    auditLog: Audit[];
+    contactInfo: []
 }

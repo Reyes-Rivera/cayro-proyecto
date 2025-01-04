@@ -3,7 +3,7 @@ import { Types } from "mongoose";
 export interface SocialLinks {
     platform: string;
     url: string;
-    _id?: Types.ObjectId;
+    id?: number;
 }
 export interface ContactInfo {
     email: string;
@@ -12,7 +12,7 @@ export interface ContactInfo {
 }
 export interface Audit {
     action: string;
-    adminId: string;
+    adminId: number;
     date: Date;
 }
 export class CompanyProfile {

@@ -30,16 +30,17 @@ export class AuthController {
 
     // Llama al servicio para verificar el código y obtener el token
     const result = await this.authService.verifyCode(email, code);
-
+    console.log("Esete es el resultado", result.token);
     // Configura la cookie con el token JWT
     res.setHeader('Set-Cookie', cookie.serialize('token', result.token, {
-      httpOnly:   true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none',
-      maxAge: 60 * 60 * 24 * 7,
-      path: '/',
+      httpOnly: true, // Seguridad adicional
+      secure: process.env.NODE_ENV === 'production', // Solo HTTPS en producción
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Compatible con desarrollo
+      maxAge: 60 * 60 * 24 * 7, // 7 días
+      path: '/', // Válida para todo el sitio
     }));
     return res.json(result.user);
+    
   }
 
   @Post('logout')
@@ -47,7 +48,7 @@ export class AuthController {
     res.clearCookie('token', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',  // Usar "secure" en producción
-      sameSite: 'none',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       path: '/'
     });
 

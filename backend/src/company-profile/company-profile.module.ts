@@ -4,7 +4,7 @@ import { CompanyProfileController } from './company-profile.controller';
 import { Mongoose } from 'mongoose';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CompanyProfile, CompanyProfileSchema } from './schema/CompanySchema';
-import { Employee, EmployeeSchema } from 'src/employees/schemas/Eployee.schema';
+import { PrismaModule } from 'src/prisma/prisma.module';
 
 @Module({
   imports: [MongooseModule.forFeature([
@@ -12,11 +12,8 @@ import { Employee, EmployeeSchema } from 'src/employees/schemas/Eployee.schema';
       name: CompanyProfile.name,
       schema: CompanyProfileSchema
     },
-    {
-      name: Employee.name,
-      schema: EmployeeSchema
-    }
-  ])],
+    
+  ]),PrismaModule],
   controllers: [CompanyProfileController],
   providers: [CompanyProfileService],
 })

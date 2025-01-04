@@ -14,7 +14,7 @@ export class AuthGuard implements CanActivate {
 
     // Extraer el token desde las cookies
     const token = this.extractTokenFromCookie(request);
-
+    console.log(token);
     if (!token) {
       throw new UnauthorizedException('Token no encontrado');
     }
@@ -23,7 +23,7 @@ export class AuthGuard implements CanActivate {
       const payload = await this.jwtService.verifyAsync(
         token,
         {
-          secret: process.env.JWT_SECRET || "fhf fhslxo ahs", // Usa el secret que tengas configurado
+          secret: "fhf fhslxo ahs", 
         }
       );
       

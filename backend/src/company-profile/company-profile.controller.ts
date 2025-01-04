@@ -32,12 +32,12 @@ export class CompanyProfileController {
   @Patch(':id/:adminId')
   @Auth([Role.ADMIN])
   update(@Param('id') id: string, @Param("adminId") adminId: string, @Body() updateCompanyProfileDto: UpdateCompanyProfileDto) {
-    return this.companyProfileService.update(id, updateCompanyProfileDto, adminId);
+    return this.companyProfileService.update(Number(id), updateCompanyProfileDto, Number(adminId));
   }
 
   @Get('/audit-log/:id')
   async getAuditLog(@Param('id') id: string) {
-    return this.companyProfileService.getAudit(id);
+    return this.companyProfileService.getAudit(Number(id));
   }
 
   @Delete(':id')

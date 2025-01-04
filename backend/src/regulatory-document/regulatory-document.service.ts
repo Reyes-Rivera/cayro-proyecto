@@ -5,7 +5,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import { DocumentRegulatory } from './schemas/RegulatoryDocumentSchema';
 import { Model } from 'mongoose';
 import { DocumentTypeInter, Status } from "./entities/enums";
-import { Employee } from 'src/employees/schemas/Eployee.schema';
 
 @Injectable()
 export class RegulatoryDocumentService {

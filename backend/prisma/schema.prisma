@@ -1,0 +1,176 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                Int       @id @default(autoincrement())
+  name              String    @db.VarChar(100)
+  surname           String    @db.VarChar(100)
+  email             String    @unique @db.VarChar(100)
+  phone             String    @db.VarChar(15)
+  birthday          DateTime
+  password          String    @db.VarChar(255)
+  passwordSetAt     DateTime  @default(now())
+  passwordExpiresAt DateTime?
+  passwordsHistory  Json?
+  loginAttempts     Int       @default(0)
+  lockUntil         DateTime?
+  gender            String
+  active            Boolean   @default(false)
+  role              Role      @default(USER)
+  profilePicture    String?   @db.VarChar(255)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  isDeleted         Boolean   @default(false)
+  sales             Sale[]
+  addresses         Address[] @relation("UserAddresses")
+}
+
+model Configuration {
+  id                    Int  @id @default(autoincrement())
+  timeTokenLogin        Int
+  timeTokenEmail        Int
+  attemptsLogin         Int
+  emailVerificationInfo Json
+  emailLogin            Json
+  emailResetPass        Json
+}
+
+model UserActivity {
+  id     Int      @id @default(autoincrement())
+  email  String   @db.VarChar(255)
+  action String   @db.VarChar(255)
+  date   DateTime
+}
+
+model Employee {
+  id                Int       @id @default(autoincrement())
+  name              String    @db.VarChar(255)
+  surname           String    @db.VarChar(255)
+  email             String    @unique @db.VarChar(255)
+  phone             String    @db.VarChar(20)
+  birthday          DateTime
+  password          String    @db.VarChar(255)
+  passwordSetAt     DateTime  @default(now())
+  passwordExpiresAt DateTime
+  passwordsHistory  Json?
+  loginAttempts     Int       @default(0)
+  lockUntil         DateTime?
+  gender            Gender
+  role              Role
+  addresses         Address[] @relation("EmployeeAddresses")
+  sales             Sale[]    @relation("EmployeeSales")
+  auditLogs         Audit[]
+}
+
+enum Role {
+  USER
+  ADMIN
+  EMPLOYEE
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum SaleStatus {
+  PENDING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model Address {
+  id         Int        @id @default(autoincrement())
+  street     String
+  city       String
+  state      String
+  country    String
+  postalCode String
+  colony     String
+  users      User[]     @relation("UserAddresses")
+  employees  Employee[] @relation("EmployeeAddresses")
+  sales      Sale[]     @relation("SaleAddresses")
+}
+
+model Sale {
+  id               Int        @id @default(autoincrement())
+  userId           Int
+  addressId        Int
+  totalAmount      Float
+  status           SaleStatus @default(PENDING)
+  employeeId       Int
+  shippedAt        DateTime?
+  deliveredAt      DateTime?
+  references       String?
+  betweenStreetOne String?
+  betweenStreetTwo String?
+  createdAt        DateTime   @default(now())
+
+  user        User         @relation(fields: [userId], references: [id])
+  address     Address      @relation("SaleAddresses", fields: [addressId], references: [id])
+  employee    Employee     @relation("EmployeeSales", fields: [employeeId], references: [id])
+  saleDetails SaleDetail[]
+}
+
+model SaleDetail {
+  id         Int   @id @default(autoincrement())
+  saleId     Int
+  productId  Int
+  quantity   Int
+  unitPrice  Float
+  totalPrice Float
+
+  sale Sale @relation(fields: [saleId], references: [id])
+}
+
+model Audit {
+  id        Int            @id @default(autoincrement())
+  action    String
+  adminId   Int
+  date      DateTime       @default(now())
+  companyId Int
+  company   CompanyProfile @relation(fields: [companyId], references: [id])
+  admin     Employee       @relation(fields: [adminId], references: [id])
+}
+
+model SocialLinks {
+  id        Int                  @id @default(autoincrement())
+  platform  String
+  url       String
+  companies CompanySocialLinks[]
+}
+
+model CompanyProfile {
+  id          Int                  @id @default(autoincrement())
+  title       String
+  slogan      String
+  logoUrl     String
+  contactInfo Json
+  auditLog    Audit[]
+  socialLinks CompanySocialLinks[]
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+}
+
+model CompanySocialLinks {
+  companyId    Int
+  socialLinkId Int
+  company      CompanyProfile @relation(fields: [companyId], references: [id])
+  socialLink   SocialLinks    @relation(fields: [socialLinkId], references: [id])
+
+  @@id([companyId, socialLinkId])
+}

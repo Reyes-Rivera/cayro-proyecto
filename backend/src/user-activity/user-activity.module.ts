@@ -2,12 +2,10 @@ import { Module } from '@nestjs/common';
 import { UserActivityService } from './user-activity.service';
 import { UserActivityController } from './user-activity.controller';
 import { MongooseModule } from '@nestjs/mongoose';
-import { UserActivity, UserActivitySchema } from './schema/UserActivitySchema';
+import { PrismaModule } from 'src/prisma/prisma.module';
 
 @Module({
-  imports: [MongooseModule.forFeature([
-    { name: UserActivity.name, schema: UserActivitySchema }
-  ])],
+  imports: [PrismaModule],
   controllers: [UserActivityController],
   providers: [UserActivityService],
 })

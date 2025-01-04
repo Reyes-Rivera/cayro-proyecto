@@ -9,6 +9,7 @@ import { UserActivityModule } from './user-activity/user-activity.module';
 import { RegulatoryDocumentModule } from './regulatory-document/regulatory-document.module';
 import { CompanyProfileModule } from './company-profile/company-profile.module';
 import { ConfigurationModule } from './configuration/configuration.module';
+import { PrismaModule } from './prisma/prisma.module';
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -20,6 +21,7 @@ import { ConfigurationModule } from './configuration/configuration.module';
     RegulatoryDocumentModule,
     CompanyProfileModule,
     ConfigurationModule,
+    PrismaModule
   ],
   controllers: [],
   providers: [AppService],

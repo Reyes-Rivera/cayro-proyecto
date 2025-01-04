@@ -159,6 +159,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(null);
       setAuth(false);
       setLoading(false);
+      console.log(error);
     }
   };
   useEffect(() => {

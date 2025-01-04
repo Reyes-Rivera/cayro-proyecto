@@ -1,35 +1,49 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateConfigurationDto } from './dto/create-configuration.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { Configuration } from '@prisma/client';
 import { UpdateConfigurationDto } from './dto/update-configuration.dto';
-import { InjectModel } from '@nestjs/mongoose';
-import { Configuration } from './entities/configuration.entity';
-import { Model } from 'mongoose';
 
 @Injectable()
 export class ConfigurationService {
-  constructor(
-    @InjectModel(Configuration.name) private readonly configurationModel: Model<Configuration>
-  ) { }
-  async create(createConfigurationDto: CreateConfigurationDto): Promise<Configuration> {
-    const newConfiguration = new this.configurationModel(createConfigurationDto);
-    return newConfiguration.save();
+  constructor(private prismaService: PrismaService) {}
+  async create(data: CreateConfigurationDto) {
+    const configurationData = {
+      timeTokenLogin: data.timeTokenLogin,
+      timeTokenEmail: data.timeTokenEmail,
+      attemptsLogin: data.attemptsLogin,
+      emailVerificationInfo: data.emailVerificationInfo, // No uses JSON.stringify
+      emailLogin: data.emailLogin, // No uses JSON.stringify
+      emailResetPass: data.emailResetPass, // No uses JSON.stringify
+    };
+  
+    return this.prismaService.configuration.create({
+      data: configurationData,
+    });
+  }
+  
+
+  async findAll():Promise<Configuration[]> {
+    return this.prismaService.configuration.findMany();
   }
 
-  findAll() {
-    return this.configurationModel.find();
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} configuration`;
-  }
-
-  async update(id: string, updateConfigurationDto: UpdateConfigurationDto): Promise<Configuration> {
+  async update(
+    id: number,
+    updateConfigurationDto: UpdateConfigurationDto,
+  ): Promise<Configuration> {
     try {
-      const existingConfig = await this.configurationModel.findByIdAndUpdate(
-        id,
-        { $set: updateConfigurationDto },
-        { new: true, runValidators: true }
-      );
+      // Filtrar campos undefined
+      const updateData = Object.entries(updateConfigurationDto)
+        .filter(([_, value]) => value !== undefined)
+        .reduce((acc, [key, value]) => {
+          acc[key] = typeof value === 'object' ? JSON.stringify(value) : value;
+          return acc;
+        }, {});
+
+      const existingConfig = await this.prismaService.configuration.update({
+        where: { id: id },
+        data: updateData,
+      });
 
       if (!existingConfig) {
         throw new NotFoundException(`Configuration with ID ${id} not found`);
@@ -37,11 +51,8 @@ export class ConfigurationService {
 
       return existingConfig;
     } catch (error) {
-      console.log(error)
+      console.error('Error updating configuration:', error);
+      throw new Error('An error occurred while updating the configuration');
     }
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} configuration`;
   }
 }
