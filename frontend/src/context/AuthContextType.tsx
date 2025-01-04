@@ -1,4 +1,3 @@
-import { supabase } from '../supabase/supabase-configf';
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { loginApi, logOutApi, signUpApi, verifyCodeApi, verifyCodeApiAuth, verifyToken } from "@/api/auth"; // Asegúrate de tener la función `verifyCodeApi`
 import { User } from '@/types/User';
@@ -8,7 +7,6 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<User | null>;
   signOut: () => Promise<any>;
   isAuthenticated: boolean;
-  signInWithGoogle: () => void;
   auth: Boolean;
   loading: Boolean;
   SignUp: (name: string, surname: string, email: string, phone: string, birthday: Date, password: string) => Promise<User | null>;
@@ -143,17 +141,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return false;
   };
 
-  const signInWithGoogle = async () => {
-    try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: "google"
-      });
-      if (error) throw new Error("Ha ocurrido un error durante la autenticación.");
-      localStorage.setItem("user", JSON.stringify(data));
-      return data;
-    } catch (error) {
-    }
-  };
+
   const verifyAuth = async () => {
     setLoading(true);
     try {
@@ -186,7 +174,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     signOut,
     isAuthenticated,
-    signInWithGoogle,
     auth,
     loading,
     SignUp,
