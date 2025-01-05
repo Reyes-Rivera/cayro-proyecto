@@ -8,7 +8,6 @@ import { CompanyProfile } from '@prisma/client';
 export class CompanyProfileService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  // Crear un nuevo perfil de empresa
   async create(
     createCompanyProfileDto: CreateCompanyProfileDto,
   ): Promise<CompanyProfile> {
@@ -21,7 +20,7 @@ export class CompanyProfileService {
         slogan,
         logoUrl,
         contactInfo, 
-        socialLinks, // Aquí convertimos el array a JSON
+        socialLinks, 
       },
     });
 

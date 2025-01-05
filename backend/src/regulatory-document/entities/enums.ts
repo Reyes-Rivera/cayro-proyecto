@@ -5,7 +5,7 @@ export enum Status{
 }
 
 export enum DocumentTypeInter{
-    policy="POLICY",
-    terms="TERMS",
-    boundary="BOUNDARY",
+    policy="POLICIES",
+    terms="TERMS_AND_CONDITIONS",
+    boundary="LEGAL_DISCLAIMER",
 }

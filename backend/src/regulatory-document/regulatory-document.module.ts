@@ -1,13 +1,10 @@
 import { Module } from '@nestjs/common';
 import { RegulatoryDocumentService } from './regulatory-document.service';
 import { RegulatoryDocumentController } from './regulatory-document.controller';
-import { MongooseModule } from '@nestjs/mongoose';
-import { DocumentRegulatory, DocumentRegulatorySchema } from './schemas/RegulatoryDocumentSchema';
+import { PrismaModule } from 'src/prisma/prisma.module';
 
 @Module({
-  imports: [MongooseModule.forFeature([
-    { name: DocumentRegulatory.name, schema: DocumentRegulatorySchema },
-  ])],
+  imports: [PrismaModule],
   controllers: [RegulatoryDocumentController],
   providers: [RegulatoryDocumentService],
 })

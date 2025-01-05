@@ -158,3 +158,33 @@ model CompanyProfile {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model DocumentRegulatory {
+  id                Int       @id @default(autoincrement())
+  title             String    @db.VarChar(255) 
+  content           String    @db.Text
+  version           Int?     
+  createdAt         DateTime? @default(now())
+  updatedAt         DateTime? @updatedAt
+  effectiveDate     DateTime
+  isDeleted         Boolean?  @default(false) 
+  isCurrentVersion  Boolean?  @default(false)
+  previousVersionId Int?   
+  status            Status?  
+  type              DocumentTypeInter
+}
+
+enum Status {
+  CURRENT
+  NOT_CURRENT
+  REMOVED
+}
+
+// Enum para el tipo de documento
+enum DocumentTypeInter {
+  POLICIES
+  TERMS_AND_CONDITIONS
+  LEGAL_DISCLAIMER
+}
+
+
