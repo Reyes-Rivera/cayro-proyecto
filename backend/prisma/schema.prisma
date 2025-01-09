@@ -26,7 +26,7 @@ model User {
   passwordsHistory  Json?
   loginAttempts     Int       @default(0)
   lockUntil         DateTime?
-  gender            String
+  gender            GenderUser
   active            Boolean   @default(false)
   role              Role      @default(USER)
   profilePicture    String?   @db.VarChar(255)
@@ -67,7 +67,7 @@ model Employee {
   passwordsHistory  Json?
   loginAttempts     Int       @default(0)
   lockUntil         DateTime?
-  gender            Gender
+  gender            GenderUser
   role              Role
   addresses         Address[] @relation("EmployeeAddresses")
   sales             Sale[]    @relation("EmployeeSales")
@@ -80,7 +80,7 @@ enum Role {
   EMPLOYEE
 }
 
-enum Gender {
+enum GenderUser {
   MALE
   FEMALE
   OTHER
@@ -106,36 +106,7 @@ model Address {
   sales      Sale[]     @relation("SaleAddresses")
 }
 
-model Sale {
-  id               Int        @id @default(autoincrement())
-  userId           Int
-  addressId        Int
-  totalAmount      Float
-  status           SaleStatus @default(PENDING)
-  employeeId       Int
-  shippedAt        DateTime?
-  deliveredAt      DateTime?
-  references       String?
-  betweenStreetOne String?
-  betweenStreetTwo String?
-  createdAt        DateTime   @default(now())
 
-  user        User         @relation(fields: [userId], references: [id])
-  address     Address      @relation("SaleAddresses", fields: [addressId], references: [id])
-  employee    Employee     @relation("EmployeeSales", fields: [employeeId], references: [id])
-  saleDetails SaleDetail[]
-}
-
-model SaleDetail {
-  id         Int   @id @default(autoincrement())
-  saleId     Int
-  productId  Int
-  quantity   Int
-  unitPrice  Float
-  totalPrice Float
-
-  sale Sale @relation(fields: [saleId], references: [id])
-}
 
 model Audit {
   id        Int            @id @default(autoincrement())
@@ -186,5 +157,123 @@ enum DocumentTypeInter {
   TERMS_AND_CONDITIONS
   LEGAL_DISCLAIMER
 }
+
+model Product {
+  id          Int         @id @default(autoincrement())
+  name        String     
+  description String      
+  categoryId  Int         
+  category    Category    @relation(fields: [categoryId], references: [id]) 
+  genderId    Int         
+  gender      Gender      @relation(fields: [genderId], references: [id]) 
+  fabricTypeId Int       
+  fabricType  FabricType  @relation(fields: [fabricTypeId], references: [id])
+  neckTypeId  Int         
+  neckType    NeckType    @relation(fields: [neckTypeId], references: [id])
+  sleeveTypeId Int       
+  sleeveType  SleeveType  @relation(fields: [sleeveTypeId], references: [id]) 
+  variants    ProductVariant[] 
+}
+
+model Gender {
+  id          Int         @id @default(autoincrement())
+  name        String     
+  products    Product[]  
+}
+
+model FabricType {
+  id          Int         @id @default(autoincrement())
+  name        String      
+  products    Product[]   
+}
+
+model NeckType {
+  id          Int         @id @default(autoincrement())
+  name        String      
+  products    Product[]   
+}
+
+model SleeveType {
+  id          Int         @id @default(autoincrement())
+  name        String      
+  products    Product[]   
+}
+
+model Category {
+  id          Int         @id @default(autoincrement())
+  name        String      
+  products    Product[]   
+  sizePrices  SizePrice[] 
+}
+
+model Color {
+  id          Int         @id @default(autoincrement())
+  name        String      
+  hexValue    String      
+  variants    ProductVariant[] 
+}
+
+model Size {
+  id          Int          @id @default(autoincrement())
+  name        String
+  variants    ProductVariant[]
+  sizePrices  SizePrice[]  // Relación con SizePrice
+}
+
+model SizePrice {
+  id          Int         @id @default(autoincrement())
+  categoryId  Int
+  sizeId      Int
+  price       Float
+  category    Category    @relation(fields: [categoryId], references: [id])
+  size        Size        @relation(fields: [sizeId], references: [id]) // Relación con Size
+}
+
+
+model ProductVariant {
+  id              Int             @id @default(autoincrement())
+  productId       Int
+  sizeId          Int
+  colorId         Int
+  price           Float
+  stock           Int
+  product         Product         @relation(fields: [productId], references: [id])
+  size            Size            @relation(fields: [sizeId], references: [id])
+  color           Color           @relation(fields: [colorId], references: [id])
+  saleDetails     SaleDetail[]    // Relación inversa con SaleDetail
+}
+
+
+model Sale {
+  id               Int        @id @default(autoincrement())
+  userId           Int
+  addressId        Int
+  totalAmount      Float
+  status           SaleStatus @default(PENDING)
+  employeeId       Int
+  shippedAt        DateTime?
+  deliveredAt      DateTime?
+  references       String?
+  betweenStreetOne String?
+  betweenStreetTwo String?
+  createdAt        DateTime   @default(now())
+
+  user        User         @relation(fields: [userId], references: [id])
+  address     Address      @relation("SaleAddresses", fields: [addressId], references: [id])
+  employee    Employee     @relation("EmployeeSales", fields: [employeeId], references: [id])
+  saleDetails SaleDetail[]
+}
+
+model SaleDetail {
+  id              Int             @id @default(autoincrement())
+  saleId          Int
+  productVariantId Int
+  quantity        Int
+  unitPrice       Float
+  totalPrice      Float
+  sale            Sale            @relation(fields: [saleId], references: [id])
+  productVariant  ProductVariant  @relation(fields: [productVariantId], references: [id])  // Relación con ProductVariant
+}
+
 
 

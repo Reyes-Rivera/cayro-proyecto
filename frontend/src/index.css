@@ -28,13 +28,6 @@
     font-family: sans-serif !important;
   }
 
-  .bg-blue-cayro {
-    background-color: #2F93D1;
-  }
-
-  .text {
-    color: #2F93D1;
-  }
 }
 @keyframes fadeInLeft {
   from {
@@ -66,37 +59,6 @@
   animation: fadeInRight 1.5s ease-out;
 }
 
-/* Ocultar barra de desplazamiento */
-.scrollbar-hide {
-  -ms-overflow-style: none; /* IE y Edge */
-  scrollbar-width: none; /* Firefox */
-}
 
-.scrollbar-hide::-webkit-scrollbar {
-  display: none; /* Chrome, Safari y Opera */
-}
 
-.custom-shape-divider-bottom-1734903450 {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  overflow: hidden;
-  line-height: 0;
-  transform: rotate(180deg);
-}
 
-.custom-shape-divider-bottom-1734903450 svg {
-  position: relative;
-  display: block;
-  width: calc(100% + 1.3px);
-  height: 186px;
-  transform: rotateY(180deg);
-}
-
-.custom-shape-divider-bottom-1734903450 .shape-fill {
-  fill: #FFFFFF;
-}
-.dark .custom-shape-divider-bottom-1734903450 .shape-fill {
-  fill: #111827;
-}

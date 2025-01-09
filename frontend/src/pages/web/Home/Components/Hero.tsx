@@ -1,43 +1,93 @@
-import { Button } from "@/components/ui/button";
-import HeroImage from "@/assets/heroimg.png";
+import { Instagram, Facebook, Mail } from "lucide-react";
+import img2 from "@/assets/uniform-removebg-preview.png";
+import img3 from "@/assets/polos2-removebg-preview.png";
 
 export default function Hero() {
   return (
-    <section className="relative bg-gradient-to-r from-blue-500 via-blue-400 to-blue-300 dark:bg-gradient-to-r dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 text-white py-16 lg:py-24">
-      {/* Forma ondulada aplicada al contenedor principal */}
-      <div className="custom-shape-divider-bottom-1734903450 md:block hidden">
-        <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
-          <path d="M1200 120L0 16.48 0 0 1200 0 1200 120z" className="shape-fill"></path>
-        </svg>
-      </div>
-
-      <div className="container mx-auto flex flex-col lg:flex-row items-center justify-between px-6 lg:px-12 relative z-10">
-        {/* Columna de Texto */}
-        <div className="w-full lg:w-1/2 text-center lg:text-left">
-          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white dark:text-white">
+    <section className="bg-gray-50 dark:bg-gray-900 py-20 lg:py-28">
+      {/* Main Container */}
+      <div className="container mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-7xl">
+        {/* Left Content */}
+        <div className="flex flex-col justify-center animate-fadeInLeft">
+          <h1
+            className="text-5xl sm:text-6xl font-extrabold text-gray-800 dark:text-white leading-tight "
+          >
             Diseña tu estilo con <br />
-            <span className="text-gray-800 dark:text-gray-400">Uniformes Exclusivos</span>
+            <span className="text-blue-600 dark:text-blue-400">
+              Uniformes Exclusivos
+            </span>
           </h1>
-          <p className="mt-4 text-lg text-gray-700 dark:text-gray-300">
-            Ofrecemos uniformes personalizados con materiales de alta calidad, ideales para escolares, deportivos y más.
+          <p
+            className="mt-6 text-xl sm:text-2xl text-gray-600 dark:text-gray-300 "
+            style={{ animationDelay: "0.3s" }}
+          >
+            Confeccionamos uniformes personalizados de alta calidad, ideales
+            para escolares, deportes y eventos profesionales.
           </p>
-          <div className="mt-6 flex flex-col md:flex-row gap-4 justify-center lg:justify-start">
-            <Button className="   text-white hover:bg-blue-700 px-6 py-3 text-lg font-semibold shadow-lg transition-transform transform hover:scale-105">
+          <div
+            className="mt-10 flex gap-8 items-center "
+            style={{ animationDelay: "0.5s" }}
+          >
+            <a
+              href="https://www.instagram.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-all"
+            >
+              <Instagram className="w-8 h-8" />
+            </a>
+            <a
+              href="https://www.facebook.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-all"
+            >
+              <Facebook className="w-8 h-8" />
+            </a>
+            <a
+              href="mailto:correo@ejemplo.com"
+              className="text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-all"
+            >
+              <Mail className="w-8 h-8" />
+            </a>
+          </div>
+          <div
+            className="mt-8 flex gap-6 "
+            style={{ animationDelay: "0.7s" }}
+          >
+            <button className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg shadow-lg hover:bg-blue-700 transition-all text-lg hover:scale-105 transform">
               Ver Productos
-            </Button>
-            <Button className="bg-gray-200 text-gray-900 hover:bg-gray-300 px-6 py-3 text-lg font-semibold shadow-lg transition-transform transform hover:scale-105 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700">
+            </button>
+            <button className="px-4 py-2 border border-gray-300 text-gray-700 dark:text-gray-300 font-medium rounded-lg shadow-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all text-lg hover:scale-105 transform">
               Personalizar
-            </Button>
+            </button>
           </div>
         </div>
 
-        {/* Columna de Imagen */}
-        <div className="relative w-full lg:w-1/2 mt-12 lg:mt-0 ">
-          <img
-            src={HeroImage}
-            alt="Uniformes"
-            className="max-w-xs sm:max-w-md  object-contain mx-auto"
-          />
+        {/* Right Content - Images */}
+        <div className="flex justify-center items-start gap-8">
+          {/* Primera Imagen */}
+          <div
+            className="relative overflow-hidden rounded-lg shadow-lg w-96 h-96 bg-gray-100 dark:bg-gray-700 animate-fadeInLeft"
+            style={{ animationDuration: "1.5s" }}
+          >
+            <img
+              src={img2}
+              alt="Equipo deportivo"
+              className="w-full h-full object-cover hover:scale-110 transform transition-transform duration-500"
+            />
+          </div>
+          {/* Segunda Imagen (Más abajo) */}
+          <div
+            className="relative overflow-hidden rounded-lg shadow-lg w-96 h-96 mt-8 bg-gray-100 dark:bg-gray-700 animate-fadeInRight"
+            style={{ animationDelay: "0.3s", animationDuration: "1.5s" }}
+          >
+            <img
+              src={img3}
+              alt="Uniformes escolares"
+              className="w-full h-full object-cover hover:scale-110 transform transition-transform duration-500"
+            />
+          </div>
         </div>
       </div>
     </section>

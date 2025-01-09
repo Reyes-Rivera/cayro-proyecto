@@ -18,7 +18,7 @@ export interface User {
     phone: string;
     birthday: Date;
     password: string;
-    gender?: string;
+    gender: string;
     direction?: Direction[];
     active?: boolean;
     role?: string;

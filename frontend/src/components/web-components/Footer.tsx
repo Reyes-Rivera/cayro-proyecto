@@ -64,7 +64,7 @@ const Footer = () => {
                                 target="_blank"
                                 rel="noopener noreferrer"
                             >
-                                {renderSocialIcon(social.platform)}
+                                {renderSocialIcon(social.platform.toLowerCase())}
                             </a>
                         ))}
                     </div>

@@ -8,15 +8,14 @@ import 'sweetalert2/src/sweetalert2.scss';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useNavigate } from 'react-router-dom';
-import { getCompanyInfoApi } from '@/api/company';
+import logo from "@/assets/logo.png";
 
 const NavBarUser = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { auth, user, signOut } = useAuth();
   const navigate = useNavigate();
-  const [logo, setLogo] = useState();
   const [darkMode, setDarkMode] = useState(false);
-  const [scrolled, setScrolled] = useState(false); // Estado para detectar el scroll
+  const [scrolled, setScrolled] = useState(false);
 
   const handleLogout = async () => {
     const res = await signOut();
@@ -49,11 +48,6 @@ const NavBarUser = () => {
   };
 
   useEffect(() => {
-    const getInfoPage = async () => {
-      const res = await getCompanyInfoApi();
-      setLogo(res?.data?.[0]?.logoUrl);
-    };
-    getInfoPage();
 
     const savedTheme = localStorage.getItem('theme') || 'light';
     if (savedTheme === 'dark') {
@@ -61,7 +55,6 @@ const NavBarUser = () => {
       setDarkMode(true);
     }
 
-    // Escuchar el scroll y actualizar el estado
     const handleScroll = () => {
       setScrolled(window.scrollY > 0);
     };
@@ -95,8 +88,8 @@ const NavBarUser = () => {
                 to="/"
                 className={({ isActive }) =>
                   isActive
-                    ? "text-[#2F93D1] border-b-2 border-[#2F93D1]"
-                    : "text-gray-700 dark:text-gray-300 hover:text-[#2F93D1] transition-all"
+                    ? "text-black dark:text-white border-b-2 border-blue-600"
+                    : "text-gray-800 dark:text-gray-300 hover:text-blue-600 transition-all"
                 }
               >
                 Inicio
@@ -105,8 +98,8 @@ const NavBarUser = () => {
                 to="/products"
                 className={({ isActive }) =>
                   isActive
-                    ? "text-[#2F93D1] border-b-2 border-[#2F93D1]"
-                    : "text-gray-700 dark:text-gray-300 hover:text-[#2F93D1] transition-all"
+                    ? "text-black dark:text-white border-b-2 border-blue-600"
+                    : "text-gray-800 dark:text-gray-300 hover:text-blue-600 transition-all"
                 }
               >
                 Productos
@@ -136,7 +129,7 @@ const NavBarUser = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <NavLink to="/login" className="bg-[#2F93D1] text-white px-4 py-2 rounded-lg hover:bg-[#2578A8]">
+                <NavLink to="/login" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
                   Iniciar sesión
                 </NavLink>
               )}
@@ -170,10 +163,10 @@ const NavBarUser = () => {
         {/* Mobile Menu */}
         <div className={`sm:hidden ${isMenuOpen ? 'block' : 'hidden'}`}>
           <div className="space-y-1 pt-2 pb-3">
-            <NavLink to="/" className="block px-4 py-2 text-gray-700 dark:text-white">
+            <NavLink to="/" className="block px-4 py-2 text-gray-800 dark:text-gray-300">
               Inicio
             </NavLink>
-            <NavLink to="/products" className="block px-4 py-2 text-gray-700 dark:text-white">
+            <NavLink to="/products" className="block px-4 py-2 text-gray-800 dark:text-gray-300">
               Productos
             </NavLink>
 
@@ -181,19 +174,19 @@ const NavBarUser = () => {
               <>
                 <button
                   onClick={handleGoToProfile}
-                  className="block px-4 py-2 text-gray-700 dark:text-white"
+                  className="block px-4 py-2 text-gray-800 dark:text-gray-300"
                 >
                   Perfil
                 </button>
                 <button
                   onClick={handleLogout}
-                  className="block px-4 py-2 text-gray-700 dark:text-white"
+                  className="block px-4 py-2 text-gray-800 dark:text-gray-300"
                 >
                   Cerrar sesión
                 </button>
               </>
             ) : (
-              <NavLink to="/login" className="block px-4 py-2 text-gray-700 dark:text-white">
+              <NavLink to="/login" className="block px-4 py-2 text-gray-800 dark:text-gray-300">
                 Iniciar sesión
               </NavLink>
             )}

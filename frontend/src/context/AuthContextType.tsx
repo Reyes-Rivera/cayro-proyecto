@@ -9,7 +9,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   auth: Boolean;
   loading: Boolean;
-  SignUp: (name: string, surname: string, email: string, phone: string, birthday: Date, password: string) => Promise<User | null>;
+  SignUp: (name: string, surname: string, email: string, phone: string, birthday: Date, password: string,gender:string) => Promise<User | null>;
   verifyCode: (email: string, code: string) => Promise<any>;
   error: string;
   emailToVerify: string | null; // Nuevo estado para almacenar el correo que está siendo verificado
@@ -71,9 +71,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const SignUp = async (name: string, surname: string, email: string, phone: string, birthday: Date, password: string) => {
+  const SignUp = async (name: string, surname: string, email: string, phone: string, birthday: Date, password: string,gender:string) => {
     try {
-      const res = await signUpApi({ name, surname, email, phone, birthday, password });
+      const res = await signUpApi({ name, surname, email, phone, birthday, password,gender });
       if (res) {
         setEmailToVerify(email); // Establecer el correo que será verificado
         setIsVerificationPending(true); // Indicar que el usuario necesita verificar su correo
@@ -87,6 +87,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setTimeout(() => {
         setError("");
       }, 2000);
+      return errorMsg;  
     }
   };
   const verifyCode = async (email: string, code: string) => {

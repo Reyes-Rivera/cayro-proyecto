@@ -38,7 +38,7 @@ export class RegulatoryDocumentService {
           effectiveDate: createRegulatoryDocumentDto.effectiveDate,
           isDeleted: false,
           isCurrentVersion: true,
-          previousVersionId: latestPolicy.id, // Reference to the previous policy
+          previousVersionId: latestPolicy.id, 
           status: Status.current, // Adjust based on your `Status` enum mapping
           type: DocumentTypeInter.policy, // Adjust based on your `DocumentTypeInter` enum mapping
         },

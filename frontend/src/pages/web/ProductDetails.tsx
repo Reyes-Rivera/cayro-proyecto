@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Link } from "react-router-dom"
-import sudadera from "@/assets/sudadera.png"
+import sudadera from "@/assets/sudadera-removebg-preview.png"
 import qr from "@/assets/qr.png"
 export default function ProductDetails() {
     return (

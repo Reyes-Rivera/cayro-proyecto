@@ -85,10 +85,10 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900 p-5">
+    <div className="flex min-h-screen items-center justify-center  p-5">
       <div className="flex flex-col-reverse md:flex-row max-w-6xl w-full bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-hidden">
         {/* Columna Izquierda */}
-        <div className="hidden md:flex md:flex-col lg:justify-center bg-gradient-to-r from-blue-500 via-blue-400 to-blue-300 dark:bg-gradient-to-r dark:from-gray-800 dark:via-gray-900 dark:to-gray-900 text-white w-full lg:w-1/2 p-10">
+        <div className="hidden md:flex md:flex-col lg:justify-center bg-blue-600 dark:bg-gray-900 text-white w-full lg:w-1/2 p-10">
           <h2 className="text-4xl font-extrabold mb-4">
             Bienvenido a <span className="text-blue-100">Cayro Uniformes</span>
           </h2>
@@ -118,7 +118,7 @@ export default function LoginPage() {
         </div>
 
         {/* Columna Derecha */}
-        <div className="flex flex-col items-center justify-center w-full lg:w-1/2 p-6 lg:p-10 bg-gray-50 dark:bg-gray-900">
+        <div className="flex flex-col items-center justify-center w-full lg:w-1/2 p-6 lg:p-10  ">
           <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-6">
             Iniciar sesión
           </h2>
@@ -197,7 +197,7 @@ export default function LoginPage() {
 
             <Button
               type="submit"
-              className="w-full bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-transform transform hover:scale-105 dark:text-white"
+              className="px-4 py-2 bg-blue-600 font-bold text-white  rounded-lg shadow-lg hover:bg-blue-700 transition-all text-lg hover:scale-105 transform w-full"
               disabled={lockoutTime > 0 || isLoading}
             >
               {isLoading ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : "Iniciar sesión"}
