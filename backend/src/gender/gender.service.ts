@@ -8,8 +8,7 @@ import {
 import { CreateGenderDto } from './dto/create-gender.dto';
 import { UpdateGenderDto } from './dto/update-gender.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Gender } from './entities/gender.entity';
-import { InternalServerError } from 'postmark/dist/client/errors/Errors';
+import { Gender } from '@prisma/client';
 
 @Injectable()
 export class GenderService {

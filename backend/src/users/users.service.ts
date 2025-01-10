@@ -192,8 +192,6 @@ export class UsersService {
 
       await this.sendCode(createUserDto.email);
       return this.prismaService.user.create({ data });
-      // await res.save();
-      // return res;
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;
@@ -426,7 +424,7 @@ export class UsersService {
       );
     }
   }
-//its okey
+  //its okey
   async restorePassword(password: string, token: any) {
     try {
       const decoded = this.jwtSvc.verify(token, {
@@ -540,7 +538,9 @@ export class UsersService {
   }
 
   async blockUser(days: number, email: string) {
-    const userFound = await this.prismaService.user.findUnique({ where: { email } });
+    const userFound = await this.prismaService.user.findUnique({
+      where: { email },
+    });
     if (!userFound) {
       throw new NotFoundException('Usuario no encontrado.');
     }

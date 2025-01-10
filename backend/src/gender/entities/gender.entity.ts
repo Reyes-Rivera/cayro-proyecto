@@ -1,3 +1,5 @@
 export class Gender {
-  name: string;
+  name: GenderType;
 }
+
+export type GenderType = 'Hombres' | 'Mujeres' | 'Unisex' | 'Niño' | 'Niña';

@@ -12,6 +12,8 @@ import { ConfigurationModule } from './configuration/configuration.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ColorsModule } from './colors/colors.module';
 import { GenderModule } from './gender/gender.module';
+import { FabricTypeModule } from './fabric-type/fabric-type.module';
+import { NeckTypeModule } from './neck-type/neck-type.module';
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -25,7 +27,9 @@ import { GenderModule } from './gender/gender.module';
     ConfigurationModule,
     PrismaModule,
     ColorsModule,
-    GenderModule
+    GenderModule,
+    FabricTypeModule,
+    NeckTypeModule
   ],
   controllers: [],
   providers: [AppService],

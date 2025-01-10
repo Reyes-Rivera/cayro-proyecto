@@ -106,8 +106,6 @@ model Address {
   sales      Sale[]     @relation("SaleAddresses")
 }
 
-
-
 model Audit {
   id        Int            @id @default(autoincrement())
   action    String
@@ -125,6 +123,8 @@ model CompanyProfile {
   logoUrl     String
   contactInfo Json
   auditLog    Audit[]
+  mission     String
+  vision      String
   socialLinks Json
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -183,7 +183,8 @@ model Gender {
 
 model FabricType {
   id          Int         @id @default(autoincrement())
-  name        String      
+  name        String
+  description String      
   products    Product[]   
 }
 
@@ -217,7 +218,7 @@ model Size {
   id          Int          @id @default(autoincrement())
   name        String
   variants    ProductVariant[]
-  sizePrices  SizePrice[]  // Relación con SizePrice
+  sizePrices  SizePrice[]
 }
 
 model SizePrice {
@@ -226,7 +227,7 @@ model SizePrice {
   sizeId      Int
   price       Float
   category    Category    @relation(fields: [categoryId], references: [id])
-  size        Size        @relation(fields: [sizeId], references: [id]) // Relación con Size
+  size        Size        @relation(fields: [sizeId], references: [id]) 
 }
 
 
