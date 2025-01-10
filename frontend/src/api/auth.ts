@@ -9,9 +9,6 @@ export const verifyToken = async () => {
 }
 
 export const loginApi = async (data: UserLogin) => {
-   // Obtener el token CSRF antes de la solicitud de login
-
-   // Realizar la solicitud de login incluyendo el token CSRF
    return axios.post("/auth/login", data, {
       withCredentials: true,  // Asegura que las cookies de sesión se envíen
    });

@@ -93,7 +93,7 @@ export class RegulatoryDocumentController {
   @Get("boundary-history")
   async findAllBoundaryHistory() {
     const res = await this.regulatoryDocumentService.findAllBoundariesHistory();
-    if (!res) throw new NotFoundException("No hay docuemntos todavia.");
+    if (!res) throw new NotFoundException("No hay documentos todavia.");
     return res;
   }
 

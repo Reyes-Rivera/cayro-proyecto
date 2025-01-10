@@ -208,8 +208,8 @@ model Category {
 
 model Color {
   id          Int         @id @default(autoincrement())
-  name        String      
-  hexValue    String      
+  name        String      @unique    
+  hexValue    String      @unique
   variants    ProductVariant[] 
 }
 

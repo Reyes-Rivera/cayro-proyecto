@@ -10,6 +10,8 @@ import { RegulatoryDocumentModule } from './regulatory-document/regulatory-docum
 import { CompanyProfileModule } from './company-profile/company-profile.module';
 import { ConfigurationModule } from './configuration/configuration.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { ColorsModule } from './colors/colors.module';
+import { GenderModule } from './gender/gender.module';
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -21,7 +23,9 @@ import { PrismaModule } from './prisma/prisma.module';
     RegulatoryDocumentModule,
     CompanyProfileModule,
     ConfigurationModule,
-    PrismaModule
+    PrismaModule,
+    ColorsModule,
+    GenderModule
   ],
   controllers: [],
   providers: [AppService],
