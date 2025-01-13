@@ -159,89 +159,118 @@ enum DocumentTypeInter {
 }
 
 model Product {
-  id          Int         @id @default(autoincrement())
-  name        String     
-  description String      
-  categoryId  Int         
-  category    Category    @relation(fields: [categoryId], references: [id]) 
-  genderId    Int         
-  gender      Gender      @relation(fields: [genderId], references: [id]) 
-  fabricTypeId Int       
-  fabricType  FabricType  @relation(fields: [fabricTypeId], references: [id])
-  neckTypeId  Int         
-  neckType    NeckType    @relation(fields: [neckTypeId], references: [id])
-  sleeveTypeId Int       
-  sleeveType  SleeveType  @relation(fields: [sleeveTypeId], references: [id]) 
-  variants    ProductVariant[] 
+  id               Int      @id @default(autoincrement())
+  name             String
+  description      String
+  barcode          String   @unique
+  stock            Int      @default(0)
+  salePrice        Float
+  active           Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  brandId          Int
+  departmentId     Int
+  genderId         Int
+  sleeveId         Int
+  sewingThreadId   Int
+  embroideryThreadId Int
+
+  brand            Brand     @relation(fields: [brandId], references: [id])
+  department       Department @relation(fields: [departmentId], references: [id])
+  gender           Gender    @relation(fields: [genderId], references: [id])
+  sleeve           Sleeve    @relation(fields: [sleeveId], references: [id])
+  sewingThread     SewingThread @relation(fields: [sewingThreadId], references: [id])
+  embroideryThread EmbroideryThread @relation(fields: [embroideryThreadId], references: [id])
+
+  colors           ProductColor[]
+  sizes            ProductSize[]
+  materials        ProductMaterial[]
+  saleDetails      SaleDetail[] 
 }
 
-model Gender {
-  id          Int         @id @default(autoincrement())
-  name        String     
-  products    Product[]  
-}
-
-model FabricType {
-  id          Int         @id @default(autoincrement())
-  name        String
-  description String      
-  products    Product[]   
-}
-
-model NeckType {
-  id          Int         @id @default(autoincrement())
-  name        String      
-  products    Product[]   
-}
-
-model SleeveType {
-  id          Int         @id @default(autoincrement())
-  name        String      
-  products    Product[]   
-}
-
-model Category {
-  id          Int         @id @default(autoincrement())
-  name        String      
-  products    Product[]   
-  sizePrices  SizePrice[] 
-}
-
+//Done
 model Color {
-  id          Int         @id @default(autoincrement())
-  name        String      @unique    
-  hexValue    String      @unique
-  variants    ProductVariant[] 
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  hexValue String    @unique
+  products ProductColor[]
 }
-
+//done
 model Size {
-  id          Int          @id @default(autoincrement())
-  name        String
-  variants    ProductVariant[]
-  sizePrices  SizePrice[]
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  products ProductSize[]
+}
+//done
+model Gender {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  products Product[]
+}
+//done
+model Sleeve {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  products Product[]
+}
+//done
+model Material {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  description String
+  products ProductMaterial[]
 }
 
-model SizePrice {
-  id          Int         @id @default(autoincrement())
-  categoryId  Int
-  sizeId      Int
-  price       Float
-  category    Category    @relation(fields: [categoryId], references: [id])
-  size        Size        @relation(fields: [sizeId], references: [id]) 
+model SewingThread {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  products Product[]
 }
 
+model EmbroideryThread {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  products Product[]
+}
 
-model ProductVariant {
-  id              Int             @id @default(autoincrement())
-  productId       Int
-  sizeId          Int
-  colorId         Int
-  price           Float
-  stock           Int
-  product         Product         @relation(fields: [productId], references: [id])
-  size            Size            @relation(fields: [sizeId], references: [id])
-  color           Color           @relation(fields: [colorId], references: [id])
-  saleDetails     SaleDetail[]    // Relación inversa con SaleDetail
+model Brand {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  products Product[]
+}
+
+model Department {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  products Product[]
+}
+
+model ProductColor {
+  productId Int
+  colorId   Int
+  product   Product @relation(fields: [productId], references: [id])
+  color     Color   @relation(fields: [colorId], references: [id])
+
+  @@id([productId, colorId])
+}
+
+model ProductSize {
+  productId Int
+  sizeId    Int
+  product   Product @relation(fields: [productId], references: [id])
+  size      Size    @relation(fields: [sizeId], references: [id])
+
+  @@id([productId, sizeId])
+}
+
+model ProductMaterial {
+  productId Int
+  materialId Int
+  product   Product @relation(fields: [productId], references: [id])
+  material  Material @relation(fields: [materialId], references: [id])
+
+  @@id([productId, materialId])
 }
 
 
@@ -268,12 +297,12 @@ model Sale {
 model SaleDetail {
   id              Int             @id @default(autoincrement())
   saleId          Int
-  productVariantId Int
+  productId       Int
   quantity        Int
   unitPrice       Float
   totalPrice      Float
   sale            Sale            @relation(fields: [saleId], references: [id])
-  productVariant  ProductVariant  @relation(fields: [productVariantId], references: [id])  // Relación con ProductVariant
+  product         Product  @relation(fields: [productId], references: [id])
 }
 
 

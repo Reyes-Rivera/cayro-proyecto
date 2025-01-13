@@ -1,9 +1,9 @@
 import { IsNotEmpty, IsString, MaxLength, MinLength } from 'class-validator';
 
-export class CreateNeckTypeDto {
-  @IsNotEmpty()
+export class CreateSleeveDto {
   @IsString()
-  @MinLength(4)
-  @MaxLength(50)
+  @IsNotEmpty()
+  @MinLength(5)
+  @MaxLength(100)
   name: string;
 }

@@ -66,12 +66,18 @@ export class GenderService {
         where: { id },
       });
     } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
       if (error.code === 'P2003') {
         throw new ConflictException(
           'No se puede eliminar el genero porque está relacionado con otros registros.',
         );
       }
-      throw new InternalServerErrorException('Error interno en el servidor.');
+      throw new HttpException(
+        'Error interno en el servidor.',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }

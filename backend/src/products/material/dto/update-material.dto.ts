@@ -1,17 +1,17 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { CreateFabricTypeDto } from './create-fabric-type.dto';
+import { CreateMaterialDto } from './create-material.dto';
 import { IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
-export class UpdateFabricTypeDto extends PartialType(CreateFabricTypeDto) {
+export class UpdateMaterialDto extends PartialType(CreateMaterialDto) {
   @IsString()
   @IsOptional()
   @MinLength(4)
   @MaxLength(100)
-  name: string;
+  name?: string;
 
   @IsString()
   @IsOptional()
   @MinLength(4)
   @MaxLength(200)
-  description: string;
+  description?: string;
 }
