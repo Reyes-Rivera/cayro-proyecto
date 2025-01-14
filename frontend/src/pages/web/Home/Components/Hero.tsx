@@ -6,7 +6,7 @@ export default function Hero() {
   return (
     <section className="bg-gray-50 dark:bg-gray-900 py-20 lg:py-28">
       {/* Main Container */}
-      <div className="container mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-7xl">
+      <div className="container mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center max-w-7xl">
         {/* Left Content */}
         <div className="flex flex-col justify-center animate-fadeInLeft">
           <h1
@@ -65,7 +65,7 @@ export default function Hero() {
         </div>
 
         {/* Right Content - Images */}
-        <div className="flex justify-center items-start gap-8">
+        <div className="md:flex hidden justify-center items-start gap-8">
           {/* Primera Imagen */}
           <div
             className="relative overflow-hidden rounded-lg shadow-lg w-96 h-96 bg-gray-100 dark:bg-gray-700 animate-fadeInLeft"

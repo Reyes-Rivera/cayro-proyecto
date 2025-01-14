@@ -639,7 +639,7 @@ export default function SignUpPage() {
               {currentStep > 1 && (
                 <button
                   type="button"
-                  className="px-4 py-2 text-[#2F93D1] font-bold dark:text-gray-100 rounded-md flex items-center"
+                  className="px-4 py-2 text-blue-500 font-bold dark:text-gray-100 rounded-md flex items-center"
                   onClick={handleBack}
                 >
                   <MoveLeft className="h-4 w-4 mr-2" />
@@ -648,7 +648,7 @@ export default function SignUpPage() {
               )}
               <button
                 type="submit"
-                className="px-4 py-2 bg-[#2F93D1] font-bold text-white rounded-md flex items-center"
+                className="px-4 py-2 bg-blue-500 font-bold text-white rounded-md flex items-center"
               >
                 <span>{currentStep === 2 ? "Confirmar" : "Siguiente"}</span>
                 {currentStep === 2 ? (
@@ -666,7 +666,7 @@ export default function SignUpPage() {
                     ¿Ya tienes una cuenta?{" "}
                     <NavLink
                       to="/login"
-                      className="font-semibold text-[#2F93D1] hover:text-blue-600"
+                      className="font-semibold text-blue-500 hover:text-blue-600"
                     >
                       Iniciar sesión
                     </NavLink>
