@@ -8,22 +8,22 @@ import {
 import { CreateSleeveDto } from './dto/create-sleeve.dto';
 import { UpdateSleeveDto } from './dto/update-sleeve.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { SleeveType } from '@prisma/client';
+import { Sleeve } from '@prisma/client';
 
 @Injectable()
 export class SleeveService {
   constructor(private prismaService: PrismaService) {}
 
-  async create(createSleeveDto: CreateSleeveDto): Promise<SleeveType> {
+  async create(createSleeveDto: CreateSleeveDto): Promise<Sleeve> {
     try {
-      const sleeveFound = await this.prismaService.sleeveType.findFirst({
+      const sleeveFound = await this.prismaService.sleeve.findFirst({
         where: { name: createSleeveDto.name },
       });
       if (sleeveFound)
         throw new ConflictException(
           'Este tipo de manga ya se encuentra registrada.',
         );
-      return await this.prismaService.sleeveType.create({
+      return await this.prismaService.sleeve.create({
         data: createSleeveDto,
       });
     } catch (error) {
@@ -35,12 +35,12 @@ export class SleeveService {
     }
   }
 
-  async findAll(): Promise<SleeveType[]> {
-    return await this.prismaService.sleeveType.findMany();
+  async findAll(): Promise<Sleeve[]> {
+    return await this.prismaService.sleeve.findMany();
   }
 
-  async findOne(id: number): Promise<SleeveType> {
-    return await this.prismaService.sleeveType.findFirst({
+  async findOne(id: number): Promise<Sleeve> {
+    return await this.prismaService.sleeve.findFirst({
       where: { id },
     });
   }
@@ -48,16 +48,16 @@ export class SleeveService {
   async update(
     id: number,
     updateSleeveDto: UpdateSleeveDto,
-  ): Promise<SleeveType> {
+  ): Promise<Sleeve> {
     try {
-      const sleeveFound = await this.prismaService.sleeveType.findFirst({
+      const sleeveFound = await this.prismaService.sleeve.findFirst({
         where: { name: updateSleeveDto.name },
       });
       if (sleeveFound)
         throw new ConflictException(
           'Este tipo de manga ya se encuentra registrado.',
         );
-      const sleeveUpdated = await this.prismaService.sleeveType.update({
+      const sleeveUpdated = await this.prismaService.sleeve.update({
         where: { id },
         data: updateSleeveDto,
       });
@@ -76,9 +76,9 @@ export class SleeveService {
   }
 
   
-    async remove(id: number): Promise<SleeveType> {
+    async remove(id: number): Promise<Sleeve> {
       try {
-        const res = await this.prismaService.sleeveType.delete({
+        const res = await this.prismaService.sleeve.delete({
           where: { id },
         });
         if (!res)

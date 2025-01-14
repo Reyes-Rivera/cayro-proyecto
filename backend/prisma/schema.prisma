@@ -36,7 +36,7 @@ model User {
   sales             Sale[]
   addresses         Address[] @relation("UserAddresses")
 }
-
+//done
 model Configuration {
   id                    Int  @id @default(autoincrement())
   timeTokenLogin        Int
@@ -46,14 +46,14 @@ model Configuration {
   emailLogin            Json
   emailResetPass        Json
 }
-
+//done
 model UserActivity {
   id     Int      @id @default(autoincrement())
   email  String   @db.VarChar(255)
   action String   @db.VarChar(255)
   date   DateTime
 }
-
+//done
 model Employee {
   id                Int       @id @default(autoincrement())
   name              String    @db.VarChar(255)
