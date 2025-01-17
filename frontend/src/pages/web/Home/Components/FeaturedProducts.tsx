@@ -12,7 +12,7 @@ import Prod3 from "@/assets/sudadera-removebg-preview.png";
 export default function FeaturedProducts() {
   return (
     <section className=" dark:bg-gray-800 py-20 lg:py-28">
-      <div className="container mx-auto flex flex-col items-center px-6 sm:px-12 lg:px-32">
+      <div className="container mx-auto flex flex-col items-center px-6 lg:px-20">
         {/* Header */}
         <div className="text-center animate-fadeInUp">
           <h2 className="text-4xl sm:text-5xl font-extrabold text-gray-800 dark:text-white leading-tight">

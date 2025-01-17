@@ -348,7 +348,6 @@ export class AuthService {
       });
     }
 
-    // Enviar código de verificación si es un usuario regular activo
     if (userFound.role === Role.USER) {
       const user = await this.prismaService.user.findUnique({
         where: { email: userFound.email },
@@ -360,7 +359,6 @@ export class AuthService {
     if (userFound.role === Role.ADMIN || userFound.role === Role.EMPLOYEE) {
       await this.sendCode(loginDto.email);
     }
-    // Eliminar la contraseña antes de devolver la información del usuario o empleado
     const {
       password,
       passwordsHistory,

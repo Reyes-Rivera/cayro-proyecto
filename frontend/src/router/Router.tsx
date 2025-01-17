@@ -20,6 +20,7 @@ import LegalBoundary from "@/pages/web/RegulatoryDocuments/LegalBoundary";
 import Contact from "@/pages/web/Contact";
 import ProductDetails from "@/pages/web/ProductDetails";
 import ProductsSection from "@/pages/web/products/ProductsSection";
+import PageNotFound from "@/pages/web/error/PageNotFound";
 const AppRoutes = () => {
   useEffect(()=>{
     const getInfoPage = async() => {
@@ -61,7 +62,7 @@ const AppRoutes = () => {
                   <Route path="/verification-code" element={<VerificationPage/>}/>
                   <Route path="/verification-code-auth" element={<VerificationPage/>}/>
                 </Route>
-                <Route path="*" element={<HomePage/>}/>
+                <Route path="*" element={<PageNotFound/>}/>
 
             </Routes>
         </div>

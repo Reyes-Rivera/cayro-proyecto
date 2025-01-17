@@ -6,7 +6,7 @@ export default function Hero() {
   return (
     <section className="bg-gray-50 dark:bg-gray-900 py-20 lg:py-28">
       {/* Main Container */}
-      <div className="container mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center max-w-7xl">
+      <div className="container mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center px-6 lg:px-20">
         {/* Left Content */}
         <div className="flex flex-col justify-center animate-fadeInLeft">
           <h1

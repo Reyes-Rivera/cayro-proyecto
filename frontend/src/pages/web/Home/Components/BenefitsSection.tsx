@@ -2,7 +2,7 @@ import { Award, Brush, UserCheck, Leaf, Truck, DollarSign } from "lucide-react";
 export default function BenefitsSection() {
   return (
     <section className="bg-gray-50 dark:bg-gray-900 py-20 lg:py-28">
-      <div className="container mx-auto text-center px-6 sm:px-12 lg:px-32 max-w-7xl">
+      <div className="container mx-auto text-center px-6 lg:px-20">
         {/* Header */}
         <div className="animate-fadeInUp">
           <h2 className="text-4xl sm:text-5xl font-extrabold text-gray-800 dark:text-white">

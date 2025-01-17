@@ -1,6 +1,6 @@
 import { Transform } from "class-transformer";
 import { IsDate, IsNotEmpty, IsString, MaxLength, MinLength, IsEnum } from "class-validator";
-import { Genders, Role } from "../entities/employee.entity";  // Asumiendo que `Role` está definido en `employee.entity.ts`
+import { Genders, Role } from "../entities/employee.entity";
 
 export class CreateEmployeeDto {
     @IsString()
