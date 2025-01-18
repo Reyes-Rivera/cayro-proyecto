@@ -21,6 +21,7 @@ import Contact from "@/pages/web/Contact";
 import ProductDetails from "@/pages/web/ProductDetails";
 import ProductsSection from "@/pages/web/products/ProductsSection";
 import PageNotFound from "@/pages/web/error/PageNotFound";
+import Error500 from "@/pages/web/error/Error500";
 const AppRoutes = () => {
   useEffect(()=>{
     const getInfoPage = async() => {
@@ -63,6 +64,7 @@ const AppRoutes = () => {
                   <Route path="/verification-code-auth" element={<VerificationPage/>}/>
                 </Route>
                 <Route path="*" element={<PageNotFound/>}/>
+                <Route path="/500" element={<Error500/>}/>
 
             </Routes>
         </div>
