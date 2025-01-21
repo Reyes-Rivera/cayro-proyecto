@@ -1,5 +1,4 @@
 import { IsNotEmpty, IsString, MaxLength, MinLength, IsArray, IsOptional, ValidateNested } from "class-validator";
-// import { SocialLinks } from "../entities/company-profile.entity";
 export class SocialLinks {
     @IsString()
     @IsNotEmpty()
@@ -8,7 +7,7 @@ export class SocialLinks {
     @IsString()
     @IsNotEmpty()
     url: string;
-  }
+  } 
   
 export class CreateCompanyProfileDto {
   @IsString()
@@ -32,7 +31,19 @@ export class CreateCompanyProfileDto {
   @MaxLength(200)
   logoUrl: string;
 
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(4)
+  @MaxLength(1000)
+  mission:string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(4)
+  @MaxLength(500)
+  vision:string;
+
   @IsArray()
-  @IsOptional() // Si es opcional, puedes usar @IsOptional
-  contactInfo?: any[]; // Puedes usar cualquier tipo adecuado para este campo, dependiendo de cómo lo manejes
+  @IsOptional() 
+  contactInfo?: any[];
 }

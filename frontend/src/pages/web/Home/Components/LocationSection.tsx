@@ -5,7 +5,7 @@ export default function LocationSection() {
     <section className="relative py-16 bg-gray-50 dark:bg-gray-900">
       <div className="container mx-auto px-6 lg:px-20">
         {/* Header */}
-        <h2 className="text-4xl font-extrabold text-gray-800 dark:text-white text-center">
+        <h2 className="text-4xl sm:text-5xl font-extrabold text-gray-800 dark:text-white leading-tight text-center">
           Nuestra Ubicación
         </h2>
         <p className="mt-4 text-lg text-gray-600 dark:text-gray-300 text-center">

@@ -23,5 +23,5 @@ export interface User {
     active?: boolean;
     role?: string;
     confirmPassword?:string,
-    _id?: string;
+    id?: string;
 }

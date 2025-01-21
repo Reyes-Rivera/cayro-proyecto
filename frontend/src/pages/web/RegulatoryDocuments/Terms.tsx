@@ -1,75 +1,158 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { useEffect, useState } from "react";
-import { termApi } from "@/api/policy";
-import { DocumentInterface } from "./DocumentInterface";
-import { Loader2 } from "lucide-react";
-
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, Printer } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function Terms() {
-  const [document, setDocument] = useState<DocumentInterface | null>(null);
-  const [loading, setLoading] = useState(false);
-  useEffect(() => {
-    const getDocument = async () => {
-      try {
-        setLoading(true);
-        const res = await termApi();
-        setDocument(res.data);
-        setLoading(false);
-      } catch (error) {
-        setLoading(false);
-      }
-
-    };
-    getDocument();
-  }, []);
-
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex flex-col">
-      <main className="flex-grow container mx-auto px-4 py-8">
-        <Card className="w-full max-w-3xl mx-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">Términos y Condiciones</CardTitle>
-            <CardDescription className="text-gray-600 dark:text-gray-300">
-              Información importante sobre nuestros términos y condiciones.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="privacidad" className="w-full">
-              <TabsContent value="privacidad">
-                <ScrollArea className="h-[400px] w-full rounded-md border border-gray-300 dark:border-gray-600 p-4 bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
-                  {loading ? (
-                    <div className="flex justify-center items-center h-full">
-                      <Loader2 className="animate-spin mr-2 h-10 w-10 text-gray-700 dark:text-gray-300" />
-                    </div>
-                  ) : (
-                    <>
-                      {document ? (
-                        <div className="space-y-4 leading-relaxed">
-                          {document.content.split("\n").map((paragraph, index) => (
-                            <p key={index} className="mb-4">{paragraph}</p>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-center text-gray-600 dark:text-gray-400">
-                          Lo sentimos, no contamos con términos y condiciones en este momento.
-                        </p>
-                      )}
-                    </>
-                  )}
-                </ScrollArea>
-              </TabsContent>
-            </Tabs>
-            <Separator className="my-4 border-gray-300 dark:border-gray-600" />
-            <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
-              Última actualización: {document ? new Date(document.createdAt).toLocaleDateString() : "N/A"}
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex items-center py-20 lg:py-28">
+      <main className="container mx-auto px-6 lg:px-20">
+        <div className="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl overflow-hidden">
+          {/* Document Header */}
+          <div className="bg-gray-100 dark:bg-gray-700 p-8 border-b dark:border-gray-600">
+            <div className="flex items-center justify-between mb-6">
+              <Link
+                to="/"
+                className="text-blue-600 dark:text-blue-400 hover:underline flex items-center"
+              >
+                <ChevronLeft className="h-4 w-4 mr-2" />
+                Volver al inicio
+              </Link>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex items-center dark:text-gray-300"
+              >
+                <Printer className="h-4 w-4 mr-2" />
+                Imprimir
+              </Button>
+            </div>
+            <h1 className="text-3xl font-extrabold">Términos y Condiciones</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+              Última actualización: {new Date().toLocaleDateString()}
             </p>
-          </CardContent>
-        </Card>
+          </div>
+
+          {/* Document Content */}
+          <div className="p-8 lg:p-12 space-y-8">
+            <section>
+              <h2 className="text-2xl font-bold mb-4">1. Introducción</h2>
+              <p>
+                Bienvenido a UniformPro. Estos términos y condiciones describen
+                las reglas y regulaciones para el uso del sitio web de
+                UniformPro.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-bold mb-4">
+                2. Aceptación de los términos
+              </h2>
+              <p>
+                Al acceder a este sitio web, asumimos que aceptas estos términos
+                y condiciones en su totalidad. No continúes usando el sitio web
+                de UniformPro si no aceptas todos los términos y condiciones
+                establecidos en esta página.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-bold mb-4">
+                3. Propiedad intelectual
+              </h2>
+              <p>
+                A menos que se indique lo contrario, UniformPro y/o sus
+                licenciantes poseen los derechos de propiedad intelectual de
+                todo el material en UniformPro. Todos los derechos de propiedad
+                intelectual están reservados.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-bold mb-4">4. Restricciones</h2>
+              <p>Está específicamente restringido:</p>
+              <ul className="list-disc list-inside mt-4 space-y-2">
+                <li>
+                  Publicar cualquier material del sitio web en otro medio.
+                </li>
+                <li>
+                  Vender, sublicenciar y/o comercializar cualquier material del
+                  sitio web.
+                </li>
+                <li>
+                  Realizar y/o mostrar públicamente cualquier material del sitio
+                  web.
+                </li>
+                <li>
+                  Usar este sitio web de cualquier manera que pueda dañar el
+                  sitio web.
+                </li>
+                <li>
+                  Usar este sitio web de cualquier manera que afecte el acceso
+                  de los usuarios.
+                </li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-bold mb-4">
+                5. Compras y entregas
+              </h2>
+              <p>Al realizar una compra en nuestro sitio web, aceptas que:</p>
+              <ul className="list-disc list-inside mt-4 space-y-2">
+                <li>
+                  Eres responsable de leer la lista completa de artículos antes
+                  de comprometerte a comprarlos.
+                </li>
+                <li>
+                  Te comprometes a ingresar información de contacto y pago
+                  precisa en todas las compras realizadas a través del sitio.
+                </li>
+                <li>
+                  Reconoces que los tiempos de entrega pueden variar según tu
+                  ubicación y la disponibilidad del producto.
+                </li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-bold mb-4">
+                6. Política de devoluciones
+              </h2>
+              <p>
+                Aceptamos devoluciones dentro de los 30 días posteriores a la
+                compra, siempre que los uniformes no hayan sido usados y
+                mantengan sus etiquetas originales. Los gastos de envío para las
+                devoluciones corren por cuenta del cliente, a menos que el
+                producto recibido sea defectuoso o incorrecto.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-bold mb-4">
+                7. Modificaciones de los términos
+              </h2>
+              <p>
+                UniformPro se reserva el derecho de revisar estos términos en
+                cualquier momento según lo considere oportuno, por lo que debes
+                revisarlos periódicamente. Los cambios serán efectivos cuando se
+                publiquen.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-bold mb-4">8. Contacto</h2>
+              <p>
+                Si tienes alguna pregunta sobre estos términos, contáctanos:
+              </p>
+              <ul className="list-disc list-inside mt-4 space-y-2">
+                <li>Por email: info@uniformpro.com</li>
+                <li>Por teléfono: (555) 123-4567</li>
+                <li>Por correo: 123 Calle Uniforme, Ciudad, CP 12345</li>
+              </ul>
+            </section>
+          </div>
+        </div>
       </main>
     </div>
   );
-
 }

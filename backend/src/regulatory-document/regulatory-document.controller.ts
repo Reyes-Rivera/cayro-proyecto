@@ -9,14 +9,14 @@ import { Role } from 'src/auth/roles/role.enum';
 export class RegulatoryDocumentController {
   constructor(private readonly regulatoryDocumentService: RegulatoryDocumentService) { }
   @Post("policy")
-  @Auth([Role.ADMIN])
+  // @Auth([Role.ADMIN])
   async createPolicy(@Body() createRegulatoryDocumentDto: CreateRegulatoryDocumentDto) {
     const res = await this.regulatoryDocumentService.createPolicy(createRegulatoryDocumentDto);
     if (!res) throw new ConflictException("Algo salio mal al registrar, intentalo mas tarde.")
     return res;
   }
   @Post("terms")
-  @Auth([Role.ADMIN])
+  // @Auth([Role.ADMIN])
   async createTerms(@Body() createRegulatoryDocumentDto: CreateRegulatoryDocumentDto) {
     const res = await this.regulatoryDocumentService.createTerms(createRegulatoryDocumentDto);
     if (!res) throw new ConflictException("Algo salio mal al registrar, intentalo mas tarde.")
@@ -24,7 +24,7 @@ export class RegulatoryDocumentController {
   }
 
   @Post("boundary")
-  @Auth([Role.ADMIN])
+  // @Auth([Role.ADMIN])
   async createBoundary(@Body() createRegulatoryDocumentDto: CreateRegulatoryDocumentDto) {
     const res = await this.regulatoryDocumentService.createBoundary(createRegulatoryDocumentDto);
     if (!res) throw new ConflictException("Algo salio mal al registrar, intentalo mas tarde.")

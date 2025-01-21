@@ -220,16 +220,23 @@ export class AuthService {
     }
   }
   async login(loginDto: LoginDto) {
-    // Buscar al usuario en la colección de usuarios
-    let userFound: UserOrEmployee = await this.prismaService.user.findUnique({
-      where: { email: loginDto.email },
-    });
     const configInfo = await this.prismaService.configuration.findMany();
 
+    // Buscar primero en la tabla 'user'
+    const user = await this.prismaService.user.findUnique({
+      where: { email: loginDto.email, active: true },
+    });
+
+    let userFound: UserOrEmployee | null = user;
+
+  
     if (!userFound) {
-      userFound = await this.prismaService.employee.findUnique({
+      const employee = await this.prismaService.employee.findUnique({
         where: { email: loginDto.email },
       });
+      console.log(employee);
+      userFound = employee;
+
       if (!userFound) {
         throw new NotFoundException('Usuario no registrado.');
       }
@@ -240,55 +247,70 @@ export class AuthService {
       const now = new Date();
       const timeDifference = userFound.lockUntil.getTime() - now.getTime();
 
-      // Calcular los minutos y segundos restantes
+      // Calcular minutos y segundos restantes
       const minutesRemaining = Math.floor(timeDifference / (1000 * 60));
       const secondsRemaining = Math.floor(
         (timeDifference % (1000 * 60)) / 1000,
       );
 
-      // Construir el mensaje dinámico
-      let formattedMessage = '';
-      if (minutesRemaining > 0) {
-        formattedMessage = `${minutesRemaining} minutos y ${secondsRemaining} segundos`;
-      } else {
-        formattedMessage = `${secondsRemaining} segundos`;
-      }
+      const formattedMessage =
+        minutesRemaining > 0
+          ? `${minutesRemaining} minutos y ${secondsRemaining} segundos`
+          : `${secondsRemaining} segundos`;
+
       throw new ForbiddenException(
-        'Cuenta bloqueada temporalmente. Inténtalo de nuevo en ' +
-          formattedMessage,
+        `Cuenta bloqueada temporalmente. Inténtalo de nuevo en ${formattedMessage}`,
       );
     }
 
-    // Verificar si la contraseña es válida
+    // Validar contraseña
     const isPasswordValid = await bcrypt.compare(
       loginDto.password,
       userFound.password,
     );
 
     if (!isPasswordValid) {
-      if (userFound.role === Role.USER) {
+      // Incrementar intentos fallidos
+      if ('active' in userFound) {
+        // Es un usuario
         await this.prismaService.user.update({
-          where: {
-            email: loginDto.email,
-          },
+          where: { email: loginDto.email },
           data: {
             loginAttempts: (userFound.loginAttempts || 0) + 1,
           },
         });
-      }
-      if (userFound.role === Role.ADMIN || userFound.role === Role.EMPLOYEE) {
+      } else {
+        // Es un empleado
         await this.prismaService.employee.update({
-          where: {
-            email: loginDto.email,
-          },
+          where: { email: loginDto.email },
           data: {
             loginAttempts: (userFound.loginAttempts || 0) + 1,
           },
         });
       }
 
-      // Bloquear la cuenta por 0 minutos después de 5 intentos fallidos y reiniciar los intentos
+      // Bloquear cuenta después de intentos fallidos
       if (userFound.loginAttempts === configInfo[0].attemptsLogin) {
+        const lockUntil = new Date(Date.now() + 5 * 60 * 1000);
+        const updateData = {
+          lockUntil,
+          loginAttempts: 0,
+        };
+
+        if ('active' in userFound) {
+          // Bloquear usuario
+          await this.prismaService.user.update({
+            where: { email: userFound.email },
+            data: updateData,
+          });
+        } else {
+          // Bloquear empleado
+          await this.prismaService.employee.update({
+            where: { email: userFound.email },
+            data: updateData,
+          });
+        }
+
         await this.prismaService.userActivity.create({
           data: {
             email: loginDto.email,
@@ -296,28 +318,6 @@ export class AuthService {
             date: new Date(),
           },
         });
-        if (userFound.role === Role.USER) {
-          await this.prismaService.user.update({
-            where: {
-              email: userFound.email,
-            },
-            data: {
-              lockUntil: new Date(Date.now() + 5 * 60 * 1000),
-              loginAttempts: 0,
-            },
-          });
-        }
-        if (userFound.role === Role.ADMIN || userFound.role === Role.EMPLOYEE) {
-          await this.prismaService.employee.update({
-            where: {
-              email: userFound.email,
-            },
-            data: {
-              lockUntil: new Date(Date.now() + 5 * 60 * 1000),
-              loginAttempts: 0,
-            },
-          });
-        }
       }
 
       throw new HttpException(
@@ -326,39 +326,28 @@ export class AuthService {
       );
     }
 
-    // Resetear los intentos de inicio de sesión después de un inicio exitoso
-    if (userFound.role === Role.USER) {
+    // Resetear intentos de inicio de sesión
+    if ('active' in userFound) {
+      // Usuario
       await this.prismaService.user.update({
-        where: {
-          email: loginDto.email,
-        },
-        data: {
-          loginAttempts: 0,
-        },
+        where: { email: loginDto.email },
+        data: { loginAttempts: 0 },
       });
-    }
-    if (userFound.role === Role.ADMIN || userFound.role === Role.EMPLOYEE) {
-      await this.prismaService.employee.update({
-        where: {
-          email: loginDto.email,
-        },
-        data: {
-          loginAttempts: 0,
-        },
-      });
-    }
 
-    if (userFound.role === Role.USER) {
-      const user = await this.prismaService.user.findUnique({
-        where: { email: userFound.email },
-      });
-      if (user.active === true) {
+      if (userFound.active === true) {
         await this.sendCode(loginDto.email);
       }
-    }
-    if (userFound.role === Role.ADMIN || userFound.role === Role.EMPLOYEE) {
+    } else {
+      // Empleado
+      await this.prismaService.employee.update({
+        where: { email: loginDto.email },
+        data: { loginAttempts: 0 },
+      });
+
       await this.sendCode(loginDto.email);
     }
+
+    // Excluir información sensible
     const {
       password,
       passwordsHistory,
@@ -366,6 +355,7 @@ export class AuthService {
       passwordSetAt,
       ...rest
     } = userFound;
+
     return { ...rest };
   }
 

@@ -1,10 +1,15 @@
 import { useState } from "react";
 import { ArrowLeft, Loader2, Mail, ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import img from "../../assets/password-update.png";
 import { Link } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -60,7 +65,7 @@ export default function PasswordRecoveryPage() {
             <CardContent className="p-0">
               <div className="md:flex">
                 {/* Columna izquierda - Fondo azul y diseño similar al login */}
-                <div className="md:w-1/2 bg-gradient-to-r from-blue-500 via-blue-400 to-blue-300 dark:from-gray-800 dark:via-gray-900 dark:to-gray-900 text-white p-10  flex-col justify-center items-center rounded-l-lg hidden md:flex">
+                <div className="md:w-1/2 bg-blue-600  text-white p-10 dark:bg-gray-900 flex-col justify-center items-center rounded-l-lg hidden md:flex">
                   <div className="bg-white dark:bg-gray-800 rounded-full p-2 mb-6">
                     <img
                       src={img}
@@ -73,20 +78,20 @@ export default function PasswordRecoveryPage() {
                     <span className="text-blue-100">Cayro Uniformes</span>
                   </h2>
                   <p className="text-lg text-center mb-6">
-                    No te preocupes, te ayudaremos a recuperar tu contraseña en unos sencillos pasos.
+                    No te preocupes, te ayudaremos a recuperar tu contraseña en
+                    unos sencillos pasos.
                   </p>
-                 
                 </div>
 
                 {/* Columna derecha - Formulario */}
-                <div className="md:w-1/2 p-8 bg-gray-50 shadow-none dark:bg-gray-900">
+                <div className="md:w-1/2 p-8 bg-white shadow-none dark:bg-gray-800">
                   <CardHeader>
                     <CardTitle className="text-3xl font-bold text-center text-gray-800 dark:text-white">
                       Recuperación de contraseña
                     </CardTitle>
                     <CardDescription className="text-center text-gray-600 dark:text-gray-400">
-                      Ingresa tu correo electrónico y te enviaremos instrucciones para restablecer tu
-                      contraseña.
+                      Ingresa tu correo electrónico y te enviaremos
+                      instrucciones para restablecer tu contraseña.
                     </CardDescription>
                   </CardHeader>
 
@@ -101,7 +106,10 @@ export default function PasswordRecoveryPage() {
                         </Label>
                         <div className="mt-2 relative">
                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Mail className="h-5 w-5 text-gray-400 dark:text-gray-300" aria-hidden="true" />
+                            <Mail
+                              className="h-5 w-5 text-gray-400 dark:text-gray-300"
+                              aria-hidden="true"
+                            />
                           </div>
                           <Input
                             id="email"
@@ -116,9 +124,9 @@ export default function PasswordRecoveryPage() {
                           />
                         </div>
                       </div>
-                      <Button
+                      <button
                         type="submit"
-                        className="w-full flex justify-center items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105"
+                        className="px-4 w-full text-center justify-center py-2 bg-blue-500 font-bold text-white rounded-md flex items-center"
                         disabled={isSubmitting}
                       >
                         {isSubmitting ? (
@@ -132,7 +140,7 @@ export default function PasswordRecoveryPage() {
                             <ArrowRight className="ml-2 h-5 w-5" />
                           </>
                         )}
-                      </Button>
+                      </button>
                     </form>
                   ) : (
                     <Alert className="mt-6 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg">
@@ -141,9 +149,10 @@ export default function PasswordRecoveryPage() {
                         Instrucciones enviadas
                       </AlertTitle>
                       <AlertDescription className="mt-2 dark:text-gray-400">
-                        Hemos enviado las instrucciones para restablecer tu contraseña a{" "}
-                        <span className="font-bold">{email}</span>. Por favor, revisa tu bandeja de entrada y sigue
-                        los pasos indicados.
+                        Hemos enviado las instrucciones para restablecer tu
+                        contraseña a <span className="font-bold">{email}</span>.
+                        Por favor, revisa tu bandeja de entrada y sigue los
+                        pasos indicados.
                       </AlertDescription>
                     </Alert>
                   )}
@@ -151,7 +160,7 @@ export default function PasswordRecoveryPage() {
                   <div className="mt-6 text-sm text-center">
                     <Link
                       to={"/login"}
-                      className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 flex items-center justify-center"
+                      className="text-blue-600 hover:text-blue-800 dark:text-blue-600 dark:hover:text-blue-600 flex items-center justify-center"
                     >
                       <ArrowLeft className="mr-2 h-5 w-5" />
                       Volver a iniciar sesión

@@ -1,5 +1,4 @@
 import { resendCodeApi } from "@/api/auth";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContextType";
@@ -85,7 +84,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center  p-5">
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900  p-5">
       <div className="flex flex-col-reverse md:flex-row max-w-6xl w-full bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-hidden">
         {/* Columna Izquierda */}
         <div className="hidden md:flex md:flex-col lg:justify-center bg-blue-600 dark:bg-gray-900 text-white w-full lg:w-1/2 p-10">
@@ -93,7 +92,8 @@ export default function LoginPage() {
             Bienvenido a <span className="text-blue-100">Cayro Uniformes</span>
           </h2>
           <p className="text-lg mb-8">
-            Accede a tu cuenta para gestionar tus pedidos, ver tu historial de compras y mucho más.
+            Accede a tu cuenta para gestionar tus pedidos, ver tu historial de
+            compras y mucho más.
           </p>
           <div className="grid grid-cols-3 gap-6">
             <div className="flex flex-col items-center">
@@ -118,7 +118,7 @@ export default function LoginPage() {
         </div>
 
         {/* Columna Derecha */}
-        <div className="flex flex-col items-center justify-center w-full lg:w-1/2 p-6 lg:p-10  ">
+        <div className="flex flex-col items-center dark:bg-gray-800 justify-center w-full lg:w-1/2 p-6 lg:p-10  ">
           <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-6">
             Iniciar sesión
           </h2>
@@ -137,7 +137,7 @@ export default function LoginPage() {
                 autoComplete="email"
                 required
                 placeholder="correo"
-                className="w-full mt-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600"
+                 className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2"
                 onChange={(e) => setData({ ...data, email: e.target.value })}
               />
             </div>
@@ -156,8 +156,10 @@ export default function LoginPage() {
                   autoComplete="current-password"
                   required
                   placeholder="contraseña"
-                  className="w-full mt-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600"
-                  onChange={(e) => setData({ ...data, password: e.target.value })}
+                   className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2"
+                  onChange={(e) =>
+                    setData({ ...data, password: e.target.value })
+                  }
                 />
                 <button
                   type="button"
@@ -170,7 +172,7 @@ export default function LoginPage() {
               <p className="mt-6 text-end text-sm text-gray-600 dark:text-gray-400">
                 <NavLink
                   to="/password-recovery"
-                  className="text-[#2F93D1] hover:text-blue-800 dark:text-blue-400"
+                  className="text-sm text-blue-500 hover:text-blue-600 mt-2"
                 >
                   ¿He olvidado mi contraseña?
                 </NavLink>
@@ -188,29 +190,32 @@ export default function LoginPage() {
                 <span className="font-bold">{formatTime(lockoutTime)}</span>.
               </div>
             )}
+            <div className="flex justify-center">
+              <ReCAPTCHA
+                sitekey="6Lc_k2MqAAAAAB19xvWE6_otNt4WRJBDfJpeo-EC"
+                onChange={handleCaptchaChange}
+                className="my-4"
+              />
+            </div>
 
-            <ReCAPTCHA
-              sitekey="6Lc_k2MqAAAAAB19xvWE6_otNt4WRJBDfJpeo-EC"
-              onChange={handleCaptchaChange}
-              className="my-4"
-            />
-
-            <Button
+            <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 font-bold text-white  rounded-lg shadow-lg hover:bg-blue-700 transition-all text-lg hover:scale-105 transform w-full"
+              className="px-4 w-full text-center justify-center py-2 bg-blue-500 font-bold text-white rounded-md flex items-center"
               disabled={lockoutTime > 0 || isLoading}
             >
-              {isLoading ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : "Iniciar sesión"}
-            </Button>
+              {isLoading ? (
+                <Loader2 className="animate-spin mr-2 h-4 w-4" />
+              ) : (
+                "Iniciar sesión"
+              )}
+            </button>
           </form>
 
-
-
-          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">
             ¿No tienes una cuenta?{" "}
             <NavLink
               to="/sign-up"
-              className="text-[#2F93D1] hover:text-blue-800 dark:text-blue-400"
+              className="font-semibold text-blue-500 hover:text-blue-600"
             >
               Regístrate
             </NavLink>

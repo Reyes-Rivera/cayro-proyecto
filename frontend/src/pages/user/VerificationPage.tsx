@@ -206,7 +206,7 @@ export default function VerificationPage() {
                 )}
                 <Button
                   type="submit"
-                  className="w-full bg-[#2F93D1] hover:bg-[#007ACC]"
+                  className="w-full bg-blue-500 hover:bg-blue-600"
                   disabled={isSubmitting || verificationCode.some(digit => !digit)}
                 >
                   {isSubmitting ? (

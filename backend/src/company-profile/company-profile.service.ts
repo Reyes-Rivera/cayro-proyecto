@@ -11,7 +11,7 @@ export class CompanyProfileService {
   async create(
     createCompanyProfileDto: CreateCompanyProfileDto,
   ): Promise<CompanyProfile> {
-    const { title, slogan, logoUrl, contactInfo, socialLinks } =
+    const { title, slogan, logoUrl, contactInfo, socialLinks,mission,vision } =
       createCompanyProfileDto;
     
     const companyProfile = await this.prismaService.companyProfile.create({
@@ -21,6 +21,8 @@ export class CompanyProfileService {
         logoUrl,
         contactInfo, 
         socialLinks, 
+        mission,
+        vision
       },
     });
 

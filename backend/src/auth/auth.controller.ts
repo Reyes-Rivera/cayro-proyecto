@@ -30,7 +30,6 @@ export class AuthController {
 
     // Llama al servicio para verificar el código y obtener el token
     const result = await this.authService.verifyCode(email, code);
-    console.log("Esete es el resultado", result.token);
     // Configura la cookie con el token JWT
     res.setHeader('Set-Cookie', cookie.serialize('token', result.token, {
       httpOnly: true, // Seguridad adicional

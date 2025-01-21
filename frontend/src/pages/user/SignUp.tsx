@@ -203,7 +203,7 @@ export default function SignUpPage() {
     }
   });
   return (
-    <div className=" min-h-screen flex items-center justify-center p-4 pt-10">
+    <div className=" min-h-screen flex items-center justify-center p-4 pt-16 bg-gray-50 dark:bg-gray-900 ">
       <div className="w-full justify-center max-w-xl md:max-w-6xl flex bg-white dark:bg-gray-800 shadow-xl rounded-lg overflow-hidden md:h-[630px] mt-8 md:mt-0">
         {/* Contenedor izquierdo */}
         <div className="hidden md:flex md:flex-col lg:justify-center bg-blue-600 dark:bg-gray-900 text-white w-full lg:w-1/2 p-10 justify-center">
