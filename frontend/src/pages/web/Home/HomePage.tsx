@@ -1,17 +1,24 @@
-import BenefitsSection from './Components/BenefitsSection';
-import FeaturedProducts from './Components/FeaturedProducts';
-import Hero from './Components/Hero';
-import LocationSection from './Components/LocationSection';
-import OffersSection from './Components/OffersSection';
+import Benefits from "./Components/Benefits";
+import CustomOrder from "./Components/CustomOrder";
+import FeaturedCategories from "./Components/FeaturedCategories";
+import FeaturedProducts from "./Components/FeaturedProducts";
+import Features from "./Components/Features";
+import Hero from "./Components/Hero";
+import Package from "./Components/Package";
+import Process from "./Components/Process";
+
 
 const HomePage = () => {
   return (
     <main className="min-h-screen ">
       <Hero />
+      <Features />
+      <FeaturedCategories />
       <FeaturedProducts />
-      <BenefitsSection />
-      <OffersSection />
-      <LocationSection />
+      <Benefits />
+      <Package />
+      <Process />
+      <CustomOrder />
     </main>
   );
 };

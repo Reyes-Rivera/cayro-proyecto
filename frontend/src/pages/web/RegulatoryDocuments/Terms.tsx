@@ -1,10 +1,21 @@
+import { currentTerm } from "@/api/terms";
 import { Button } from "@/components/ui/button";
+import { RegulatoryDocument } from "@/pages/employees/dashboard-admin/legal/LegalDocumentsView";
 import { ChevronLeft, Printer } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 export default function Terms() {
+  const [terms, setTerms] = useState<RegulatoryDocument[]>([]);
+  useEffect(() => {
+    const getTerms = async () => {
+      const res = await currentTerm();
+      setTerms([res.data]);
+    };
+    getTerms();
+  }, []);
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex items-center py-20 lg:py-28">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex py-20 lg:py-28">
       <main className="container mx-auto px-6 lg:px-20">
         <div className="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl overflow-hidden">
           {/* Document Header */}
@@ -27,129 +38,61 @@ export default function Terms() {
               </Button>
             </div>
             <h1 className="text-3xl font-extrabold">Términos y Condiciones</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+            {/* <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
               Última actualización: {new Date().toLocaleDateString()}
-            </p>
+            </p> */}
           </div>
 
           {/* Document Content */}
-          <div className="p-8 lg:p-12 space-y-8">
-            <section>
-              <h2 className="text-2xl font-bold mb-4">1. Introducción</h2>
-              <p>
-                Bienvenido a UniformPro. Estos términos y condiciones describen
-                las reglas y regulaciones para el uso del sitio web de
-                UniformPro.
+          <div className="p-8 lg:p-12 space-y-8 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-lg shadow-md">
+            {terms?.length > 0 && terms[0]?.content ? (
+              <div
+                className="whitespace-pre-wrap leading-relaxed text-justify"
+                style={{
+                  fontFamily: "Arial, sans-serif",
+                  fontSize: "16px",
+                  lineHeight: "1.8",
+                }}
+              >
+                {terms[0].content.split("\n").map((section, index) => {
+                  const match = section.match(/^(Sección \d+\s–)\s*(.+)$/);
+
+                  if (match) {
+                    return (
+                      <div key={index} className="mb-6">
+                        {/* Título principal en negritas */}
+                        <p className="font-bold text-lg">
+                          {match[1]}{" "}
+                          <span>{match[2]}</span>
+                        </p>
+                      </div>
+                    );
+                  }
+
+                  // Resaltamos el texto antes de ":" en negritas
+                  const colonMatch = section.match(/^(.+?):\s*(.+)$/);
+                  if (colonMatch) {
+                    return (
+                      <p key={index} className="mb-4">
+                        <span className="font-bold">{colonMatch[1]}:</span>{" "}
+                        {colonMatch[2]}
+                      </p>
+                    );
+                  }
+
+                  // Renderizamos el texto normal
+                  return (
+                    <p key={index} className="mb-4">
+                      {section}
+                    </p>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-center text-gray-500">
+                No hay términos y condiciones disponibles.
               </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-bold mb-4">
-                2. Aceptación de los términos
-              </h2>
-              <p>
-                Al acceder a este sitio web, asumimos que aceptas estos términos
-                y condiciones en su totalidad. No continúes usando el sitio web
-                de UniformPro si no aceptas todos los términos y condiciones
-                establecidos en esta página.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-bold mb-4">
-                3. Propiedad intelectual
-              </h2>
-              <p>
-                A menos que se indique lo contrario, UniformPro y/o sus
-                licenciantes poseen los derechos de propiedad intelectual de
-                todo el material en UniformPro. Todos los derechos de propiedad
-                intelectual están reservados.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-bold mb-4">4. Restricciones</h2>
-              <p>Está específicamente restringido:</p>
-              <ul className="list-disc list-inside mt-4 space-y-2">
-                <li>
-                  Publicar cualquier material del sitio web en otro medio.
-                </li>
-                <li>
-                  Vender, sublicenciar y/o comercializar cualquier material del
-                  sitio web.
-                </li>
-                <li>
-                  Realizar y/o mostrar públicamente cualquier material del sitio
-                  web.
-                </li>
-                <li>
-                  Usar este sitio web de cualquier manera que pueda dañar el
-                  sitio web.
-                </li>
-                <li>
-                  Usar este sitio web de cualquier manera que afecte el acceso
-                  de los usuarios.
-                </li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-bold mb-4">
-                5. Compras y entregas
-              </h2>
-              <p>Al realizar una compra en nuestro sitio web, aceptas que:</p>
-              <ul className="list-disc list-inside mt-4 space-y-2">
-                <li>
-                  Eres responsable de leer la lista completa de artículos antes
-                  de comprometerte a comprarlos.
-                </li>
-                <li>
-                  Te comprometes a ingresar información de contacto y pago
-                  precisa en todas las compras realizadas a través del sitio.
-                </li>
-                <li>
-                  Reconoces que los tiempos de entrega pueden variar según tu
-                  ubicación y la disponibilidad del producto.
-                </li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-bold mb-4">
-                6. Política de devoluciones
-              </h2>
-              <p>
-                Aceptamos devoluciones dentro de los 30 días posteriores a la
-                compra, siempre que los uniformes no hayan sido usados y
-                mantengan sus etiquetas originales. Los gastos de envío para las
-                devoluciones corren por cuenta del cliente, a menos que el
-                producto recibido sea defectuoso o incorrecto.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-bold mb-4">
-                7. Modificaciones de los términos
-              </h2>
-              <p>
-                UniformPro se reserva el derecho de revisar estos términos en
-                cualquier momento según lo considere oportuno, por lo que debes
-                revisarlos periódicamente. Los cambios serán efectivos cuando se
-                publiquen.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-bold mb-4">8. Contacto</h2>
-              <p>
-                Si tienes alguna pregunta sobre estos términos, contáctanos:
-              </p>
-              <ul className="list-disc list-inside mt-4 space-y-2">
-                <li>Por email: info@uniformpro.com</li>
-                <li>Por teléfono: (555) 123-4567</li>
-                <li>Por correo: 123 Calle Uniforme, Ciudad, CP 12345</li>
-              </ul>
-            </section>
+            )}
           </div>
         </div>
       </main>

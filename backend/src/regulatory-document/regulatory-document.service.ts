@@ -247,7 +247,7 @@ export class RegulatoryDocumentService {
         isCurrentVersion: true,
       },
     });
-    return res[0];
+    return res;
   }
 
   async findCurrentTerms() {
@@ -258,8 +258,8 @@ export class RegulatoryDocumentService {
         isCurrentVersion: true,
       },
     });
-
-    return res[0];
+    console.log(res);
+    return res;
   }
 
   async findCurrentBoundary() {
@@ -270,7 +270,7 @@ export class RegulatoryDocumentService {
         isCurrentVersion: true,
       },
     });
-    return res[0];
+    return res;
   }
 
   async updatePolicy(

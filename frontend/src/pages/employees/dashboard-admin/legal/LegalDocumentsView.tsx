@@ -7,10 +7,27 @@ import {
   Edit,
   Trash,
 } from "lucide-react";
+import Swal from "sweetalert2";
+import "sweetalert2/src/sweetalert2.scss";
 import DocumentDialog from "./DocumentDialog";
-import { createPolicysApi, policiesApi } from "@/api/policy";
-import { createTermsApi, termsApi } from "@/api/terms";
-import { boundaryApi, createBoundaryApi } from "@/api/boundary";
+import {
+  activePolicyApi,
+  createPolicysApi,
+  policiesApi,
+  updatePolicysApi,
+} from "@/api/policy";
+import {
+  activeTermsApi,
+  createTermsApi,
+  termsApi,
+  updateTermsApi,
+} from "@/api/terms";
+import {
+  boundaryApi,
+  createBoundaryApi,
+  updateBoundaryApi,
+} from "@/api/boundary";
+import { useNavigate } from "react-router-dom";
 
 export enum Status {
   current = "CURRENT",
@@ -25,6 +42,7 @@ export enum DocumentTypeInter {
 }
 
 export class RegulatoryDocument {
+  id?: number;
   title?: string;
   content?: string;
   version?: number;
@@ -38,23 +56,24 @@ export class RegulatoryDocument {
 }
 
 type Tabs =
-  | "Política de Privacidad"
+  | "Aviso de Privacidad"
   | "Términos y Condiciones"
   | "Deslinde Legal";
 
 const tabConfig: { label: Tabs; icon: React.ReactNode }[] = [
-  { label: "Política de Privacidad", icon: <Lock size={18} /> },
+  { label: "Aviso de Privacidad", icon: <Lock size={18} /> },
   { label: "Términos y Condiciones", icon: <FileText size={18} /> },
   { label: "Deslinde Legal", icon: <ShieldCheck size={18} /> },
 ];
 
 const LegalDocumentsView: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<Tabs>("Política de Privacidad");
+  const [activeTab, setActiveTab] = useState<Tabs>("Aviso de Privacidad");
   const [policies, setPolicies] = useState<RegulatoryDocument[]>([]);
   const [terms, setTerms] = useState<RegulatoryDocument[]>([]);
   const [boundary, setBoundary] = useState<RegulatoryDocument[]>([]);
+  const [selectedDocument, setSelectedDocument] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-
+  const navigate = useNavigate();
   useEffect(() => {
     const getInfo = async () => {
       try {
@@ -73,25 +92,84 @@ const LegalDocumentsView: React.FC = () => {
   }, []);
 
   const dataMap = {
-    "Política de Privacidad": policies,
+    "Aviso de Privacidad": policies,
     "Términos y Condiciones": terms,
     "Deslinde Legal": boundary,
   };
 
   const setDataMap = {
-    "Política de Privacidad": setPolicies,
+    "Aviso de Privacidad": setPolicies,
     "Términos y Condiciones": setTerms,
     "Deslinde Legal": setBoundary,
   };
+  const openEditDialog = (document: any) => {
+    setSelectedDocument(document); // Establece el documento seleccionado para edición
+    setIsDialogOpen(true);
+  };
+  const toggleStatus = async (index: number, item: RegulatoryDocument) => {
+    try {
+      const updateDocumentState = () => {
+        const currentData = dataMap[activeTab];
+        if (currentData) {
+          // Desactiva todos los documentos excepto el seleccionado
+          const updatedData = currentData.map((doc, i) => ({
+            ...doc,
+            isCurrentVersion: i === index, // Solo activa el documento en el índice actual
+          }));
+          setDataMap[activeTab](updatedData);
+        }
+      };
 
-  const toggleStatus = (index: number) => {
-    const currentData = dataMap[activeTab];
-    if (currentData) {
-      const updatedData = currentData.map((doc, i) => ({
-        ...doc,
-        isCurrentVersion: i === index,
-      }));
-      setDataMap[activeTab](updatedData);
+      if (item.type === DocumentTypeInter.policy && !item.isCurrentVersion) {
+        const res = await activePolicyApi(item.id);
+        if (res) {
+          Swal.fire({
+            icon: "success",
+            title: "Activado.",
+            text: "Documento activado correctamente.",
+            confirmButtonColor: "#2F93D1",
+          });
+          updateDocumentState();
+          return;
+        }
+      }
+
+      if (item.type === DocumentTypeInter.terms && !item.isCurrentVersion) {
+        const res = await activeTermsApi(item.id);
+        if (res) {
+          Swal.fire({
+            icon: "success",
+            title: "Activado.",
+            text: "Documento activado correctamente.",
+            confirmButtonColor: "#2F93D1",
+          });
+          updateDocumentState();
+          return;
+        }
+      }
+
+      if (item.type === DocumentTypeInter.boundary && !item.isCurrentVersion) {
+        const res = await activeTermsApi(item.id);
+        if (res) {
+          Swal.fire({
+            icon: "success",
+            title: "Activado.",
+            text: "Documento activado correctamente.",
+            confirmButtonColor: "#2F93D1",
+          });
+          updateDocumentState();
+          return;
+        }
+      }
+
+      Swal.fire({
+        icon: "error",
+        title: "Error.",
+        text: "Algo salió mal, por favor intenta más tarde.",
+        confirmButtonColor: "#2F93D1",
+      });
+    } catch (error) {
+      navigate("/500", { state: { fromError: true } });
     }
   };
 
@@ -120,7 +198,7 @@ const LegalDocumentsView: React.FC = () => {
       const res = await createTermsApi({
         title: newDocument.title,
         content: newDocument.content,
-        effectiveDate: newDocument.effectiveDate,
+        effectiveDate: new Date(newDocument.effectiveDate).toISOString(),
       });
       if (res) {
         setTerms((prev) =>
@@ -130,6 +208,13 @@ const LegalDocumentsView: React.FC = () => {
                 .concat(document)
             : [document]
         );
+        Swal.fire({
+          icon: "success",
+          title: "Agregado.",
+          text: "Documento agregado correctamente.",
+          confirmButtonColor: "#2F93D1",
+        });
+        return;
       }
     }
 
@@ -137,7 +222,7 @@ const LegalDocumentsView: React.FC = () => {
       const res = await createPolicysApi({
         title: newDocument.title,
         content: newDocument.content,
-        effectiveDate: newDocument.effectiveDate,
+        effectiveDate: new Date(newDocument.effectiveDate).toISOString(),
       });
       if (res) {
         setPolicies((prev) =>
@@ -147,6 +232,13 @@ const LegalDocumentsView: React.FC = () => {
                 .concat(document)
             : [document]
         );
+        Swal.fire({
+          icon: "success",
+          title: "Agregado.",
+          text: "Documento agregado correctamente.",
+          confirmButtonColor: "#2F93D1",
+        });
+        return;
       }
     }
 
@@ -154,7 +246,7 @@ const LegalDocumentsView: React.FC = () => {
       const res = await createBoundaryApi({
         title: newDocument.title,
         content: newDocument.content,
-        effectiveDate: newDocument.effectiveDate,
+        effectiveDate: new Date(newDocument.effectiveDate).toISOString(),
       });
       if (res) {
         setBoundary((prev) =>
@@ -164,14 +256,132 @@ const LegalDocumentsView: React.FC = () => {
                 .concat(document)
             : [document]
         );
+        Swal.fire({
+          icon: "success",
+          title: "Agregado.",
+          text: "Documento agregado correctamente.",
+          confirmButtonColor: "#2F93D1",
+        });
+        return;
       }
+    }
+  };
+
+  const updateDocument = async (newDocument: {
+    title: string;
+    content: string;
+    effectiveDate: string;
+    type: DocumentTypeInter;
+    id?: number;
+  }) => {
+    const document = {
+      title: newDocument.title,
+      content: newDocument.content,
+      effectiveDate: new Date(newDocument.effectiveDate),
+      isCurrentVersion: true,
+      type: newDocument.type,
+    };
+    try {
+      if (newDocument.type === DocumentTypeInter.terms) {
+        console.log(newDocument.id);
+        const res = await updateTermsApi(
+          {
+            title: newDocument.title,
+            content: newDocument.content,
+            effectiveDate: new Date(newDocument.effectiveDate).toISOString(),
+          },
+          newDocument.id
+        );
+        if (res) {
+          setTerms((prev) =>
+            prev
+              ? prev
+                  .map((doc) => ({ ...doc, isCurrentVersion: false }))
+                  .concat(document)
+              : [document]
+          );
+          Swal.fire({
+            icon: "success",
+            title: "Agregado.",
+            text: "Documento agregado correctamente.",
+            confirmButtonColor: "#2F93D1",
+          });
+          return;
+        }
+      }
+
+      if (newDocument.type === DocumentTypeInter.policy) {
+        console.log(newDocument);
+        const res = await updatePolicysApi(
+          {
+            title: newDocument.title,
+            content: newDocument.content,
+            effectiveDate: new Date(newDocument.effectiveDate).toISOString(),
+          },
+          newDocument.id
+        );
+
+        if (res) {
+          setPolicies((prev) =>
+            prev
+              ? prev
+                  .map((doc) => ({ ...doc, isCurrentVersion: false }))
+                  .concat(document)
+              : [document]
+          );
+          Swal.fire({
+            icon: "success",
+            title: "Agregado.",
+            text: "Documento agregado correctamente.",
+            confirmButtonColor: "#2F93D1",
+          });
+          return;
+        }
+      }
+
+      if (newDocument.type === DocumentTypeInter.boundary) {
+        const res = await updateBoundaryApi(
+          {
+            title: newDocument.title,
+            content: newDocument.content,
+            effectiveDate: new Date(newDocument.effectiveDate).toISOString(),
+          },
+          newDocument.id
+        );
+
+        if (res) {
+          setBoundary((prev) =>
+            prev
+              ? prev
+                  .map((doc) => ({ ...doc, isCurrentVersion: false }))
+                  .concat(document)
+              : [document]
+          );
+          Swal.fire({
+            icon: "success",
+            title: "Agregado.",
+            text: "Documento agregado correctamente.",
+            confirmButtonColor: "#2F93D1",
+          });
+          return;
+        }
+      }
+      Swal.fire({
+        icon: "error",
+        title: "Error.",
+        text: "Algo salió mal, intenta más tarde.",
+        confirmButtonColor: "#2F93D1",
+      });
+      return;
+    } catch (error) {
+      navigate("/500", { state: { fromError: true } });
     }
   };
 
   const currentData = dataMap[activeTab];
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col items-center sm:p-6 dark:text-gray-100">
+    <div className="min-h-screen  dark:bg-gray-900 flex flex-col items-center sm:p-6 dark:text-gray-100">
       <div className="bg-white dark:bg-gray-800 w-full max-w-7xl rounded-xl shadow-lg p-6 mb-6">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold dark:text-gray-100">
@@ -238,18 +448,21 @@ const LegalDocumentsView: React.FC = () => {
                     key={index}
                     className="border-b dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition text-xs sm:text-sm"
                   >
-                    <td className="px-4 py-4 text-gray-800 dark:text-gray-100">
+                    <td className="px-4 py-4 text-gray-800 dark:text-gray-100 align-middle ">
                       {item.title}
                     </td>
-                    <td className="px-4 py-4 text-gray-600 dark:text-gray-300">
+                    <td
+                      className="px-4 py-4 text-gray-600 dark:text-gray-300 align-middle line-clamp-1 overflow-hidden"
+                      
+                    >
                       {item.content}
                     </td>
-                    <td className="px-4 py-4 text-gray-600 dark:text-gray-300">
+                    <td className="px-4 py-4 text-gray-600 dark:text-gray-300 align-middle">
                       {item.effectiveDate
                         ? new Date(item.effectiveDate).toLocaleDateString()
                         : "N/A"}
                     </td>
-                    <td className="px-4 py-4 text-center">
+                    <td className="px-4 py-4 text-center align-middle">
                       <span
                         className={`px-3 py-1 text-xs sm:text-sm font-semibold rounded-full ${
                           item.isCurrentVersion
@@ -260,18 +473,21 @@ const LegalDocumentsView: React.FC = () => {
                         {item.isCurrentVersion ? "Activo" : "Inactivo"}
                       </span>
                     </td>
-                    <td className="px-4 py-4 flex space-x-2 sm:space-x-4">
+                    <td className="px-4 flex align-middle space-x-2 sm:space-x-4">
                       <button
-                        className="text-blue-500 dark:text-blue-300 hover:text-blue-700 dark:hover:text-blue-400"
-                        onClick={() => toggleStatus(index)}
+                        className={`${
+                          item.isCurrentVersion
+                            ? "text-gray-300"
+                            : "text-blue-500 dark:text-blue-300 hover:text-blue-700 dark:hover:text-blue-400"
+                        }`}
+                        onClick={() => toggleStatus(index, item)}
+                        disabled={item.isCurrentVersion}
                       >
-                        {item.isCurrentVersion ? "Desactivar" : "Activar"}
+                        Activar
                       </button>
                       <button
                         className="text-green-500 dark:text-green-300 hover:text-green-700 dark:hover:text-green-400"
-                        onClick={() =>
-                          alert("Editar funcionalidad en desarrollo")
-                        }
+                        onClick={() => openEditDialog(item)}
                       >
                         <Edit size={18} />
                       </button>
@@ -295,8 +511,13 @@ const LegalDocumentsView: React.FC = () => {
       </div>
       <DocumentDialog
         isOpen={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
+        onClose={() => {
+          setIsDialogOpen(false);
+          setSelectedDocument(null);
+        }}
         addDocument={addDocument}
+        updateDocument={updateDocument}
+        documentToEdit={selectedDocument} // Objeto del documento seleccionado o null
       />
     </div>
   );

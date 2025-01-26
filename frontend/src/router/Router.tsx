@@ -23,6 +23,8 @@ import Error500 from "@/pages/web/error/Error500";
 import { Footer } from "@/components/web-components/Footer";
 import AdminDashboard from "@/pages/employees/dashboard-admin/DashboardLayout";
 import AboutPage from "@/pages/web/about/AboutPage";
+import ScrollToTop from "./ScrollToTop";
+import Error400 from "@/pages/web/error/Error400";
 const AppRoutes = () => {
   useEffect(() => {
     const getInfoPage = async () => {
@@ -37,9 +39,10 @@ const AppRoutes = () => {
         <NavBarUser />
       </div>
       <div className="container-bg">
+        <ScrollToTop />
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/policies" element={<Policies />} />
+          <Route path="/privacy" element={<Policies />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/legal" element={<LegalBoundary />} />
@@ -71,6 +74,7 @@ const AppRoutes = () => {
           </Route>
           <Route path="*" element={<PageNotFound />} />
           <Route path="/500" element={<Error500 />} />
+          <Route path="/400" element={<Error400 />} />
         </Routes>
       </div>
       <div className="w-full">

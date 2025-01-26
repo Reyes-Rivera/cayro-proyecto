@@ -146,7 +146,6 @@ const NavBarUser = () => {
           </div>
         </div>
 
-        {/* Mobile Menu */}
         <div
           className={`fixed top-0 right-0 h-full bg-white dark:bg-gray-900 shadow-lg z-50 transition-transform duration-300 ${
             isMenuOpen ? "translate-x-0" : "translate-x-full"

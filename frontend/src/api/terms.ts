@@ -6,6 +6,12 @@ export const termsApi = async () => {
     });
     return res;
 }
+export const currentTerm = async () => {
+    const res = await axios.get("/regulatory-document/current-term", {
+        withCredentials: true,
+    });
+    return res;
+}
 export const termsHistoriApi = async () => {
     const res = await axios.get("/regulatory-document/terms-history", {
         withCredentials: true,

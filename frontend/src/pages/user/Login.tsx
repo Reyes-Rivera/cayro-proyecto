@@ -59,6 +59,7 @@ export default function LoginPage() {
       setIsLoading(false);
     } catch (error: any) {
       setIsLoading(false);
+      navigate("/500", { state: { fromError: true } });
     }
   };
 
@@ -137,7 +138,7 @@ export default function LoginPage() {
                 autoComplete="email"
                 required
                 placeholder="correo"
-                 className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2"
+                className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2"
                 onChange={(e) => setData({ ...data, email: e.target.value })}
               />
             </div>
@@ -156,7 +157,7 @@ export default function LoginPage() {
                   autoComplete="current-password"
                   required
                   placeholder="contraseña"
-                   className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2"
+                  className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2"
                   onChange={(e) =>
                     setData({ ...data, password: e.target.value })
                   }

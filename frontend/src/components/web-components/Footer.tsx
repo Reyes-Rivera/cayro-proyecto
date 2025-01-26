@@ -40,13 +40,13 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link to="#" className="hover:text-blue-400">
-                  Política de Privacidad
+                <Link to="/privacy" className="hover:text-blue-400">
+                  Aviso de Privacidad
                 </Link>
               </li>
               <li>
-                <Link to="#" className="hover:text-blue-400">
-                  Política de Devoluciones
+                <Link to="/legal" className="hover:text-blue-400">
+                  Deslinde legal
                 </Link>
               </li>
             </ul>

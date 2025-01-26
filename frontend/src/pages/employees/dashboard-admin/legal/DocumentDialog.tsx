@@ -1,3 +1,4 @@
+import  { useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -30,6 +31,20 @@ interface DocumentDialogProps {
     effectiveDate: string;
     type: DocumentTypeInter;
   }) => void;
+  updateDocument?: (updatedDocument: {
+    id: number;
+    title: string;
+    content: string;
+    effectiveDate: string;
+    type: DocumentTypeInter;
+  }) => void;
+  documentToEdit?: {
+    id: number;
+    title: string;
+    content: string;
+    effectiveDate: string;
+    type: DocumentTypeInter;
+  } | null;
 }
 
 type FormData = {
@@ -43,6 +58,8 @@ export default function DocumentDialog({
   isOpen,
   onClose,
   addDocument,
+  updateDocument,
+  documentToEdit,
 }: DocumentDialogProps) {
   const {
     register,
@@ -59,6 +76,20 @@ export default function DocumentDialog({
       type: DocumentTypeInter.policy,
     },
   });
+  useEffect(() => {
+    if (documentToEdit) {
+      setValue("title", documentToEdit.title);
+      setValue("content", documentToEdit.content);
+      setValue(
+        "effectiveDate",
+        documentToEdit.effectiveDate
+          ? new Date(documentToEdit.effectiveDate).toISOString().split("T")[0]
+          : "" // Asegura que el campo quede vacío si no hay fecha
+      );
+      setValue("type", documentToEdit.type);
+    }
+  }, [documentToEdit, setValue]);
+  
 
   const onSubmit: SubmitHandler<FormData> = (data) => {
     const currentDate = new Date();
@@ -77,9 +108,29 @@ export default function DocumentDialog({
       return;
     }
 
-    addDocument(data);
-    reset(); // Limpia el formulario
-    onClose(); // Cierra el modal
+    if (documentToEdit) {
+      updateDocument?.({
+        id: documentToEdit.id,
+        ...data,
+      });
+      Swal.fire({
+        icon: "success",
+        title: "Documento actualizado",
+        text: "El documento se actualizó correctamente.",
+        confirmButtonColor: "#3085d6",
+      });
+    } else {
+      addDocument(data);
+      Swal.fire({
+        icon: "success",
+        title: "Documento creado",
+        text: "El documento se creó correctamente.",
+        confirmButtonColor: "#3085d6",
+      });
+    }
+
+    reset();
+    onClose();
   };
 
   return (
@@ -87,10 +138,12 @@ export default function DocumentDialog({
       <DialogContent className="max-w-2xl bg-white dark:bg-gray-800 rounded-lg shadow-lg">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-gray-800 dark:text-gray-100">
-            Nuevo Documento
+            {documentToEdit ? "Editar Documento" : "Nuevo Documento"}
           </DialogTitle>
           <DialogDescription className="text-sm text-gray-600 dark:text-gray-300">
-            Ingrese los detalles del nuevo documento legal.
+            {documentToEdit
+              ? "Modifique los detalles del documento."
+              : "Ingrese los detalles del nuevo documento legal."}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="grid gap-6 py-4">
@@ -155,7 +208,7 @@ export default function DocumentDialog({
                 <SelectValue placeholder="Seleccione el tipo de documento" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={DocumentTypeInter.policy}>Política</SelectItem>
+                <SelectItem value={DocumentTypeInter.policy}>Aviso de privacidad</SelectItem>
                 <SelectItem value={DocumentTypeInter.terms}>
                   Términos y Condiciones
                 </SelectItem>
@@ -185,7 +238,7 @@ export default function DocumentDialog({
               type="submit"
               className="bg-blue-600 text-white hover:bg-blue-700 focus:ring focus:ring-blue-300 dark:bg-blue-500 dark:hover:bg-blue-600 dark:focus:ring-blue-400"
             >
-              Crear Documento
+              {documentToEdit ? "Actualizar Documento" : "Crear Documento"}
             </Button>
           </DialogFooter>
         </form>

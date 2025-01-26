@@ -1,70 +1,119 @@
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+"use client";
+
+import { motion } from "framer-motion";
 import { ShoppingCart } from "lucide-react";
-import Prod1 from "@/assets/playera_hongo-removebg-preview.png";
-import Prod2 from "@/assets/playera_batmat-removebg-preview.png";
-import Prod3 from "@/assets/sudadera-removebg-preview.png";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+
+const products = [
+  {
+    id: 1,
+    name: "Uniforme Escolar Clásico",
+    price: 599,
+    oldPrice: 799,
+    image: "/placeholder.svg?height=400&width=300",
+    category: "Primaria",
+  },
+  {
+    id: 2,
+    name: "Conjunto Deportivo Premium de Alta Calidad",
+    price: 499,
+    oldPrice: 649,
+    image: "/placeholder.svg?height=400&width=300",
+    category: "Deportes",
+  },
+  {
+    id: 3,
+    name: "Falda Plisada Elegante",
+    price: 299,
+    oldPrice: 399,
+    image: "/placeholder.svg?height=400&width=300",
+    category: "Secundaria",
+  },
+  {
+    id: 4,
+    name: "Chaleco Institucional",
+    price: 249,
+    oldPrice: 299,
+    image: "/placeholder.svg?height=400&width=300",
+    category: "Accesorios",
+  },
+];
+
 export default function FeaturedProducts() {
   return (
-    <section className=" dark:bg-gray-800 py-20 lg:py-28">
-      <div className="container mx-auto flex flex-col items-center px-6 lg:px-20">
+    <section className="py-20 bg-gray-50 dark:bg-gray-800">
+      <div className="container mx-auto px-4">
         {/* Header */}
-        <div className="text-center animate-fadeInUp">
-          <h2 className="text-4xl sm:text-5xl font-extrabold text-gray-800 dark:text-white leading-tight">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-12"
+        >
+          <h2 className="text-4xl font-extrabold text-center text-gray-900 dark:text-gray-100 mb-4 tracking-tight">
             Productos Destacados
           </h2>
-          <p className="mt-6 text-lg sm:text-xl text-gray-600 dark:text-gray-300">
-            Descubre nuestros productos más populares y altamente recomendados.
+          <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+            Descubre nuestra selección de uniformes de alta calidad, diseñados
+            para brindar comodidad y estilo a los estudiantes.
           </p>
-        </div>
+        </motion.div>
 
         {/* Product Grid */}
-        <div
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-12 w-full max-w-7xl animate-fadeInUp"
-          style={{ animationDelay: "0.3s" }}
-        >
-          {[Prod1, Prod2, Prod3].map((product, index) => (
-            <Card
-              key={index}
-              className="shadow-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden transition-transform transform hover:scale-105"
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          {products.map((product, index) => (
+            <motion.div
+              key={product.id}
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
             >
-              <CardHeader className="p-0">
-                <img
-                  src={product}
-                  alt={`Producto ${index + 1}`}
-                  className="w-full h-48 object-contain hover:scale-110 transform transition-transform duration-500"
-                />
-              </CardHeader>
-              <CardContent className="p-6">
-                <CardTitle className="text-xl font-semibold text-gray-800 dark:text-white">
-                  {index === 0
-                    ? "Uniforme Escolar"
-                    : index === 1
-                    ? "Uniforme Deportivo"
-                    : "Uniforme Empresarial"}
-                </CardTitle>
-                <CardDescription className="mt-3 text-gray-600 dark:text-gray-300">
-                  {index === 0
-                    ? "Uniforme completo con diseño personalizado."
-                    : index === 1
-                    ? "Ideal para equipos y competencias."
-                    : "Perfecto para eventos y uso diario en oficinas."}
-                </CardDescription>
-                <div className="mt-6 flex items-center justify-between">
-                  <span className="text-lg font-bold text-gray-800 dark:text-white">
-                    $499.00
-                  </span>
-                  <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 transition-all rounded-full p-2">
-                    <ShoppingCart className="w-5 h-5 text-white" />
-                  </button>
-                </div>
-              </CardContent>
-            </Card>
+              <Card className="group relative overflow-hidden bg-white dark:bg-gray-700 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col h-full">
+                {/* Product Image */}
+                <CardContent className="p-0">
+                  <div className="relative overflow-hidden">
+                    <img
+                      src={product.image || "/placeholder.svg"}
+                      alt={product.name}
+                      className="w-full h-[300px] object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                    {/* Hover Overlay */}
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      whileHover={{ opacity: 1 }}
+                      className="absolute inset-0 bg-black/50 flex items-center justify-center text-white font-medium text-lg transition-opacity duration-300"
+                    >
+                      Ver detalles
+                    </motion.div>
+                  </div>
+                </CardContent>
+
+                {/* Product Details */}
+                <CardFooter className="flex flex-col flex-grow p-6 items-start">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                    {product.category}
+                  </p>
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100 leading-tight mb-2 text-left">
+                    {product.name}
+                  </h3>
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-2">
+                      <span className="text-blue-600 dark:text-blue-400 font-bold">
+                        ${product.price}
+                      </span>
+                      <span className="text-gray-400 line-through text-sm">
+                        ${product.oldPrice}
+                      </span>
+                    </div>
+                    <button className="w-10 h-10 bg-blue-100 dark:bg-blue-700 rounded-full flex items-center justify-center shadow-md hover:bg-blue-200 dark:hover:bg-blue-600 transition">
+                      <ShoppingCart className="w-5 h-5 text-blue-600 dark:text-blue-300" />
+                    </button>
+                  </div>
+                </CardFooter>
+              </Card>
+            </motion.div>
           ))}
         </div>
       </div>

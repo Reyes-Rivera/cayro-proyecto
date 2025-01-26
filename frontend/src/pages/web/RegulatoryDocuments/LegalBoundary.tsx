@@ -1,76 +1,90 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { useEffect, useState } from "react";
 import { boundaryApi } from "@/api/policy";
 import { DocumentInterface } from "./DocumentInterface";
-import { Loader2 } from "lucide-react";
-
+import { ChevronLeft, Printer } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 export default function LegalBoundary() {
-  const [document, setDocument] = useState<DocumentInterface | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [document, setDocument] = useState<DocumentInterface[]>([]);
 
   useEffect(() => {
     const getDocument = async () => {
-      try {
-        setLoading(true);
-        const res = await boundaryApi();
-        setDocument(res.data);
-        setLoading(false);
-      } catch (error) {
-        setLoading(false);
-      }
-
+      const res = await boundaryApi();
+      setDocument([res.data]);
     };
     getDocument();
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex flex-col">
-      <main className="flex-grow container mx-auto px-4 py-8">
-        <Card className="w-full max-w-3xl mx-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">Deslinde Legal</CardTitle>
-            <CardDescription className="text-gray-600 dark:text-gray-300">
-              Información importante sobre el deslinde legal.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="privacidad" className="w-full">
-              <TabsContent value="privacidad">
-                <ScrollArea className="h-[400px] w-full rounded-md border border-gray-300 dark:border-gray-600 p-4 bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
-                  {loading ? (
-                    <div className="flex justify-center items-center h-full">
-                      <Loader2 className="animate-spin mr-2 h-10 w-10 text-gray-700 dark:text-gray-300" />
-                    </div>
-                  ) : (
-                    <>
-                      {document ? (
-                        <div className="space-y-4 leading-relaxed">
-                          {document.content.split("\n").map((paragraph, index) => (
-                            <p key={index} className="mb-4">{paragraph}</p>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-center text-gray-600 dark:text-gray-400">
-                          Lo sentimos, no contamos con términos y condiciones en este momento.
-                        </p>
-                      )}
-                    </>
-                  )}
-                </ScrollArea>
-              </TabsContent>
-            </Tabs>
-            <Separator className="my-4 border-gray-300 dark:border-gray-600" />
-            <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
-              Última actualización: {document ? new Date(document.createdAt).toLocaleDateString() : "N/A"}
-            </p>
-          </CardContent>
-        </Card>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex py-20 lg:py-28">
+      <main className="container mx-auto px-6 lg:px-20">
+        <div className="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl overflow-hidden">
+          {/* Document Header */}
+          <div className="bg-gray-100 dark:bg-gray-700 p-8 border-b dark:border-gray-600">
+            <div className="flex items-center justify-between mb-6">
+              <Link
+                to="/"
+                className="text-blue-600 dark:text-blue-400 hover:underline flex items-center"
+              >
+                <ChevronLeft className="h-4 w-4 mr-2" />
+                Volver al inicio
+              </Link>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex items-center dark:text-gray-300"
+              >
+                <Printer className="h-4 w-4 mr-2" />
+                Imprimir
+              </Button>
+            </div>
+            <h1 className="text-3xl font-extrabold">Deslinde legal</h1>
+            {/* <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+            Última actualización: {new Date().toLocaleDateString()}
+          </p> */}
+          </div>
+
+          {/* Document Content */}
+          <div className="p-8 lg:p-12 space-y-8 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-lg shadow-md">
+            {document?.length > 0 && document[0]?.content ? (
+              <div
+                className="whitespace-pre-wrap leading-relaxed text-justify"
+                style={{
+                  fontFamily: "Arial, sans-serif",
+                  fontSize: "16px",
+                  lineHeight: "1.8",
+                }}
+              >
+                {document[0].content.split("\n").map((section, index) => {
+                  // Identificar líneas con títulos que terminan en ":"
+                  const colonMatch = section.match(/^(.+?):$/);
+
+                  if (colonMatch) {
+                    return (
+                      <div key={index} className="mb-4">
+                        {/* Título en negritas */}
+                        <p className="font-bold text-lg">{colonMatch[1]}:</p>
+                      </div>
+                    );
+                  }
+
+                  // Renderizar texto normal después de títulos
+                  return (
+                    <p key={index} className="mb-4">
+                      {section}
+                    </p>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-center text-gray-500">
+                No hay contenido disponible.
+              </p>
+            )}
+          </div>
+        </div>
       </main>
     </div>
   );
-
 }
