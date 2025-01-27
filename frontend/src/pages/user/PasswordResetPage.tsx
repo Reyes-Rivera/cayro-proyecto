@@ -143,7 +143,6 @@ export default function PasswordResetPage() {
             No te preocupes, te ayudaremos a recuperar tu contraseña en unos
             sencillos pasos.
           </p>
-        
         </div>
 
         <CardContent className="md:w-1/2 p-8 bg-white shadow-none dark:bg-gray-800 rounded-r-sm">
@@ -175,6 +174,7 @@ export default function PasswordResetPage() {
                     onChange={(e) => {
                       setPassword(e.target.value);
                       clearErrors("password");
+                      clearErrors("confirmPassword");
                     }}
                     autoComplete="new-password"
                     className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2"
@@ -325,7 +325,7 @@ export default function PasswordResetPage() {
                   </span>
                 )}
               </div>
-            
+
               <button
                 type="submit"
                 className="px-4 w-full text-center justify-center py-2 bg-blue-500 font-bold text-white rounded-md flex items-center"

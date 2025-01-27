@@ -1,16 +1,17 @@
-"use client";
-
 import { motion } from "framer-motion";
 import { ShoppingCart } from "lucide-react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-
+import escolta from "@/assets/uniformes-escolta-removebg-preview.png";
+import polo from "@/assets/polo-3-removebg-preview.png";
+import deportivo from "@/assets/conjunto-removebg-preview.png";
+import espinilleras from "@/assets/espinilleras-removebg-preview.png";
 const products = [
   {
     id: 1,
     name: "Uniforme Escolar Clásico",
     price: 599,
     oldPrice: 799,
-    image: "/placeholder.svg?height=400&width=300",
+    image: escolta,
     category: "Primaria",
   },
   {
@@ -18,7 +19,7 @@ const products = [
     name: "Conjunto Deportivo Premium de Alta Calidad",
     price: 499,
     oldPrice: 649,
-    image: "/placeholder.svg?height=400&width=300",
+    image: deportivo,
     category: "Deportes",
   },
   {
@@ -26,15 +27,15 @@ const products = [
     name: "Falda Plisada Elegante",
     price: 299,
     oldPrice: 399,
-    image: "/placeholder.svg?height=400&width=300",
+    image: polo,
     category: "Secundaria",
   },
   {
     id: 4,
-    name: "Chaleco Institucional",
+    name: "Espinilleras",
     price: 249,
     oldPrice: 299,
-    image: "/placeholder.svg?height=400&width=300",
+    image: espinilleras,
     category: "Accesorios",
   },
 ];
@@ -100,14 +101,12 @@ export default function FeaturedProducts() {
                   </h3>
                   <div className="flex items-center justify-between w-full">
                     <div className="flex items-center gap-2">
-                      <span className="text-blue-600 dark:text-blue-400 font-bold">
+                      <span className="text-gray-700 font-bold">
                         ${product.price}
                       </span>
-                      <span className="text-gray-400 line-through text-sm">
-                        ${product.oldPrice}
-                      </span>
+                      
                     </div>
-                    <button className="w-10 h-10 bg-blue-100 dark:bg-blue-700 rounded-full flex items-center justify-center shadow-md hover:bg-blue-200 dark:hover:bg-blue-600 transition">
+                    <button className="w-10 h-10  dark:bg-blue-700 rounded-full flex items-center justify-center shadow-md hover:bg-blue-200 dark:hover:bg-blue-600 transition">
                       <ShoppingCart className="w-5 h-5 text-blue-600 dark:text-blue-300" />
                     </button>
                   </div>

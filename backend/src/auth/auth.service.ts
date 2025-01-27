@@ -156,6 +156,7 @@ export class AuthService {
         code: verificationCode,
         expires: expirationTime,
       });
+      const companyInfo = await this.prismaService.companyProfile.findMany();
       const currentYear = new Date().getFullYear();
       const html = `
         <!DOCTYPE html>
@@ -169,7 +170,7 @@ export class AuthService {
             <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
                 <tr>
                     <td align="center" >
-                        <img src="https://res.cloudinary.com/dhhv8l6ti/image/upload/v1728748461/logo.png" alt="Cayro Uniformes" style="display: block; width: 150px; max-width: 100%; height: auto;">
+                        <img src=${companyInfo[0].logoUrl} alt="Cayro Uniformes" style="display: block; width: 150px; max-width: 100%; height: auto;">
                     </td>
                 </tr>
                 <tr>

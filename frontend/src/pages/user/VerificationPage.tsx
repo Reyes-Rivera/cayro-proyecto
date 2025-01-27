@@ -49,7 +49,7 @@ export default function VerificationPage() {
     const code = verificationCode.join('');
     setIsSubmitting(true)
 
-    if (location.pathname === '/verification-code') {
+    if (location.pathname === '/codigo-verificacion') {
       const response = await await verifyCode(emailToVerify, code);
       if (response.status === 201) {
         Swal.fire({
@@ -73,7 +73,7 @@ export default function VerificationPage() {
         setError('Código de verificación incorrecto. Por favor, inténtelo de nuevo.')
       }
     }
-    if (location.pathname === '/verification-code-auth') {
+    if (location.pathname === '/codigo-verificacion-auth') {
       const response = await await verifyCodeAuth(emailToVerify, code);
       if (response.status === 201) {
         Swal.fire({
@@ -88,11 +88,11 @@ export default function VerificationPage() {
           localStorage.removeItem('emailToVerify');
           setIsVerified(true);
           if(response.data.role === "ADMIN"){
-            navigate('/admin-profile');
+            navigate('/perfil-admin');
           }
           if(response.data.role === "USER"){
 
-            navigate('/user-profile');
+            navigate('/perfil-usuario');
           }
         }, 1000);
 
@@ -110,7 +110,7 @@ export default function VerificationPage() {
 
   const handleResendCode = async () => {
     try {
-      if (location.pathname === '/verification-code') {
+      if (location.pathname === '/codigo-verificacion') {
         const res = await resendCodeApi({ email: emailToVerify });
         if (res) {
           Swal.fire({
@@ -129,7 +129,7 @@ export default function VerificationPage() {
         }
       }
 
-      if (location.pathname === '/verification-code-auth') {
+      if (location.pathname === '/codigo-verificacion-auth') {
         const res = await resendCodeApiAuth({ email: emailToVerify });
         if (res) {
           Swal.fire({
@@ -149,7 +149,6 @@ export default function VerificationPage() {
       }
 
     } catch (error) {
-      console.error(error);
       Swal.fire({
         icon: 'error',
         title: 'Error',

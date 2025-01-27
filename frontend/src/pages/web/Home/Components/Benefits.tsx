@@ -6,21 +6,25 @@ const benefits = [
     icon: Shield,
     title: "Garantía de Calidad",
     description: "Materiales premium y acabados perfectos en cada prenda.",
+    bgColor: "bg-blue-100 dark:bg-blue-700", // Fondo azul
   },
   {
     icon: Truck,
     title: "Envío Rápido",
     description: "Entrega garantizada en tiempo y forma para inicio de clases.",
+    bgColor: "bg-green-100 dark:bg-green-700", // Fondo verde
   },
   {
     icon: Headphones,
     title: "Soporte 24/7",
     description: "Equipo de atención al cliente siempre disponible para ayudarte.",
+    bgColor: "bg-yellow-100 dark:bg-yellow-700", // Fondo amarillo
   },
   {
     icon: RefreshCw,
     title: "Cambios Sencillos",
     description: "Política de cambios flexible para tu tranquilidad.",
+    bgColor: "bg-red-100 dark:bg-red-700", // Fondo rojo
   },
 ];
 
@@ -47,7 +51,7 @@ export default function Benefits() {
   };
 
   return (
-    <section className="py-20 bg-white dark:bg-gray-900">
+    <section className="py-20 bg-gray-50 dark:bg-gray-800">
       <div className="container mx-auto px-4">
         {/* Título y descripción */}
         <motion.div
@@ -79,11 +83,13 @@ export default function Benefits() {
               <motion.div
                 key={benefit.title}
                 variants={itemVariants}
-                className="bg-white dark:bg-gray-800 rounded-xl p-8 transform transition-transform duration-300 hover:-translate-y-2 shadow-lg"
+                className="bg-white dark:bg-gray-700 rounded-xl p-8 transform transition-transform duration-300 hover:-translate-y-2 shadow-lg"
               >
-                {/* Icono */}
-                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-700 rounded-lg flex items-center justify-center mb-6">
-                  <Icon className="w-6 h-6 text-blue-600 dark:text-blue-300" />
+                {/* Icono con fondo dinámico */}
+                <div
+                  className={`w-12 h-12 ${benefit.bgColor} rounded-lg flex items-center justify-center mb-6`}
+                >
+                  <Icon className="w-6 h-6 " />
                 </div>
                 {/* Título */}
                 <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3">

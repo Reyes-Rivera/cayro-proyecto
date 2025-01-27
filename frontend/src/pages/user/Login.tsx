@@ -51,9 +51,9 @@ export default function LoginPage() {
         if (res?.role === "USER" && res.active === false) {
           setIsLoading(true);
           await resendCodeApi({ email: res.email });
-          navigate("/verification-code");
+          navigate("/codigo-verificacion");
         } else {
-          navigate("/verification-code-auth");
+          navigate("/codigo-verificacion-auth");
         }
       }
       setIsLoading(false);
@@ -172,7 +172,7 @@ export default function LoginPage() {
               </div>
               <p className="mt-6 text-end text-sm text-gray-600 dark:text-gray-400">
                 <NavLink
-                  to="/password-recovery"
+                  to="/recuperar-password"
                   className="text-sm text-blue-500 hover:text-blue-600 mt-2"
                 >
                   ¿He olvidado mi contraseña?
@@ -215,7 +215,7 @@ export default function LoginPage() {
           <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">
             ¿No tienes una cuenta?{" "}
             <NavLink
-              to="/sign-up"
+              to="/registro"
               className="font-semibold text-blue-500 hover:text-blue-600"
             >
               Regístrate

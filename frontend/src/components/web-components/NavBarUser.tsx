@@ -72,7 +72,7 @@ const NavBarUser = () => {
                 Inicio
               </NavLink>
               <NavLink
-                to="/products"
+                to="/productos"
                 className={({ isActive }) =>
                   isActive
                     ? "text-black dark:text-white border-b-2 border-blue-600"
@@ -92,7 +92,7 @@ const NavBarUser = () => {
                     to={
                       user?.role === "ADMIN"
                         ? "/admin-profile"
-                        : "/employee-profile"
+                        : user?.role === "USER" ? "/user-profile":"/employee-profile"
                     }
                     className="hidden md:inline-block"
                   >
@@ -170,7 +170,7 @@ const NavBarUser = () => {
               Inicio
             </NavLink>
             <NavLink
-              to="/products"
+              to="/productos"
               className="block px-4 py-2 text-gray-800 dark:text-gray-300"
             >
               Productos

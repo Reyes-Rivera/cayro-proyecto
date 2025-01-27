@@ -6,9 +6,7 @@ import playera from "@/assets/playera_batmat-removebg-preview.png";
 
 export default function Hero() {
   return (
-    <section className="min-h-screen bg-white dark:bg-gray-900 relative overflow-hidden flex items-center ">
- 
-
+    <section className="min-h-screen mt-14 lg:mt-0 bg-white dark:bg-gray-900 relative overflow-hidden flex items-center ">
       <div className="container mx-auto px-4  ">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left content */}
@@ -27,11 +25,11 @@ export default function Hero() {
             <div className="flex gap-6">
               <Button
                 size="lg"
-                className="bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600"
+                className="bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 font-bold"
               >
                 Ver catálogo
               </Button>
-              <Button size="lg" variant="outline">
+              <Button size="lg" variant="outline" className="font-bold">
                 Contactar
               </Button>
             </div>

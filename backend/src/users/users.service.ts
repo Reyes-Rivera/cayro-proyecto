@@ -66,7 +66,7 @@ export class UsersService {
       const timeToken = configInfo[0].timeTokenEmail;
       const expirationTime = Date.now() + timeToken * 60000;
       const verificationCode = crypto.randomInt(100000, 999999).toString();
-
+      const companyInfo = await this.prismaService.companyProfile.findMany();
       this.codes.set(email, {
         code: verificationCode,
         expires: expirationTime,
@@ -84,7 +84,7 @@ export class UsersService {
             <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
                 <tr>
                     <td align="center" >
-                        <img src="https://res.cloudinary.com/dhhv8l6ti/image/upload/v1728748461/logo.png" alt="Cayro Uniformes" style="display: block; width: 150px; max-width: 100%; height: auto;">
+                        <img src=${companyInfo[0].logoUrl} alt="Cayro Uniformes" style="display: block; width: 150px; max-width: 100%; height: auto;">
                     </td>
                 </tr>
                 <tr>
@@ -341,6 +341,8 @@ export class UsersService {
         throw new NotFoundException(
           `El correo ${email} no se encuentra registrado.`,
         );
+      const companyInfo = await this.prismaService.companyProfile.findMany();
+
       // Crear payload y generar token con tiempo de expiración
       const payload = { sub: userFound.id, role: Role.USER };
       const expirationTime = configInfo[0]?.timeTokenEmail || 10;
@@ -362,7 +364,7 @@ export class UsersService {
               <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
                   <tr>
                       <td align="center">
-                          <img src="https://res.cloudinary.com/dhhv8l6ti/image/upload/v1728748461/logo.png" alt="Cayro Uniformes" style="display: block; width: 150px; max-width: 100%; height: auto;">
+                          <img src=${companyInfo[0].logoUrl} alt="Cayro Uniformes" style="display: block; width: 150px; max-width: 100%; height: auto;">
                       </td>
                   </tr>
                   <tr>
@@ -378,7 +380,7 @@ export class UsersService {
                           </p>
 
                           <div style="background-color: #f0f0f0; border-radius: 4px; padding: 20px; text-align: center; margin-bottom: 20px;">
-                              <a href="https://cayro.netlify.app/reset-password/${token}" style="font-size: 32px; font-weight: bold; color: #0099FF;">Recuperar contraseña</a>
+                              <a href="http://localhost:5173/restaurar-password/${token}" style="font-size: 32px; font-weight: bold; color: #0099FF;">Recuperar contraseña</a>
                           </div>
                           <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
                           ${dataConfig?.secondaryinstruction || 'Si no solicitaste esta acción, ignora este mensaje.'}

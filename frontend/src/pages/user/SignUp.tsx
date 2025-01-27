@@ -40,6 +40,7 @@ export default function SignUpPage() {
     handleSubmit,
     setValue,
     clearErrors,
+    watch,
     formState: { errors },
   } = useForm<User>();
 
@@ -178,7 +179,7 @@ export default function SignUpPage() {
             return;
           }
           if (res) {
-            navigate("/verification-code");
+            navigate("/codigo-verificacion");
           }
         } catch (error: any) {
           Swal.fire({
@@ -206,6 +207,7 @@ export default function SignUpPage() {
     <div className=" min-h-screen flex items-center justify-center p-4 pt-16 bg-gray-50 dark:bg-gray-900 ">
       <div className="w-full justify-center max-w-xl md:max-w-6xl flex bg-white dark:bg-gray-800 shadow-xl rounded-lg overflow-hidden md:h-[630px] mt-8 md:mt-0">
         {/* Contenedor izquierdo */}
+        
         <div className="hidden md:flex md:flex-col lg:justify-center bg-blue-600 dark:bg-gray-900 text-white w-full lg:w-1/2 p-10 justify-center">
           <h2 className="text-4xl font-extrabold mb-4">
             Bienvenido a <span className="text-blue-100">Cayro Uniformes</span>
@@ -468,6 +470,7 @@ export default function SignUpPage() {
                       onChange={(e) => {
                         setPassword(e.target.value);
                         clearErrors("password");
+                        clearErrors("confirmPassword");
                       }}
                       autoComplete="new-password"
                       className="w-full bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 "
@@ -596,7 +599,7 @@ export default function SignUpPage() {
                         required:
                           "La confirmación de la contraseña es requerida",
                         validate: (value) =>
-                          value === password || "Las contraseñas no coinciden",
+                          value === watch("password") || "Las contraseñas no coinciden",
                       })}
                       id="password-confirm"
                       type={showConfirmPassword ? "text" : "password"}

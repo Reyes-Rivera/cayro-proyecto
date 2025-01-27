@@ -1,6 +1,5 @@
 import { Check } from "lucide-react";
-import { Button } from "@/components/ui/button";
-
+import cbta from "@/assets/cbta-removebg-preview.png";
 const benefits = [
   "Telas resistentes y duraderas",
   "Diseños modernos y cómodos",
@@ -10,7 +9,7 @@ const benefits = [
 
 export default function Package() {
   return (
-    <section className="py-20 bg-gray-100 dark:bg-gray-800">
+    <section className="py-20 bg-gray-100 dark:bg-gray-800 ">
       <div className="container mx-auto px-4">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Texto del paquete */}
@@ -33,19 +32,17 @@ export default function Package() {
                 </li>
               ))}
             </ul>
-            <Button className="mt-8 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white text-lg shadow-md">
-              Solicitar información
-            </Button>
+            
           </div>
 
           {/* Imagen */}
-          <div className="relative">
+          <div className="felx justify-center items-center w-full">
             <img
-              src="/placeholder.svg?height=400&width=600"
+              src={cbta}
               alt="Estudiantes con uniformes"
-              className="rounded-lg shadow-xl transition-transform duration-300 hover:scale-105 dark:shadow-gray-700"
+              className="rounded-lg shadow-xl transition-transform duration-300 hover:scale-105 dark:shadow-gray-700 m-auto"
             />
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-t from-black/20 via-transparent to-black/0 rounded-lg pointer-events-none" />
+           
           </div>
         </div>
       </div>

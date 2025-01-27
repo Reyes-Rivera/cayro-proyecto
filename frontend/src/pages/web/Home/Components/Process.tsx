@@ -5,21 +5,29 @@ const steps = [
     icon: ClipboardList,
     title: "Planeación",
     description: "Evaluamos tus necesidades",
+    bgColor: "bg-blue-600 dark:bg-blue-500",
+    lineColor: "bg-blue-300 dark:bg-blue-600",
   },
   {
     icon: PenTool,
     title: "Diseño",
     description: "Creamos los modelos",
+    bgColor: "bg-green-600 dark:bg-green-500",
+    lineColor: "bg-green-300 dark:bg-green-600",
   },
   {
     icon: Ruler,
     title: "Producción",
     description: "Fabricamos con calidad",
+    bgColor: "bg-yellow-500 dark:bg-yellow-400",
+    lineColor: "bg-yellow-300 dark:bg-yellow-500",
   },
   {
     icon: Truck,
     title: "Entrega",
     description: "Enviamos a tiempo",
+    bgColor: "bg-red-600 dark:bg-red-500",
+    lineColor: "bg-red-300 dark:bg-red-600",
   },
 ];
 
@@ -28,7 +36,7 @@ export default function Process() {
     <section className="py-20 dark:bg-gray-900">
       <div className="container mx-auto px-4">
         {/* Title */}
-        <h2 className="text-4xl font-extrabold  text-gray-900 dark:text-gray-100  tracking-tight text-center mb-12">
+        <h2 className="text-4xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight text-center mb-12">
           Nuestro Proceso de Trabajo
         </h2>
 
@@ -42,7 +50,9 @@ export default function Process() {
                 className="flex flex-col items-center text-center relative group"
               >
                 {/* Icon */}
-                <div className="w-20 h-20 bg-blue-600 dark:bg-blue-500 rounded-full flex items-center justify-center shadow-lg mb-6">
+                <div
+                  className={`w-20 h-20 ${step.bgColor} rounded-full flex items-center justify-center shadow-lg mb-6`}
+                >
                   <Icon className="w-10 h-10 text-white" />
                 </div>
                 {/* Title */}
@@ -55,7 +65,9 @@ export default function Process() {
                 </p>
                 {/* Connector Line */}
                 {index < steps.length - 1 && (
-                  <div className="hidden md:block absolute top-10 left-[120%] w-24 h-0.5 bg-blue-300 dark:bg-blue-600" />
+                  <div
+                    className={`hidden md:block absolute top-10 left-[120%] w-24 h-0.5 ${step.lineColor}`}
+                  />
                 )}
               </div>
             );

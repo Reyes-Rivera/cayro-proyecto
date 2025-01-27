@@ -39,43 +39,47 @@ const AppRoutes = () => {
         <NavBarUser />
       </div>
       <div className="container-bg">
-        <ScrollToTop />
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/privacy" element={<Policies />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/legal" element={<LegalBoundary />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/sign-up" element={<SignUpPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/products" element={<ProductsSection />} />
-          <Route path="/product-details" element={<ProductDetails />} />
-          <Route path="/password-recovery" element={<PasswordRecoveryPage />} />
-          <Route
-            path="/reset-password/:token"
-            element={<PasswordResetPage />}
-          />
+          <ScrollToTop />
 
-          <Route element={<ProtectedRouterAdmin />}>
-            <Route path="/admin-profile" element={<AdminDashboard />} />
-          </Route>
-
-          <Route element={<ProtectedRouterUser />}>
-            <Route path="/user-profile" element={<UserDashboard />} />
-          </Route>
-
-          <Route element={<ProtectedRouterVerification />}>
-            <Route path="/verification-code" element={<VerificationPage />} />
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/aviso-privacidad" element={<Policies />} />
+            <Route path="/sobre-nosotros" element={<AboutPage />} />
+            <Route path="/terminos" element={<Terms />} />
+            <Route path="/deslinde-legal" element={<LegalBoundary />} />
+            <Route path="/contacto" element={<Contact />} />
+            <Route path="/registro" element={<SignUpPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/productos" element={<ProductsSection />} />
+            <Route path="/detalles-producto" element={<ProductDetails />} />
             <Route
-              path="/verification-code-auth"
-              element={<VerificationPage />}
+              path="/recuperar-password"
+              element={<PasswordRecoveryPage />}
             />
-          </Route>
-          <Route path="*" element={<PageNotFound />} />
-          <Route path="/500" element={<Error500 />} />
-          <Route path="/400" element={<Error400 />} />
-        </Routes>
+            <Route
+              path="/restaurar-password/:token"
+              element={<PasswordResetPage />}
+            />
+
+            <Route element={<ProtectedRouterAdmin />}>
+              <Route path="/perfil-admin" element={<AdminDashboard />} />
+            </Route>
+
+            <Route element={<ProtectedRouterUser />}>
+              <Route path="/perfil-usuario" element={<UserDashboard />} />
+            </Route>
+
+            <Route element={<ProtectedRouterVerification />}>
+              <Route path="/codigo-verificacion" element={<VerificationPage />} />
+              <Route
+                path="/codigo-verificacion-auth"
+                element={<VerificationPage />}
+              />
+            </Route>
+            <Route path="*" element={<PageNotFound />} />
+            <Route path="/500" element={<Error500 />} />
+            <Route path="/400" element={<Error400 />} />
+          </Routes>
       </div>
       <div className="w-full">
         <Footer />

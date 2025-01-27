@@ -1,71 +1,58 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { ShoppingCart, Search } from "lucide-react";
-import img from "@/assets/sudadera-removebg-preview.png";
-import playera from "@/assets/470524508_1114544320459967_8053404278450786658_n-removebg-preview.png";
-import Header from "./Header";
+import React, { Suspense, useState } from "react";
+import Header from "./components/Header";
+
+const ProductGrid = React.lazy(() => import("./components/ProductGrid"));
+const Sidebar = React.lazy(() => import("./components/Sidebar"));
+
+interface Filters {
+  categories: string[];
+  priceRange: [number, number];
+  colors: string[];
+  sizes: string[];
+}
+
+const initialFilters: Filters = {
+  categories: [],
+  priceRange: [0, 1000],
+  colors: [],
+  sizes: [],
+};
 
 export default function ProductsSection() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [activeSearchTerm, setActiveSearchTerm] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const [filters, setFilters] = useState<Filters>(initialFilters);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const categories = [
-    { name: "Escolar", icon: "🎓" },
-    { name: "Deportivo", icon: "⚽" },
-    { name: "Gorras", icon: "🧢" },
-    { name: "Playeras", icon: "👕" },
-    { name: "Polos", icon: "🦴" },
-    { name: "Pantalones", icon: "👖" },
-    { name: "Shorts", icon: "🩳" },
-    { name: "Accesorios", icon: "🎒" },
-  ];
+  const toggleSidebar = () => setIsOpen(!isOpen);
 
-  const allProducts = Array.from({ length: 50 }, (_, i) => ({
-    id: i + 1,
-    name:
-      i % 2 === 0 ? `Uniforme Escolar ${i + 1}` : `Uniforme Deportivo ${i + 1}`,
-    category: i % 2 === 0 ? "Escolar" : "Deportivo",
-    subCategory: categories[i % categories.length].name,
-    price: (50 + i * 10).toFixed(2),
-    image: "https://via.placeholder.com/150",
-  }));
-
-  const filteredProducts = allProducts.filter(
-    (product) =>
-      product.name.toLowerCase().includes(activeSearchTerm.toLowerCase()) ||
-      product.subCategory.toLowerCase().includes(activeSearchTerm.toLowerCase())
-  );
-
-  const itemsPerPage = 12;
-  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
-
-  const displayedProducts = filteredProducts.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  const handleFilterChange = (newFilters: Filters) => {
+    setFilters(newFilters);
   };
 
-  const handlePreviousPage = () => {
-    if (currentPage > 1) setCurrentPage(currentPage - 1);
-  };
-
-  const handleSearchEnter = (e: any) => {
-    if (e.key === "Enter") {
-      setActiveSearchTerm(searchTerm);
-    }
-  };
-
-  const handleSearchClick = () => {
-    setActiveSearchTerm(searchTerm);
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
   };
 
   return (
-    <div className="">
+    <div className="min-h-screen bg-gray-50 w-full">
       <Header />
+      <div className=" mx-auto px-4 py-8 ">
+        <div className="flex  flex-col md:flex-row gap-8">
+          <Suspense fallback={<div>Cargando Sidebar...</div>}>
+            <Sidebar
+              isOpen={isOpen}
+              onClose={toggleSidebar}
+              onFilterChange={handleFilterChange}
+              onSearch={handleSearch}
+            />
+          </Suspense>
+          <div className="flex-1">
+            <Suspense fallback={<div>Cargando productos...</div>}>
+              <ProductGrid toggleSidebar={toggleSidebar} filters={filters} searchQuery={searchQuery} />
+            </Suspense>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

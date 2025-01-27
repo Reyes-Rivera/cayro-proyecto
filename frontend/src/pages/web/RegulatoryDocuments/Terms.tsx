@@ -1,9 +1,7 @@
 import { currentTerm } from "@/api/terms";
-import { Button } from "@/components/ui/button";
+import Breadcrumbs from "@/components/web-components/Breadcrumbs";
 import { RegulatoryDocument } from "@/pages/employees/dashboard-admin/legal/LegalDocumentsView";
-import { ChevronLeft, Printer } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 
 export default function Terms() {
   const [terms, setTerms] = useState<RegulatoryDocument[]>([]);
@@ -21,21 +19,8 @@ export default function Terms() {
           {/* Document Header */}
           <div className="bg-gray-100 dark:bg-gray-700 p-8 border-b dark:border-gray-600">
             <div className="flex items-center justify-between mb-6">
-              <Link
-                to="/"
-                className="text-blue-600 dark:text-blue-400 hover:underline flex items-center"
-              >
-                <ChevronLeft className="h-4 w-4 mr-2" />
-                Volver al inicio
-              </Link>
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex items-center dark:text-gray-300"
-              >
-                <Printer className="h-4 w-4 mr-2" />
-                Imprimir
-              </Button>
+             <Breadcrumbs/>
+              
             </div>
             <h1 className="text-3xl font-extrabold">Términos y Condiciones</h1>
             {/* <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">

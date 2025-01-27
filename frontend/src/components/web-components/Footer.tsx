@@ -35,17 +35,17 @@ export function Footer() {
             <h3 className="text-lg font-semibold mb-4">Enlaces Legales</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/terms" className="hover:text-blue-400">
+                <Link to="/terminos" className="hover:text-blue-400">
                   Términos y Condiciones
                 </Link>
               </li>
               <li>
-                <Link to="/privacy" className="hover:text-blue-400">
+                <Link to="/aviso-privacidad" className="hover:text-blue-400">
                   Aviso de Privacidad
                 </Link>
               </li>
               <li>
-                <Link to="/legal" className="hover:text-blue-400">
+                <Link to="/deslinde-legal" className="hover:text-blue-400">
                   Deslinde legal
                 </Link>
               </li>
@@ -55,7 +55,7 @@ export function Footer() {
             <h3 className="text-lg font-semibold mb-4">Empresa</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/about" className="hover:text-blue-400">
+                <Link to="/sobre-nosotros" className="hover:text-blue-400">
                   Quiénes Somos
                 </Link>
               </li>
