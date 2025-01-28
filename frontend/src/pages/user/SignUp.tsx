@@ -1,4 +1,4 @@
-import  { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Check,
   CheckCircleIcon,
@@ -18,6 +18,7 @@ import "sweetalert2/src/sweetalert2.scss";
 import { useAuth } from "@/context/AuthContextType";
 import { useNavigate } from "react-router-dom";
 import { NavLink } from "react-router-dom";
+import Breadcrumbs from "@/components/web-components/Breadcrumbs";
 
 export default function SignUpPage() {
   const [password, setPassword] = useState("");
@@ -47,6 +48,7 @@ export default function SignUpPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
+
     const checks = {
       length: password.length >= 8,
       uppercase: /[A-Z]/.test(password),
@@ -57,7 +59,7 @@ export default function SignUpPage() {
     };
     setPasswordChecks(checks);
     setPasswordStrength(Object.values(checks).filter(Boolean).length * 20);
-  }, [password]);
+  }, [password, error]);
 
   // Detección de patrones secuenciales comunes
   const containsSequentialPatterns = (password: string): boolean => {
@@ -178,6 +180,10 @@ export default function SignUpPage() {
             setCurrentStep(2);
             return;
           }
+          if (res === "Error desconocido al registrar.") {
+            navigate("/500", { state: { fromError: true } });
+            return;
+          }
           if (res) {
             navigate("/codigo-verificacion");
           }
@@ -204,16 +210,20 @@ export default function SignUpPage() {
     }
   });
   return (
-    <div className=" min-h-screen flex items-center justify-center p-4 pt-16 bg-gray-50 dark:bg-gray-900 ">
+    <div className=" min-h-screen flex-col flex items-center justify-center p-4 pt-14 bg-gray-50 dark:bg-gray-900 ">
+      <div className="w-full lg:pl-36">
+        <Breadcrumbs />
+      </div>
       <div className="w-full justify-center max-w-xl md:max-w-6xl flex bg-white dark:bg-gray-800 shadow-xl rounded-lg overflow-hidden md:h-[630px] mt-8 md:mt-0">
         {/* Contenedor izquierdo */}
-        
+
         <div className="hidden md:flex md:flex-col lg:justify-center bg-blue-600 dark:bg-gray-900 text-white w-full lg:w-1/2 p-10 justify-center">
           <h2 className="text-4xl font-extrabold mb-4">
             Bienvenido a <span className="text-blue-100">Cayro Uniformes</span>
           </h2>
           <p className="text-lg mb-8">
-            Regístrate para acceder a ofertas exclusivas, gestionar tus pedidos y más.
+            Regístrate para acceder a ofertas exclusivas, gestionar tus pedidos
+            y más.
           </p>
 
           <div className="grid grid-cols-3 gap-6">
@@ -599,7 +609,8 @@ export default function SignUpPage() {
                         required:
                           "La confirmación de la contraseña es requerida",
                         validate: (value) =>
-                          value === watch("password") || "Las contraseñas no coinciden",
+                          value === watch("password") ||
+                          "Las contraseñas no coinciden",
                       })}
                       id="password-confirm"
                       type={showConfirmPassword ? "text" : "password"}

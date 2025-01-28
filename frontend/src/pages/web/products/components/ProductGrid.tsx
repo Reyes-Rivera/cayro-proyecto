@@ -52,7 +52,7 @@ export default function ProductGrid({
     });
 
     setFilteredProducts(filtered);
-    setCurrentPage(1); // Reinicia a la primera página cuando cambian los filtros
+    setCurrentPage(1); 
   }, [filters, searchQuery, products]);
 
   const indexOfLastProduct = currentPage * productsPerPage;

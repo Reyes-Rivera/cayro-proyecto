@@ -8,6 +8,7 @@ const routeNames: Record<string, string> = {
   "/products": "Productos",
   "/terms": "Términos y Condiciones",
   "/about": "Acerca de Nosotros",
+  "/recuperar-password": "Recuperar contraseña",
 };
 
 export default function Breadcrumbs() {

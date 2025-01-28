@@ -47,7 +47,7 @@ export default function PasswordResetPage() {
       lowercase: /[a-z]/.test(password),
       number: /[0-9]/.test(password),
       special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
-      noSequential: !containsSequentialPatterns(password), // Validar patrones secuenciales
+      noSequential: !containsSequentialPatterns(password), 
     };
     setPasswordChecks(checks);
     setPasswordStrength(Object.values(checks).filter(Boolean).length * 20);

@@ -11,6 +11,13 @@ import polo3 from "../assets/polo-3-removebg-preview.png"
 import sudare from "../assets/sudadera-removebg-preview.png"
 import gorraNaranja from "../assets/gorranaranja-removebg-preview.png"
 import casualRojo from "../assets/casualrojo.png"
+import poloAzul from "../assets/polo_azul-removebg-preview.png";
+import playerarosa from "../assets/mujer-rosa.png";
+import calcetas from "../assets/calcetas-grises.png"
+import espinilleras from "../assets/espinnilleras-grises.png"
+import gorraUnisex from "../assets/gorraunisex.png"
+import uniformeEscolar from "../assets/uniformeescolarhombre.png"
+import playeraDeportivaMujer from "../assets/deportivomujer.png"
 interface Product {
   id: number;
   name: string;
@@ -19,6 +26,7 @@ interface Product {
   category: string;
   color: string;
   size: string;
+  sex:string;
 }
 
 export const products: Product[] = [
@@ -28,8 +36,9 @@ export const products: Product[] = [
     price: 299,
     image: uniformeDeportivo,
     category: "Uniformes Deportivos",
-    color: "#3B82F6",
+    color: "#3B82F6", // Azul
     size: "M",
+    sex:"Hombre"
   },
   {
     id: 2,
@@ -37,17 +46,19 @@ export const products: Product[] = [
     price: 349,
     image: cbtaUniforme,
     category: "Uniformes Escolares",
-    color: "#FFFFFF",
+    color: "#FFFFFF", // Blanco
     size: "L",
+    sex:"Mujer"
   },
   {
     id: 3,
     name: "Camiseta Deportiva Roja",
     price: 199,
-    image:deportivaroja,
+    image: deportivaroja,
     category: "Uniformes Deportivos",
-    color: "#EF4444",
+    color: "#EF4444", // Rojo
     size: "S",
+    sex:"Hombre"
   },
   {
     id: 4,
@@ -55,8 +66,9 @@ export const products: Product[] = [
     price: 249,
     image: pantalongris,
     category: "Uniformes Escolares",
-    color: "#6B7280",
+    color: "#6B7280", // Gris
     size: "M",
+    sex:"Hombre"
   },
   {
     id: 5,
@@ -64,8 +76,9 @@ export const products: Product[] = [
     price: 179,
     image: shortsnegros,
     category: "Uniformes Deportivos",
-    color: "#111827",
+    color: "#111827", // Negro
     size: "L",
+    "sex":"Hombre"
   },
   {
     id: 6,
@@ -73,8 +86,9 @@ export const products: Product[] = [
     price: 229,
     image: escolta,
     category: "Uniformes Escolares",
-    color: "#111827",
+    color: "#111827", // Negro
     size: "S",
+    sex:"Unisex"
   },
   {
     id: 7,
@@ -82,8 +96,9 @@ export const products: Product[] = [
     price: 399,
     image: chaquetaAzul,
     category: "Uniformes Deportivos",
-    color: "#3B82F6",
+    color: "#3B82F6", // Azul
     size: "XL",
+    sex:"Hombre"
   },
   {
     id: 8,
@@ -91,8 +106,9 @@ export const products: Product[] = [
     price: 59,
     image: calcetasAzul,
     category: "Calcetas",
-    color: "#111827",
+    color: "#111827", // Negro
     size: "M",
+    sex:"Unisex"
   },
   {
     id: 9,
@@ -100,8 +116,9 @@ export const products: Product[] = [
     price: 189,
     image: polo3,
     category: "Polos",
-    color: "#10B981",
+    color: "#FFFFFF", // Verde
     size: "L",
+    sex:"Hombre"
   },
   {
     id: 10,
@@ -109,8 +126,9 @@ export const products: Product[] = [
     price: 329,
     image: sudare,
     category: "Uniformes Deportivos",
-    color: "#111827",
+    color: "#111827", // Negro
     size: "XL",
+    sex:"Hombre"
   },
   {
     id: 11,
@@ -118,8 +136,9 @@ export const products: Product[] = [
     price: 89,
     image: gorraNaranja,
     category: "Gorras",
-    color: "#F59E0B",
+    color: "#F59E0B", // Naranja
     size: "M",
+    sex:"Unisex"
   },
   {
     id: 12,
@@ -127,16 +146,179 @@ export const products: Product[] = [
     price: 149,
     image: casualRojo,
     category: "Playeras",
-    color: "#EF4444",
+    color: "#EF4444", // Rojo
     size: "S",
+    sex:"Hombre"
   },
   {
-    id: 6,
+    id: 13,
     name: "Uniforme Fausta Careta",
     price: 229,
     image: careta,
     category: "Uniformes Escolares",
-    color: "#111827",
+    color: "#111827", // Negro
     size: "S",
+    sex:"Unisex"
+  },
+  {
+    id: 14,
+    name: "Polo Casual Hombre",
+    price: 199,
+    image: poloAzul,
+    category: "Polos",
+    color: "#2563EB", // Azul intenso
+    size: "M",
+    sex: "Hombre",
+  },
+  {
+    id: 15,
+    name: "Playera Básica Mujer",
+    price: 149,
+    image: playerarosa,
+    category: "Playeras",
+    color: "#F87171", // Rosa claro
+    size: "S",
+    sex: "Mujer",
+  },
+  {
+    id: 16,
+    name: "Calcetas  Hombre",
+    price: 69,
+    image: calcetas,
+    category: "Calcetas",
+    color: "#4B5563", // Gris oscuro
+    size: "L",
+    sex: "Hombre",
+  },
+  {
+    id: 17,
+    name: "Espinilleras Pro",
+    price: 299,
+    image: espinilleras,
+    category: "Espinilleras",
+    color: "#374151", // Gris medio
+    size: "M",
+    sex: "Unisex",
+  },
+  {
+    id: 18,
+    name: "Gorra Unisex",
+    price: 99,
+    image: gorraUnisex,
+    category: "Gorras",
+    color: "#D97706", // Naranja oscuro
+    size: "M",
+    sex: "Unisex",
+  },
+  {
+    id: 19,
+    name: "Uniforme Escolar Primaria Hombre",
+    price: 349,
+    image: uniformeEscolar,
+    category: "Uniforme Escolar",
+    color: "#F3F4F6", // Blanco/gris claro
+    size: "L",
+    sex: "Hombre",
+  },
+  {
+    id: 20,
+    name: "Playera Deportiva Mujer",
+    price: 329,
+    image: playeraDeportivaMujer,
+    category: "Uniforme Deportivo",
+    color: "#60A5FA", // Azul claro
+    size: "M",
+    sex: "Mujer",
+  },
+  {
+    id: 21,
+    name: "Polo Estilo Deportivo Unisex",
+    price: 209,
+    image: polo3,
+    category: "Polos",
+    color: "#34D399", // Verde menta
+    size: "S",
+    sex: "Unisex",
+  },
+  {
+    id: 22,
+    name: "Playera Casual Hombre",
+    price: 159,
+    image: casualRojo,
+    category: "Playeras",
+    color: "#F87171", // Rosa claro
+    size: "L",
+    sex: "Hombre",
+  },
+  {
+    id: 23,
+    name: "Calcetas Escolares Mujer",
+    price: 49,
+    image: calcetasAzul,
+    category: "Calcetas",
+    color: "#1E293B", // Azul marino
+    size: "S",
+    sex: "Mujer",
+  },
+  {
+    id: 24,
+    name: "Espinilleras Clásicas Hombre",
+    price: 199,
+    image: shortsnegros,
+    category: "Espinilleras",
+    color: "#6B7280", // Gris
+    size: "L",
+    sex: "Hombre",
+  },
+  {
+    id: 25,
+    name: "Gorra Casual Mujer",
+    price: 89,
+    image: gorraNaranja,
+    category: "Gorras",
+    color: "#F59E0B", // Amarillo
+    size: "S",
+    sex: "Mujer",
+  },
+  {
+    id: 26,
+    name: "Uniforme Escolar Secundaria Mujer",
+    price: 389,
+    image: cbtaUniforme,
+    category: "Uniforme Escolar",
+    color: "#FFFFFF", // Blanco
+    size: "M",
+    sex: "Mujer",
+  },
+  {
+    id: 27,
+    name: "Uniforme Deportivo Unisex",
+    price: 309,
+    image: uniformeDeportivo,
+    category: "Uniforme Deportivo",
+    color: "#3B82F6", // Azul
+    size: "XL",
+    sex: "Unisex",
+  },
+  {
+    id: 28,
+    name: "Polo Deportivo Hombre",
+    price: 219,
+    image: polo3,
+    category: "Polos",
+    color: "#0EA5E9", // Azul celeste
+    size: "M",
+    sex: "Hombre",
+  },
+  {
+    id: 29,
+    name: "Playera Casual Unisex",
+    price: 169,
+    image: casualRojo,
+    category: "Playeras",
+    color: "#F43F5E", // Rosa oscuro
+    size: "L",
+    sex: "Unisex",
   },
 ];
+

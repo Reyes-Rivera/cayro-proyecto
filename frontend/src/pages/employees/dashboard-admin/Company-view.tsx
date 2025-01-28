@@ -159,7 +159,11 @@ export function CompanyView() {
   const onSubmit: SubmitHandler<InfoCompany> = async (data) => {
     // console.log(da);
     try {
-      const res = await companyInfoUpdateApi({...data,logoUrl:logo}, id, user?.id);
+      const res = await companyInfoUpdateApi(
+        { ...data, logoUrl: logo },
+        id,
+        user?.id
+      );
       if (res) {
         Swal.fire({
           icon: "success",
@@ -177,7 +181,6 @@ export function CompanyView() {
       });
       return;
     } catch (error) {
-
       navigate("/500", { state: { fromError: true } });
       toggleEditing();
     }
@@ -301,7 +304,7 @@ export function CompanyView() {
 
             <input
               type="file"
-               accept="image/png, image/jpeg"
+              accept="image/png, image/jpeg"
               id="logoUpload"
               className="hidden"
               onChange={handleImageChange}

@@ -11,15 +11,17 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import img from "../../assets/password-update.png";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
 import { recoverPassword } from "@/api/auth";
+import Breadcrumbs from "@/components/web-components/Breadcrumbs";
 
 export default function PasswordRecoveryPage() {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -45,12 +47,10 @@ export default function PasswordRecoveryPage() {
         return;
       }
     } catch (error: any) {
-      Swal.fire({
-        icon: "error",
-        title: "Error al enviar.",
-        text: error.response?.data?.message || "Error desconocido.",
-        confirmButtonColor: "#2F93D1",
-      });
+      if (error.response && error.response.status === 400) {
+        navigate("/400");
+      }
+      navigate("/500", { state: { fromError: true } });
     } finally {
       setIsSubmitting(false);
     }
@@ -61,6 +61,7 @@ export default function PasswordRecoveryPage() {
       {/* Contenido principal */}
       <div className="flex-grow flex items-center justify-center px-4 sm:px-6 lg:px-8 ">
         <div className="max-w-4xl w-full ">
+          <Breadcrumbs />
           <Card className=" dark:bg-gray-800 dark:text-gray-200 shadow-none border-none">
             <CardContent className="p-0">
               <div className="md:flex">

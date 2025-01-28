@@ -1,8 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
   provider = "prisma-client-js"
@@ -170,18 +166,14 @@ model Product {
   updatedAt        DateTime @updatedAt
 
   brandId          Int
-  departmentId     Int
   genderId         Int
   sleeveId         Int
-  sewingThreadId   Int
-  embroideryThreadId Int
+  categoryId       Int
 
   brand            Brand     @relation(fields: [brandId], references: [id])
-  department       Department @relation(fields: [departmentId], references: [id])
   gender           Gender    @relation(fields: [genderId], references: [id])
   sleeve           Sleeve    @relation(fields: [sleeveId], references: [id])
-  sewingThread     SewingThread @relation(fields: [sewingThreadId], references: [id])
-  embroideryThread EmbroideryThread @relation(fields: [embroideryThreadId], references: [id])
+  category         Category  @relation(fields: [categoryId], references: [id])
 
   colors           ProductColor[]
   sizes            ProductSize[]
@@ -189,49 +181,36 @@ model Product {
   saleDetails      SaleDetail[] 
 }
 
-//Done
 model Color {
   id       Int       @id @default(autoincrement())
   name     String    @unique
   hexValue String    @unique
   products ProductColor[]
 }
-//done
+
 model Size {
   id       Int       @id @default(autoincrement())
   name     String    @unique
   products ProductSize[]
 }
-//done
+
 model Gender {
   id       Int       @id @default(autoincrement())
   name     String    @unique
   products Product[]
 }
-//done
+
 model Sleeve {
   id       Int       @id @default(autoincrement())
   name     String    @unique
   products Product[]
 }
-//done
-model Material {
-  id       Int       @id @default(autoincrement())
-  name     String    @unique
-  description String
-  products ProductMaterial[]
-}
-//done
-model SewingThread {
-  id       Int       @id @default(autoincrement())
-  name     String    @unique
-  products Product[]
-}
 
-model EmbroideryThread {
-  id       Int       @id @default(autoincrement())
-  name     String    @unique
-  products Product[]
+model Material {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  description String
+  products    ProductMaterial[]
 }
 
 model Brand {
@@ -240,7 +219,7 @@ model Brand {
   products Product[]
 }
 
-model Department {
+model Category {
   id       Int       @id @default(autoincrement())
   name     String    @unique
   products Product[]
@@ -265,10 +244,10 @@ model ProductSize {
 }
 
 model ProductMaterial {
-  productId Int
+  productId  Int
   materialId Int
-  product   Product @relation(fields: [productId], references: [id])
-  material  Material @relation(fields: [materialId], references: [id])
+  product    Product  @relation(fields: [productId], references: [id])
+  material   Material @relation(fields: [materialId], references: [id])
 
   @@id([productId, materialId])
 }

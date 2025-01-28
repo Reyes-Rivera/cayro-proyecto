@@ -9,6 +9,7 @@ import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
 import ReCAPTCHA from "react-google-recaptcha";
 import { Check, Eye, EyeOff, Loader2, Lock, User } from "lucide-react";
+import Breadcrumbs from "@/components/web-components/Breadcrumbs";
 
 export default function LoginPage() {
   const { login, error, errorTimer } = useAuth();
@@ -20,6 +21,10 @@ export default function LoginPage() {
   const [lockoutTime, setLockoutTime] = useState(0);
 
   useEffect(() => {
+    if (error === "Error desconocido al iniciar sesión.") {
+      console.log("object");
+      navigate("/500", { state: { fromError: true } });
+    }
     let timer: NodeJS.Timeout;
     if (lockoutTime > 0) {
       timer = setInterval(() => {
@@ -27,7 +32,7 @@ export default function LoginPage() {
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [lockoutTime]);
+  }, [lockoutTime,error]);
 
   const handleCaptchaChange = (token: string | null) => {
     setCaptchaToken(token);
@@ -58,8 +63,8 @@ export default function LoginPage() {
       }
       setIsLoading(false);
     } catch (error: any) {
+      console.log(error);
       setIsLoading(false);
-      navigate("/500", { state: { fromError: true } });
     }
   };
 
@@ -85,7 +90,10 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900  p-5">
+    <div className="flex min-h-screen mt-5 flex-col items-center justify-center bg-gray-50 dark:bg-gray-900  p-5">
+      <div className="w-full lg:pl-36">
+        <Breadcrumbs />
+      </div>
       <div className="flex flex-col-reverse md:flex-row max-w-6xl w-full bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-hidden">
         {/* Columna Izquierda */}
         <div className="hidden md:flex md:flex-col lg:justify-center bg-blue-600 dark:bg-gray-900 text-white w-full lg:w-1/2 p-10">
@@ -216,7 +224,7 @@ export default function LoginPage() {
             ¿No tienes una cuenta?{" "}
             <NavLink
               to="/registro"
-              className="font-semibold text-blue-500 hover:text-blue-600"
+              className="text-sm text-blue-500 hover:text-blue-600 mt-2"
             >
               Regístrate
             </NavLink>

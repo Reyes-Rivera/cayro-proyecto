@@ -9,11 +9,11 @@ interface AuthContextType {
   isAuthenticated: boolean;
   auth: Boolean;
   loading: Boolean;
-  SignUp: (name: string, surname: string, email: string, phone: string, birthday: Date, password: string,gender:string) => Promise<User | null>;
+  SignUp: (name: string, surname: string, email: string, phone: string, birthday: Date, password: string,gender:string) => Promise<User | any>;
   verifyCode: (email: string, code: string) => Promise<any>;
   error: string;
-  emailToVerify: string | null; // Nuevo estado para almacenar el correo que está siendo verificado
-  isVerificationPending: boolean; // Estado para saber si se requiere la verificación del código
+  emailToVerify: string | null; 
+  isVerificationPending: boolean;
   setEmailToVerify: (email: string | null) => void;
   setIsVerificationPending: (pending: boolean) => void;
   errorTimer: string;
@@ -75,12 +75,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const res = await signUpApi({ name, surname, email, phone, birthday, password,gender });
       if (res) {
-        setEmailToVerify(email); // Establecer el correo que será verificado
-        setIsVerificationPending(true); // Indicar que el usuario necesita verificar su correo
-        localStorage.setItem('emailToVerify', email); // Guardar en localStorage para persistencia
+        setEmailToVerify(email); 
+        setIsVerificationPending(true); 
+        localStorage.setItem('emailToVerify', email);
         localStorage.setItem('isVerificationPending', 'true');
+        return res?.data;
       }
-      return res?.data;
     } catch (error: any) {
       const errorMsg = error.response?.data?.message || "Error desconocido al registrar.";
       setError(errorMsg);

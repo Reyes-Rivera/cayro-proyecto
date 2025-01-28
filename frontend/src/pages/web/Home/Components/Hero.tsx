@@ -41,7 +41,7 @@ export default function Hero() {
                 <p className="text-gray-600 dark:text-gray-300 text-lg">Años de experiencia</p>
               </div>
               <div>
-                <h4 className="text-4xl font-bold text-blue-600 dark:text-blue-400">500+</h4>
+                <h4 className="text-4xl font-bold text-blue-600 dark:text-blue-400">50+</h4>
                 <p className="text-gray-600 dark:text-gray-300 text-lg">Escuelas confían en nosotros</p>
               </div>
               <div>
