@@ -91,8 +91,8 @@ const NavBarUser = () => {
                   <Link
                     to={
                       user?.role === "ADMIN"
-                        ? "/admin-profile"
-                        : user?.role === "USER" ? "/user-profile":"/employee-profile"
+                        ? "/perfil-admin"
+                        : user?.role === "USER" ? "/perfil-usuario":"/employee-profile"
                     }
                     className="hidden md:inline-block"
                   >

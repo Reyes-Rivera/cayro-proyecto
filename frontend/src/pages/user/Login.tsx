@@ -63,7 +63,6 @@ export default function LoginPage() {
       }
       setIsLoading(false);
     } catch (error: any) {
-      console.log(error);
       setIsLoading(false);
     }
   };

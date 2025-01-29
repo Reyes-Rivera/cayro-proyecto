@@ -615,7 +615,7 @@ export default function SignUpPage() {
                       id="password-confirm"
                       type={showConfirmPassword ? "text" : "password"}
                       autoComplete="new-password"
-                      className="w-full bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                       className="w-full bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 "
                       placeholder="Confirmar contraseña"
                     />
                     <button
@@ -680,7 +680,7 @@ export default function SignUpPage() {
                     ¿Ya tienes una cuenta?{" "}
                     <NavLink
                       to="/login"
-                      className="font-semibold text-blue-500 hover:text-blue-600"
+                      className="text-sm text-blue-500 hover:text-blue-600 mt-2"
                     >
                       Iniciar sesión
                     </NavLink>

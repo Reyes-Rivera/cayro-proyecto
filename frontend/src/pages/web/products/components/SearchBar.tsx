@@ -8,7 +8,6 @@ export default function SearchBar() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    // Aquí iría la lógica de búsqueda
     console.log("Buscando:", search)
   }
 

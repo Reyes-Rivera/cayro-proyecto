@@ -3,6 +3,7 @@ import { Home, Users, Package, FileText, LogOut, Menu } from "lucide-react";
 import { ProfileView } from "./profile/Profile-views";
 import LegalDocumentsView from "./legal/LegalDocumentsView";
 import { CompanyView } from "./Company-view";
+import { useAuth } from "@/context/AuthContextType";
 
 type TabKey = "company" | "users" | "products" | "legal";
 
@@ -10,7 +11,7 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState<TabKey>("users");
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
+  const {signOut} = useAuth();
   const tabs: Record<TabKey, JSX.Element> = {
     company: <CompanyView />,
     users: <ProfileView />,
@@ -32,7 +33,7 @@ const AdminDashboard = () => {
     { key: "company", label: "Empresa", icon: <Home /> },
     { key: "products", label: "Products", icon: <Package /> },
     { key: "legal", label: "Legal", icon: <FileText /> },
-    { key: "logout", label: "Logout", icon: <LogOut /> },
+    { key: "logout", label: "Salir", icon: <LogOut /> },
   ];
 
   return (
@@ -53,7 +54,12 @@ const AdminDashboard = () => {
             {menuOptions.map((option) => (
               <li key={option.key}>
                 <button
-                  onClick={() => setActiveTab(option.key as TabKey)}
+                  onClick={() => {
+                    setActiveTab(option.key as TabKey);
+                    if(option.key === "logout") {
+                      signOut();
+                    }
+                  }}
                   className={`flex items-center gap-4 w-full p-2 rounded ${
                     activeTab === option.key
                       ? "bg-blue-100 text-blue-600 dark:bg-blue-800 dark:text-blue-300"

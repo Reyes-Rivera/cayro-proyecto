@@ -22,7 +22,7 @@ export default function Policies() {
       <main className="container mx-auto px-6 lg:px-20">
         <div className="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl overflow-hidden">
           {/* Document Header */}
-          <div className="bg-gray-100 dark:bg-gray-700 p-8 border-b dark:border-gray-600">
+          <div className="bg-gray-100 bg dark:bg-gray-700 p-8 border-b dark:border-gray-600">
             <div className="flex items-center justify-between mb-6">
               <Breadcrumbs/>
             </div>
@@ -33,7 +33,7 @@ export default function Policies() {
           </div>
 
           {/* Document Content */}
-          <div className="p-8 lg:p-12 space-y-8 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-lg shadow-md">
+          <div className="p-8 lg:p-12 space-y-8 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-lg shadow-md ">
             {policy?.length > 0 && policy[0]?.content ? (
               <div
                 className="whitespace-pre-wrap leading-relaxed text-justify"
