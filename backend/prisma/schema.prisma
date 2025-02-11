@@ -31,6 +31,7 @@ model User {
   isDeleted         Boolean   @default(false)
   sales             Sale[]
   addresses         Address[] @relation("UserAddresses")
+  cart              Cart?     @relation("UserCart")
 }
 //done
 model Configuration {
@@ -202,6 +203,7 @@ model ProductVariant {
   color     Color   @relation(fields: [colorId], references: [id])
   size      Size    @relation(fields: [sizeId], references: [id])
   saleDetails SaleDetail[] 
+  cartItems  CartItem[]
   @@unique([productId, colorId, sizeId]) 
 }
 
@@ -263,11 +265,11 @@ model SaleDetail {
 
 model Cart {
   id        Int       @id @default(autoincrement())
-  userId    Int       @unique  // Un usuario solo puede tener un carrito activo
+  userId    Int       @unique  
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  user      User      @relation(fields: [userId], references: [id])
+  user      User      @relation("UserCart", fields: [userId], references: [id])
   items     CartItem[]
 }
 
