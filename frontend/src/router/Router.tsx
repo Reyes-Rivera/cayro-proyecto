@@ -15,7 +15,6 @@ import { getCompanyInfoApi } from "@/api/company";
 import Policies from "@/pages/web/RegulatoryDocuments/Policies";
 import Terms from "@/pages/web/RegulatoryDocuments/Terms";
 import LegalBoundary from "@/pages/web/RegulatoryDocuments/LegalBoundary";
-import Contact from "@/pages/web/Contact";
 import ProductDetails from "@/pages/web/ProductDetails";
 import ProductsSection from "@/pages/web/products/ProductsSection";
 import PageNotFound from "@/pages/web/error/PageNotFound";
@@ -25,6 +24,8 @@ import AdminDashboard from "@/pages/employees/dashboard-admin/DashboardLayout";
 import AboutPage from "@/pages/web/about/AboutPage";
 import ScrollToTop from "./ScrollToTop";
 import Error400 from "@/pages/web/error/Error400";
+import ContactPage from "@/pages/web/contact/ContactPage";
+import EmployeeDashboard from "@/pages/employees/employee/DashboardLayout";
 const AppRoutes = () => {
   useEffect(() => {
     const getInfoPage = async () => {
@@ -47,7 +48,7 @@ const AppRoutes = () => {
             <Route path="/sobre-nosotros" element={<AboutPage />} />
             <Route path="/terminos" element={<Terms />} />
             <Route path="/deslinde-legal" element={<LegalBoundary />} />
-            <Route path="/contacto" element={<Contact />} />
+            <Route path="/contacto" element={<ContactPage />} />
             <Route path="/registro" element={<SignUpPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/productos" element={<ProductsSection />} />
@@ -60,9 +61,9 @@ const AppRoutes = () => {
               path="/restaurar-password/:token"
               element={<PasswordResetPage />}
             />
-
-            <Route element={<ProtectedRouterAdmin />}>
+            <Route path="/perfil-empleado" element={<EmployeeDashboard />} />
               <Route path="/perfil-admin" element={<AdminDashboard />} />
+            <Route element={<ProtectedRouterAdmin />}>
             </Route>
 
             <Route element={<ProtectedRouterUser />}>

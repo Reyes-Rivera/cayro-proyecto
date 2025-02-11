@@ -31,7 +31,7 @@ export class RegulatoryDocumentController {
     return res;
   }
 
-  @Auth([Role.ADMIN])
+  
   @Get("policy")
   async findAllPolicies() {
     const res = await this.regulatoryDocumentService.findAllPolicies();
@@ -62,7 +62,7 @@ export class RegulatoryDocumentController {
     return res;
   }
 
-  @Auth([Role.ADMIN])
+
   @Get("terms")
   async findAllTerms() {
     const res = await this.regulatoryDocumentService.findAllTerms();
@@ -70,7 +70,7 @@ export class RegulatoryDocumentController {
     return res;
   }
 
-  @Auth([Role.ADMIN])
+  
   @Get("boundary")
   async findAllBoundaries() {
     const res = await this.regulatoryDocumentService.findAllBoundaries();

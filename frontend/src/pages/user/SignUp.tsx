@@ -643,7 +643,7 @@ export default function SignUpPage() {
             )}
 
             {error && (
-              <p className="text-xs text-red-500 text-center">{error}</p>
+              <p className="text-sm text-red-500 text-center">{error}</p>
             )}
             <div
               className={`flex ${

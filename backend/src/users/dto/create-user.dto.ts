@@ -50,6 +50,5 @@ export class CreateUserDto {
   @MinLength(3)
   @MaxLength(20)
   gender: Genders;
-
   
 }

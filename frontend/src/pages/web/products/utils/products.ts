@@ -26,7 +26,7 @@ import gorraMujer from "../assets/gorramujer.png";
 import pantalon from "../assets/pantalon.png";
 import playeraDeportiva from "../assets/playeradeportiva.png";
 enum categories {
-  Uniformesescolares = "Uniformes escolares",
+  Uniformesescolares = "uniformes-escolares",
   Deportivos = "Deportivos",
   Pantalones = "Pantalones",
   Gorras = "Gorras",

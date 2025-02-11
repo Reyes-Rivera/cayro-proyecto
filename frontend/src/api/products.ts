@@ -1,0 +1,66 @@
+import axios from "./axios";
+// Categories
+export const addCategory = (data: { name: string }) =>
+  axios.post("/category", data);
+
+export const updateCategory = (id: number, data: { name: string }) =>
+  axios.patch(`/category/${id}`, data);
+
+export const deleteCategory = (id: number) => axios.delete(`/category/${id}`);
+
+export const getCategories = () => axios.get("/category");
+
+// sizes
+
+export const addSize = (data: { name: string }) => axios.post("/size", data);
+
+export const updateSize = (id: number, data: { name: string }) =>
+  axios.patch(`/size/${id}`, data);
+
+export const deleteSize = (id: number) => axios.delete(`/size/${id}`);
+
+export const getSizes = () => axios.get("/size");
+
+// sleeves
+
+export const addSleeve = (data: { name: string }) => axios.post("/sleeve", data);
+
+export const updateSleeve = (id: number, data: { name: string }) =>
+  axios.patch(`/sleeve/${id}`, data);
+
+export const deleteSleeve = (id: number) => axios.delete(`/sleeve/${id}`);
+
+export const getSleeve = () => axios.get("/sleeve");
+
+// Gender
+
+export const addGender = (data: { name: string }) => axios.post("/gender", data);
+
+export const updateGender = (id: number, data: { name: string }) =>
+  axios.patch(`/gender/${id}`, data);
+
+export const deleteGender = (id: number) => axios.delete(`/gender/${id}`);
+
+export const getGenders = () => axios.get("/gender");
+
+// Brand 
+
+export const addBrand = (data: { name: string }) => axios.post("/brand", data);
+
+export const updateBrand = (id: number, data: { name: string }) =>
+  axios.patch(`/brand/${id}`, data);
+
+export const deleteBrand = (id: number) => axios.delete(`/brand/${id}`);
+
+export const getBrands = () => axios.get("/brand");
+
+// color 
+
+export const addColor = (data: { name: string, hexValue:string }) => axios.post("/colors", data);
+
+export const updateColor = (id: number, data: { name: string,hexValue:string }) =>
+  axios.patch(`/colors/${id}`, data);
+
+export const deleteColor = (id: number) => axios.delete(`/colors/${id}`);
+
+export const getColors = () => axios.get("/colors");

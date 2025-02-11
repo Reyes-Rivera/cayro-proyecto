@@ -22,7 +22,6 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (error === "Error desconocido al iniciar sesión.") {
-      console.log("object");
       navigate("/500", { state: { fromError: true } });
     }
     let timer: NodeJS.Timeout;
@@ -32,7 +31,7 @@ export default function LoginPage() {
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [lockoutTime,error]);
+  }, [lockoutTime, error]);
 
   const handleCaptchaChange = (token: string | null) => {
     setCaptchaToken(token);
@@ -208,7 +207,7 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="px-4 w-full text-center justify-center py-2 bg-blue-500 font-bold text-white rounded-md flex items-center"
+              className="px-4 w-full text-center justify-center py-2 bg-blue-600 font-bold text-white rounded-md flex items-center"
               disabled={lockoutTime > 0 || isLoading}
             >
               {isLoading ? (

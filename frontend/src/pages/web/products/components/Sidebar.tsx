@@ -103,9 +103,9 @@ export default function Sidebar({
             />
             <button
               type="submit"
-              className="absolute right-3 top-1/2 transform -translate-y-1/2"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 "
             >
-              <Search className="text-gray-400 h-4 w-4" />
+              <Search className="text-gray-800 h-6 w-6 " />
             </button>
           </div>
         </form>
@@ -116,7 +116,7 @@ export default function Sidebar({
             <h3 className="font-semibold mb-4 text-gray-900">Categorías</h3>
             <div className="space-y-3">
               {[
-                "Uniformes escolares",
+                "Uniformes Escolares",
                 "Deportivos",
                 "Pantalones",
                 "Gorras",
@@ -124,7 +124,7 @@ export default function Sidebar({
                 "Playeras",
                 "Calcetas",
                 "Shorts",
-                "Espinilleras"
+                "Espinilleras",
               ].map((category) => (
                 <label
                   key={category}
@@ -133,7 +133,12 @@ export default function Sidebar({
                   <input
                     type="checkbox"
                     checked={filters.categories.includes(category)}
-                    onChange={() => handleCategoryChange(category)}
+                    onChange={() => {
+                      if (category === "Uniformes Escolares") {
+                        handleCategoryChange("uniformes-escolares");
+                      }
+                      handleCategoryChange(category);
+                    }}
                     className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
                   <span className="ml-3 text-sm text-gray-600 group-hover:text-gray-900 transition-colors">
@@ -196,29 +201,33 @@ export default function Sidebar({
                 <span className="font-semibold text-gray-900">Colores</span>
               </AccordionTrigger>
               <AccordionContent>
-                
                 <div className="flex flex-wrap gap-3 pt-4">
                   {[
-                    "#FF0000",
-                    "#FFFFFF",
-                    "#008000",
-                    "#FFA500",
-                    "#808080",
-                    "#FFC0CB",
-                    "#000000",
-                    "#800080",
-                    "#3B82F6",
-                  ].map((color) => (
-                    <button
+                    { color: "#FF0000", name: "Rojo" },
+                    { color: "#FFFFFF", name: "Blanco" },
+                    { color: "#008000", name: "Verde" },
+                    { color: "#FFA500", name: "Naranja" },
+                    { color: "#808080", name: "Gris" },
+                    { color: "#FFC0CB", name: "Rosa" },
+                    { color: "#000000", name: "Negro" },
+                    { color: "#800080", name: "Morado" },
+                    { color: "#3B82F6", name: "Azul" },
+                  ].map(({ color, name }) => (
+                    <div
                       key={color}
-                      className={`w-8 h-8 rounded-full ring-2 ring-offset-2 transition-all border ${
-                        filters.colors.includes(color)
-                          ? "ring-gray-900"
-                          : "ring-transparent hover:ring-gray-300"
-                      }`}
-                      style={{ backgroundColor: color }}
-                      onClick={() => handleColorChange(color)}
-                    />
+                      className="flex flex-col items-center gap-2"
+                    >
+                      <button
+                        className={`w-8 h-8 rounded-full ring-2 ring-offset-2 transition-all border ${
+                          filters.colors.includes(color)
+                            ? "ring-gray-900"
+                            : "ring-transparent hover:ring-gray-300"
+                        }`}
+                        style={{ backgroundColor: color }}
+                        onClick={() => handleColorChange(color)}
+                      />
+                      <span className="text-sm text-gray-700">{name}</span>
+                    </div>
                   ))}
                 </div>
               </AccordionContent>

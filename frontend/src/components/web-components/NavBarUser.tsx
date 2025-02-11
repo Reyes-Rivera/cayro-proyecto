@@ -7,6 +7,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 import { Link } from "react-router-dom";
 import { getCompanyInfoApi } from "@/api/company";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@radix-ui/react-dropdown-menu";
+import { Button } from "../ui/button";
 
 const NavBarUser = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -39,7 +46,17 @@ const NavBarUser = () => {
       setDarkMode(true);
     }
   }, []);
-
+  const categories = {
+    Uniformesescolares: "uniformes-escolares",
+    Deportivos: "deportivos",
+    Pantalones: "pantalones",
+    Gorras: "gorras",
+    Polo: "polo",
+    Playeras: "playeras",
+    Calcetas: "calcetas",
+    Short: "shorts",
+    Espinilleras: "espinilleras",
+  };
   return (
     <div
       className={`sticky top-0 z-50 transition-colors duration-300 bg-white shadow-md dark:bg-gray-900`}
@@ -71,17 +88,132 @@ const NavBarUser = () => {
               >
                 Inicio
               </NavLink>
-              <NavLink
-                to="/productos"
-                className={({ isActive }) =>
-                  isActive
-                    ? "text-black dark:text-white border-b-2 border-blue-600"
-                    : "text-gray-800 dark:text-gray-300 hover:text-blue-600 transition-all"
-                }
-              >
-                Productos
-              </NavLink>
 
+              {/* Menú de Productos */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 px-4 py-2 rounded-md transition-colors"
+                  >
+                    Productos
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg">
+                  <DropdownMenuItem
+                    key={"productos"}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <Link
+                      to={`/productos`}
+                      className="w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                    >
+                      Productos
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    key={"uniformes-escolares"}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <Link
+                      to={`/productos?categoria=${categories.Uniformesescolares}`}
+                      className="w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                    >
+                      Uniformes Escolares
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    key={"deportivos"}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <Link
+                      to={`/productos?categoria=${categories.Deportivos}`}
+                      className="w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                    >
+                      Deportivos
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    key={"pantalones"}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <Link
+                      to={`/productos?categoria=${categories.Pantalones}`}
+                      className="w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                    >
+                      Pantalones
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    key={"gorras"}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <Link
+                      to={`/productos?categoria=${categories.Gorras}`}
+                      className="w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                    >
+                      Gorras
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    key={"polo"}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <Link
+                      to={`/productos?categoria=${categories.Polo}`}
+                      className="w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                    >
+                      Polo
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    key={"playeras"}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <Link
+                      to={`/productos?categoria=${categories.Playeras}`}
+                      className="w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                    >
+                      Playeras
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    key={"calcetas"}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <Link
+                      to={`/productos?categoria=${categories.Calcetas}`}
+                      className="w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                    >
+                      Calcetas
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    key={"shorts"}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <Link
+                      to={`/productos?categoria=${categories.Short}`}
+                      className="w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                    >
+                      Shorts
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    key={"espinilleras"}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <Link
+                      to={`/productos?categoria=${categories.Espinilleras}`}
+                      className="w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                    >
+                      Espinilleras
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Avatar o Iniciar Sesión */}
               {auth ? (
                 <div className="flex justify-center items-center gap-2">
                   <Avatar className="h-8 w-8">
@@ -92,9 +224,11 @@ const NavBarUser = () => {
                     to={
                       user?.role === "ADMIN"
                         ? "/perfil-admin"
-                        : user?.role === "USER" ? "/perfil-usuario":"/employee-profile"
+                        : user?.role === "USER"
+                        ? "/perfil-usuario"
+                        : "/employee-profile"
                     }
-                    className="hidden md:inline-block"
+                    className="hidden md:inline-block text-gray-700 dark:text-gray-300"
                   >
                     {user?.name}
                   </Link>
@@ -108,6 +242,7 @@ const NavBarUser = () => {
                 </NavLink>
               )}
 
+              {/* Botón de Tema (Modo Claro/Oscuro) */}
               <button
                 onClick={toggleTheme}
                 className="p-2 rounded-full bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 transition-all"
@@ -115,7 +250,7 @@ const NavBarUser = () => {
                 {darkMode ? (
                   <Sun className="h-6 w-6 text-yellow-500" />
                 ) : (
-                  <Moon className="h-6 w-6 text-gray-900" />
+                  <Moon className="h-6 w-6 text-gray-900 dark:text-gray-300" />
                 )}
               </button>
             </div>
@@ -129,7 +264,7 @@ const NavBarUser = () => {
                 {darkMode ? (
                   <Sun className="h-6 w-6 text-yellow-500" />
                 ) : (
-                  <Moon className="h-6 w-6 text-gray-900" />
+                  <Moon className="h-6 w-6 text-gray-900 dark:text-gray-300" />
                 )}
               </button>
               <button
@@ -146,6 +281,7 @@ const NavBarUser = () => {
           </div>
         </div>
 
+        {/* Mobile Menu */}
         <div
           className={`fixed top-0 right-0 h-full bg-white dark:bg-gray-900 shadow-lg z-50 transition-transform duration-300 ${
             isMenuOpen ? "translate-x-0" : "translate-x-full"
@@ -165,20 +301,20 @@ const NavBarUser = () => {
           <div className="space-y-1 pt-4 pb-3">
             <NavLink
               to="/"
-              className="block px-4 py-2 text-gray-800 dark:text-gray-300"
+              className="block px-4 py-2 text-gray-800 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               Inicio
             </NavLink>
             <NavLink
               to="/productos"
-              className="block px-4 py-2 text-gray-800 dark:text-gray-300"
+              className="block px-4 py-2 text-gray-800 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               Productos
             </NavLink>
             {!auth && (
               <NavLink
                 to="/login"
-                className="block px-4 py-2 text-gray-800 dark:text-gray-300"
+                className="block px-4 py-2 text-gray-800 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
               >
                 Iniciar sesión
               </NavLink>

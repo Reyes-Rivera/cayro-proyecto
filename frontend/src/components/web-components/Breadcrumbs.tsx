@@ -2,12 +2,8 @@ import { useLocation, Link } from "react-router-dom";
 import { ChevronRight, Home } from "lucide-react";
 import { useEffect, useState } from "react";
 
-// Configuración de nombres personalizados para las rutas
 const routeNames: Record<string, string> = {
   "/": "Inicio",
-  "/products": "Productos",
-  "/terms": "Términos y Condiciones",
-  "/about": "Acerca de Nosotros",
   "/recuperar-password": "Recuperar contraseña",
 };
 
@@ -19,7 +15,6 @@ export default function Breadcrumbs() {
 
   useEffect(() => {
     if (location.pathname === "/") {
-      // Reinicia breadcrumbs al estar en Inicio
       setBreadcrumbs([]);
       localStorage.removeItem("breadcrumbs");
     } else {
@@ -27,12 +22,10 @@ export default function Breadcrumbs() {
         const currentPathIndex = prev.indexOf(location.pathname);
 
         if (currentPathIndex === -1) {
-          // Agrega la ruta actual si no está en los breadcrumbs
           const updatedBreadcrumbs = [...prev, location.pathname];
           localStorage.setItem("breadcrumbs", JSON.stringify(updatedBreadcrumbs));
           return updatedBreadcrumbs;
         } else {
-          // Elimina rutas posteriores si retrocedemos
           const updatedBreadcrumbs = prev.slice(0, currentPathIndex + 1);
           localStorage.setItem("breadcrumbs", JSON.stringify(updatedBreadcrumbs));
           return updatedBreadcrumbs;
@@ -41,7 +34,6 @@ export default function Breadcrumbs() {
     }
   }, [location.pathname]);
 
-  // Si estamos en la página de inicio, no mostramos breadcrumbs
   if (location.pathname === "/") {
     return null;
   }
