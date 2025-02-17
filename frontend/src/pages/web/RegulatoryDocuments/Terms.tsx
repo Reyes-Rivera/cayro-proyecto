@@ -2,9 +2,11 @@ import { currentTerm } from "@/api/terms";
 import Breadcrumbs from "@/components/web-components/Breadcrumbs";
 import { RegulatoryDocument } from "@/pages/employees/dashboard-admin/legal/LegalDocumentsView";
 import { useEffect, useState } from "react";
+import heroImage from "../Home/assets/hero.jpg";
 
 export default function Terms() {
   const [terms, setTerms] = useState<RegulatoryDocument[]>([]);
+
   useEffect(() => {
     const getTerms = async () => {
       const res = await currentTerm();
@@ -12,20 +14,31 @@ export default function Terms() {
     };
     getTerms();
   }, []);
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex py-20 lg:py-28">
-      <main className="container mx-auto px-6 lg:px-20">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+      {/* Hero Section */}
+      <div
+        className="relative h-96 flex items-center justify-center bg-cover bg-center"
+        style={{ backgroundImage: `url(${heroImage})` }}
+      >
+        <div className="absolute inset-0 bg-black bg-opacity-50" />
+        <div className="relative z-10 text-center text-white max-w-5xl px-4">
+          <h1 className="text-5xl md:text-6xl font-extrabold mb-6">
+            Términos y condiciones
+          </h1>
+          <div className="text-white [&_*]:!text-white flex justify-center">
+            <Breadcrumbs />
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <main className="container mx-auto px-6 lg:px-20 ">
         <div className="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl overflow-hidden">
           {/* Document Header */}
-          <div className="bg-gray-100 dark:bg-gray-700 p-8 border-b dark:border-gray-600">
-            <div className="flex items-center justify-between mb-6">
-             <Breadcrumbs/>
-              
-            </div>
-            <h1 className="text-3xl font-extrabold">Términos y Condiciones</h1>
-            {/* <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-              Última actualización: {new Date().toLocaleDateString()}
-            </p> */}
+          <div className="bg-gray-100 font-bold dark:bg-gray-900 p-8 border-b dark:border-gray-600">
+            Términos y condiciones
           </div>
 
           {/* Document Content */}

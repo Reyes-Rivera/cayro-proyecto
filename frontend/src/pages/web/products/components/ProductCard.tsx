@@ -1,4 +1,5 @@
-import { ShoppingCart, Eye } from "lucide-react";
+import { Eye } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface Product {
   id: number;
@@ -9,27 +10,41 @@ interface Product {
 
 export default function ProductCard({ product }: { product: Product }) {
   return (
-    <div className="group bg-white dark:bg-gray-700 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 p-2">
-      <div className="relative aspect-square mb-3 overflow-hidden rounded-lg hover:cursor-pointer">
+    <div className="group bg-white dark:bg-gray-700 hover:shadow-xl transition-all duration-300 overflow-hidden relative shadow-lg">
+      {/* Imagen del producto */}
+      <div className="relative aspect-square overflow-hidden bg-gray-100 rounded-t-lg">
         <img
           src={product.image || "/placeholder.svg"}
           alt={product.name}
-          className="object-cover transition-all duration-300 group-hover:opacity-75 group-hover:scale-105"
+          className="object-cover w-full h-full transition-all duration-300 group-hover:opacity-50 group-hover:scale-105"
         />
-        <div className="absolute inset-0 font-bold flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-gray-50/20">
-          <Eye className="mr-2 h-4 w-4" />
-          Ver detalles
-        </div>
+
+        {/* Botón "Ver detalles" en el centro de la imagen */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }} // Inicia fuera de la vista (arriba)
+          whileHover={{ opacity: 1, y: 0 }} // Aparece y cae
+          transition={{ duration: 0.3 }} // Duración de la animación
+          className="absolute inset-0 flex items-center justify-center"
+        >
+          <button className="flex items-center justify-center px-4 py-2  font-bold">
+            <Eye className="mr-2 h-4 w-4" />
+            Ver detalles
+          </button>
+        </motion.div>
       </div>
-      <div>
-        <h3 className="font-bold text-sm mb-1 text-gray-900">{product.name}</h3>
-        <div className="flex items-center justify-between">
-          <p className="font-semibold text-gray-600">
+
+      {/* Detalles del producto */}
+      <div className="p-4 border">
+        {/* Nombre del producto */}
+        <h3 className="font-bold text-center text-lg mb-1 text-gray-900 dark:text-gray-100">
+          {product.name}
+        </h3>
+
+        {/* Precio */}
+        <div className="flex items-center justify-center">
+          <p className="font-semibold text-center dark:text-gray-100">
             ${product.price.toFixed(2)}
           </p>
-          <button className="w-10 h-10  dark:bg-blue-700 rounded-full flex items-center justify-center shadow-md hover:bg-blue-200 dark:hover:bg-blue-600 transition">
-            <ShoppingCart className="w-5 h-5 text-blue-600 dark:text-blue-300" />
-          </button>
         </div>
       </div>
     </div>

@@ -47,9 +47,7 @@ export default function Sidebar({
   const handleCategoryChange = (category: string) => {
     setFilters((prev) => ({
       ...prev,
-      categories: prev.categories.includes(category)
-        ? prev.categories.filter((c) => c !== category)
-        : [...prev.categories, category],
+      categories: prev.categories.includes(category) ? [] : [category], // Solo permite una categoría seleccionada
     }));
   };
 
@@ -126,25 +124,17 @@ export default function Sidebar({
                 "Shorts",
                 "Espinilleras",
               ].map((category) => (
-                <label
+                <button
                   key={category}
-                  className="flex items-center group cursor-pointer"
+                  onClick={() => handleCategoryChange(category)}
+                  className={`w-full text-left text-sm transition-colors ${
+                    filters.categories.includes(category)
+                      ? "text-blue-600 font-medium" // Texto en azul si está seleccionado
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
                 >
-                  <input
-                    type="checkbox"
-                    checked={filters.categories.includes(category)}
-                    onChange={() => {
-                      if (category === "Uniformes Escolares") {
-                        handleCategoryChange("uniformes-escolares");
-                      }
-                      handleCategoryChange(category);
-                    }}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="ml-3 text-sm text-gray-600 group-hover:text-gray-900 transition-colors">
-                    {category}
-                  </span>
-                </label>
+                  {category}
+                </button>
               ))}
             </div>
           </div>
@@ -220,13 +210,21 @@ export default function Sidebar({
                       <button
                         className={`w-8 h-8 rounded-full ring-2 ring-offset-2 transition-all border ${
                           filters.colors.includes(color)
-                            ? "ring-gray-900"
+                            ? "ring-blue-600" // Borde azul si está seleccionado
                             : "ring-transparent hover:ring-gray-300"
                         }`}
                         style={{ backgroundColor: color }}
                         onClick={() => handleColorChange(color)}
                       />
-                      <span className="text-sm text-gray-700">{name}</span>
+                      <span
+                        className={`text-sm ${
+                          filters.colors.includes(color)
+                            ? "text-blue-600" // Texto en azul si está seleccionado
+                            : "text-gray-700"
+                        }`}
+                      >
+                        {name}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -243,7 +241,7 @@ export default function Sidebar({
                   key={size}
                   className={`h-10 rounded border text-sm font-medium transition-colors ${
                     filters.sizes.includes(size)
-                      ? "border-blue-600 bg-blue-50 text-blue-600"
+                      ? "border-blue-600 bg-blue-50 text-blue-600" // Estilo azul si está seleccionado
                       : "border-gray-200 hover:border-blue-600 hover:text-blue-600"
                   }`}
                   onClick={() => handleSizeChange(size)}

@@ -33,7 +33,7 @@ const steps = [
 
 export default function Process() {
   return (
-    <section className="py-20 dark:bg-gray-900">
+    <section className="py-20 bg-gray-50 dark:bg-gray-900">
       <div className="container mx-auto px-4">
         {/* Title */}
         <h2 className="text-4xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight text-center mb-12">
@@ -51,9 +51,9 @@ export default function Process() {
               >
                 {/* Icon */}
                 <div
-                  className={`w-20 h-20 ${step.bgColor} rounded-full flex items-center justify-center shadow-lg mb-6`}
+                  className={`w-16 h-16 ${step.bgColor} rounded-full flex items-center justify-center shadow-lg mb-6`}
                 >
-                  <Icon className="w-10 h-10 text-white" />
+                  <Icon className="w-8 h-8 text-white" />
                 </div>
                 {/* Title */}
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">

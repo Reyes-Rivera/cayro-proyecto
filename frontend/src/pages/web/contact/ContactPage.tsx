@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { CompanyProfile } from "@/types/CompanyInfo";
 import { getCompanyInfoApi } from "@/api/company";
 import Breadcrumbs from "@/components/web-components/Breadcrumbs";
-
+import backgroundImage from "../Home/assets/hero.jpg";
 export default function ContactPage() {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -37,6 +37,7 @@ export default function ContactPage() {
   };
 
   const handleSubmit = (e: React.FormEvent) => {
+    setIsLoading(true);
     e.preventDefault();
     console.log(formData);
     alert("Mensaje enviado");
@@ -55,78 +56,101 @@ export default function ContactPage() {
 
   return (
     <div className="min-h-screen  dark:bg-gray-900">
-      <div className=" mx-auto  py-16">
+      <div className=" mx-auto  ">
         {/* Header Section */}
-        <div className="text-center py-4 mb-16 h-52 bg-gray-50 dark:bg-gray-800">
+        <div
+          style={{ backgroundImage: `url(${backgroundImage})` }}
+          className="relative text-center py-12 mb-16 h-80 bg-gray-50 dark:bg-gray-800 bg-cover bg-center bg-no-repeat"
+        >
+          {/* Capa de opacidad para mejorar visibilidad */}
+          <div className="absolute inset-0 bg-black bg-opacity-50" />
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
+            className="relative mt-6"
           >
-            <h2 className="text-sm font-semibold dark:text-white tracking-wide uppercase">
+            <h2 className="text-lg font-semibold text-white tracking-wide uppercase">
               CONTÁCTANOS
             </h2>
-            <h1 className="mt-3 text-4xl font-extrabold text-blue-600  sm:text-5xl tracking-tight">
+            <h1 className="mt-4 text-5xl font-extrabold text-white sm:text-6xl tracking-tight">
               Nos encantaría hablar contigo
             </h1>
+            <div className="text-white [&_*]:!text-white flex justify-center">
+              <Breadcrumbs />
+            </div>
           </motion.div>
         </div>
+        <div className="flex flex-col items-center text-center mb-10">
+          <div className="flex items-center gap-4">
+            <div className="border-t-2 border-blue-600 w-20 sm:w-72"></div>
+            <span className="bg-blue-600 text-white text-sm px-4 py-1 rounded-full font-semibold uppercase">
+              Contáctanos
+            </span>
+            <div className="border-t-2 border-blue-600 w-20 sm:w-72"></div>
+          </div>
 
-        <div className="grid grid-cols-1 max-w-7xl m-auto gap-6 mb-14 sm:grid-cols-3 mt-[-118px]">
+          <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-black">
+            Ponte en Contacto
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 max-w-7xl m-auto gap-6 mb-14 sm:grid-cols-3">
           <motion.div
-            className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-lg"
+            className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-md border border-gray-200"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <div className="flex items-center gap-3">
-              <Phone className="h-5 w-5 text-blue-600 dark:text-blue-300" />
-              <h3 className="font-semibold text-gray-900 dark:text-white">
-                LLÁMANOS
-              </h3>
+            <div className="flex flex-col items-center">
+              <div className="bg-blue-600 text-white p-3 rounded-md">
+                <Phone className="h-6 w-6" />
+              </div>
+              <h3 className="font-bold text-lg text-black mt-4">LLÁMANOS</h3>
             </div>
-            <p className="mt-2 text-lg text-gray-700 dark:text-gray-300">
+            <p className="mt-2 text-gray-600 text-center">
               {info?.contactInfo[0].phone}
             </p>
           </motion.div>
 
           <motion.div
-            className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-lg"
+            className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-md border border-gray-200"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            <div className="flex items-center gap-3">
-              <Mail className="h-5 w-5 text-blue-600 dark:text-blue-300" />
-              <h3 className="font-semibold text-gray-900 dark:text-white">
-                EMAIL
-              </h3>
+            <div className="flex flex-col items-center">
+              <div className="bg-blue-600 text-white p-3 rounded-md">
+                <Mail className="h-6 w-6" />
+              </div>
+              <h3 className="font-bold text-lg text-black mt-4">EMAIL</h3>
             </div>
-            <p className="mt-2 text-lg text-gray-700 dark:text-gray-300">
+            <p className="mt-2 text-gray-600 text-center">
               {info?.contactInfo[0].email}
             </p>
           </motion.div>
 
           <motion.div
-            className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-lg"
+            className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-md border border-gray-200"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
           >
-            <div className="flex items-center gap-3">
-              <MapPin className="h-5 w-5 text-blue-600 dark:text-blue-300" />
-              <h3 className="font-semibold text-gray-900 dark:text-white">
+            <div className="flex flex-col items-center">
+              <div className="bg-blue-600 text-white p-3 rounded-md">
+                <MapPin className="h-6 w-6" />
+              </div>
+              <h3 className="font-bold text-lg text-black mt-4">
                 LOCAL PRINCIPAL
               </h3>
             </div>
-            <p className="mt-2 text-lg text-gray-700 dark:text-gray-300">
+            <p className="mt-2 text-gray-600 text-center">
               {info?.contactInfo[0].address}
             </p>
           </motion.div>
         </div>
-        <div className="max-w-7xl m-auto">
-          <Breadcrumbs />
-        </div>
+
         {/* Main Content */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16 max-w-7xl m-auto shadow-lg rounded-lg overflow-hidden">
           <motion.div
@@ -144,9 +168,10 @@ export default function ContactPage() {
               Cuéntanos sobre tu proyecto
             </h2>
             <p className="text-lg mb-24">
-              Comparte tu visión para tus uniformes escolares. Ya sea que
-              necesites un pedido personalizado o tengas preguntas sobre
-              nuestros productos, estamos aquí para ayudarte.
+              Comparte tu visión para tus prendas personalizadas. Ya sea que
+              necesites playeras, polos, camisas, ropa deportiva, pantalones o
+              cualquier otra prenda, estamos aquí para ayudarte a hacerla
+              realidad.
             </p>
 
             {/* Redes Sociales */}

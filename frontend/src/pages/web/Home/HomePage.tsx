@@ -12,9 +12,9 @@ const HomePage = () => {
     <main className="min-h-screen  ">
       <Breadcrumbs/>
       <Hero />
-      <FeaturedProducts />
-      <FeaturedCategories />
       <Benefits />
+      <FeaturedCategories />
+      <FeaturedProducts />
       <Process />
       <CustomOrder />
     </main>

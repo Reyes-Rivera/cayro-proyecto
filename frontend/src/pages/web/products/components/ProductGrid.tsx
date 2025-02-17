@@ -3,7 +3,6 @@ import ProductCard from "./ProductCard";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Filter } from "lucide-react";
 import { products } from "../utils/products";
-import Breadcrumbs from "@/components/web-components/Breadcrumbs";
 import { useSearchParams } from "react-router-dom";
 
 interface ProductGridProps {
@@ -26,11 +25,14 @@ export default function ProductGrid({
   const [filteredProducts, setFilteredProducts] = useState(products);
   const productsPerPage = 12;
   const [searchParams] = useSearchParams();
-  const category = searchParams.get("categoria");
   const color = searchParams.get("color");
   const size = searchParams.get("talla");
   const gender = searchParams.get("genero");
   const searchQueryparam = searchParams.get("search") || "";
+
+  // Obtener la categoría seleccionada desde filters
+  const selectedCategory =
+    filters.categories.length > 0 ? filters.categories[0] : null;
 
   useEffect(() => {
     const searchTerm =
@@ -38,8 +40,6 @@ export default function ProductGrid({
 
     const filtered = products.filter((product) => {
       // Filtros por parámetros de URL
-      const matchesCategory =
-        !category || product.category.toLowerCase() === category.toLowerCase();
       const matchesColor = !color || product.color === color;
       const matchesSize = !size || product.size === size;
       const matchesGender = !gender || product.sex === gender;
@@ -60,7 +60,6 @@ export default function ProductGrid({
 
       // Aplicar todos los filtros simultáneamente con AND lógico
       return (
-        matchesCategory &&
         matchesColor &&
         matchesSize &&
         matchesGender &&
@@ -72,10 +71,9 @@ export default function ProductGrid({
       );
     });
 
-
     setFilteredProducts(filtered);
     setCurrentPage(1);
-  }, [category, color, size, gender, searchQuery, searchQueryparam, filters]);
+  }, [color, size, gender, searchQuery, searchQueryparam, filters]);
 
   const indexOfLastProduct = currentPage * productsPerPage;
   const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
@@ -88,9 +86,13 @@ export default function ProductGrid({
   return (
     <div className="space-y-6">
       <div className="flex flex-col justify-between">
-        <Breadcrumbs />
 
-        <div className="flex items-center gap-2 justify-between md:justify-start ">
+        {/* Mostrar la categoría seleccionada o "Productos" */}
+        <h2 className="text-xl font-bold mt-2">
+          {selectedCategory ? selectedCategory : "Productos"}
+        </h2>
+
+        <div className="flex items-center gap-2 justify-between md:justify-start">
           <p className="text-sm text-gray-500">
             Mostrando {currentProducts.length} de {filteredProducts.length}{" "}
             productos
@@ -107,7 +109,9 @@ export default function ProductGrid({
       </div>
 
       {filteredProducts.length === 0 ? (
-        <p className="text-center text-gray-500 pt-28">No se encontraron productos</p>
+        <p className="text-center text-gray-500 pt-28">
+          No se encontraron productos
+        </p>
       ) : (
         <>
           <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -118,6 +122,7 @@ export default function ProductGrid({
 
           <div className="flex flex-col justify-end h-full">
             <div className="flex items-center justify-center gap-2 mt-auto pt-6">
+              {/* Botón de página anterior */}
               <Button
                 variant="outline"
                 size="icon"
@@ -129,11 +134,17 @@ export default function ProductGrid({
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
+
+              {/* Botones de páginas */}
               {Array.from({ length: totalPages }).map((_, index) => (
                 <Button
                   key={index + 1}
-                  variant={currentPage === index + 1 ? "default" : "outline"}
-                  className="min-w-[40px]"
+                  variant="outline" // Siempre outline, pero cambiamos el estilo manualmente
+                  className={`min-w-[40px] ${
+                    currentPage === index + 1
+                      ? "bg-blue-100 text-blue-600 font-bold hover:bg-blue-500" // Página actual: fondo azul y texto blanco
+                      : "bg-white text-gray-700 hover:bg-gray-100" // Otras páginas: fondo blanco y texto gris
+                  }`}
                   onClick={() => {
                     window.scrollTo(0, 0);
                     setCurrentPage(index + 1);
@@ -142,6 +153,8 @@ export default function ProductGrid({
                   {index + 1}
                 </Button>
               ))}
+
+              {/* Botón de página siguiente */}
               <Button
                 variant="outline"
                 size="icon"
