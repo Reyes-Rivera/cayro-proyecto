@@ -60,8 +60,7 @@ export default function Terms() {
                       <div key={index} className="mb-6">
                         {/* Título principal en negritas */}
                         <p className="font-bold text-lg">
-                          {match[1]}{" "}
-                          <span>{match[2]}</span>
+                          {match[1]} <span>{match[2]}</span>
                         </p>
                       </div>
                     );

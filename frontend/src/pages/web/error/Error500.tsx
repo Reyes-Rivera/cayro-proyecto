@@ -5,9 +5,9 @@ import { useLocation, Navigate } from "react-router-dom";
 const Error500 = () => {
   const location = useLocation();
 
-  // if (!location.state || !location.state.fromError) {
-  //   return <Navigate to="/" replace />;
-  // }
+  if (!location.state || !location.state.fromError) {
+    return <Navigate to="/" replace />;
+  }
   return (
     <section className="min-h-screen flex items-center justify-center p-6">
       <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-12 flex flex-col lg:flex-row items-stretch w-[90%] max-w-6xl lg:gap-16">

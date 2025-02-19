@@ -1,5 +1,5 @@
-import type React from "react"
-import type { Product } from "../data/sampleData"
+import type React from "react";
+import type { Product } from "../data/sampleData";
 
 interface ProductListProps {
   products: Product[]
@@ -52,8 +52,8 @@ const ProductList: React.FC<ProductListProps> = ({ products, onEdit, onDelete, o
         </tbody>
       </table>
     </div>
-  )
-}
+  );
+};
 
-export default ProductList
+export default ProductList;
 

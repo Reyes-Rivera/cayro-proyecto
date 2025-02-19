@@ -123,11 +123,12 @@ const GenderPage = () => {
         } else {
           throw new Error("No se pudo eliminar el tipo de género.");
         }
-      } catch (error) {
+      } catch (error:any) {
+
         setIsLoading(false);
         Swal.fire({
           title: "Error",
-          text: "Ocurrió un problema al eliminar el tipo de género. Inténtalo de nuevo.",
+          text: error.response.data.message||"Error al eliminar el género",
           icon: "error",
           confirmButtonColor: "#d33",
         });

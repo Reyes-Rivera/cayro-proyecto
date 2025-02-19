@@ -59,7 +59,7 @@ export function PasswordSection() {
     );
   };
 
-  const getStrengthColor = (strength: any) => {
+  const getStrengthColor = (strength: number) => {
     if (strength <= 20) return "bg-red-500";
     if (strength <= 40) return "bg-orange-500";
     if (strength <= 60) return "bg-yellow-500";
@@ -67,7 +67,7 @@ export function PasswordSection() {
     return "bg-green-500";
   };
 
-  const getStrengthName = (strength: any) => {
+  const getStrengthName = (strength: number) => {
     if (strength <= 20) return "Muy débil";
     if (strength <= 40) return "Débil";
     if (strength <= 60) return "Moderada";

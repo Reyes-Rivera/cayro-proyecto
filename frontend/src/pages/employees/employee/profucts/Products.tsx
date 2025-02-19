@@ -1,15 +1,15 @@
-import type React from "react"
-import { useState } from "react"
-import ProductList from "./components/ProductList"
-import ProductDetails from "./components/ProductDetails"
-import { type Product, sampleProducts } from "./data/sampleData"
-import ProductForm from "./components/ProductForm"
+import type React from "react";
+import { useState } from "react";
+import ProductList from "./components/ProductList";
+import ProductDetails from "./components/ProductDetails";
+import { type Product, sampleProducts } from "./data/sampleData";
+import ProductForm from "./components/ProductForm";
 
 const Products: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>(sampleProducts)
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
-  const [isEditing, setIsEditing] = useState(false)
-  const [isViewing, setIsViewing] = useState(false)
+  const [products, setProducts] = useState<Product[]>(sampleProducts);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isViewing, setIsViewing] = useState(false);
 
   const handleAddProduct = (newProduct: Omit<Product, "id" | "createdAt" | "updatedAt">) => {
     const product: Product = {
@@ -22,10 +22,10 @@ const Products: React.FC = () => {
         id: index + 1,
         productId: products.length + 1,
       })),
-    }
-    setProducts([...products, product])
-    setIsEditing(false)
-  }
+    };
+    setProducts([...products, product]);
+    setIsEditing(false);
+  };
 
   const handleEditProduct = (updatedProduct: Omit<Product, "id" | "createdAt" | "updatedAt">) => {
     if (selectedProduct) {
@@ -42,24 +42,24 @@ const Products: React.FC = () => {
               })),
             }
           : p,
-      )
-      setProducts(updatedProducts)
-      setSelectedProduct(null)
-      setIsEditing(false)
+      );
+      setProducts(updatedProducts);
+      setSelectedProduct(null);
+      setIsEditing(false);
     }
-  }
+  };
 
   const handleDeleteProduct = (id: number) => {
-    setProducts(products.filter((p) => p.id !== id))
-  }
+    setProducts(products.filter((p) => p.id !== id));
+  };
 
   const handleViewProduct = (id: number) => {
-    const product = products.find((p) => p.id === id)
+    const product = products.find((p) => p.id === id);
     if (product) {
-      setSelectedProduct(product)
-      setIsViewing(true)
+      setSelectedProduct(product);
+      setIsViewing(true);
     }
-  }
+  };
 
   return (
     <div className="App bg-gray-100 min-h-screen">
@@ -70,10 +70,10 @@ const Products: React.FC = () => {
             <ProductList
               products={products}
               onEdit={(id) => {
-                const product = products.find((p) => p.id === id)
+                const product = products.find((p) => p.id === id);
                 if (product) {
-                  setSelectedProduct(product)
-                  setIsEditing(true)
+                  setSelectedProduct(product);
+                  setIsEditing(true);
                 }
               }}
               onDelete={handleDeleteProduct}
@@ -92,8 +92,8 @@ const Products: React.FC = () => {
             product={selectedProduct || undefined}
             onSubmit={selectedProduct ? handleEditProduct : handleAddProduct}
             onCancel={() => {
-              setSelectedProduct(null)
-              setIsEditing(false)
+              setSelectedProduct(null);
+              setIsEditing(false);
             }}
           />
         )}
@@ -101,15 +101,15 @@ const Products: React.FC = () => {
           <ProductDetails
             product={selectedProduct}
             onBack={() => {
-              setSelectedProduct(null)
-              setIsViewing(false)
+              setSelectedProduct(null);
+              setIsViewing(false);
             }}
           />
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Products
+export default Products;
 

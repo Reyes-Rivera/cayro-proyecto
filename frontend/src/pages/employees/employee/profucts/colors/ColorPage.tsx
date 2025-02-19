@@ -157,6 +157,7 @@ const ColorPage = () => {
         } else {
           throw new Error("No se pudo eliminar el color.");
         }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (error) {
         setIsLoading(false);
         Swal.fire({

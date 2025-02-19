@@ -48,22 +48,19 @@ export default function LoginPage() {
       });
       return;
     }
-    try {
-      setIsLoading(true);
-      const res = await login(data.email, data.password);
-      if (res) {
-        if (res?.role === "USER" && res.active === false) {
-          setIsLoading(true);
-          await resendCodeApi({ email: res.email });
-          navigate("/codigo-verificacion");
-        } else {
-          navigate("/codigo-verificacion-auth");
-        }
+
+    setIsLoading(true);
+    const res = await login(data.email, data.password);
+    if (res) {
+      if (res?.role === "USER" && res.active === false) {
+        setIsLoading(true);
+        await resendCodeApi({ email: res.email });
+        navigate("/codigo-verificacion");
+      } else {
+        navigate("/codigo-verificacion-auth");
       }
-      setIsLoading(false);
-    } catch (error: any) {
-      setIsLoading(false);
     }
+    setIsLoading(false);
   };
 
   useEffect(() => {

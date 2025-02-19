@@ -118,6 +118,7 @@ const BrandPage = () => {
         } else {
           throw new Error("No se pudo eliminar el tipo de marca.");
         }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (error) {
         setIsLoading(false);
         Swal.fire({

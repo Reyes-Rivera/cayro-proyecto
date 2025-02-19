@@ -21,7 +21,7 @@ export default function LegalBoundary() {
           {/* Document Header */}
           <div className="bg-gray-100 dark:bg-gray-700 p-8 border-b dark:border-gray-600">
             <div className="flex items-center justify-between mb-6">
-            <Breadcrumbs/>
+              <Breadcrumbs />
             </div>
             <h1 className="text-3xl font-extrabold">Deslinde legal</h1>
             {/* <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">

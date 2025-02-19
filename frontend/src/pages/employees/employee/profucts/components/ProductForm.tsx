@@ -1,5 +1,5 @@
-import type React from "react"
-import { useState, useEffect } from "react"
+import type React from "react";
+import { useState, useEffect } from "react";
 import {
   type Product,
   type ProductVariant,
@@ -9,17 +9,17 @@ import {
   sampleCategories,
   sampleColors,
   sampleSizes,
-} from "../data/sampleData"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { X, AlertCircle, Upload } from "lucide-react"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+} from "../data/sampleData";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { X, AlertCircle, Upload } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface ColorSizeConfig {
   colorId: number
@@ -45,10 +45,10 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
     neckTypeId: null,
     categoryId: 1,
     variants: [],
-  })
+  });
 
-  const [colorConfigs, setColorConfigs] = useState<ColorSizeConfig[]>([])
-  const [selectedColorId, setSelectedColorId] = useState<number | null>(null)
+  const [colorConfigs, setColorConfigs] = useState<ColorSizeConfig[]>([]);
+  const [selectedColorId, setSelectedColorId] = useState<number | null>(null);
 
   useEffect(() => {
     if (product) {
@@ -61,17 +61,17 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
         neckTypeId: product.neckTypeId,
         categoryId: product.categoryId,
         variants: product.variants,
-      })
+      });
 
       // Group variants by color
       const configsByColor = product.variants.reduce((acc: ColorSizeConfig[], variant) => {
-        const existingConfig = acc.find((config) => config.colorId === variant.colorId)
+        const existingConfig = acc.find((config) => config.colorId === variant.colorId);
         if (existingConfig) {
           if (!existingConfig.sizes.includes(variant.sizeId)) {
-            existingConfig.sizes.push(variant.sizeId)
+            existingConfig.sizes.push(variant.sizeId);
           }
-          existingConfig.prices[variant.sizeId] = variant.price
-          existingConfig.stocks[variant.sizeId] = variant.stock
+          existingConfig.prices[variant.sizeId] = variant.price;
+          existingConfig.stocks[variant.sizeId] = variant.stock;
         } else {
           acc.push({
             colorId: variant.colorId,
@@ -79,24 +79,24 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
             prices: { [variant.sizeId]: variant.price },
             stocks: { [variant.sizeId]: variant.stock },
             image: "/placeholder.svg?height=200&width=200",
-          })
+          });
         }
-        return acc
-      }, [])
+        return acc;
+      }, []);
 
-      setColorConfigs(configsByColor)
+      setColorConfigs(configsByColor);
     }
-  }, [product])
+  }, [product]);
 
   const handleChange = (name: string, value: string | boolean | number | null) => {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-    }))
-  }
+    }));
+  };
 
   const handleAddColor = (colorId: string) => {
-    const numericColorId = Number.parseInt(colorId, 10)
+    const numericColorId = Number.parseInt(colorId, 10);
     if (!colorConfigs.some((config) => config.colorId === numericColorId)) {
       setColorConfigs((prev) => [
         ...prev,
@@ -107,20 +107,20 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
           stocks: {},
           image: "/placeholder.svg?height=200&width=200",
         },
-      ])
-      setSelectedColorId(numericColorId)
+      ]);
+      setSelectedColorId(numericColorId);
     }
-  }
+  };
 
   const handleRemoveColor = (colorId: number) => {
-    setColorConfigs((prev) => prev.filter((config) => config.colorId !== colorId))
+    setColorConfigs((prev) => prev.filter((config) => config.colorId !== colorId));
     if (selectedColorId === colorId) {
-      setSelectedColorId(null)
+      setSelectedColorId(null);
     }
-  }
+  };
 
   const handleAddSize = (colorId: number, sizeId: string) => {
-    const numericSizeId = Number.parseInt(sizeId, 10)
+    const numericSizeId = Number.parseInt(sizeId, 10);
     setColorConfigs((prev) =>
       prev.map((config) =>
         config.colorId === colorId
@@ -132,26 +132,26 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
             }
           : config,
       ),
-    )
-  }
+    );
+  };
 
   const handleRemoveSize = (colorId: number, sizeId: number) => {
     setColorConfigs((prev) =>
       prev.map((config) => {
         if (config.colorId === colorId) {
-          const { [sizeId]: priceToRemove, ...remainingPrices } = config.prices
-          const { [sizeId]: stockToRemove, ...remainingStocks } = config.stocks
+          const {  ...remainingPrices } = config.prices;
+          const {  ...remainingStocks } = config.stocks;
           return {
             ...config,
             sizes: config.sizes.filter((id) => id !== sizeId),
             prices: remainingPrices,
             stocks: remainingStocks,
-          }
+          };
         }
-        return config
+        return config;
       }),
-    )
-  }
+    );
+  };
 
   const handlePriceChange = (colorId: number, sizeId: number, price: string) => {
     setColorConfigs((prev) =>
@@ -163,8 +163,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
             }
           : config,
       ),
-    )
-  }
+    );
+  };
 
   const handleStockChange = (colorId: number, sizeId: number, stock: string) => {
     setColorConfigs((prev) =>
@@ -176,13 +176,13 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
             }
           : config,
       ),
-    )
-  }
+    );
+  };
 
   const handleImageUpload = (colorId: number, event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
+    const file = event.target.files?.[0];
     if (file) {
-      const reader = new FileReader()
+      const reader = new FileReader();
       reader.onloadend = () => {
         setColorConfigs((prev) =>
           prev.map((config) =>
@@ -193,15 +193,15 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
                 }
               : config,
           ),
-        )
-      }
-      reader.readAsDataURL(file)
+        );
+      };
+      reader.readAsDataURL(file);
     }
-  }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    const variants: ProductVariant[] = []
+    e.preventDefault();
+    const variants: ProductVariant[] = [];
 
     colorConfigs.forEach((config) => {
       config.sizes.forEach((sizeId) => {
@@ -213,12 +213,12 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
           price: config.prices[sizeId] || 0,
           stock: config.stocks[sizeId] || 0,
           barcode: `${formData.name}-${config.colorId}-${sizeId}`,
-        })
-      })
-    })
+        });
+      });
+    });
 
-    onSubmit({ ...formData, variants })
-  }
+    onSubmit({ ...formData, variants });
+  };
 
   return (
     <form onSubmit={handleSubmit} className="max-w-6xl mx-auto p-4 space-y-6">
@@ -397,8 +397,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
                         size="sm"
                         className="h-4 w-4 p-0 ml-2"
                         onClick={(e) => {
-                          e.stopPropagation()
-                          handleRemoveColor(config.colorId)
+                          e.stopPropagation();
+                          handleRemoveColor(config.colorId);
                         }}
                       >
                         <X className="h-3 w-3" />
@@ -530,8 +530,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
         <Button type="submit">{product ? "Actualizar" : "Crear"} Producto</Button>
       </div>
     </form>
-  )
-}
+  );
+};
 
-export default ProductForm
+export default ProductForm;
 

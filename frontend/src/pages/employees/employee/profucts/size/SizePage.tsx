@@ -119,11 +119,11 @@ const SizePage = () => {
         } else {
           throw new Error("No se pudo eliminar la talla.");
         }
-      } catch (error) {
+      } catch (error:any) {
         setIsLoading(false);
         Swal.fire({
           title: "Error",
-          text: "Ocurrió un problema al eliminar la talla. Inténtalo de nuevo.",
+          text: error.response.data.message||"Ocurrió un problema al eliminar la talla. Inténtalo de nuevo.",
           icon: "error",
           confirmButtonColor: "#d33",
         });

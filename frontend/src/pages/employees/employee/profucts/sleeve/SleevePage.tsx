@@ -3,7 +3,12 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { Edit, Loader2, Save, Trash } from "lucide-react";
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
-import { addSleeve, deleteSleeve, getSleeve, updateSleeve } from "@/api/products";
+import {
+  addSleeve,
+  deleteSleeve,
+  getSleeve,
+  updateSleeve,
+} from "@/api/products";
 import { useNavigate } from "react-router-dom";
 
 interface DataForm {
@@ -118,11 +123,13 @@ const SleevePage = () => {
         } else {
           throw new Error("No se pudo eliminar la categoría.");
         }
-      } catch (error) {
+      } catch (error: any) {
         setIsLoading(false);
         Swal.fire({
           title: "Error",
-          text: "Ocurrió un problema al eliminar el tipo de cuello. Inténtalo de nuevo.",
+          text:
+            error.response.data.message ||
+            "Ocurrió un problema al eliminar el tipo de cuello. Inténtalo de nuevo.",
           icon: "error",
           confirmButtonColor: "#d33",
         });

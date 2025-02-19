@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -161,8 +162,8 @@ export function CompanyView() {
     try {
       const res = await companyInfoUpdateApi(
         { ...data, logoUrl: logo },
-        id,
-        user?.id
+        Number(id),
+        Number(user?.id)
       );
       if (res) {
         Swal.fire({

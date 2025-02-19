@@ -1,4 +1,4 @@
-import type React from "react"
+import type React from "react";
 import {
   type Product,
   sampleBrands,
@@ -7,7 +7,7 @@ import {
   sampleCategories,
   sampleColors,
   sampleSizes,
-} from "../data/sampleData"
+} from "../data/sampleData";
 
 interface ProductDetailsProps {
   product: Product
@@ -15,14 +15,14 @@ interface ProductDetailsProps {
 }
 
 const ProductDetails: React.FC<ProductDetailsProps> = ({ product, onBack }) => {
-  const getBrandName = (brandId: number) => sampleBrands.find((b) => b.id === brandId)?.name || "Desconocido"
-  const getGenderName = (genderId: number) => sampleGenders.find((g) => g.id === genderId)?.name || "Desconocido"
+  const getBrandName = (brandId: number) => sampleBrands.find((b) => b.id === brandId)?.name || "Desconocido";
+  const getGenderName = (genderId: number) => sampleGenders.find((g) => g.id === genderId)?.name || "Desconocido";
   const getNeckTypeName = (neckTypeId: number | null) =>
-    neckTypeId ? sampleNeckTypes.find((n) => n.id === neckTypeId)?.name : "N/A"
+    neckTypeId ? sampleNeckTypes.find((n) => n.id === neckTypeId)?.name : "N/A";
   const getCategoryName = (categoryId: number) =>
-    sampleCategories.find((c) => c.id === categoryId)?.name || "Desconocido"
-  const getColorName = (colorId: number) => sampleColors.find((c) => c.id === colorId)?.name || "Desconocido"
-  const getSizeName = (sizeId: number) => sampleSizes.find((s) => s.id === sizeId)?.name || "Desconocido"
+    sampleCategories.find((c) => c.id === categoryId)?.name || "Desconocido";
+  const getColorName = (colorId: number) => sampleColors.find((c) => c.id === colorId)?.name || "Desconocido";
+  const getSizeName = (sizeId: number) => sampleSizes.find((s) => s.id === sizeId)?.name || "Desconocido";
 
   return (
     <div className="container mx-auto p-4">
@@ -103,8 +103,8 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, onBack }) => {
         </button>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ProductDetails
+export default ProductDetails;
 

@@ -1,24 +1,24 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Plus } from 'lucide-react'
+import { useState } from "react";
+import { Plus } from 'lucide-react';
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -26,7 +26,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
 
 const products = [
   {
@@ -41,18 +41,18 @@ const products = [
     status: "Activo",
   },
   // Añadir más productos según sea necesario
-]
+];
 
-const categories = ["Todos", "Ropa", "Zapatos", "Accesorios"]
-const brands = ["Todas", "ModaMex", "EstiloMx", "LuxuryMex"]
-const colors = ["Todos", "Azul", "Negro", "Blanco", "Rojo"]
-const sizes = ["Todas", "S", "M", "L", "XL"]
+const categories = ["Todos", "Ropa", "Zapatos", "Accesorios"];
+const brands = ["Todas", "ModaMex", "EstiloMx", "LuxuryMex"];
+const colors = ["Todos", "Azul", "Negro", "Blanco", "Rojo"];
+const sizes = ["Todas", "S", "M", "L", "XL"];
 
 export function ProductsView() {
-  const [selectedCategory, setSelectedCategory] = useState("Todos")
-  const [selectedBrand, setSelectedBrand] = useState("Todas")
-  const [selectedColor, setSelectedColor] = useState("Todos")
-  const [selectedSize, setSelectedSize] = useState("Todas")
+  const [selectedCategory, setSelectedCategory] = useState("Todos");
+  const [selectedBrand, setSelectedBrand] = useState("Todas");
+  const [selectedColor, setSelectedColor] = useState("Todos");
+  const [selectedSize, setSelectedSize] = useState("Todas");
 
   return (
     <div className="space-y-4">
@@ -166,6 +166,6 @@ export function ProductsView() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
 

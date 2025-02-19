@@ -122,6 +122,7 @@ const CategoryPage = () => {
         } else {
           throw new Error("No se pudo eliminar la categoría.");
         }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (error) {
         Swal.fire({
           title: "Error",

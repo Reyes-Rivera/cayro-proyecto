@@ -191,7 +191,7 @@ export default function SignUpPage() {
           Swal.fire({
             icon: "error",
             title: "Error en el servidor.",
-            text: "Algo salió mal, por favor intenta más tarde.",
+            text: error.response.data.message||"Algo salió mal, por favor intenta más tarde.",
             confirmButtonColor: "#2F93D1",
           });
         }

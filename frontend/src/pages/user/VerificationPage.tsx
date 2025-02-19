@@ -1,173 +1,200 @@
-import { useState } from 'react';
-import { Loader2, Send, RefreshCw } from 'lucide-react';
+import { useState } from "react";
+import { Loader2, Send, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAuth } from '@/context/AuthContextType';
-import { useNavigate } from 'react-router-dom';
-import { resendCodeApi, resendCodeApiAuth } from '@/api/auth';
-import Swal from 'sweetalert2';
-import 'sweetalert2/src/sweetalert2.scss';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { useAuth } from "@/context/AuthContextType";
+import { useNavigate } from "react-router-dom";
+import { resendCodeApi, resendCodeApiAuth } from "@/api/auth";
+import Swal from "sweetalert2";
+import "sweetalert2/src/sweetalert2.scss";
 
 export default function VerificationPage() {
-  const [verificationCode, setVerificationCode] = useState(['', '', '', '', '', '']);
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isVerified, setIsVerified] = useState(false)
-  const [error, setError] = useState('')
-  const { verifyCode, verifyCodeAuth, emailToVerify, setIsVerificationPending } = useAuth();
+  const [verificationCode, setVerificationCode] = useState([
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+  ]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isVerified, setIsVerified] = useState(false);
+  const [error, setError] = useState("");
+  const {
+    verifyCode,
+    verifyCodeAuth,
+    emailToVerify,
+    setIsVerificationPending,
+  } = useAuth();
 
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
 
   const navigate = useNavigate();
 
-
   const handleCodeChange = (index: number, value: string) => {
-    const newCode = [...verificationCode]
-    newCode[index] = value
+    const newCode = [...verificationCode];
+    newCode[index] = value;
 
     // Si se ingresa un dígito, mover al siguiente input
     if (value && index < 5) {
-      const nextInput = document.getElementById(`code-${index + 1}`) as HTMLInputElement
-      if (nextInput) nextInput.focus()
+      const nextInput = document.getElementById(
+        `code-${index + 1}`
+      ) as HTMLInputElement;
+      if (nextInput) nextInput.focus();
     }
 
-    setVerificationCode(newCode)
-  }
+    setVerificationCode(newCode);
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!emailToVerify) {
       Swal.fire({
-        icon: 'error',
-        title: 'Correo no encontrado',
-        text: 'Correo electrónico no encontrado. Por favor, intente nuevamente.',
-        confirmButtonColor: '#2F93D1',
+        icon: "error",
+        title: "Correo no encontrado",
+        text: "Correo electrónico no encontrado. Por favor, intente nuevamente.",
+        confirmButtonColor: "#2F93D1",
       });
       return;
     }
-    const code = verificationCode.join('');
-    setIsSubmitting(true)
+    const code = verificationCode.join("");
+    setIsSubmitting(true);
 
-    if (location.pathname === '/codigo-verificacion') {
-      const response = await await verifyCode(emailToVerify, code);
+    if (location.pathname === "/codigo-verificacion") {
+      const response = await await verifyCode(emailToVerify, code)as{
+        response: any;status:number
+};
       if (response.status === 201) {
         Swal.fire({
-          icon: 'success',
-          title: '¡Verificación Exitosa!',
-          text: 'Tu código ha sido verificado correctamente. Serás redirigido en breve.',
-          confirmButtonColor: '#2F93D1',
+          icon: "success",
+          title: "¡Verificación Exitosa!",
+          text: "Tu código ha sido verificado correctamente. Serás redirigido en breve.",
+          confirmButtonColor: "#2F93D1",
         });
         setTimeout(() => {
-          navigate('/login');
-        }, 2000);// Redirigir a la página principal después de la verificación
+          navigate("/login");
+        }, 2000); // Redirigir a la página principal después de la verificación
         setIsVerificationPending(false); // Deshabilitar la verificación pendiente
-        localStorage.removeItem('isVerificationPending');
-        localStorage.removeItem('emailToVerify'); // Limpiar localStorage después de la verificación
+        localStorage.removeItem("isVerificationPending");
+        localStorage.removeItem("emailToVerify"); // Limpiar localStorage después de la verificación
         setIsVerified(true);
       } else {
         setMessage(response?.response?.data?.message);
         setTimeout(() => {
           setMessage("");
         }, 2000);
-        setError('Código de verificación incorrecto. Por favor, inténtelo de nuevo.')
+        setError(
+          "Código de verificación incorrecto. Por favor, inténtelo de nuevo."
+        );
       }
     }
-    if (location.pathname === '/codigo-verificacion-auth') {
-      const response = await await verifyCodeAuth(emailToVerify, code);
+    if (location.pathname === "/codigo-verificacion-auth") {
+      const response = await await verifyCodeAuth(emailToVerify, code)as{
+        response: any;
+        data: any;status:number
+};
       if (response.status === 201) {
         Swal.fire({
-          icon: 'success',
-          title: '¡Verificación Exitosa!',
-          text: 'Tu código ha sido verificado correctamente. Serás redirigido en breve.',
-          confirmButtonColor: '#2F93D1',
+          icon: "success",
+          title: "¡Verificación Exitosa!",
+          text: "Tu código ha sido verificado correctamente. Serás redirigido en breve.",
+          confirmButtonColor: "#2F93D1",
         });
         setTimeout(() => {
           setIsVerificationPending(false);
-          localStorage.removeItem('isVerificationPending');
-          localStorage.removeItem('emailToVerify');
+          localStorage.removeItem("isVerificationPending");
+          localStorage.removeItem("emailToVerify");
           setIsVerified(true);
-          if(response.data.role === "ADMIN"){
-            navigate('/perfil-admin');
+          if (response.data.role === "ADMIN") {
+            navigate("/perfil-admin");
           }
-          if(response.data.role === "USER"){
-
-            navigate('/perfil-usuario');
+          if (response.data.role === "USER") {
+            navigate("/perfil-usuario");
           }
         }, 1000);
-
       } else {
         setMessage(response?.response?.data?.message);
         setTimeout(() => {
           setMessage("");
         }, 2000);
-        setError('Código de verificación incorrecto. Por favor, inténtelo de nuevo.')
+        setError(
+          "Código de verificación incorrecto. Por favor, inténtelo de nuevo."
+        );
       }
     }
-    setError('')
-    setIsSubmitting(false)
-  }
+    setError("");
+    setIsSubmitting(false);
+  };
 
   const handleResendCode = async () => {
     try {
-      if (location.pathname === '/codigo-verificacion') {
+      if (location.pathname === "/codigo-verificacion") {
         const res = await resendCodeApi({ email: emailToVerify });
         if (res) {
           Swal.fire({
-            icon: 'success',
-            title: 'Código reenviado',
-            text: 'Se ha enviado un nuevo código de verificación.',
-            confirmButtonColor: '#2F93D1',
+            icon: "success",
+            title: "Código reenviado",
+            text: "Se ha enviado un nuevo código de verificación.",
+            confirmButtonColor: "#2F93D1",
           });
         } else {
           Swal.fire({
-            icon: 'error',
-            title: 'Error al reenviar',
-            text: 'Algo salió mal, intente más tarde.',
-            confirmButtonColor: '#2F93D1',
+            icon: "error",
+            title: "Error al reenviar",
+            text: "Algo salió mal, intente más tarde.",
+            confirmButtonColor: "#2F93D1",
           });
         }
       }
 
-      if (location.pathname === '/codigo-verificacion-auth') {
+      if (location.pathname === "/codigo-verificacion-auth") {
         const res = await resendCodeApiAuth({ email: emailToVerify });
         if (res) {
           Swal.fire({
-            icon: 'success',
-            title: 'Código reenviado',
-            text: 'Se ha enviado un nuevo código de verificación.',
-            confirmButtonColor: '#2F93D1',
+            icon: "success",
+            title: "Código reenviado",
+            text: "Se ha enviado un nuevo código de verificación.",
+            confirmButtonColor: "#2F93D1",
           });
         } else {
           Swal.fire({
-            icon: 'error',
-            title: 'Error al reenviar',
-            text: 'Algo salió mal, intente más tarde.',
-            confirmButtonColor: '#2F93D1',
+            icon: "error",
+            title: "Error al reenviar",
+            text: "Algo salió mal, intente más tarde.",
+            confirmButtonColor: "#2F93D1",
           });
         }
       }
-
-    } catch (error) {
+    } catch (error:any) {
       Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'No se pudo reenviar el código, intente más tarde.',
-        confirmButtonColor: '#2F93D1',
+        icon: "error",
+        title: "Error",
+        text: error.response?.data?.message ||"No se pudo reenviar el código, intente más tarde.",
+        confirmButtonColor: "#2F93D1",
       });
     }
-  }
+  };
 
   return (
     <div className="flex flex-col min-h-screen ">
-
       {/* Main Content */}
       <div className="flex-grow flex items-center justify-center px-4 sm:px-6 lg:px-8">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="text-2xl font-bold text-center">Verificación de Código</CardTitle>
+            <CardTitle className="text-2xl font-bold text-center">
+              Verificación de Código
+            </CardTitle>
             <CardDescription className="text-center">
-              Por favor, ingrese el código de 6 dígitos que hemos enviado a su correo electrónico.
+              Por favor, ingrese el código de 6 dígitos que hemos enviado a su
+              correo electrónico.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -185,17 +212,23 @@ export default function VerificationPage() {
                       onChange={(e) => handleCodeChange(index, e.target.value)}
                       className="w-12 h-12 text-center text-2xl"
                       onKeyDown={(e) => {
-                        if (e.key === 'Backspace' && !digit && index > 0) {
-                          const prevInput = document.getElementById(`code-${index - 1}`) as HTMLInputElement
+                        if (e.key === "Backspace" && !digit && index > 0) {
+                          const prevInput = document.getElementById(
+                            `code-${index - 1}`
+                          ) as HTMLInputElement;
                           if (prevInput) {
-                            prevInput.focus()
+                            prevInput.focus();
                           }
                         }
                       }}
                     />
                   ))}
                 </div>
-                {message && <p className='text-red-500 text-[12px] text-center'>{message}</p>}
+                {message && (
+                  <p className="text-red-500 text-[12px] text-center">
+                    {message}
+                  </p>
+                )}
 
                 {error && (
                   <Alert variant="destructive">
@@ -206,7 +239,9 @@ export default function VerificationPage() {
                 <Button
                   type="submit"
                   className="w-full bg-blue-500 hover:bg-blue-600"
-                  disabled={isSubmitting || verificationCode.some(digit => !digit)}
+                  disabled={
+                    isSubmitting || verificationCode.some((digit) => !digit)
+                  }
                 >
                   {isSubmitting ? (
                     <>
@@ -222,7 +257,7 @@ export default function VerificationPage() {
                 </Button>
                 <div className="text-center">
                   <Button
-                    type='button'
+                    type="button"
                     variant="link"
                     onClick={handleResendCode}
                     className="text-[#0099FF] hover:text-[#007ACC]"
@@ -236,14 +271,14 @@ export default function VerificationPage() {
               <Alert>
                 <AlertTitle>¡Verificación Exitosa!</AlertTitle>
                 <AlertDescription>
-                  Su código ha sido verificado correctamente. Será redirigido en breve.
+                  Su código ha sido verificado correctamente. Será redirigido en
+                  breve.
                 </AlertDescription>
               </Alert>
             )}
           </CardContent>
         </Card>
       </div>
-
     </div>
-  )
+  );
 }

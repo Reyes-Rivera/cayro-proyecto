@@ -55,10 +55,7 @@ export class RegulatoryDocument {
   type?: DocumentTypeInter;
 }
 
-type Tabs =
-  | "Aviso de Privacidad"
-  | "Términos y Condiciones"
-  | "Deslinde Legal";
+type Tabs = "Aviso de Privacidad" | "Términos y Condiciones" | "Deslinde Legal";
 
 const tabConfig: { label: Tabs; icon: React.ReactNode }[] = [
   { label: "Aviso de Privacidad", icon: <Lock size={18} /> },
@@ -121,7 +118,7 @@ const LegalDocumentsView: React.FC = () => {
       };
 
       if (item.type === DocumentTypeInter.policy && !item.isCurrentVersion) {
-        const res = await activePolicyApi(item.id);
+        const res = await activePolicyApi(Number(item.id));
         if (res) {
           Swal.fire({
             icon: "success",
@@ -135,7 +132,7 @@ const LegalDocumentsView: React.FC = () => {
       }
 
       if (item.type === DocumentTypeInter.terms && !item.isCurrentVersion) {
-        const res = await activeTermsApi(item.id);
+        const res = await activeTermsApi(Number(item.id));
         if (res) {
           Swal.fire({
             icon: "success",
@@ -149,7 +146,7 @@ const LegalDocumentsView: React.FC = () => {
       }
 
       if (item.type === DocumentTypeInter.boundary && !item.isCurrentVersion) {
-        const res = await activeTermsApi(item.id);
+        const res = await activeTermsApi(Number(item.id));
         if (res) {
           Swal.fire({
             icon: "success",
@@ -168,6 +165,7 @@ const LegalDocumentsView: React.FC = () => {
         text: "Algo salió mal, por favor intenta más tarde.",
         confirmButtonColor: "#2F93D1",
       });
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       navigate("/500", { state: { fromError: true } });
     }
@@ -290,7 +288,7 @@ const LegalDocumentsView: React.FC = () => {
             content: newDocument.content,
             effectiveDate: new Date(newDocument.effectiveDate).toISOString(),
           },
-          newDocument.id
+          Number(newDocument.id)
         );
         if (res) {
           setTerms((prev) =>
@@ -318,7 +316,7 @@ const LegalDocumentsView: React.FC = () => {
             content: newDocument.content,
             effectiveDate: new Date(newDocument.effectiveDate).toISOString(),
           },
-          newDocument.id
+          Number(newDocument.id)
         );
 
         if (res) {
@@ -346,7 +344,7 @@ const LegalDocumentsView: React.FC = () => {
             content: newDocument.content,
             effectiveDate: new Date(newDocument.effectiveDate).toISOString(),
           },
-          newDocument.id
+          Number(newDocument.id)
         );
 
         if (res) {
@@ -373,7 +371,8 @@ const LegalDocumentsView: React.FC = () => {
         confirmButtonColor: "#2F93D1",
       });
       return;
-    } catch (error) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error:any) {
       navigate("/500", { state: { fromError: true } });
     }
   };
@@ -451,10 +450,7 @@ const LegalDocumentsView: React.FC = () => {
                     <td className="px-4 py-4 text-gray-800 dark:text-gray-100 align-middle ">
                       {item.title}
                     </td>
-                    <td
-                      className="px-4 py-4 text-gray-600 dark:text-gray-300 align-middle line-clamp-1 overflow-hidden"
-                      
-                    >
+                    <td className="px-4 py-4 text-gray-600 dark:text-gray-300 align-middle line-clamp-1 overflow-hidden">
                       {item.content}
                     </td>
                     <td className="px-4 py-4 text-gray-600 dark:text-gray-300 align-middle">

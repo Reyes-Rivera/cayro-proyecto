@@ -57,26 +57,26 @@ export interface Product {
     { id: 2, name: "Adidas" },
     { id: 3, name: "Puma" },
     { id: 4, name: "Reebok" },
-  ]
+  ];
   
   export const sampleGenders: Gender[] = [
     { id: 1, name: "Hombre" },
     { id: 2, name: "Mujer" },
     { id: 3, name: "Unisex" },
-  ]
+  ];
   
   export const sampleNeckTypes: NeckType[] = [
     { id: 1, name: "Cuello redondo" },
     { id: 2, name: "Cuello V" },
     { id: 3, name: "Cuello polo" },
-  ]
+  ];
   
   export const sampleCategories: Category[] = [
     { id: 1, name: "Playeras" },
     { id: 2, name: "Pantalones" },
     { id: 3, name: "Zapatos" },
     { id: 4, name: "Accesorios" },
-  ]
+  ];
   
   export const sampleColors: Color[] = [
     { id: 1, name: "Rojo" },
@@ -84,7 +84,7 @@ export interface Product {
     { id: 3, name: "Verde" },
     { id: 4, name: "Negro" },
     { id: 5, name: "Blanco" },
-  ]
+  ];
   
   export const sampleSizes: Size[] = [
     { id: 1, name: "XS" },
@@ -92,7 +92,7 @@ export interface Product {
     { id: 3, name: "M" },
     { id: 4, name: "L" },
     { id: 5, name: "XL" },
-  ]
+  ];
   
   export const sampleProducts: Product[] = [
     {
@@ -150,6 +150,6 @@ export interface Product {
         },
       ],
     },
-  ]
+  ];
   
   
