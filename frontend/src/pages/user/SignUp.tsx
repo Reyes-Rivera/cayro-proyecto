@@ -9,7 +9,8 @@ import {
   MoveRight,
   Package,
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import backgroundImage from "../web/Home/assets/hero.jpg";
+
 import { Label } from "@/components/ui/label";
 import { User } from "@/types/User";
 import { useForm } from "react-hook-form";
@@ -48,7 +49,6 @@ export default function SignUpPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-
     const checks = {
       length: password.length >= 8,
       uppercase: /[A-Z]/.test(password),
@@ -191,7 +191,9 @@ export default function SignUpPage() {
           Swal.fire({
             icon: "error",
             title: "Error en el servidor.",
-            text: error.response.data.message||"Algo salió mal, por favor intenta más tarde.",
+            text:
+              error.response.data.message ||
+              "Algo salió mal, por favor intenta más tarde.",
             confirmButtonColor: "#2F93D1",
           });
         }
@@ -210,485 +212,502 @@ export default function SignUpPage() {
     }
   });
   return (
-    <div className=" min-h-screen flex-col flex items-center justify-center p-4 pt-14 bg-gray-50 dark:bg-gray-900 ">
-      <div className="w-full lg:pl-36">
-        <Breadcrumbs />
-      </div>
-      <div className="w-full justify-center max-w-xl md:max-w-6xl flex bg-white dark:bg-gray-800 shadow-xl rounded-lg overflow-hidden md:h-[630px] mt-8 md:mt-0">
+    <div className=" min-h-screen flex-col flex items-center justify-center  bg-gray-50 dark:bg-gray-900 mt-14 ">
+      <div className="w-full justify-center  flex bg-white dark:bg-gray-800 shadow-xl rounded-lg overflow-hidden ">
         {/* Contenedor izquierdo */}
-
-        <div className="hidden md:flex md:flex-col lg:justify-center bg-blue-600 dark:bg-gray-900 text-white w-full lg:w-1/2 p-10 justify-center">
-          <h2 className="text-4xl font-extrabold mb-4">
-            Bienvenido a <span className="text-blue-100">Cayro Uniformes</span>
-          </h2>
-          <p className="text-lg mb-8">
-            Regístrate para acceder a ofertas exclusivas, gestionar tus pedidos
-            y más.
-          </p>
-
-          <div className="grid grid-cols-3 gap-6">
-            <div className="flex flex-col items-center">
-              <div className="flex items-center justify-center w-14 h-14 bg-gradient-to-tr from-blue-400 to-blue-600 rounded-full shadow-lg">
-                <Check size={32} className="text-white" />
-              </div>
-              <p className="mt-3 text-sm text-white">Pedidos rápidos</p>
+        <div
+          className="hidden h-screen justify-center items-center md:flex md:w-1/2 bg-cover bg-center relative"
+          style={{ backgroundImage: `url(${backgroundImage})` }}
+        >
+          {/* Overlay oscuro */}
+          <div className="absolute inset-0 bg-black bg-opacity-50"></div>
+          {/* Contenido de la columna derecha */}
+          <div className="relative z-10 p-10 text-white">
+            <div className="text-white [&_*]:!text-white flex justify-center">
+              <Breadcrumbs />
             </div>
-            <div className="flex flex-col items-center">
-              <div className="flex items-center justify-center w-14 h-14 bg-gradient-to-tr from-green-400 to-green-600 rounded-full shadow-lg">
-                <Lock size={32} className="text-white" />
+            <h2 className="text-4xl font-extrabold mb-4">
+              Bienvenido a{" "}
+              <span className="text-blue-100">Cayro Uniformes</span>
+            </h2>
+            <p className="text-lg mb-8">
+              Regístrate para acceder a ofertas exclusivas, gestionar tus
+              pedidos y más.
+            </p>
+            <div className="grid grid-cols-3 gap-6">
+              <div className="flex flex-col items-center">
+                <div className="flex items-center justify-center w-14 h-14 bg-gradient-to-tr from-blue-400 to-blue-600 rounded-full shadow-lg">
+                  <Check size={32} className="text-white" />
+                </div>
+                <p className="mt-3 text-sm text-white">Pedidos rápidos</p>
               </div>
-              <p className="mt-3 text-sm text-white">Seguridad garantizada</p>
-            </div>
-            <div className="flex flex-col items-center">
-              <div className="flex items-center justify-center w-14 h-14 bg-gradient-to-tr from-yellow-400 to-yellow-600 rounded-full shadow-lg">
-                <Package size={32} className="text-white" />
+              <div className="flex flex-col items-center">
+                <div className="flex items-center justify-center w-14 h-14 bg-gradient-to-tr from-green-400 to-green-600 rounded-full shadow-lg">
+                  <Lock size={32} className="text-white" />
+                </div>
+                <p className="mt-3 text-sm text-white">Seguridad garantizada</p>
               </div>
-              <p className="mt-3 text-sm text-white">Gestión personalizada</p>
+              <div className="flex flex-col items-center">
+                <div className="flex items-center justify-center w-14 h-14 bg-gradient-to-tr from-yellow-400 to-yellow-600 rounded-full shadow-lg">
+                  <Package size={32} className="text-white" />
+                </div>
+                <p className="mt-3 text-sm text-white">Gestión personalizada</p>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Contenedor derecho (Formulario de registro) */}
-        <div className="md:w-1/2 p-10 space-y-6">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 leading-tight">
-              Crea tu cuenta en Cayro
-            </h2>
+        <div className="flex flex-col items-center justify-center  w-full md:w-1/2   dark:bg-gray-900">
+          <div className="w-[500px]">
+            <div className="text-center">
+              <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-6">
+                Crea tu cuenta en Cayro
+              </h2>
+            </div>
+            <form onSubmit={onSubmit} className="space-y-6">
+              {currentStep === 1 && (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label
+                        htmlFor="nombre"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                      >
+                        Nombre
+                      </Label>
+                      <input
+                        {...register("name", {
+                          required: "El nombre es requerido",
+                          minLength: {
+                            value: 3,
+                            message: "Debe tener al menos 3 caracteres",
+                          },
+                          maxLength: {
+                            value: 30,
+                            message: "No puede superar los 30 caracteres",
+                          },
+                          pattern: {
+                            value: /^[a-zA-ZÀ-ÿ\u00f1\u00d1\s]+$/,
+                            message: "Solo puede contener letras",
+                          },
+                        })}
+                        id="nombre"
+                        type="text"
+                       className="block w-full rounded-md bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600 focus:ring-1 focus:ring-blue-600 p-3 active:border-none focus:border-none focus:outline-none"
+                        placeholder="Ingresa tu nombre"
+                      />
+                      {errors.name && (
+                        <span className="text-xs text-red-500">
+                          {errors.name.message}
+                        </span>
+                      )}
+                    </div>
+                    <div>
+                      <Label
+                        htmlFor="apellidos"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                      >
+                        Apellidos
+                      </Label>
+                      <input
+                        {...register("surname", {
+                          required: "El apellido es requerido",
+                          minLength: {
+                            value: 3,
+                            message: "Debe tener al menos 3 caracteres",
+                          },
+                          maxLength: {
+                            value: 50,
+                            message: "No puede superar los 50 caracteres",
+                          },
+                          pattern: {
+                            value: /^[a-zA-ZÀ-ÿ\u00f1\u00d1\s]+$/,
+                            message: "Solo puede contener letras",
+                          },
+                        })}
+                        id="apellidos"
+                        type="text"
+                       className="block w-full rounded-md bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600 focus:ring-1 focus:ring-blue-600 p-3 active:border-none focus:border-none focus:outline-none"
+                        placeholder="Ingresa tus apellidos"
+                      />
+                      {errors.surname && (
+                        <span className="text-xs text-red-500">
+                          {errors.surname.message}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <Label
+                      htmlFor="fecha-nacimiento"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      Fecha de nacimiento
+                    </Label>
+                    <input
+                      {...register("birthday", {
+                        required: "La fecha de nacimiento es requerida",
+                        validate: (value) =>
+                          validateAge(value) ||
+                          "Debes tener al menos 18 años para registrarte.",
+                      })}
+                      id="fecha-nacimiento"
+                      type="date"
+                     className="block w-full rounded-md bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600 focus:ring-1 focus:ring-blue-600 p-3 active:border-none focus:border-none focus:outline-none"
+                    />
+                    {errors.birthday && (
+                      <span className="text-xs text-red-500">
+                        {errors.birthday.message}
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <Label
+                      htmlFor="telefono"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      Teléfono
+                    </Label>
+                    <input
+                      {...register("phone", {
+                        required: "El teléfono es requerido",
+                        pattern: {
+                          value: /^[0-9]{10}$/,
+                          message:
+                            "El número de teléfono debe tener exactamente 10 números",
+                        },
+                      })}
+                      onChange={(e) =>
+                        handleInputChange("phone", e.target.value)
+                      }
+                      id="telefono"
+                      type="tel"
+                      className="block w-full rounded-md bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600 focus:ring-1 focus:ring-blue-600 p-3 active:border-none focus:border-none focus:outline-none"
+                      placeholder="Ingresa tu teléfono"
+                    />
+                    {errors.phone && (
+                      <span className="text-xs text-red-500">
+                        {errors.phone.message}
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <Label
+                      htmlFor="sexo"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      Sexo
+                    </Label>
+                    <div className="w-full bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2 flex justify-between">
+                      {[
+                        {
+                          id: "MALE",
+                          value: "MALE",
+                          label: "Masculino",
+                        },
+                        { id: "FEMALE", value: "FEMALE", label: "Femenino" },
+                        { id: "OTHER", value: "OTHER", label: "Otro" },
+                      ].map(({ id, value, label }) => (
+                        <div className="flex items-center" key={id}>
+                          <input
+                            type="radio"
+                            id={id}
+                            value={value}
+                            {...register("gender", {
+                              required: "El sexo es requerido",
+                            })}
+                           className="block w-full rounded-md bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600   p-3 active:border-none focus:border-none focus:outline-none"
+                          />
+                          <Label
+                            htmlFor={id}
+                            className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300"
+                          >
+                            {label}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                    {errors.gender && (
+                      <span className="text-xs text-red-500">
+                        {errors.gender.message}
+                      </span>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {currentStep === 2 && (
+                <>
+                  <div>
+                    <Label
+                      htmlFor="email"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      Correo electrónico
+                    </Label>
+                    <input
+                      {...register("email", {
+                        required: "El correo electrónico es requerido",
+                        pattern: {
+                          value: /^(?!.*[<>])^\S+@\S+\.\S+$/,
+                          message: "El correo electrónico no es válido",
+                        },
+                      })}
+                      onChange={(e) =>
+                        handleInputChange("email", e.target.value)
+                      }
+                      id="email"
+                      type="email"
+                      className="block w-full rounded-md bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600 focus:ring-1 focus:ring-blue-600 p-3 active:border-none focus:border-none focus:outline-none"
+                      placeholder="Ingresa tu correo"
+                    />
+                    {errors.email && (
+                      <span className="text-xs text-red-500">
+                        {errors.email.message}
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <Label
+                      htmlFor="password"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      Contraseña
+                    </Label>
+                    <div className="relative">
+                      <input
+                        {...register("password", {
+                          required: "La contraseña es requerida",
+                          pattern: {
+                            value:
+                              /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|])(?!.*[<>]).{8,}$/,
+                            message:
+                              'Introduce caracteres especiales como !@#$%^&*(),.?":{}|',
+                          },
+                        })}
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => {
+                          setPassword(e.target.value);
+                          clearErrors("password");
+                          clearErrors("confirmPassword");
+                        }}
+                        autoComplete="new-password"
+                      className="block w-full rounded-md bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600 focus:ring-1 focus:ring-blue-600 p-3 active:border-none focus:border-none focus:outline-none"
+                        placeholder="contraseña"
+                      />
+                      <button
+                        type="button"
+                        className="absolute z-40 inset-y-0 right-3 flex items-center cursor-pointer"
+                        onClick={() => setShowPassword(!showPassword)}
+                        tabIndex={-1}
+                      >
+                        {showPassword ? (
+                          <EyeOff size={20} />
+                        ) : (
+                          <Eye size={20} />
+                        )}
+                      </button>
+                    </div>
+                    {errors.password && (
+                      <span className="text-xs text-red-500">
+                        {errors.password.message}
+                      </span>
+                    )}
+
+                    {!Object.values(passwordChecks).every(Boolean) &&
+                      password && (
+                        <>
+                          <div className="mt-2">
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Fortaleza de la contraseña:
+                              </span>
+                              <span
+                                className={`text-sm font-medium ${getStrengthColor(
+                                  passwordStrength
+                                ).replace("bg-", "text-")}`}
+                              >
+                                {getStrengthName(passwordStrength)}
+                              </span>
+                            </div>
+                            <div className="w-full h-2 rounded-full bg-gray-200 dark:bg-gray-600">
+                              <div
+                                className={`h-full rounded-full ${getStrengthColor(
+                                  passwordStrength
+                                )}`}
+                                style={{ width: `${passwordStrength}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                          <ul className="mt-2 space-y-1 text-sm text-gray-500 dark:text-gray-400">
+                            <li
+                              className={
+                                passwordChecks.length ? "text-green-500" : ""
+                              }
+                            >
+                              {passwordChecks.length ? (
+                                <Check size={16} className="inline mr-1" />
+                              ) : null}
+                              Mínimo 8 caracteres
+                            </li>
+                            <li
+                              className={
+                                passwordChecks.uppercase ? "text-green-500" : ""
+                              }
+                            >
+                              {passwordChecks.uppercase ? (
+                                <Check size={16} className="inline mr-1" />
+                              ) : null}
+                              Al menos una mayúscula
+                            </li>
+                            <li
+                              className={
+                                passwordChecks.lowercase ? "text-green-500" : ""
+                              }
+                            >
+                              {passwordChecks.lowercase ? (
+                                <Check size={16} className="inline mr-1" />
+                              ) : null}
+                              Al menos una minúscula
+                            </li>
+                            <li
+                              className={
+                                passwordChecks.number ? "text-green-500" : ""
+                              }
+                            >
+                              {passwordChecks.number ? (
+                                <Check size={16} className="inline mr-1" />
+                              ) : null}
+                              Al menos un número
+                            </li>
+                            <li
+                              className={
+                                passwordChecks.special ? "text-green-500" : ""
+                              }
+                            >
+                              {passwordChecks.special ? (
+                                <Check size={16} className="inline mr-1" />
+                              ) : null}
+                              Al menos un carácter especial como:
+                              !@#$%^&*(),.?":
+                              {}
+                            </li>
+                            <li
+                              className={
+                                passwordChecks.noSequential
+                                  ? "text-green-500"
+                                  : ""
+                              }
+                            >
+                              {passwordChecks.noSequential ? (
+                                <Check size={16} className="inline mr-1" />
+                              ) : null}
+                              Sin secuencias obvias como "12345" o "abcd"
+                            </li>
+                          </ul>
+                        </>
+                      )}
+                  </div>
+
+                  {/* Confirmar Contraseña */}
+                  <div>
+                    <Label
+                      htmlFor="password-confirm"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      Confirmar contraseña
+                    </Label>
+                    <div className="relative">
+                      <input
+                        {...register("confirmPassword", {
+                          required:
+                            "La confirmación de la contraseña es requerida",
+                          validate: (value) =>
+                            value === watch("password") ||
+                            "Las contraseñas no coinciden",
+                        })}
+                        id="password-confirm"
+                        type={showConfirmPassword ? "text" : "password"}
+                        autoComplete="new-password"
+                        className="block w-full rounded-md bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600 focus:ring-1 focus:ring-blue-600 p-3 active:border-none focus:border-none focus:outline-none"
+                        placeholder="Confirmar contraseña"
+                      />
+                      <button
+                        type="button"
+                        className="absolute z-40 inset-y-0 right-3 flex items-center cursor-pointer"
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                        tabIndex={-1}
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff size={20} />
+                        ) : (
+                          <Eye size={20} />
+                        )}
+                      </button>
+                    </div>
+                    {errors.confirmPassword && (
+                      <span className="text-red-500 text-xs">
+                        {errors.confirmPassword.message}
+                      </span>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {error && (
+                <p className="text-sm text-red-500 text-center">{error}</p>
+              )}
+              <div
+                className={`flex ${
+                  currentStep === 1 ? "justify-end" : "justify-between"
+                } ${currentStep === 2 && ""}`}
+              >
+                {currentStep > 1 && (
+                  <button
+                    type="button"
+                    className="px-4 py-2 text-blue-600 font-bold dark:text-gray-100 rounded-md flex items-center"
+                    onClick={handleBack}
+                  >
+                    <MoveLeft className="h-4 w-4 mr-2" />
+                    Atrás
+                  </button>
+                )}
+                <button
+                  type="submit"
+                 className="flex items-center p-3 bg-blue-600 text-white font-bold rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  <span>{currentStep === 2 ? "Confirmar" : "Siguiente"}</span>
+                  {currentStep === 2 ? (
+                    <CheckCircleIcon className="h-4 w-4 ml-2" />
+                  ) : (
+                    <MoveRight className="h-4 w-4 ml-2" />
+                  )}
+                </button>
+              </div>
+
+              {currentStep === 1 && (
+                <div className="flex  w-full">
+                  <div className="text-center w-full ">
+                    <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">
+                      ¿Ya tienes una cuenta?{" "}
+                      <NavLink
+                        to="/login"
+                        className="text-sm text-blue-500 hover:text-blue-600 mt-2"
+                      >
+                        Iniciar sesión
+                      </NavLink>
+                    </p>
+                  </div>
+                </div>
+              )}
+            </form>
           </div>
 
-          {/* Formulario */}
-          <form onSubmit={onSubmit} className="space-y-6">
-            {currentStep === 1 && (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label
-                      htmlFor="nombre"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
-                      Nombre
-                    </Label>
-                    <Input
-                      {...register("name", {
-                        required: "El nombre es requerido",
-                        minLength: {
-                          value: 3,
-                          message: "Debe tener al menos 3 caracteres",
-                        },
-                        maxLength: {
-                          value: 30,
-                          message: "No puede superar los 30 caracteres",
-                        },
-                        pattern: {
-                          value: /^[a-zA-ZÀ-ÿ\u00f1\u00d1\s]+$/,
-                          message: "Solo puede contener letras",
-                        },
-                      })}
-                      id="nombre"
-                      type="text"
-                      className="w-full bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2"
-                      placeholder="Ingresa tu nombre"
-                    />
-                    {errors.name && (
-                      <span className="text-xs text-red-500">
-                        {errors.name.message}
-                      </span>
-                    )}
-                  </div>
-                  <div>
-                    <Label
-                      htmlFor="apellidos"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
-                      Apellidos
-                    </Label>
-                    <Input
-                      {...register("surname", {
-                        required: "El apellido es requerido",
-                        minLength: {
-                          value: 3,
-                          message: "Debe tener al menos 3 caracteres",
-                        },
-                        maxLength: {
-                          value: 50,
-                          message: "No puede superar los 50 caracteres",
-                        },
-                        pattern: {
-                          value: /^[a-zA-ZÀ-ÿ\u00f1\u00d1\s]+$/,
-                          message: "Solo puede contener letras",
-                        },
-                      })}
-                      id="apellidos"
-                      type="text"
-                      className="w-full bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2"
-                      placeholder="Ingresa tus apellidos"
-                    />
-                    {errors.surname && (
-                      <span className="text-xs text-red-500">
-                        {errors.surname.message}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <Label
-                    htmlFor="fecha-nacimiento"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    Fecha de nacimiento
-                  </Label>
-                  <Input
-                    {...register("birthday", {
-                      required: "La fecha de nacimiento es requerida",
-                      validate: (value) =>
-                        validateAge(value) ||
-                        "Debes tener al menos 18 años para registrarte.",
-                    })}
-                    id="fecha-nacimiento"
-                    type="date"
-                    className="w-full bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2"
-                  />
-                  {errors.birthday && (
-                    <span className="text-xs text-red-500">
-                      {errors.birthday.message}
-                    </span>
-                  )}
-                </div>
-                <div>
-                  <Label
-                    htmlFor="telefono"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    Teléfono
-                  </Label>
-                  <Input
-                    {...register("phone", {
-                      required: "El teléfono es requerido",
-                      pattern: {
-                        value: /^[0-9]{10}$/,
-                        message:
-                          "El número de teléfono debe tener exactamente 10 caracteres",
-                      },
-                    })}
-                    onChange={(e) => handleInputChange("phone", e.target.value)}
-                    id="telefono"
-                    type="tel"
-                    className="w-full bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Ingresa tu teléfono"
-                  />
-                  {errors.phone && (
-                    <span className="text-xs text-red-500">
-                      {errors.phone.message}
-                    </span>
-                  )}
-                </div>
-                <div>
-                  <Label
-                    htmlFor="sexo"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    Sexo
-                  </Label>
-                  <div className="w-full bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2 flex justify-between">
-                    {[
-                      {
-                        id: "MALE",
-                        value: "MALE",
-                        label: "Masculino",
-                      },
-                      { id: "FEMALE", value: "FEMALE", label: "Femenino" },
-                      { id: "OTHER", value: "OTHER", label: "Otro" },
-                    ].map(({ id, value, label }) => (
-                      <div className="flex items-center" key={id}>
-                        <input
-                          type="radio"
-                          id={id}
-                          value={value}
-                          {...register("gender", {
-                            required: "El sexo es requerido",
-                          })}
-                          className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                        />
-                        <Label
-                          htmlFor={id}
-                          className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300"
-                        >
-                          {label}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                  {errors.gender && (
-                    <span className="text-xs text-red-500">
-                      {errors.gender.message}
-                    </span>
-                  )}
-                </div>
-              </>
-            )}
-
-            {currentStep === 2 && (
-              <>
-                <div>
-                  <Label
-                    htmlFor="email"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    Correo electrónico
-                  </Label>
-                  <Input
-                    {...register("email", {
-                      required: "El correo electrónico es requerido",
-                      pattern: {
-                        value: /^(?!.*[<>])^\S+@\S+\.\S+$/,
-                        message: "El correo electrónico no es válido",
-                      },
-                    })}
-                    onChange={(e) => handleInputChange("email", e.target.value)}
-                    id="email"
-                    type="email"
-                    className="w-full bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Ingresa tu correo"
-                  />
-                  {errors.email && (
-                    <span className="text-xs text-red-500">
-                      {errors.email.message}
-                    </span>
-                  )}
-                </div>
-                <div>
-                  <Label
-                    htmlFor="password"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    Contraseña
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      {...register("password", {
-                        required: "La contraseña es requerida",
-                        pattern: {
-                          value:
-                            /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|])(?!.*[<>]).{8,}$/,
-                          message:
-                            'Introduce caracteres especiales como !@#$%^&*(),.?":{}|',
-                        },
-                      })}
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      value={password}
-                      onChange={(e) => {
-                        setPassword(e.target.value);
-                        clearErrors("password");
-                        clearErrors("confirmPassword");
-                      }}
-                      autoComplete="new-password"
-                      className="w-full bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 "
-                      placeholder="contraseña"
-                    />
-                    <button
-                      type="button"
-                      className="absolute z-40 inset-y-0 right-3 flex items-center cursor-pointer"
-                      onClick={() => setShowPassword(!showPassword)}
-                      tabIndex={-1}
-                    >
-                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                    </button>
-                  </div>
-                  {errors.password && (
-                    <span className="text-xs text-red-500">
-                      {errors.password.message}
-                    </span>
-                  )}
-
-                  {!Object.values(passwordChecks).every(Boolean) &&
-                    password && (
-                      <>
-                        <div className="mt-2">
-                          <div className="flex justify-between items-center mb-1">
-                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                              Fortaleza de la contraseña:
-                            </span>
-                            <span
-                              className={`text-sm font-medium ${getStrengthColor(
-                                passwordStrength
-                              ).replace("bg-", "text-")}`}
-                            >
-                              {getStrengthName(passwordStrength)}
-                            </span>
-                          </div>
-                          <div className="w-full h-2 rounded-full bg-gray-200 dark:bg-gray-600">
-                            <div
-                              className={`h-full rounded-full ${getStrengthColor(
-                                passwordStrength
-                              )}`}
-                              style={{ width: `${passwordStrength}%` }}
-                            ></div>
-                          </div>
-                        </div>
-                        <ul className="mt-2 space-y-1 text-sm text-gray-500 dark:text-gray-400">
-                          <li
-                            className={
-                              passwordChecks.length ? "text-green-500" : ""
-                            }
-                          >
-                            {passwordChecks.length ? (
-                              <Check size={16} className="inline mr-1" />
-                            ) : null}
-                            Mínimo 8 caracteres
-                          </li>
-                          <li
-                            className={
-                              passwordChecks.uppercase ? "text-green-500" : ""
-                            }
-                          >
-                            {passwordChecks.uppercase ? (
-                              <Check size={16} className="inline mr-1" />
-                            ) : null}
-                            Al menos una mayúscula
-                          </li>
-                          <li
-                            className={
-                              passwordChecks.lowercase ? "text-green-500" : ""
-                            }
-                          >
-                            {passwordChecks.lowercase ? (
-                              <Check size={16} className="inline mr-1" />
-                            ) : null}
-                            Al menos una minúscula
-                          </li>
-                          <li
-                            className={
-                              passwordChecks.number ? "text-green-500" : ""
-                            }
-                          >
-                            {passwordChecks.number ? (
-                              <Check size={16} className="inline mr-1" />
-                            ) : null}
-                            Al menos un número
-                          </li>
-                          <li
-                            className={
-                              passwordChecks.special ? "text-green-500" : ""
-                            }
-                          >
-                            {passwordChecks.special ? (
-                              <Check size={16} className="inline mr-1" />
-                            ) : null}
-                            Al menos un carácter especial como: !@#$%^&*(),.?":
-                            {}
-                          </li>
-                          <li
-                            className={
-                              passwordChecks.noSequential
-                                ? "text-green-500"
-                                : ""
-                            }
-                          >
-                            {passwordChecks.noSequential ? (
-                              <Check size={16} className="inline mr-1" />
-                            ) : null}
-                            Sin secuencias obvias como "12345" o "abcd"
-                          </li>
-                        </ul>
-                      </>
-                    )}
-                </div>
-
-                {/* Confirmar Contraseña */}
-                <div>
-                  <Label
-                    htmlFor="password-confirm"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    Confirmar contraseña
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      {...register("confirmPassword", {
-                        required:
-                          "La confirmación de la contraseña es requerida",
-                        validate: (value) =>
-                          value === watch("password") ||
-                          "Las contraseñas no coinciden",
-                      })}
-                      id="password-confirm"
-                      type={showConfirmPassword ? "text" : "password"}
-                      autoComplete="new-password"
-                       className="w-full bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 "
-                      placeholder="Confirmar contraseña"
-                    />
-                    <button
-                      type="button"
-                      className="absolute z-40 inset-y-0 right-3 flex items-center cursor-pointer"
-                      onClick={() =>
-                        setShowConfirmPassword(!showConfirmPassword)
-                      }
-                      tabIndex={-1}
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOff size={20} />
-                      ) : (
-                        <Eye size={20} />
-                      )}
-                    </button>
-                  </div>
-                  {errors.confirmPassword && (
-                    <span className="text-red-500 text-xs">
-                      {errors.confirmPassword.message}
-                    </span>
-                  )}
-                </div>
-              </>
-            )}
-
-            {error && (
-              <p className="text-sm text-red-500 text-center">{error}</p>
-            )}
-            <div
-              className={`flex ${
-                currentStep === 1 ? "justify-end" : "justify-between"
-              } ${currentStep === 2 && ""}`}
-            >
-              {currentStep > 1 && (
-                <button
-                  type="button"
-                  className="px-4 py-2 text-blue-500 font-bold dark:text-gray-100 rounded-md flex items-center"
-                  onClick={handleBack}
-                >
-                  <MoveLeft className="h-4 w-4 mr-2" />
-                  Atrás
-                </button>
-              )}
-              <button
-                type="submit"
-                className="px-4 py-2 bg-blue-500 font-bold text-white rounded-md flex items-center"
-              >
-                <span>{currentStep === 2 ? "Confirmar" : "Siguiente"}</span>
-                {currentStep === 2 ? (
-                  <CheckCircleIcon className="h-4 w-4 ml-2" />
-                ) : (
-                  <MoveRight className="h-4 w-4 ml-2" />
-                )}
-              </button>
-            </div>
-
-            {currentStep === 1 && (
-              <div className="flex  w-full">
-                <div className="text-center w-full ">
-                  <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">
-                    ¿Ya tienes una cuenta?{" "}
-                    <NavLink
-                      to="/login"
-                      className="text-sm text-blue-500 hover:text-blue-600 mt-2"
-                    >
-                      Iniciar sesión
-                    </NavLink>
-                  </p>
-                </div>
-              </div>
-            )}
-          </form>
         </div>
       </div>
     </div>

@@ -78,7 +78,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setIsVerificationPending(true);
         localStorage.setItem("emailToVerify", email);
         localStorage.setItem("isVerificationPending", "true");
-        return res.data;
+        return res.data; // Retorna los datos del usuario si el inicio de sesión es exitoso
       }
     } catch (error: any) {
       if (
@@ -90,11 +90,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           error.response?.data?.message ||
             "Error desconocido al iniciar sesión."
         );
-        setTimeout(() => {
-          setError("");
-        }, 2000);
       }
+      throw error; // Lanza el error para que pueda ser capturado en el componente
     }
+    return null; // Retorna null si no hay respuesta
   };
 
   const SignUp = async (

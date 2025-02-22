@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
 import backgroundImage from "../assets/hero.jpg";
+import { NavLink } from "react-router-dom";
 
 export default function Hero() {
   return (
@@ -24,12 +24,10 @@ export default function Hero() {
           increíble en cualquier ocasión.
         </p>
         <div className="flex justify-center gap-6">
-          <Button size="lg" className="bg-blue-600 hover:bg-blue-700 font-bold">
+          <NavLink to={"/productos"}  className=" p-3 bg-blue-600 text-white font-bold rounded-md hover:bg-blue-700 transition-colors flex justify-center items-center">
             Ver catálogo
-          </Button>
-          <Button size="lg" variant="outline" className="font-bold text-black">
-            Contactar
-          </Button>
+          </NavLink>
+         
         </div>
       </motion.div>
     </section>

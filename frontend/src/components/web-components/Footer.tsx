@@ -5,16 +5,16 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 export function Footer() {
-    const [info, setInfo] = useState<CompanyProfile>();
-    useEffect(() => {
-      const getInfo = async () => {
-        const res = await getCompanyInfoApi();
-        if (res) {
-          setInfo(res.data[0]);
-        }
-      };
-      getInfo();
-    }, []);
+  const [info, setInfo] = useState<CompanyProfile>();
+  useEffect(() => {
+    const getInfo = async () => {
+      const res = await getCompanyInfoApi();
+      if (res) {
+        setInfo(res.data[0]);
+      }
+    };
+    getInfo();
+  }, []);
   return (
     <footer className="bg-slate-950 text-white">
       <div className="container mx-auto px-4 py-12">
@@ -72,25 +72,23 @@ export function Footer() {
             <ul className="space-y-2">
               <li className="flex items-center">
                 <Mail size={18} className="mr-2" />
-                <p>{info?.contactInfo[0].email}</p>
+                <p>{info?.contactInfo && info?.contactInfo[0]?.email}</p>
               </li>
               <li className="flex items-center">
                 <Phone size={18} className="mr-2" />
-                <p>{info?.contactInfo[0].phone}</p>
+                <p>{info?.contactInfo && info?.contactInfo[0]?.phone}</p>
               </li>
               <li className="flex items-center">
                 <MapPin size={18} className="mr-2" />
-                <span>
-                 {info?.contactInfo[0].address}
-                </span>
+                <span>{info?.contactInfo && info?.contactInfo[0]?.address}</span>
               </li>
             </ul>
           </div>
         </div>
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
           <p>
-            
-            &copy; {new Date().getFullYear()} {info?.title}. Todos los derechos reservados.
+            &copy; {new Date().getFullYear()} {info?.title}. Todos los derechos
+            reservados.
           </p>
         </div>
       </div>

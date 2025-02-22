@@ -16,17 +16,6 @@ const NavBarUser = () => {
   const { auth, user } = useAuth();
   const [darkMode, setDarkMode] = useState(false);
   const [logo, setLogo] = useState<string>("");
-  const [scrolled, setScrolled] = useState(false);
-
-  // Detectar scroll para cambiar el fondo del navbar
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50); // Cambia a fondo sólido después de 50px
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   useEffect(() => {
     const getInfo = async () => {
@@ -51,12 +40,12 @@ const NavBarUser = () => {
     localStorage.setItem("theme", newTheme);
   };
 
+  const closeMenu = () => {
+    setIsMenuOpen(false);
+  };
+
   return (
-    <div
-      className={`sticky top-0 z-50 transition-colors duration-300 ${
-        scrolled ? "bg-white dark:bg-gray-900 shadow-md" : "bg-transparent"
-      }`}
-    >
+    <div className="sticky bg-white dark:bg-gray-900 shadow-md top-0 z-50">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -70,24 +59,15 @@ const NavBarUser = () => {
             </NavLink>
           </div>
 
-          {/* Menú de navegación */}
+          {/* Menú de navegación en escritorio */}
           <div className="hidden sm:flex sm:items-center sm:space-x-6">
-            <NavLink
-              to="/"
-              className={`transition-all ${
-                scrolled ? "text-gray-800 dark:text-gray-300" : "text-white"
-              } hover:text-blue-600`}
-            >
+            <NavLink to="/" className="text-black dark:text-white hover:text-blue-600">
               Inicio
             </NavLink>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button
-                  className={`transition-all ${
-                    scrolled ? "text-gray-800 dark:text-gray-300" : "text-white"
-                  } hover:text-blue-600`}
-                >
+                <button className="text-black dark:text-white hover:text-blue-600">
                   Productos
                 </button>
               </DropdownMenuTrigger>
@@ -95,7 +75,7 @@ const NavBarUser = () => {
                 <DropdownMenuItem>
                   <Link
                     to="/productos"
-                    className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    className="block px-4 py-2 text-sm text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
                   >
                     Todos los productos
                   </Link>
@@ -103,7 +83,7 @@ const NavBarUser = () => {
                 <DropdownMenuItem>
                   <Link
                     to="/productos?categoria=uniformes-escolares"
-                    className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    className="block px-4 py-2 text-sm text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
                   >
                     Uniformes Escolares
                   </Link>
@@ -111,7 +91,7 @@ const NavBarUser = () => {
                 <DropdownMenuItem>
                   <Link
                     to="/productos?categoria=deportivos"
-                    className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    className="block px-4 py-2 text-sm text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
                   >
                     Deportivos
                   </Link>
@@ -119,58 +99,34 @@ const NavBarUser = () => {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <NavLink
-              to="/contacto"
-              className={`transition-all ${
-                scrolled ? "text-gray-800 dark:text-gray-300" : "text-white"
-              } hover:text-blue-600`}
-            >
+            <NavLink to="/contacto" className="text-black dark:text-white hover:text-blue-600">
               Contacto
             </NavLink>
           </div>
 
-          {/* Iconos */}
+          {/* Iconos en escritorio */}
           <div className="hidden sm:flex items-center gap-4">
             {auth ? (
               <Link
                 to={user?.role === "ADMIN" ? "/perfil-admin" : "/perfil-usuario"}
               >
-                <User
-                  className={`h-6 w-6 transition ${
-                    scrolled ? "text-gray-800 dark:text-gray-300" : "text-white"
-                  } hover:text-blue-600`}
-                />
+                <User className="h-6 w-6 text-black dark:text-white hover:text-blue-600" />
               </Link>
             ) : (
               <Link to="/login">
-                <User
-                  className={`h-6 w-6 transition ${
-                    scrolled ? "text-gray-800 dark:text-gray-300" : "text-white"
-                  } hover:text-blue-600`}
-                />
+                <User className="h-6 w-6 text-black dark:text-white hover:text-blue-600" />
               </Link>
             )}
 
             <Link to="/carrito">
-              <ShoppingCart
-                className={`h-6 w-6 transition ${
-                  scrolled ? "text-gray-800 dark:text-gray-300" : "text-white"
-                } hover:text-blue-600`}
-              />
+              <ShoppingCart className="h-6 w-6 text-black dark:text-white hover:text-blue-600" />
             </Link>
 
-            <button
-              onClick={toggleTheme}
-              className="p-2 hover:text-blue-600 border-b-blue-600"
-            >
+            <button onClick={toggleTheme} className="p-2 hover:text-blue-600">
               {darkMode ? (
-                <Sun  className={`h-6 w-6 transition ${
-                  scrolled ? "text-gray-800 dark:text-gray-300" : "text-white"
-                } hover:text-blue-600`} />
+                <Sun className="h-6 w-6 text-black dark:text-white hover:text-blue-600" />
               ) : (
-                <Moon  className={`h-6 w-6 transition ${
-                  scrolled ? "text-gray-800 dark:text-gray-300" : "text-white"
-                } hover:text-blue-600`} />
+                <Moon className="h-6 w-6 text-black dark:text-white hover:text-blue-600" />
               )}
             </button>
           </div>
@@ -179,14 +135,92 @@ const NavBarUser = () => {
           <div className="flex items-center sm:hidden">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className={`p-2 rounded-md transition ${
-                scrolled ? "text-gray-800 dark:text-white" : "text-white"
-              } hover:bg-gray-200 dark:hover:bg-gray-800`}
+              className="p-2 rounded-md text-black dark:text-white hover:bg-gray-200 dark:hover:bg-gray-800"
             >
               {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </div>
+
+        {/* Menú móvil desplegable */}
+        {isMenuOpen && (
+          <div className="sm:hidden fixed inset-y-0 right-0 w-1/2 bg-white dark:bg-gray-800 shadow-lg z-50">
+            <div className="flex flex-col space-y-4 p-6">
+              <NavLink to="/" onClick={closeMenu} className="text-black dark:text-white hover:text-blue-600">
+                Inicio
+              </NavLink>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="text-black dark:text-white hover:text-blue-600">
+                    Productos
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg">
+                  <DropdownMenuItem>
+                    <Link
+                      to="/productos"
+                      onClick={closeMenu}
+                      className="block px-4 py-2 text-sm text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                      Todos los productos
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Link
+                      to="/productos?categoria=uniformes-escolares"
+                      onClick={closeMenu}
+                      className="block px-4 py-2 text-sm text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                      Uniformes Escolares
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Link
+                      to="/productos?categoria=deportivos"
+                      onClick={closeMenu}
+                      className="block px-4 py-2 text-sm text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                      Deportivos
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <NavLink to="/contacto" onClick={closeMenu} className="text-black dark:text-white hover:text-blue-600">
+                Contacto
+              </NavLink>
+
+              <div className="flex items-center gap-4">
+                {auth ? (
+                  <Link
+                    to={user?.role === "ADMIN" ? "/perfil-admin" : "/perfil-usuario"}
+                    onClick={closeMenu}
+                    className="text-black dark:text-white hover:text-blue-600"
+                  >
+                    <User className="h-6 w-6" />
+                  </Link>
+                ) : (
+                  <Link to="/login" onClick={closeMenu} className="text-black dark:text-white hover:text-blue-600">
+                    <User className="h-6 w-6" />
+                  </Link>
+                )}
+
+                <Link to="/carrito" onClick={closeMenu} className="text-black dark:text-white hover:text-blue-600">
+                  <ShoppingCart className="h-6 w-6" />
+                </Link>
+
+                <button onClick={toggleTheme} className="text-black dark:text-white hover:text-blue-600">
+                  {darkMode ? (
+                    <Sun className="h-6 w-6" />
+                  ) : (
+                    <Moon className="h-6 w-6" />
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </nav>
     </div>
   );

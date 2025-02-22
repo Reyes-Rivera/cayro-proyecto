@@ -56,7 +56,7 @@ export default function CustomOrder() {
               >
                 <Button
                   size="lg"
-                  className="bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 font-bold"
+                  className=" p-3 bg-blue-600 text-white font-bold rounded-md hover:bg-blue-700 transition-colors flex justify-center items-center"
                 >
                   Solicitar presupuesto
                   <ArrowRight className="ml-2 w-4 h-4" />

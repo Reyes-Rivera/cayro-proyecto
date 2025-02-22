@@ -1,5 +1,4 @@
 import { resendCodeApi } from "@/api/auth";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContextType";
 import { UserLogin } from "@/types/User";
@@ -10,6 +9,7 @@ import "sweetalert2/src/sweetalert2.scss";
 import ReCAPTCHA from "react-google-recaptcha";
 import { Check, Eye, EyeOff, Loader2, Lock, User } from "lucide-react";
 import Breadcrumbs from "@/components/web-components/Breadcrumbs";
+import backgroundImage from "../web/Home/assets/hero.jpg";
 
 export default function LoginPage() {
   const { login, error, errorTimer } = useAuth();
@@ -50,17 +50,37 @@ export default function LoginPage() {
     }
 
     setIsLoading(true);
-    const res = await login(data.email, data.password);
-    if (res) {
-      if (res?.role === "USER" && res.active === false) {
-        setIsLoading(true);
-        await resendCodeApi({ email: res.email });
-        navigate("/codigo-verificacion");
-      } else {
-        navigate("/codigo-verificacion-auth");
+
+    try {
+      const res = await login(data.email, data.password);
+      if (res) {
+        if (res?.role === "USER" && res.active === false) {
+          setIsLoading(true);
+          await resendCodeApi({ email: res.email });
+          navigate("/codigo-verificacion");
+        } else {
+          navigate("/codigo-verificacion-auth");
+        }
       }
+    } catch (error: any) {
+      // Capturamos el error lanzado por la función `login`
+      const errorMessage =
+        error.response?.data?.message || "Error desconocido al iniciar sesión.";
+      Swal.fire({
+        icon: "error",
+        title: "Error al iniciar sesión",
+        toast: true,
+        text: errorMessage,
+        position: "top-end",
+        timer: 3000,
+        showConfirmButton: false,
+        animation: true,
+        
+        
+      });
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   useEffect(() => {
@@ -85,44 +105,52 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen mt-5 flex-col items-center justify-center bg-gray-50 dark:bg-gray-900  p-5">
-      <div className="w-full lg:pl-36">
-        <Breadcrumbs />
-      </div>
-      <div className="flex flex-col-reverse md:flex-row max-w-6xl w-full bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-hidden">
-        {/* Columna Izquierda */}
-        <div className="hidden md:flex md:flex-col lg:justify-center bg-blue-600 dark:bg-gray-900 text-white w-full lg:w-1/2 p-10">
-          <h2 className="text-4xl font-extrabold mb-4">
-            Bienvenido a <span className="text-blue-100">Cayro Uniformes</span>
-          </h2>
-          <p className="text-lg mb-8">
-            Accede a tu cuenta para gestionar tus pedidos, ver tu historial de
-            compras y mucho más.
-          </p>
-          <div className="grid grid-cols-3 gap-6">
-            <div className="flex flex-col items-center">
-              <div className="flex items-center justify-center w-14 h-14 bg-gradient-to-tr from-blue-400 to-blue-600 rounded-full shadow-lg">
-                <Check size={32} className="text-white" />
-              </div>
-              <p className="mt-3 text-sm text-white">Pedidos rápidos</p>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 mt-14">
+      {/* Contenedor principal con dos columnas */}
+      <div className="flex flex-col md:flex-row w-full">
+        <div
+          className="hidden h-screen justify-center items-center md:flex md:w-1/2 bg-cover bg-center relative"
+          style={{ backgroundImage: `url(${backgroundImage})` }}
+        >
+          {/* Overlay oscuro */}
+          <div className="absolute inset-0 bg-black bg-opacity-50"></div>
+          {/* Contenido de la columna derecha */}
+          <div className="relative z-10 p-10 text-white">
+            <div className="text-white [&_*]:!text-white flex justify-center">
+              <Breadcrumbs />
             </div>
-            <div className="flex flex-col items-center">
-              <div className="flex items-center justify-center w-14 h-14 bg-gradient-to-tr from-green-400 to-green-600 rounded-full shadow-lg">
-                <Lock size={32} className="text-white" />
+            <h2 className="text-4xl font-extrabold mb-4">
+              Bienvenido a{" "}
+              <span className="text-blue-100">Cayro Uniformes</span>
+            </h2>
+            <p className="text-lg mb-8">
+              Accede a tu cuenta para gestionar tus pedidos, ver tu historial de
+              compras y mucho más.
+            </p>
+            <div className="grid grid-cols-3 gap-6">
+              <div className="flex flex-col items-center">
+                <div className="flex items-center justify-center w-14 h-14 bg-gradient-to-tr from-blue-400 to-blue-600 rounded-full shadow-lg">
+                  <Check size={32} className="text-white" />
+                </div>
+                <p className="mt-3 text-sm text-white">Pedidos rápidos</p>
               </div>
-              <p className="mt-3 text-sm text-white">Seguridad garantizada</p>
-            </div>
-            <div className="flex flex-col items-center">
-              <div className="flex items-center justify-center w-14 h-14 bg-gradient-to-tr from-yellow-400 to-yellow-600 rounded-full shadow-lg">
-                <User size={32} className="text-white" />
+              <div className="flex flex-col items-center">
+                <div className="flex items-center justify-center w-14 h-14 bg-gradient-to-tr from-green-400 to-green-600 rounded-full shadow-lg">
+                  <Lock size={32} className="text-white" />
+                </div>
+                <p className="mt-3 text-sm text-white">Seguridad garantizada</p>
               </div>
-              <p className="mt-3 text-sm text-white">Gestión personalizada</p>
+              <div className="flex flex-col items-center">
+                <div className="flex items-center justify-center w-14 h-14 bg-gradient-to-tr from-yellow-400 to-yellow-600 rounded-full shadow-lg">
+                  <User size={32} className="text-white" />
+                </div>
+                <p className="mt-3 text-sm text-white">Gestión personalizada</p>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Columna Derecha */}
-        <div className="flex flex-col items-center dark:bg-gray-800 justify-center w-full lg:w-1/2 p-6 lg:p-10  ">
+        <div className="flex flex-col items-center justify-center w-full md:w-1/2 p-6 lg:p-10 bg-white dark:bg-gray-900">
           <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-6">
             Iniciar sesión
           </h2>
@@ -134,14 +162,14 @@ export default function LoginPage() {
               >
                 Correo electrónico
               </Label>
-              <Input
+              <input
                 id="email"
                 name="email"
                 type="email"
                 autoComplete="email"
                 required
-                placeholder="correo"
-                className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2"
+                placeholder="correo@ejemplo.com"
+                className="block w-full rounded-md bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600 focus:ring-1 focus:ring-blue-600 p-3 active:border-none focus:border-none focus:outline-none"
                 onChange={(e) => setData({ ...data, email: e.target.value })}
               />
             </div>
@@ -153,21 +181,21 @@ export default function LoginPage() {
                 Contraseña
               </Label>
               <div className="relative">
-                <Input
+                <input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   name="password"
                   autoComplete="current-password"
                   required
-                  placeholder="contraseña"
-                  className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2"
+                  placeholder="********"
+                  className="block w-full rounded-md bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600 focus:ring-1 focus:ring-blue-600 p-3 active:border-none focus:border-none focus:outline-none"
                   onChange={(e) =>
                     setData({ ...data, password: e.target.value })
                   }
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500 dark:text-gray-300"
+                  className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500 dark:text-gray-400"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -176,24 +204,20 @@ export default function LoginPage() {
               <p className="mt-6 text-end text-sm text-gray-600 dark:text-gray-400">
                 <NavLink
                   to="/recuperar-password"
-                  className="text-sm text-blue-500 hover:text-blue-600 mt-2"
+                  className="text-sm text-blue-500 hover:text-blue-600"
                 >
                   ¿He olvidado mi contraseña?
                 </NavLink>
               </p>
             </div>
 
-            {error && (
-              <div className="bg-red-100 dark:bg-red-800 text-red-700 dark:text-red-300 p-3 rounded-md text-sm">
-                {error}
-              </div>
-            )}
             {lockoutTime > 0 && (
               <div className="bg-yellow-100 dark:bg-yellow-800 text-yellow-700 dark:text-yellow-300 p-3 rounded-md text-sm">
                 Cuenta bloqueada temporalmente. Inténtalo en{" "}
                 <span className="font-bold">{formatTime(lockoutTime)}</span>.
               </div>
             )}
+
             <div className="flex justify-center">
               <ReCAPTCHA
                 sitekey="6Lc_k2MqAAAAAB19xvWE6_otNt4WRJBDfJpeo-EC"
@@ -204,7 +228,7 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="px-4 w-full text-center justify-center py-2 bg-blue-600 font-bold text-white rounded-md flex items-center"
+              className="w-full p-3 bg-blue-600 text-white font-bold rounded-md hover:bg-blue-700 transition-colors"
               disabled={lockoutTime > 0 || isLoading}
             >
               {isLoading ? (
@@ -219,7 +243,7 @@ export default function LoginPage() {
             ¿No tienes una cuenta?{" "}
             <NavLink
               to="/registro"
-              className="text-sm text-blue-500 hover:text-blue-600 mt-2"
+              className="text-sm text-blue-500 hover:text-blue-600"
             >
               Regístrate
             </NavLink>
