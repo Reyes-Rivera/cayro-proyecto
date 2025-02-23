@@ -42,13 +42,13 @@ export default function FeaturedCategories() {
   }, []);
 
   return (
-    <section className="py-12 md:py-20 bg-gray-50 px-4 sm:px-8 lg:px-36">
+    <section className="py-12 md:py-20 bg-gray-50 dark:bg-gray-800  px-4 sm:px-8 lg:px-36">
       <div className="container mx-auto px-4">
         <motion.h2
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-6 sm:mb-8"
+          className="text-3xl sm:text-4xl dark:text-white font-extrabold text-center text-gray-900 mb-6 sm:mb-8"
         >
           Categorías Destacadas
         </motion.h2>
@@ -61,16 +61,12 @@ export default function FeaturedCategories() {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.2, delay: index * 0.1 }}
-              className={`relative h-24 sm:h-32 overflow-hidden bg-white shadow-lg flex items-center justify-center ${
-                index !== categories.length - 1
-                  ? "border-r border-gray-200"
-                  : ""
-              }`}
+              className={`relative h-24 sm:h-32 overflow-hidden bg-white dark:bg-gray-900  flex items-center justify-center`}
             >
               {/* Texto de la categoría (siempre visible) */}
               <p
                 className={`font-bold text-lg sm:text-xl z-20 uppercase transition-colors duration-300 ${
-                  index === visibleIndex ? "text-white" : "text-gray-800"
+                  index === visibleIndex ? "text-white " : "text-gray-800 dark:text-gray-100"
                 }`}
               >
                 {category.name}
@@ -87,7 +83,7 @@ export default function FeaturedCategories() {
                 style={{ backgroundImage: `url(${category.image})` }}
                 initial={{ x: "-100%" }} // Inicia fuera del contenedor a la izquierda
                 animate={{
-                  x: index === visibleIndex ? "0%" : "-100%", // Se desliza a la posición original si es la categoría visible
+                  x: index === visibleIndex ? "0%" : "-100%", 
                 }}
                 transition={{ duration: 0.5, ease: "easeInOut" }} // Animación suave
               />

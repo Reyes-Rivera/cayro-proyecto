@@ -1,11 +1,10 @@
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import imagen from "../assets/personalizar.jpg";
 
 export default function CustomOrder() {
   return (
-    <section className="py-24 bg-white dark:bg-gray-800 px-10">
+    <section className="py-24 bg-white dark:bg-gray-900 px-10">
       <div className="container mx-auto px-4">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left Side - Single Image (Smaller) */}
@@ -54,13 +53,12 @@ export default function CustomOrder() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: 0.6 }}
               >
-                <Button
-                  size="lg"
+                <button
                   className=" p-3 bg-blue-600 text-white font-bold rounded-md hover:bg-blue-700 transition-colors flex justify-center items-center"
                 >
                   Solicitar presupuesto
                   <ArrowRight className="ml-2 w-4 h-4" />
-                </Button>
+                </button>
               </motion.div>
             </div>
           </motion.div>

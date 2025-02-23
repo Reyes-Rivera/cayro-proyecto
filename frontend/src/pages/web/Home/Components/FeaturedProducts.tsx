@@ -11,18 +11,102 @@ import ProductCard from "../../products/components/ProductCard";
 
 // Datos de los productos (4 fijos + 8 en carrusel)
 const allProducts = [
-  { id: 1, name: "Uniforme Escolar Clásico", price: 599, oldPrice: 799, image: escolta, category: "Primaria" },
-  { id: 2, name: "Conjunto Deportivo Premium", price: 499, oldPrice: 649, image: deportivo, category: "Deportes" },
-  { id: 3, name: "Falda Plisada Elegante", price: 299, oldPrice: 399, image: polo, category: "Secundaria" },
-  { id: 4, name: "Espinilleras", price: 249, oldPrice: 299, image: espinilleras, category: "Accesorios" },
-  { id: 5, name: "Polo Casual", price: 350, oldPrice: 450, image: polo, category: "Hombre" },
-  { id: 6, name: "Pantalón Formal", price: 799, oldPrice: 999, image: deportivo, category: "Hombre" },
-  { id: 7, name: "Playera Deportiva", price: 199, oldPrice: 299, image: espinilleras, category: "Deportes" },
-  { id: 8, name: "Sudadera Clásica", price: 599, oldPrice: 749, image: escolta, category: "Mujer" },
-  { id: 9, name: "Gorra Sport", price: 149, oldPrice: 199, image: espinilleras, category: "Accesorios" },
-  { id: 10, name: "Short Deportivo", price: 399, oldPrice: 499, image: deportivo, category: "Deportes" },
-  { id: 11, name: "Chamarra Ligera", price: 899, oldPrice: 1099, image: polo, category: "Hombre" },
-  { id: 12, name: "Calcetas Largas", price: 99, oldPrice: 149, image: escolta, category: "Accesorios" },
+  {
+    id: 1,
+    name: "Uniforme Escolar Clásico",
+    price: 599,
+    oldPrice: 799,
+    image: escolta,
+    category: "Primaria",
+  },
+  {
+    id: 2,
+    name: "Conjunto Deportivo Premium",
+    price: 499,
+    oldPrice: 649,
+    image: deportivo,
+    category: "Deportes",
+  },
+  {
+    id: 3,
+    name: "Falda Plisada Elegante",
+    price: 299,
+    oldPrice: 399,
+    image: polo,
+    category: "Secundaria",
+  },
+  {
+    id: 4,
+    name: "Espinilleras",
+    price: 249,
+    oldPrice: 299,
+    image: espinilleras,
+    category: "Accesorios",
+  },
+  {
+    id: 5,
+    name: "Polo Casual",
+    price: 350,
+    oldPrice: 450,
+    image: polo,
+    category: "Hombre",
+  },
+  {
+    id: 6,
+    name: "Pantalón Formal",
+    price: 799,
+    oldPrice: 999,
+    image: deportivo,
+    category: "Hombre",
+  },
+  {
+    id: 7,
+    name: "Playera Deportiva",
+    price: 199,
+    oldPrice: 299,
+    image: espinilleras,
+    category: "Deportes",
+  },
+  {
+    id: 8,
+    name: "Sudadera Clásica",
+    price: 599,
+    oldPrice: 749,
+    image: escolta,
+    category: "Mujer",
+  },
+  {
+    id: 9,
+    name: "Gorra Sport",
+    price: 149,
+    oldPrice: 199,
+    image: espinilleras,
+    category: "Accesorios",
+  },
+  {
+    id: 10,
+    name: "Short Deportivo",
+    price: 399,
+    oldPrice: 499,
+    image: deportivo,
+    category: "Deportes",
+  },
+  {
+    id: 11,
+    name: "Chamarra Ligera",
+    price: 899,
+    oldPrice: 1099,
+    image: polo,
+    category: "Hombre",
+  },
+  {
+    id: 12,
+    name: "Calcetas Largas",
+    price: 99,
+    oldPrice: 149,
+    image: escolta,
+    category: "Accesorios",
+  },
 ];
 
 // Separar los 4 productos fijos y los 8 en carrusel
@@ -58,7 +142,7 @@ export default function FeaturedProducts() {
           <Swiper
             modules={[Autoplay]}
             spaceBetween={20}
-            slidesPerView={4} // Muestra 4 productos a la vez
+            slidesPerView={4} // Predeterminado: 4 productos en pantallas grandes
             autoplay={{
               delay: 0, // Sin pausa entre transiciones
               disableOnInteraction: false, // No se detiene al interactuar
@@ -68,6 +152,17 @@ export default function FeaturedProducts() {
             loop={true} // Hace que el carrusel nunca termine
             freeMode={true} // Movimiento suave, sin cortes
             className="mySwiper"
+            breakpoints={{
+              0: {
+                slidesPerView: 2, // En móviles (pantallas pequeñas) muestra 2 productos
+              },
+              768: {
+                slidesPerView: 3, // En tablets muestra 3 productos
+              },
+              1024: {
+                slidesPerView: 4, // En pantallas grandes muestra 4 productos
+              },
+            }}
           >
             {carouselProducts.concat(carouselProducts).map((product, index) => (
               <SwiperSlide key={index}>

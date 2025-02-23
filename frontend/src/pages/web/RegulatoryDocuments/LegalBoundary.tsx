@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { boundaryApi } from "@/api/policy";
 import { DocumentInterface } from "./DocumentInterface";
 import Breadcrumbs from "@/components/web-components/Breadcrumbs";
-
+import { motion } from "framer-motion";
+import backgroundImage from "../Home/assets/hero.jpg";
 export default function LegalBoundary() {
   const [document, setDocument] = useState<DocumentInterface[]>([]);
 
@@ -15,22 +16,57 @@ export default function LegalBoundary() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex py-20 lg:py-28">
-      <main className="container mx-auto px-6 lg:px-20">
-        <div className="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl overflow-hidden">
-          {/* Document Header */}
-          <div className="bg-gray-100 dark:bg-gray-700 p-8 border-b dark:border-gray-600">
-            <div className="flex items-center justify-between mb-6">
-              <Breadcrumbs />
-            </div>
-            <h1 className="text-3xl font-extrabold">Deslinde legal</h1>
-            {/* <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-            Última actualización: {new Date().toLocaleDateString()}
-          </p> */}
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex flex-col">
+      {/* Hero Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="relative h-96 flex items-center justify-center bg-cover bg-center"
+        style={{ backgroundImage: `url(${backgroundImage})` }}
+      >
+        <div className="absolute inset-0 bg-black bg-opacity-50" />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="relative z-10 text-center text-white max-w-5xl px-4"
+        >
+          <h1 className="text-5xl md:text-6xl font-extrabold mb-6">
+            Deslinde legal
+          </h1>
+          <div className="text-white [&_*]:!text-white flex justify-center">
+            <Breadcrumbs />
           </div>
+        </motion.div>
+      </motion.div>
+
+      {/* Main Content */}
+      <main className="container mx-auto px-6 lg:px-20">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl overflow-hidden"
+        >
+          {/* Document Header */}
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="bg-gray-100 font-bold dark:bg-gray-900 p-8 border-b dark:border-gray-600"
+          >
+            
+            Deslinde legal
+          </motion.p>
 
           {/* Document Content */}
-          <div className="p-8 lg:p-12 space-y-8 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-lg shadow-md">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+            className="p-8 lg:p-12 space-y-8 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-lg shadow-md"
+          >
             {document?.length > 0 && document[0]?.content ? (
               <div
                 className="whitespace-pre-wrap leading-relaxed text-justify"
@@ -46,28 +82,44 @@ export default function LegalBoundary() {
 
                   if (colonMatch) {
                     return (
-                      <div key={index} className="mb-4">
-                        {/* Título en negritas */}
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.1 * index }}
+                        className="mb-4"
+                      >
                         <p className="font-bold text-lg">{colonMatch[1]}:</p>
-                      </div>
+                      </motion.div>
                     );
                   }
 
                   // Renderizar texto normal después de títulos
                   return (
-                    <p key={index} className="mb-4">
+                    <motion.p
+                      key={index}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.1 * index }}
+                      className="mb-4"
+                    >
                       {section}
-                    </p>
+                    </motion.p>
                   );
                 })}
               </div>
             ) : (
-              <p className="text-center text-gray-500">
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="text-center text-gray-500"
+              >
                 No hay contenido disponible.
-              </p>
+              </motion.p>
             )}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </main>
     </div>
   );

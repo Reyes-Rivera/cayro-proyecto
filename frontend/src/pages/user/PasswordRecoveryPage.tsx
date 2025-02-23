@@ -27,7 +27,7 @@ export default function PasswordRecoveryPage() {
           icon: "success",
           title: "Recuperación de contraseña.",
           text: "Se ha enviado un correo con las instrucciones para la recuperación de su contraseña.",
-          confirmButtonColor: "#2F93D1",
+          confirmButtonColor: "#2563EB",
         });
         return;
       } else {
@@ -35,7 +35,7 @@ export default function PasswordRecoveryPage() {
           icon: "error",
           title: "Algo salió mal.",
           text: "Por favor, inténtalo más tarde.",
-          confirmButtonColor: "#2F93D1",
+          confirmButtonColor: "#2563EB",
         });
         return;
       }
@@ -50,7 +50,7 @@ export default function PasswordRecoveryPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 dark:bg-gray-900">
+    <div className="flex p-10 md:p-0 min-h-screen flex-col items-center justify-center bg-gray-50 dark:bg-gray-900">
       {/* Contenedor principal con dos columnas */}
       <div className="flex flex-col md:flex-row w-full">
         {/* Columna Izquierda con imagen de fondo */}
@@ -77,7 +77,7 @@ export default function PasswordRecoveryPage() {
         </div>
 
         {/* Columna Derecha - Formulario */}
-        <div className="flex flex-col items-center justify-center w-full md:w-1/2 p-6 lg:p-10 bg-white dark:bg-gray-900">
+        <div className="flex flex-col items-center justify-center w-full md:w-1/2 p-6 lg:p-10 bg-white dark:bg-gray-900  rounded-md shadow-lg">
           <CardHeader>
             <CardTitle className="text-3xl font-bold text-center text-gray-800 dark:text-white">
               Recuperación de contraseña

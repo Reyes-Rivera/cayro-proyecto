@@ -10,8 +10,6 @@ import {
   Instagram,
   Facebook,
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { CompanyProfile } from "@/types/CompanyInfo";
 import { getCompanyInfoApi } from "@/api/company";
@@ -55,12 +53,12 @@ export default function ContactPage() {
   }, []);
 
   return (
-    <div className="min-h-screen  dark:bg-gray-900">
-      <div className=" mx-auto  ">
+    <div className="min-h-screen bg-gray-50  dark:bg-gray-800 mt-14">
+      <div className="mx-auto">
         {/* Header Section */}
         <div
           style={{ backgroundImage: `url(${backgroundImage})` }}
-          className="relative text-center py-12 mb-16 h-80 bg-gray-50 dark:bg-gray-800 bg-cover bg-center bg-no-repeat"
+          className="relative text-center py-12  h-80 bg-cover bg-center bg-no-repeat"
         >
           {/* Capa de opacidad para mejorar visibilidad */}
           <div className="absolute inset-0 bg-black bg-opacity-50" />
@@ -82,82 +80,88 @@ export default function ContactPage() {
             </div>
           </motion.div>
         </div>
-        <div className="flex flex-col items-center text-center mb-10">
-          <div className="flex items-center gap-4">
-            <div className="border-t-2 border-blue-600 w-20 sm:w-72"></div>
-            <span className="bg-blue-600 text-white text-sm px-4 py-1 rounded-full font-semibold uppercase">
-              Contáctanos
-            </span>
-            <div className="border-t-2 border-blue-600 w-20 sm:w-72"></div>
+        <div className="dark:bg-gray-800 py-16 bg-gray-50">
+          <div className="flex flex-col items-center text-center mb-10 ">
+            <div className="flex items-center gap-4">
+              <div className="border-t-2 border-blue-600 w-20 sm:w-72"></div>
+              <span className="bg-blue-600 text-white text-sm px-4 py-1 rounded-full font-semibold uppercase">
+                Contáctanos
+              </span>
+              <div className="border-t-2 border-blue-600 w-20 sm:w-72"></div>
+            </div>
+
+            <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-black dark:text-white">
+              Ponte en Contacto
+            </h2>
           </div>
+          <div className="grid grid-cols-1 max-w-7xl m-auto gap-6 mb-14 sm:grid-cols-3">
+            <motion.div
+              className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              <div className="flex flex-col items-center">
+                <div className="bg-blue-600 text-white p-3 rounded-md">
+                  <Phone className="h-6 w-6" />
+                </div>
+                <h3 className="font-bold text-lg text-black dark:text-white mt-4">
+                  LLÁMANOS
+                </h3>
+              </div>
+              <p className="mt-2 text-gray-600 dark:text-gray-300 text-center">
+                {info?.contactInfo[0].phone}
+              </p>
+            </motion.div>
 
-          <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-black">
-            Ponte en Contacto
-          </h2>
+            <motion.div
+              className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <div className="flex flex-col items-center">
+                <div className="bg-blue-600 text-white p-3 rounded-md">
+                  <Mail className="h-6 w-6" />
+                </div>
+                <h3 className="font-bold text-lg text-black dark:text-white mt-4">
+                  EMAIL
+                </h3>
+              </div>
+              <p className="mt-2 text-gray-600 dark:text-gray-300 text-center">
+                {info?.contactInfo[0].email}
+              </p>
+            </motion.div>
+
+            <motion.div
+              className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+            >
+              <div className="flex flex-col items-center">
+                <div className="bg-blue-600 text-white p-3 rounded-md">
+                  <MapPin className="h-6 w-6" />
+                </div>
+                <h3 className="font-bold text-lg text-black dark:text-white mt-4">
+                  LOCAL PRINCIPAL
+                </h3>
+              </div>
+              <p className="mt-2 text-gray-600 dark:text-gray-300 text-center">
+                {info?.contactInfo[0].address}
+              </p>
+            </motion.div>
+          </div>
         </div>
-
-        <div className="grid grid-cols-1 max-w-7xl m-auto gap-6 mb-14 sm:grid-cols-3">
-          <motion.div
-            className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-md border border-gray-200"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
-            <div className="flex flex-col items-center">
-              <div className="bg-blue-600 text-white p-3 rounded-md">
-                <Phone className="h-6 w-6" />
-              </div>
-              <h3 className="font-bold text-lg text-black mt-4">LLÁMANOS</h3>
-            </div>
-            <p className="mt-2 text-gray-600 text-center">
-              {info?.contactInfo[0].phone}
-            </p>
-          </motion.div>
-
-          <motion.div
-            className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-md border border-gray-200"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <div className="flex flex-col items-center">
-              <div className="bg-blue-600 text-white p-3 rounded-md">
-                <Mail className="h-6 w-6" />
-              </div>
-              <h3 className="font-bold text-lg text-black mt-4">EMAIL</h3>
-            </div>
-            <p className="mt-2 text-gray-600 text-center">
-              {info?.contactInfo[0].email}
-            </p>
-          </motion.div>
-
-          <motion.div
-            className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-md border border-gray-200"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-          >
-            <div className="flex flex-col items-center">
-              <div className="bg-blue-600 text-white p-3 rounded-md">
-                <MapPin className="h-6 w-6" />
-              </div>
-              <h3 className="font-bold text-lg text-black mt-4">
-                LOCAL PRINCIPAL
-              </h3>
-            </div>
-            <p className="mt-2 text-gray-600 text-center">
-              {info?.contactInfo[0].address}
-            </p>
-          </motion.div>
-        </div>
+        {/* Sección de Contacto */}
 
         {/* Main Content */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16 max-w-7xl m-auto shadow-lg rounded-lg overflow-hidden">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16 px-24 m-auto  overflow-hidden bg-white py-5 dark:bg-gray-900">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
-            className="lg:pr-12 p-10 bg-blue-600 dark:bg-gray-900 text-white rounded-l-lg"
+            className="lg:pr-12 p-10 bg-blue-600 dark:bg-gray-800 text-white rounded-l-lg"
           >
             <div className="mb-8">
               <span className="inline-flex items-center justify-center rounded-full bg-blue-100 dark:bg-gray-700 px-3 py-1 text-sm font-semibold text-blue-600 dark:text-blue-300">
@@ -194,7 +198,7 @@ export default function ContactPage() {
 
           {/* Right Column - Form */}
           <motion.div
-            className="p-6 sm:px-6 lg:p-10 w-full max-w-lg md:max-w-none mx-auto dark:bg-gray-800"
+            className="p-6 sm:px-6 lg:p-10 w-full max-w-lg md:max-w-none mx-auto"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
@@ -214,14 +218,14 @@ export default function ContactPage() {
                 >
                   Nombre
                 </Label>
-                <Input
+                <input
                   id="firstName"
                   name="firstName"
                   type="text"
                   placeholder="Tu nombre"
                   onChange={handleChange}
                   required
-                  className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2"
+                  className="block w-full rounded-md bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600 focus:ring-1 focus:ring-blue-600 p-3 active:border-none focus:border-none focus:outline-none"
                 />
               </div>
 
@@ -233,14 +237,14 @@ export default function ContactPage() {
                 >
                   Apellido
                 </Label>
-                <Input
+                <input
                   id="lastName"
                   name="lastName"
                   type="text"
                   placeholder="Tu apellido"
                   onChange={handleChange}
                   required
-                  className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2"
+                  className="block w-full rounded-md bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600 focus:ring-1 focus:ring-blue-600 p-3 active:border-none focus:border-none focus:outline-none"
                 />
               </div>
 
@@ -252,14 +256,14 @@ export default function ContactPage() {
                 >
                   Correo electrónico
                 </Label>
-                <Input
+                <input
                   id="email"
                   name="email"
                   type="email"
                   placeholder="correo"
                   onChange={handleChange}
                   required
-                  className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2"
+                  className="block w-full rounded-md bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600 focus:ring-1 focus:ring-blue-600 p-3 active:border-none focus:border-none focus:outline-none"
                 />
               </div>
 
@@ -271,14 +275,14 @@ export default function ContactPage() {
                 >
                   Servicio de interés
                 </Label>
-                <Input
+                <input
                   id="service"
                   name="service"
                   type="text"
                   placeholder="Servicio"
                   onChange={handleChange}
                   required
-                  className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2"
+                   className="block w-full rounded-md bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600 focus:ring-1 focus:ring-blue-600 p-3 active:border-none focus:border-none focus:outline-none"
                 />
               </div>
 
@@ -290,14 +294,14 @@ export default function ContactPage() {
                 >
                   Asunto
                 </Label>
-                <Input
+                <input
                   id="subject"
                   name="subject"
                   type="text"
                   placeholder="Asunto"
                   onChange={handleChange}
                   required
-                  className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2"
+                  className="block w-full rounded-md bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600 focus:ring-1 focus:ring-blue-600 p-3 active:border-none focus:border-none focus:outline-none"
                 />
               </div>
 
@@ -309,7 +313,7 @@ export default function ContactPage() {
                 >
                   Mensaje
                 </Label>
-                <Textarea
+                <textarea
                   id="message"
                   name="message"
                   placeholder="Cuéntanos sobre tu proyecto"
@@ -317,7 +321,7 @@ export default function ContactPage() {
                   onChange={handleChange}
                   required
                   rows={4}
-                  className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2"
+                  className="block w-full rounded-md bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600 focus:ring-1 focus:ring-blue-600 p-3 active:border-none focus:border-none focus:outline-none"
                 />
               </div>
 
@@ -336,7 +340,7 @@ export default function ContactPage() {
         </div>
 
         {/* Sección del Mapa */}
-        <div className="mt-16 max-w-7xl m-auto">
+        <div className="mt-16 max-w-7xl m-auto ">
           <div className="h-[400px] w-full rounded-xl overflow-hidden">
             <iframe
               src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3721.2917195571363!2d-98.42331282496527!3d21.140785880536765!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x85d7277686110b85%3A0x96770f44da5dda79!2sCayro%20Uniformes!5e0!3m2!1ses-419!2smx!4v1738528175488!5m2!1ses-419!2smx"

@@ -10,7 +10,7 @@ interface Product {
 
 export default function ProductCard({ product }: { product: Product }) {
   return (
-    <div className="group bg-white dark:bg-gray-700 hover:shadow-xl transition-all duration-300 overflow-hidden relative shadow-lg">
+    <div className="group bg-white dark:bg-gray-900 hover:shadow-xl transition-all duration-300 overflow-hidden relative shadow-lg">
       {/* Imagen del producto */}
       <div className="relative aspect-square overflow-hidden bg-gray-100 rounded-t-lg">
         <img
@@ -34,7 +34,7 @@ export default function ProductCard({ product }: { product: Product }) {
       </div>
 
       {/* Detalles del producto */}
-      <div className="p-4 border">
+      <div className="p-4 border dark:border-gray-600">
         {/* Nombre del producto */}
         <h3 className="font-bold text-center text-lg mb-1 text-gray-900 dark:text-gray-100">
           {product.name}

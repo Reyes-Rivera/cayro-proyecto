@@ -107,7 +107,7 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 mt-14">
       {/* Contenedor principal con dos columnas */}
-      <div className="flex flex-col md:flex-row w-full">
+      <div className="flex flex-col md:flex-row w-full p-10 md:p-0">
         <div
           className="hidden h-screen justify-center items-center md:flex md:w-1/2 bg-cover bg-center relative"
           style={{ backgroundImage: `url(${backgroundImage})` }}
@@ -150,7 +150,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <div className="flex flex-col items-center justify-center w-full md:w-1/2 p-6 lg:p-10 bg-white dark:bg-gray-900">
+        <div className="flex flex-col items-center rounded-md shadow-lg justify-center w-full md:w-1/2 p-6 lg:p-10 bg-white dark:bg-gray-900">
           <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-6">
             Iniciar sesión
           </h2>
@@ -228,7 +228,7 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="w-full p-3 bg-blue-600 text-white font-bold rounded-md hover:bg-blue-700 transition-colors"
+              className="w-full p-3 bg-blue-600 text-white font-bold rounded-md hover:bg-blue-700 transition-colors flex justify-center"
               disabled={lockoutTime > 0 || isLoading}
             >
               {isLoading ? (

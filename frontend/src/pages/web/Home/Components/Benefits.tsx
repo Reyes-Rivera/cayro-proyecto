@@ -47,7 +47,7 @@ export default function Benefits() {
   };
 
   return (
-    <section className="py-20 bg-white dark:bg-gray-800">
+    <section className="py-20 bg-white dark:bg-gray-900">
       <div className="container mx-auto px-4">
         {/* Lista de beneficios */}
         <motion.div

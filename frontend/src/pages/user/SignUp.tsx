@@ -8,6 +8,7 @@ import {
   MoveLeft,
   MoveRight,
   Package,
+  Loader2,
 } from "lucide-react";
 import backgroundImage from "../web/Home/assets/hero.jpg";
 
@@ -35,6 +36,7 @@ export default function SignUpPage() {
 
   const { SignUp, error } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const {
@@ -158,12 +160,13 @@ export default function SignUpPage() {
             icon: "error",
             title: "Error de Contraseña",
             text: "La contraseña no debe contener partes de tu nombre, apellido o fecha de nacimiento.",
-            confirmButtonColor: "#2F93D1",
+            confirmButtonColor: "#2563EB",
           });
           return;
         }
         try {
-          const res = await SignUp(
+          setIsLoading(true);
+          const res:any = await SignUp(
             data.name,
             data.surname,
             data.email,
@@ -172,19 +175,27 @@ export default function SignUpPage() {
             data.password,
             data.gender
           );
+          console.log(res);
           if (
-            res !== null &&
-            typeof res === "string" &&
-            res === "El correo ya esta en uso."
+            res.success === false &&
+            res.message === "El correo ya esta en uso."
           ) {
+            Swal.fire({
+              icon: "error",
+              title: "Error de Correo",
+              text: "El correo electrónico ya está registrado.",
+              confirmButtonColor: "#2563EB",
+            });
             setCurrentStep(2);
+            setIsLoading(false);
             return;
           }
-          if (res === "Error desconocido al registrar.") {
+          if (res.message === "Error desconocido al registrar.") {
             navigate("/500", { state: { fromError: true } });
+            setIsLoading(false);
             return;
           }
-          if (res) {
+          if (res.success) {
             navigate("/codigo-verificacion");
           }
         } catch (error: any) {
@@ -194,26 +205,28 @@ export default function SignUpPage() {
             text:
               error.response.data.message ||
               "Algo salió mal, por favor intenta más tarde.",
-            confirmButtonColor: "#2F93D1",
+            confirmButtonColor: "#2563EB",
           });
+          setIsLoading(false);
         }
       } else {
         Swal.fire({
           icon: "error",
           title: "Error de Contraseña",
           text: "La contraseña no cumple con todos los requisitos de seguridad.",
-          confirmButtonColor: "#2F93D1",
+          confirmButtonColor: "#2563EB",
         });
+        setIsLoading(false);
       }
     }
 
-    if (currentStep < 4) {
+    if (currentStep < 2) {
       setCurrentStep(currentStep + 1);
     }
   });
   return (
     <div className=" min-h-screen flex-col flex items-center justify-center  bg-gray-50 dark:bg-gray-900 mt-14 ">
-      <div className="w-full justify-center  flex bg-white dark:bg-gray-800 shadow-xl rounded-lg overflow-hidden ">
+      <div className="w-full p-10 md:p-0 justify-center  flex   overflow-hidden ">
         {/* Contenedor izquierdo */}
         <div
           className="hidden h-screen justify-center items-center md:flex md:w-1/2 bg-cover bg-center relative"
@@ -258,8 +271,8 @@ export default function SignUpPage() {
         </div>
 
         {/* Contenedor derecho (Formulario de registro) */}
-        <div className="flex flex-col items-center justify-center  w-full md:w-1/2   dark:bg-gray-900">
-          <div className="w-[500px]">
+        <div className="flex flex-col items-center justify-center rounded-md p-6 bg-white shadow-lg w-full md:w-1/2   dark:bg-gray-900">
+          <div className="md:max-w-[500px] w-full">
             <div className="text-center">
               <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-6">
                 Crea tu cuenta en Cayro
@@ -294,7 +307,7 @@ export default function SignUpPage() {
                         })}
                         id="nombre"
                         type="text"
-                       className="block w-full rounded-md bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600 focus:ring-1 focus:ring-blue-600 p-3 active:border-none focus:border-none focus:outline-none"
+                        className="block w-full rounded-md bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600 focus:ring-1 focus:ring-blue-600 p-3 active:border-none focus:border-none focus:outline-none"
                         placeholder="Ingresa tu nombre"
                       />
                       {errors.name && (
@@ -328,7 +341,7 @@ export default function SignUpPage() {
                         })}
                         id="apellidos"
                         type="text"
-                       className="block w-full rounded-md bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600 focus:ring-1 focus:ring-blue-600 p-3 active:border-none focus:border-none focus:outline-none"
+                        className="block w-full rounded-md bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600 focus:ring-1 focus:ring-blue-600 p-3 active:border-none focus:border-none focus:outline-none"
                         placeholder="Ingresa tus apellidos"
                       />
                       {errors.surname && (
@@ -354,7 +367,7 @@ export default function SignUpPage() {
                       })}
                       id="fecha-nacimiento"
                       type="date"
-                     className="block w-full rounded-md bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600 focus:ring-1 focus:ring-blue-600 p-3 active:border-none focus:border-none focus:outline-none"
+                      className="block w-full rounded-md bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600 focus:ring-1 focus:ring-blue-600 p-3 active:border-none focus:border-none focus:outline-none"
                     />
                     {errors.birthday && (
                       <span className="text-xs text-red-500">
@@ -417,7 +430,7 @@ export default function SignUpPage() {
                             {...register("gender", {
                               required: "El sexo es requerido",
                             })}
-                           className="block w-full rounded-md bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600   p-3 active:border-none focus:border-none focus:outline-none"
+                            className="block w-full rounded-md bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600   p-3 active:border-none focus:border-none focus:outline-none"
                           />
                           <Label
                             htmlFor={id}
@@ -495,7 +508,7 @@ export default function SignUpPage() {
                           clearErrors("confirmPassword");
                         }}
                         autoComplete="new-password"
-                      className="block w-full rounded-md bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600 focus:ring-1 focus:ring-blue-600 p-3 active:border-none focus:border-none focus:outline-none"
+                        className="block w-full rounded-md bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600 focus:ring-1 focus:ring-blue-600 p-3 active:border-none focus:border-none focus:outline-none"
                         placeholder="contraseña"
                       />
                       <button
@@ -659,9 +672,9 @@ export default function SignUpPage() {
                 </>
               )}
 
-              {error && (
+              {/* {error && (
                 <p className="text-sm text-red-500 text-center">{error}</p>
-              )}
+              )} */}
               <div
                 className={`flex ${
                   currentStep === 1 ? "justify-end" : "justify-between"
@@ -679,11 +692,22 @@ export default function SignUpPage() {
                 )}
                 <button
                   type="submit"
-                 className="flex items-center p-3 bg-blue-600 text-white font-bold rounded-md hover:bg-blue-700 transition-colors"
+                  className="flex items-center p-3 bg-blue-600 text-white font-bold rounded-md hover:bg-blue-700 transition-colors"
+                  disabled={currentStep === 2 && isLoading} // Opcional: Deshabilita el botón mientras está cargando
                 >
-                  <span>{currentStep === 2 ? "Confirmar" : "Siguiente"}</span>
+                  <span>
+                    {currentStep === 2
+                      ? isLoading
+                        ? "Enviando"
+                        : "Confirmar"
+                      : "Siguiente"}
+                  </span>
                   {currentStep === 2 ? (
-                    <CheckCircleIcon className="h-4 w-4 ml-2" />
+                    isLoading ? (
+                      <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+                    ) : (
+                      <CheckCircleIcon className="h-4 w-4 ml-2" />
+                    )
                   ) : (
                     <MoveRight className="h-4 w-4 ml-2" />
                   )}
@@ -707,7 +731,6 @@ export default function SignUpPage() {
               )}
             </form>
           </div>
-
         </div>
       </div>
     </div>

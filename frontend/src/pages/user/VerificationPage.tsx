@@ -27,15 +27,13 @@ export default function VerificationPage() {
   ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
-  const [error, setError] = useState("");
+  const [isResending, setIsResending] = useState(false); // Nuevo estado para el reenvío
   const {
     verifyCode,
     verifyCodeAuth,
     emailToVerify,
     setIsVerificationPending,
   } = useAuth();
-
-  const [message, setMessage] = useState("");
 
   const navigate = useNavigate();
 
@@ -56,85 +54,78 @@ export default function VerificationPage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
     if (!emailToVerify) {
       Swal.fire({
         icon: "error",
         title: "Correo no encontrado",
         text: "Correo electrónico no encontrado. Por favor, intente nuevamente.",
-        confirmButtonColor: "#2F93D1",
+        confirmButtonColor: "#2563EB",
+        backdrop: "rgba(0,0,0,0.4)",
       });
       return;
     }
+
     const code = verificationCode.join("");
     setIsSubmitting(true);
 
-    if (location.pathname === "/codigo-verificacion") {
-      const response = await await verifyCode(emailToVerify, code)as{
-        response: any;status:number
-};
-      if (response.status === 201) {
-        Swal.fire({
-          icon: "success",
-          title: "¡Verificación Exitosa!",
-          text: "Tu código ha sido verificado correctamente. Serás redirigido en breve.",
-          confirmButtonColor: "#2F93D1",
-        });
-        setTimeout(() => {
-          navigate("/login");
-        }, 2000); // Redirigir a la página principal después de la verificación
-        setIsVerificationPending(false); // Deshabilitar la verificación pendiente
-        localStorage.removeItem("isVerificationPending");
-        localStorage.removeItem("emailToVerify"); // Limpiar localStorage después de la verificación
-        setIsVerified(true);
-      } else {
-        setMessage(response?.response?.data?.message);
-        setTimeout(() => {
-          setMessage("");
-        }, 2000);
-        setError(
-          "Código de verificación incorrecto. Por favor, inténtelo de nuevo."
-        );
+    let response: any;
+
+    try {
+      if (location.pathname === "/codigo-verificacion") {
+        response = await verifyCode(emailToVerify, code);
+      } else if (location.pathname === "/codigo-verificacion-auth") {
+        response = await verifyCodeAuth(emailToVerify, code);
       }
-    }
-    if (location.pathname === "/codigo-verificacion-auth") {
-      const response = await await verifyCodeAuth(emailToVerify, code)as{
-        response: any;
-        data: any;status:number
-};
+
       if (response.status === 201) {
         Swal.fire({
           icon: "success",
           title: "¡Verificación Exitosa!",
           text: "Tu código ha sido verificado correctamente. Serás redirigido en breve.",
-          confirmButtonColor: "#2F93D1",
+          confirmButtonColor: "#2563EB",
+          backdrop: "rgba(0,0,0,0.4)",
         });
+
         setTimeout(() => {
           setIsVerificationPending(false);
           localStorage.removeItem("isVerificationPending");
           localStorage.removeItem("emailToVerify");
           setIsVerified(true);
-          if (response.data.role === "ADMIN") {
-            navigate("/perfil-admin");
+
+          if (location.pathname === "/codigo-verificacion-auth") {
+            if (response.data?.role === "ADMIN") {
+              navigate("/perfil-admin");
+            } else if (response.data?.role === "USER") {
+              navigate("/perfil-usuario");
+            }
+          } else {
+            navigate("/login");
           }
-          if (response.data.role === "USER") {
-            navigate("/perfil-usuario");
-          }
-        }, 1000);
-      } else {
-        setMessage(response?.response?.data?.message);
-        setTimeout(() => {
-          setMessage("");
         }, 2000);
-        setError(
-          "Código de verificación incorrecto. Por favor, inténtelo de nuevo."
-        );
+      } else {
+        throw new Error(response.message || "Error en la verificación");
       }
+    } catch (error) {
+      const errorMessage =
+        (error as { message?: string })?.message ||
+        "Código de verificación incorrecto. Inténtelo de nuevo.";
+
+      Swal.fire({
+        icon: "error",
+        title: "Error al verificar el código",
+        text: errorMessage,
+        confirmButtonColor: "#2563EB",
+        backdrop: "rgba(0,0,0,0.4)",
+      });
     }
-    setError("");
+
     setIsSubmitting(false);
   };
 
   const handleResendCode = async () => {
+    setIsResending(true); // Activar el estado de carga
+
     try {
       if (location.pathname === "/codigo-verificacion") {
         const res = await resendCodeApi({ email: emailToVerify });
@@ -143,14 +134,14 @@ export default function VerificationPage() {
             icon: "success",
             title: "Código reenviado",
             text: "Se ha enviado un nuevo código de verificación.",
-            confirmButtonColor: "#2F93D1",
+            confirmButtonColor: "#2563EB",
           });
         } else {
           Swal.fire({
             icon: "error",
             title: "Error al reenviar",
             text: "Algo salió mal, intente más tarde.",
-            confirmButtonColor: "#2F93D1",
+            confirmButtonColor: "#2563EB",
           });
         }
       }
@@ -162,24 +153,28 @@ export default function VerificationPage() {
             icon: "success",
             title: "Código reenviado",
             text: "Se ha enviado un nuevo código de verificación.",
-            confirmButtonColor: "#2F93D1",
+            confirmButtonColor: "#2563EB",
           });
         } else {
           Swal.fire({
             icon: "error",
             title: "Error al reenviar",
             text: "Algo salió mal, intente más tarde.",
-            confirmButtonColor: "#2F93D1",
+            confirmButtonColor: "#2563EB",
           });
         }
       }
-    } catch (error:any) {
+    } catch (error: any) {
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: error.response?.data?.message ||"No se pudo reenviar el código, intente más tarde.",
-        confirmButtonColor: "#2F93D1",
+        text:
+          error.response?.data?.message ||
+          "No se pudo reenviar el código, intente más tarde.",
+        confirmButtonColor: "#2563EB",
       });
+    } finally {
+      setIsResending(false); // Desactivar el estado de carga
     }
   };
 
@@ -224,21 +219,10 @@ export default function VerificationPage() {
                     />
                   ))}
                 </div>
-                {message && (
-                  <p className="text-red-500 text-[12px] text-center">
-                    {message}
-                  </p>
-                )}
 
-                {error && (
-                  <Alert variant="destructive">
-                    <AlertTitle>Error</AlertTitle>
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                )}
                 <Button
                   type="submit"
-                  className="w-full bg-blue-500 hover:bg-blue-600"
+                  className="w-full p-3 bg-blue-600 text-white font-bold rounded-md hover:bg-blue-700 transition-colors flex justify-center" 
                   disabled={
                     isSubmitting || verificationCode.some((digit) => !digit)
                   }
@@ -260,10 +244,20 @@ export default function VerificationPage() {
                     type="button"
                     variant="link"
                     onClick={handleResendCode}
-                    className="text-[#0099FF] hover:text-[#007ACC]"
+                    className="text-blue-600 p-3"
+                    disabled={isResending}
                   >
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    Reenviar código
+                    {isResending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Reenviando...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Reenviar código
+                      </>
+                    )}
                   </Button>
                 </div>
               </form>

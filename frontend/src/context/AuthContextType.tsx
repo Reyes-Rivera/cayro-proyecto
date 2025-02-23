@@ -91,9 +91,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             "Error desconocido al iniciar sesión."
         );
       }
-      throw error; // Lanza el error para que pueda ser capturado en el componente
+      throw error; 
     }
-    return null; // Retorna null si no hay respuesta
+    return null; 
   };
 
   const SignUp = async (
@@ -120,7 +120,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setIsVerificationPending(true);
         localStorage.setItem("emailToVerify", email);
         localStorage.setItem("isVerificationPending", "true");
-        return res?.data;
+        return { success: true, data: res?.data };
       }
     } catch (error: unknown) {
       let errorMessage = "Error desconocido al registrar.";
@@ -136,22 +136,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setTimeout(() => {
         setError("");
       }, 2000);
-      return errorMessage;
+      return { success: false, message: errorMessage };
     }
   };
   const verifyCode = async (email: string, code: string) => {
     try {
       const res = await verifyCodeApi(email, code);
+
       if (res.status === 201) {
         setIsVerificationPending(false);
         setEmailToVerify(null);
         localStorage.removeItem("emailToVerify");
         localStorage.removeItem("isVerificationPending");
       }
-      return res;
-    } catch (error: unknown) {
+
+      return { status: res.status, data: res.data };
+    } catch (error) {
       let errorMessage = "Error desconocido al verificar el código.";
-      if (error instanceof Error) {
+
+      if (error instanceof Error && "response" in error) {
         const axiosError = error as {
           response?: { data?: { message?: string } };
         };
@@ -159,35 +162,43 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       setError(errorMessage);
+      return { status: 500, message: errorMessage };
     }
   };
 
   const verifyCodeAuth = async (email: string, code: string) => {
     try {
       const res = await verifyCodeApiAuth(email, code);
+
       if (res.status === 201) {
         setEmailToVerify(null);
         setUser(res.data.user);
         localStorage.setItem("token", res.data.token);
-        setLoading(true);
         setAuth(true);
         setUser(res.data);
-        setTimeout(() => {
-          setLoading(false);
-        }, 2000);
+
+        setLoading(true);
+        setTimeout(() => setLoading(false), 2000);
       }
-      return res;
-    } catch (error: any) {
-      setError(
-        error.response?.data?.message ||
-          "Error desconocido al verificar el código."
-      );
-      setTimeout(() => {
-        setError("");
-      }, 2000);
-      return error;
+
+      return { status: res.status, data: res.data };
+    } catch (error) {
+      let errorMessage = "Error desconocido al verificar el código.";
+
+      if (error instanceof Error && "response" in error) {
+        const axiosError = error as {
+          response?: { data?: { message?: string } };
+        };
+        errorMessage = axiosError.response?.data?.message || errorMessage;
+      }
+
+      setError(errorMessage);
+      setTimeout(() => setError(""), 2000);
+
+      return { status: 500, message: errorMessage };
     }
   };
+
   const signOut = async () => {
     const res = await logOutApi();
     if (res) {
