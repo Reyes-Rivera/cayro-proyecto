@@ -36,7 +36,7 @@ export default function SignUpPage() {
 
   const { SignUp, error } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const {
@@ -57,15 +57,13 @@ export default function SignUpPage() {
       lowercase: /[a-z]/.test(password),
       number: /[0-9]/.test(password),
       special: /[!@#$%^&*(),.?":{}|]/.test(password),
-      noSequential: !containsSequentialPatterns(password), // Validar patrones secuenciales
+      noSequential: !containsSequentialPatterns(password),
     };
     setPasswordChecks(checks);
     setPasswordStrength(Object.values(checks).filter(Boolean).length * 20);
   }, [password, error]);
 
-  // Detección de patrones secuenciales comunes
   const containsSequentialPatterns = (password: string): boolean => {
-    // Patrones comunes a evitar
     const commonPatterns = [
       "1234",
       "abcd",
@@ -75,18 +73,16 @@ export default function SignUpPage() {
       "aaaa",
     ];
 
-    // Verificación básica de números y letras consecutivas
     const sequentialPatternRegex =
       /(01234|12345|23456|34567|45678|56789|67890|abcd|bcde|cdef|defg|efgh|fghi)/;
 
-    // Verifica si la contraseña contiene alguno de los patrones comunes
     return (
       commonPatterns.some((pattern) => password.includes(pattern)) ||
       sequentialPatternRegex.test(password)
     );
   };
 
-  // Obtener color del progreso según la fortaleza
+
   const getStrengthColor = (strength: any) => {
     if (strength <= 20) return "bg-red-500";
     if (strength <= 40) return "bg-orange-500";

@@ -62,54 +62,79 @@ const Products: React.FC = () => {
   };
 
   return (
-    <div className="App bg-gray-100 min-h-screen">
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-center mb-8">Dashboard de Productos</h1>
-        {!isEditing && !isViewing && (
-          <>
-            <ProductList
-              products={products}
-              onEdit={(id) => {
-                const product = products.find((p) => p.id === id);
-                if (product) {
-                  setSelectedProduct(product);
-                  setIsEditing(true);
-                }
-              }}
-              onDelete={handleDeleteProduct}
-              onView={handleViewProduct}
-            />
-            <button
-              onClick={() => setIsEditing(true)}
-              className="mt-4 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-            >
-              Agregar Producto
-            </button>
-          </>
-        )}
-        {isEditing && (
-          <ProductForm
-            product={selectedProduct || undefined}
-            onSubmit={selectedProduct ? handleEditProduct : handleAddProduct}
-            onCancel={() => {
-              setSelectedProduct(null);
-              setIsEditing(false);
-            }}
-          />
-        )}
-        {isViewing && selectedProduct && (
-          <ProductDetails
-            product={selectedProduct}
-            onBack={() => {
-              setSelectedProduct(null);
-              setIsViewing(false);
-            }}
-          />
-        )}
+    <div className="min-h-screen dark:bg-gray-900 flex flex-col items-center sm:p-6 dark:text-gray-100">
+      {/* Encabezado de Página */}
+      <div className="bg-white dark:bg-gray-800 w-full max-w-7xl rounded-xl shadow-lg p-6 mb-6">
+        <div className="flex flex-col items-center">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            Gestión de Productos
+          </h1>
+          <p className="text-gray-600 dark:text-gray-300">
+            Administra los productos fácilmente.
+          </p>
+        </div>
       </div>
+
+      {/* Tabla de Productos */}
+      <div className="w-full max-w-7xl overflow-x-auto shadow-md rounded-lg bg-white dark:bg-gray-800 p-6">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          Lista de Productos
+        </h2>
+        <ProductList
+          products={products}
+          onEdit={(id) => {
+            const product = products.find((p) => p.id === id);
+            if (product) {
+              setSelectedProduct(product);
+              setIsEditing(true);
+            }
+          }}
+          onDelete={handleDeleteProduct}
+          onView={handleViewProduct}
+        />
+        <button
+          onClick={() => setIsEditing(true)}
+          className="mt-4 px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition flex items-center justify-center gap-4"
+        >
+          Agregar Producto
+        </button>
+      </div>
+
+      {/* Modal para Agregar/Editar Producto */}
+      {(isEditing || selectedProduct) && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-2xl">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+              {selectedProduct ? "Editar Producto" : "Agregar Producto"}
+            </h2>
+            <ProductForm
+              product={selectedProduct || undefined}
+              onSubmit={selectedProduct ? handleEditProduct : handleAddProduct}
+              onCancel={() => {
+                setSelectedProduct(null);
+                setIsEditing(false);
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Modal para Ver Detalles del Producto */}
+      {isViewing && selectedProduct && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-2xl">
+            <ProductDetails
+              product={selectedProduct}
+              onBack={() => {
+                setSelectedProduct(null);
+                setIsViewing(false);
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 export default Products;
-

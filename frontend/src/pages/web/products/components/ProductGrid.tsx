@@ -139,11 +139,11 @@ export default function ProductGrid({
               {Array.from({ length: totalPages }).map((_, index) => (
                 <Button
                   key={index + 1}
-                  variant="outline" // Siempre outline, pero cambiamos el estilo manualmente
+                  variant="outline" 
                   className={`min-w-[40px] ${
                     currentPage === index + 1
-                      ? "bg-blue-100 text-blue-600 font-bold hover:bg-blue-500" // Página actual: fondo azul y texto blanco
-                      : "bg-white text-gray-700 hover:bg-gray-100" // Otras páginas: fondo blanco y texto gris
+                      ? "bg-blue-100 text-blue-600 font-bold hover:bg-blue-500" 
+                      : "bg-white text-gray-700 hover:bg-gray-100" 
                   }`}
                   onClick={() => {
                     window.scrollTo(0, 0);
@@ -153,7 +153,6 @@ export default function ProductGrid({
                   {index + 1}
                 </Button>
               ))}
-
               {/* Botón de página siguiente */}
               <Button
                 variant="outline"

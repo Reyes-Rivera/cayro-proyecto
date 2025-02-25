@@ -26,6 +26,7 @@ import ScrollToTop from "./ScrollToTop";
 import Error400 from "@/pages/web/error/Error400";
 import ContactPage from "@/pages/web/contact/ContactPage";
 import EmployeeDashboard from "@/pages/employees/employee/DashboardLayout";
+import ProtectedRouterEmployee from "@/utils/ProtectedRouterEmpleado";
 const AppRoutes = () => {
   useEffect(() => {
     const getInfoPage = async () => {
@@ -40,47 +41,49 @@ const AppRoutes = () => {
         <NavBarUser />
       </div>
       <div className="container-bg">
-          <ScrollToTop />
+        <ScrollToTop />
 
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/aviso-privacidad" element={<Policies />} />
-            <Route path="/sobre-nosotros" element={<AboutPage />} />
-            <Route path="/terminos" element={<Terms />} />
-            <Route path="/deslinde-legal" element={<LegalBoundary />} />
-            <Route path="/contacto" element={<ContactPage />} />
-            <Route path="/registro" element={<SignUpPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/productos" element={<ProductsSection />} />
-            <Route path="/detalles-producto" element={<ProductDetails />} />
-            <Route
-              path="/recuperar-password"
-              element={<PasswordRecoveryPage />}
-            />
-            <Route
-              path="/restaurar-password/:token"
-              element={<PasswordResetPage />}
-            />
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/aviso-privacidad" element={<Policies />} />
+          <Route path="/sobre-nosotros" element={<AboutPage />} />
+          <Route path="/terminos" element={<Terms />} />
+          <Route path="/deslinde-legal" element={<LegalBoundary />} />
+          <Route path="/contacto" element={<ContactPage />} />
+          <Route path="/registro" element={<SignUpPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/productos" element={<ProductsSection />} />
+          <Route path="/detalles-producto" element={<ProductDetails />} />
+          <Route
+            path="/recuperar-password"
+            element={<PasswordRecoveryPage />}
+          />
+          <Route
+            path="/restaurar-password/:token"
+            element={<PasswordResetPage />}
+          />
+          <Route element={<ProtectedRouterEmployee />}>
             <Route path="/perfil-empleado" element={<EmployeeDashboard />} />
-              <Route path="/perfil-admin" element={<AdminDashboard />} />
-            <Route element={<ProtectedRouterAdmin />}>
-            </Route>
+          </Route>
+          <Route element={<ProtectedRouterAdmin />}>
+            <Route path="/perfil-admin" element={<AdminDashboard />} />
+          </Route>
 
-            <Route element={<ProtectedRouterUser />}>
-              <Route path="/perfil-usuario" element={<UserDashboard />} />
-            </Route>
+          <Route element={<ProtectedRouterUser />}>
+            <Route path="/perfil-usuario" element={<UserDashboard />} />
+          </Route>
 
-            <Route element={<ProtectedRouterVerification />}>
-              <Route path="/codigo-verificacion" element={<VerificationPage />} />
-              <Route
-                path="/codigo-verificacion-auth"
-                element={<VerificationPage />}
-              />
-            </Route>
-            <Route path="*" element={<PageNotFound />} />
-            <Route path="/500" element={<Error500 />} />
-            <Route path="/400" element={<Error400 />} />
-          </Routes>
+          <Route element={<ProtectedRouterVerification />}>
+            <Route path="/codigo-verificacion" element={<VerificationPage />} />
+            <Route
+              path="/codigo-verificacion-auth"
+              element={<VerificationPage />}
+            />
+          </Route>
+          <Route path="*" element={<PageNotFound />} />
+          <Route path="/500" element={<Error500 />} />
+          <Route path="/400" element={<Error400 />} />
+        </Routes>
       </div>
       <div className="w-full">
         <Footer />

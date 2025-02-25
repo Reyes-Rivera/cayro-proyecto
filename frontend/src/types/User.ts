@@ -16,7 +16,7 @@ export interface User {
     surname: string;
     email: string;
     phone: string;
-    birthday: Date;
+    birthdate: Date;
     password: string;
     gender: string;
     direction?: Direction[];
@@ -25,3 +25,5 @@ export interface User {
     confirmPassword?:string,
     id?: string;
 }
+
+

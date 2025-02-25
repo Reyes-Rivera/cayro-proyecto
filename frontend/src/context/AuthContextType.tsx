@@ -27,7 +27,7 @@ interface AuthContextType {
     surname: string,
     email: string,
     phone: string,
-    birthday: Date,
+    birthdate: Date,
     password: string,
     gender: string
   ) => Promise<User | unknown>;
@@ -56,17 +56,17 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null); // Estado del usuario
+  const [user, setUser] = useState<User | null>(null);
   const [auth, setAuth] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [errorTimer, setErrorTimer] = useState("");
   const [emailToVerify, setEmailToVerify] = useState<string | null>(() => {
-    return localStorage.getItem("emailToVerify") || null; // Recupera el email desde localStorage si existe
+    return localStorage.getItem("emailToVerify") || null; 
   });
   const [isVerificationPending, setIsVerificationPending] = useState<boolean>(
     () => {
-      return localStorage.getItem("isVerificationPending") === "true"; // Recupera el estado de verificación desde localStorage
+      return localStorage.getItem("isVerificationPending") === "true";
     }
   );
 
@@ -101,7 +101,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     surname: string,
     email: string,
     phone: string,
-    birthday: Date,
+    birthdate: Date,
     password: string,
     gender: string
   ) => {
@@ -111,7 +111,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         surname,
         email,
         phone,
-        birthday,
+        birthdate,
         password,
         gender,
       });
@@ -208,13 +208,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
     return false;
   };
-
   const verifyAuth = async () => {
     setLoading(true);
     try {
       const res = await verifyToken();
       if (res) {
-        setUser(res.data);
+        setUser({...res.data,birthdate:res.data.birthday});
+        console.log(res.data);
         setAuth(true);
         setLoading(false);
       } else {
@@ -244,13 +244,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     auth,
     loading,
     SignUp,
-    verifyCode, // Añadir la función de verificación al contexto
+    verifyCode, 
     error,
     emailToVerify,
     isVerificationPending,
     setEmailToVerify,
     verifyCodeAuth,
-    errorTimer, // Setter para actualizar `emailToVerify`
+    errorTimer, 
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -6,8 +6,6 @@ import {
 } from '@nestjs/common';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import axios from 'axios';
@@ -15,9 +13,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class EmployeesService {
-  constructor(
-    private prismaService: PrismaService,
-  ) {}
+  constructor(private prismaService: PrismaService) {}
   async isPasswordCompromised(password: string): Promise<boolean> {
     const hashedPassword = crypto
       .createHash('sha1')
@@ -35,13 +31,13 @@ export class EmployeesService {
       for (let entry of breachedPasswords) {
         const [hashSuffix, count] = entry.split(':');
         if (hashSuffix === suffix) {
-          return true; // Contraseña comprometida
+          return true;
         }
       }
-      return false; // Contraseña segura
+      return false;
     } catch (error) {
       console.error('Error verificando contraseña comprometida:', error);
-      return false; // Por precaución, devolver que no está comprometida en caso de error
+      return false;
     }
   }
   async create(createEmployeeDto: CreateEmployeeDto) {
@@ -80,7 +76,15 @@ export class EmployeesService {
           passwordsHistory: [{ password: hashPassword, createdAt: new Date() }],
         },
       });
-      return res;
+      const {
+        password,
+        passwordsHistory,
+        passwordExpiresAt,
+        passwordSetAt,
+        ...rest
+      } = res;
+
+      return { ...rest };
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;
@@ -96,12 +100,62 @@ export class EmployeesService {
     return `This action returns all employees`;
   }
 
-  findOne(id: number) {
+  async findOne(id: number) {
     return `This action returns a #${id} employee`;
   }
 
-  update(id: number, updateEmployeeDto: UpdateEmployeeDto) {
-    return `This action updates a #${id} employee`;
+  async update(id: number, updateEmployeeDto: UpdateEmployeeDto) {
+    try {
+      console.log(updateEmployeeDto);
+      const employeeFound = await this.prismaService.employee.findUnique({
+        where: { email: updateEmployeeDto.email },
+      });
+      const userFound = await this.prismaService.user.findUnique({
+        where: { email: updateEmployeeDto.email },
+      });
+      if (userFound) {
+        if (
+          userFound.email === updateEmployeeDto.email &&
+          userFound.id !== id
+        ) {
+          throw new ConflictException('El correo se encuentra registrado.');
+        }
+      }
+      if (employeeFound) {
+        if (
+          employeeFound.email === updateEmployeeDto.email &&
+          employeeFound.id !== id
+        ) {
+          throw new ConflictException('El correo ya esta en uso.');
+        }
+      }
+
+      const res = await this.prismaService.employee.update({
+        where: { id: id },
+        data: {
+          ...updateEmployeeDto,
+          birthday: new Date(employeeFound.birthday),
+        },
+      });
+      const {
+        password,
+        passwordsHistory,
+        passwordExpiresAt,
+        passwordSetAt,
+        ...rest
+      } = res;
+
+      return { ...rest };
+    } catch (error) {
+      console.log(error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Error interno del servidor',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   remove(id: number) {

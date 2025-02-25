@@ -521,7 +521,11 @@ export class UsersService {
             date: new Date(),
           },
         });
-        return resUser;
+
+        return {
+          status: 201,
+          message: 'La contraseña se restableció con éxito.',
+        };
       }
     } catch (error) {
       if (error.name === 'TokenExpiredError') {
@@ -551,7 +555,14 @@ export class UsersService {
       where: { email },
       data: { lockUntil },
     });
-    return res;
+    const {
+      password,
+      passwordsHistory,
+      passwordExpiresAt,
+      passwordSetAt,
+      ...rest
+    } = res;
+    return { ...rest };
   }
   findAll() {
     return `This action returns all users`;

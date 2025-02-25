@@ -60,7 +60,7 @@ export class AuthService {
   ) {}
   //its okey
   async sendEmail(correo, subject, html) {
-    var transporter = nodemailer.createTransport({
+    const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: 'cayrouniformes38@gmail.com',
@@ -68,7 +68,7 @@ export class AuthService {
       },
     });
 
-    var mailOptions = {
+    const mailOptions = {
       from: 'cayrouniformes38@gmail.com',
       to: correo,
       subject: subject,
@@ -133,7 +133,7 @@ export class AuthService {
       passwordsHistory,
       ...rest
     } = userFound;
-    const payload = { sub: userFound.id, role: userFound.role };
+    const payload = { sub: userFound.id, role: userFound.role,email:userFound.email };
     const token = this.jwtSvc.sign(payload, { expiresIn });
     await this.prismaService.userActivity.create({
       data: {
@@ -230,7 +230,6 @@ export class AuthService {
 
     let userFound: UserOrEmployee | null = user;
 
-  
     if (!userFound) {
       const employee = await this.prismaService.employee.findUnique({
         where: { email: loginDto.email },
@@ -363,19 +362,17 @@ export class AuthService {
   async verifyToken(@Request() request) {
     try {
       const user = await this.prismaService.user.findUnique({
-        where: { id: request.sub },
+        where: { id: request.sub,email:request.email },
       });
       const admin =
         !user &&
         (await this.prismaService.employee.findUnique({
-          where: { id: request.sub },
+          where: { id: request.sub,email:request.email },
         }));
-      // const employee = !user && !admin && await this.profesorModel.findById(request.sub);
+      
 
       if (user || admin) {
-        // if (user) {
         const entity = user || admin;
-        // const entity = user;
         const {
           password,
           passwordsHistory,

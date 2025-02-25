@@ -26,9 +26,9 @@ export class EmployeesController {
   }
 
   @Patch(':id')
-  @Auth([Role.ADMIN])
-  update(@Param('id') id: string, @Body() updateEmployeeDto: UpdateEmployeeDto) {
-    return this.employeesService.update(+id, updateEmployeeDto);
+  // @Auth([Role.ADMIN])
+  async update(@Param('id') id: string, @Body() updateEmployeeDto: UpdateEmployeeDto) {
+    return await this.employeesService.update(+id, updateEmployeeDto);
   }
 
   @Delete(':id')

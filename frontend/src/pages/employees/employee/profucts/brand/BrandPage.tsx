@@ -46,6 +46,8 @@ const BrandPage = () => {
           );
           setIsLoading(false);
           setEditId(null);
+          reset();
+
           return;
         }
         setIsLoading(false);
@@ -66,12 +68,11 @@ const BrandPage = () => {
             { id: prev.length + 1, name: data.name },
           ]);
           setIsLoading(false);
+          reset();
           return;
         }
       }
-
-      reset();
-    } catch (error) {
+    } catch (error:any) {
       setIsLoading(false);
       if (error === "Error interno en el servidor.") {
         navigate("/500", { state: { fromError: true } });
@@ -80,7 +81,7 @@ const BrandPage = () => {
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "Ocurrió un problema al procesar la solicitud. Inténtalo de nuevo.",
+        text: error.response.data.message,
         confirmButtonColor: "#2563EB",
       });
     }
@@ -118,7 +119,7 @@ const BrandPage = () => {
         } else {
           throw new Error("No se pudo eliminar el tipo de marca.");
         }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (error) {
         setIsLoading(false);
         Swal.fire({
@@ -160,7 +161,7 @@ const BrandPage = () => {
 
       <div className="flex flex-col md:flex-row gap-8 w-full max-w-7xl">
         {/* Formulario (Izquierda) */}
-        <div className="md:w-1/3 h-64 bg-white dark:bg-gray-700 p-6 rounded-lg shadow-md flex flex-col">
+        <div className="md:w-1/3 h-64 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md flex flex-col">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
             {editId !== null ? "Editar Marca " : "Agregar Marca "}
           </h2>
@@ -171,7 +172,7 @@ const BrandPage = () => {
             <div className="space-y-1">
               <label
                 htmlFor="brandName"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                className="block text-sm font-bold text-gray-700 dark:text-gray-300"
               >
                 Nombre
               </label>
@@ -196,7 +197,7 @@ const BrandPage = () => {
                 })}
                 id="marcaName"
                 type="text"
-                className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2 bg-white dark:bg-gray-700 dark:text-gray-100"
+                className="block w-full rounded-md bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600 focus:ring-1 focus:ring-blue-600 p-3 active:border-none focus:border-none focus:outline-none"
               />
               {errors.name && (
                 <span className="text-red-500 text-sm">

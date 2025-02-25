@@ -51,6 +51,7 @@ const GenderPage = () => {
           );
           setIsLoading(false);
           setEditId(null);
+          reset();
           return;
         }
         setIsLoading(false);
@@ -71,11 +72,12 @@ const GenderPage = () => {
             { id: prev.length + 1, name: data.name },
           ]);
           setIsLoading(false);
+          reset();
           return;
         }
       }
 
-      reset();
+     
     } catch (error) {
       setIsLoading(false);
       if (error === "Error interno en el servidor.") {
@@ -123,12 +125,11 @@ const GenderPage = () => {
         } else {
           throw new Error("No se pudo eliminar el tipo de género.");
         }
-      } catch (error:any) {
-
+      } catch (error: any) {
         setIsLoading(false);
         Swal.fire({
           title: "Error",
-          text: error.response.data.message||"Error al eliminar el género",
+          text: error.response.data.message || "Error al eliminar el género",
           icon: "error",
           confirmButtonColor: "#d33",
         });
@@ -201,7 +202,7 @@ const GenderPage = () => {
                 })}
                 id="genderName"
                 type="text"
-                className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2 bg-white dark:bg-gray-700 dark:text-gray-100"
+                className="block w-full rounded-md bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600 focus:ring-1 focus:ring-blue-600 p-3 active:border-none focus:border-none focus:outline-none"
               />
               {errors.name && (
                 <span className="text-red-500 text-sm">

@@ -69,6 +69,7 @@ const ColorPage = () => {
           );
           setIsLoading(false);
           setEditId(null);
+          reset();
           return;
         }
         setIsLoading(false);
@@ -93,11 +94,11 @@ const ColorPage = () => {
             { id: prev.length + 1, name: data.name, hexValue: data.hexValue },
           ]);
           setIsLoading(false);
+          reset();
           return;
         }
       }
 
-      reset();
       setPreviewImage(null);
     } catch (error: any) {
       setIsLoading(false);
@@ -114,7 +115,7 @@ const ColorPage = () => {
         });
         return;
       }
-    
+
       Swal.fire({
         icon: "error",
         title: "Error",
@@ -157,7 +158,7 @@ const ColorPage = () => {
         } else {
           throw new Error("No se pudo eliminar el color.");
         }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (error) {
         setIsLoading(false);
         Swal.fire({
@@ -336,7 +337,7 @@ const ColorPage = () => {
                 })}
                 id="hexValue"
                 type="text"
-                className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2 bg-white dark:bg-gray-700 dark:text-gray-100"
+                className="block w-full rounded-md bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600 focus:ring-1 focus:ring-blue-600 p-3 active:border-none focus:border-none focus:outline-none"
                 placeholder="#FFFFFF"
               />
               {errors.hexValue && (
@@ -373,7 +374,7 @@ const ColorPage = () => {
                 })}
                 id="colorName"
                 type="text"
-                className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-4 py-2 bg-white dark:bg-gray-700 dark:text-gray-100"
+                className="block w-full rounded-md bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600 focus:ring-1 focus:ring-blue-600 p-3 active:border-none focus:border-none focus:outline-none"
               />
               {errors.name && (
                 <span className="text-red-500 text-sm">

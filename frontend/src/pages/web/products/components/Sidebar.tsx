@@ -47,7 +47,7 @@ export default function Sidebar({
   const handleCategoryChange = (category: string) => {
     setFilters((prev) => ({
       ...prev,
-      categories: prev.categories.includes(category) ? [] : [category], // Solo permite una categoría seleccionada
+      categories: prev.categories.includes(category) ? [] : [category], 
     }));
   };
 

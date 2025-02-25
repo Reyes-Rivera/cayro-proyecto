@@ -26,7 +26,7 @@ import gorraMujer from "../assets/gorramujer.png";
 import pantalon from "../assets/pantalon.png";
 import playeraDeportiva from "../assets/playeradeportiva.png";
 enum categories {
-  Uniformesescolares = "uniformes-escolares",
+  Uniformesescolares = "Uniformes escolares",
   Deportivos = "Deportivos",
   Pantalones = "Pantalones",
   Gorras = "Gorras",
@@ -58,6 +58,7 @@ interface Product {
   color: Colors;
   size: string;
   sex: string;
+  rating: number; // Nuevo campo para el rating
 }
 
 export const products: Product[] = [
@@ -67,9 +68,10 @@ export const products: Product[] = [
     price: 299,
     image: uniformeDeportivo,
     category: categories.Deportivos,
-    color: Colors.Blue, // Azul
+    color: Colors.Blue,
     size: "M",
     sex: "Hombre",
+    rating: 4.5,
   },
   {
     id: 2,
@@ -80,6 +82,7 @@ export const products: Product[] = [
     color: Colors.White, // Blanco
     size: "L",
     sex: "Mujer",
+    rating:3
   },
   {
     id: 3,
@@ -90,6 +93,7 @@ export const products: Product[] = [
     color: Colors.Red, // Rojo
     size: "S",
     sex: "Hombre",
+    rating:3
   },
   {
     id: 4,
@@ -100,6 +104,7 @@ export const products: Product[] = [
     color: Colors.Gray, // Gris
     size: "M",
     sex: "Hombre",
+    rating:5
   },
   {
     id: 5,
@@ -110,6 +115,7 @@ export const products: Product[] = [
     color: Colors.Black, // Negro
     size: "L",
     sex: "Hombre",
+    rating:3
   },
   {
     id: 6,
@@ -120,6 +126,7 @@ export const products: Product[] = [
     color: Colors.Black, // Negro
     size: "S",
     sex: "Unisex",
+    rating:4
   },
   {
     id: 7,
@@ -130,6 +137,7 @@ export const products: Product[] = [
     color: Colors.Blue, // Azul
     size: "XL",
     sex: "Hombre",
+    rating:4
   },
   {
     id: 8,
@@ -140,6 +148,7 @@ export const products: Product[] = [
     color: Colors.Black, // Negro
     size: "M",
     sex: "Unisex",
+    rating:4
   },
   {
     id: 9,
@@ -150,6 +159,7 @@ export const products: Product[] = [
     color: Colors.Green, // Verde
     size: "L",
     sex: "Hombre",
+    rating:4
   },
   {
     id: 10,
@@ -160,6 +170,7 @@ export const products: Product[] = [
     color: Colors.Black, // Negro
     size: "XL",
     sex: "Hombre",
+    rating:5
   },
   {
     id: 11,
@@ -170,6 +181,8 @@ export const products: Product[] = [
     color: Colors.Orange, // Naranja
     size: "M",
     sex: "Unisex",
+    rating:5
+
   },
   {
     id: 12,
@@ -180,6 +193,8 @@ export const products: Product[] = [
     color: Colors.Red, // Rojo
     size: "S",
     sex: "Hombre",
+    rating:5
+
   },
   {
     id: 13,
@@ -190,6 +205,7 @@ export const products: Product[] = [
     color: Colors.Black, // Negro
     size: "S",
     sex: "Unisex",
+    rating:2
   },
   {
     id: 14,
@@ -200,6 +216,7 @@ export const products: Product[] = [
     color: Colors.Blue, // Azul intenso
     size: "M",
     sex: "Hombre",
+    rating:2
   },
   {
     id: 15,
@@ -210,6 +227,7 @@ export const products: Product[] = [
     color: Colors.Pink, // Rosa claro
     size: "S",
     sex: "Mujer",
+    rating:2
   },
   {
     id: 16,
@@ -220,6 +238,7 @@ export const products: Product[] = [
     color: Colors.Gray, // Gris oscuro
     size: "L",
     sex: "Hombre",
+    rating:1
   },
   {
     id: 17,
@@ -230,6 +249,7 @@ export const products: Product[] = [
     color: Colors.Gray, // Gris medio
     size: "M",
     sex: "Unisex",
+    rating:5
   },
   {
     id: 18,
@@ -240,6 +260,8 @@ export const products: Product[] = [
     color: Colors.Orange, // Naranja oscuro
     size: "M",
     sex: "Unisex",
+    rating:5
+
   },
   {
     id: 19,
@@ -250,6 +272,8 @@ export const products: Product[] = [
     color: Colors.White, // Blanco/gris claro
     size: "L",
     sex: "Hombre",
+    rating:5
+
   },
   {
     id: 20,
@@ -260,6 +284,8 @@ export const products: Product[] = [
     color: Colors.Blue, // Azul claro
     size: "M",
     sex: "Mujer",
+    rating:5
+
   },
   {
     id: 21,
@@ -270,6 +296,8 @@ export const products: Product[] = [
     color: Colors.Green, // Verde menta
     size: "S",
     sex: "Hombre",
+    rating:5
+
   },
   {
     id: 22,
@@ -280,6 +308,8 @@ export const products: Product[] = [
     color: Colors.Pink, // Rosa claro
     size: "L",
     sex: "Hombre",
+    rating:5
+
   },
   {
     id: 23,
@@ -290,6 +320,7 @@ export const products: Product[] = [
     color: Colors.White, // blancas
     size: "S",
     sex: "Mujer",
+    rating:4
   },
   {
     id: 24,
@@ -300,6 +331,7 @@ export const products: Product[] = [
     color: Colors.Gray, // Gris
     size: "L",
     sex: "Hombre",
+    rating:2
   },
   {
     id: 25,
@@ -310,6 +342,7 @@ export const products: Product[] = [
     color: Colors.Black, // negro
     size: "S",
     sex: "Mujer",
+    rating:3
   },
   {
     id: 26,
@@ -320,6 +353,7 @@ export const products: Product[] = [
     color:Colors.Blue, // azul marino
     size: "M",
     sex: "Mujer",
+    rating:2
   },
   {
     id: 27,
@@ -330,5 +364,6 @@ export const products: Product[] = [
     color: Colors.Blue, // Azul
     size: "XL",
     sex: "Hombre",
+    rating:5
   },
 ];

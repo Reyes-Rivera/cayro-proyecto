@@ -76,35 +76,32 @@ export default function VerificationPage() {
         response = await verifyCode(emailToVerify, code);
       } else if (location.pathname === "/codigo-verificacion-auth") {
         response = await verifyCodeAuth(emailToVerify, code);
-      }
+        if (response.status === 201) {
+          Swal.fire({
+            icon: "success",
+            title: "¡Verificación Exitosa!",
+            text: "Tu código ha sido verificado correctamente. Serás redirigido en breve.",
+            confirmButtonColor: "#2563EB",
+            backdrop: "rgba(0,0,0,0.4)",
+          });
 
-      if (response.status === 201) {
-        Swal.fire({
-          icon: "success",
-          title: "¡Verificación Exitosa!",
-          text: "Tu código ha sido verificado correctamente. Serás redirigido en breve.",
-          confirmButtonColor: "#2563EB",
-          backdrop: "rgba(0,0,0,0.4)",
-        });
-
-        setTimeout(() => {
-          setIsVerificationPending(false);
-          localStorage.removeItem("isVerificationPending");
-          localStorage.removeItem("emailToVerify");
-          setIsVerified(true);
-
-          if (location.pathname === "/codigo-verificacion-auth") {
+          setTimeout(() => {
+            setIsVerificationPending(false);
+            localStorage.removeItem("isVerificationPending");
+            localStorage.removeItem("emailToVerify");
+            setIsVerified(true);
+            console.log("Entro");
             if (response.data?.role === "ADMIN") {
               navigate("/perfil-admin");
             } else if (response.data?.role === "USER") {
               navigate("/perfil-usuario");
+            } else if (response.data?.role === "EMPLOYEE") {
+              navigate("/perfil-empleado");
             }
-          } else {
-            navigate("/login");
-          }
-        }, 2000);
-      } else {
-        throw new Error(response.message || "Error en la verificación");
+          }, 2000);
+        } else {
+          throw new Error(response.message || "Error en la verificación");
+        }
       }
     } catch (error) {
       const errorMessage =
@@ -124,7 +121,7 @@ export default function VerificationPage() {
   };
 
   const handleResendCode = async () => {
-    setIsResending(true); // Activar el estado de carga
+    setIsResending(true);
 
     try {
       if (location.pathname === "/codigo-verificacion") {
@@ -222,7 +219,7 @@ export default function VerificationPage() {
 
                 <Button
                   type="submit"
-                  className="w-full p-3 bg-blue-600 text-white font-bold rounded-md hover:bg-blue-700 transition-colors flex justify-center" 
+                  className="w-full p-3 bg-blue-600 text-white font-bold rounded-md hover:bg-blue-700 transition-colors flex justify-center"
                   disabled={
                     isSubmitting || verificationCode.some((digit) => !digit)
                   }
