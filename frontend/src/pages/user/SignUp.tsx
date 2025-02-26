@@ -149,7 +149,7 @@ export default function SignUpPage() {
             password,
             data.name,
             data.surname,
-            data.birthday.toString()
+            data.birthdate.toString()
           )
         ) {
           Swal.fire({
@@ -167,11 +167,10 @@ export default function SignUpPage() {
             data.surname,
             data.email,
             data.phone,
-            data.birthday,
+            data.birthdate,
             data.password,
             data.gender
           );
-          console.log(res);
           if (
             res.success === false &&
             res.message === "El correo ya esta en uso."
@@ -355,7 +354,7 @@ export default function SignUpPage() {
                       Fecha de nacimiento
                     </Label>
                     <input
-                      {...register("birthday", {
+                      {...register("birthdate", {
                         required: "La fecha de nacimiento es requerida",
                         validate: (value) =>
                           validateAge(value) ||
@@ -365,9 +364,9 @@ export default function SignUpPage() {
                       type="date"
                       className="block w-full rounded-md bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600 focus:ring-1 focus:ring-blue-600 p-3 active:border-none focus:border-none focus:outline-none"
                     />
-                    {errors.birthday && (
+                    {errors.birthdate && (
                       <span className="text-xs text-red-500">
-                        {errors.birthday.message}
+                        {errors.birthdate.message}
                       </span>
                     )}
                   </div>

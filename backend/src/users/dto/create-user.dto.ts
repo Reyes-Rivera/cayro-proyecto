@@ -36,7 +36,7 @@ export class CreateUserDto {
   @IsDate()
   @IsNotEmpty()
   @Transform(({ value }) => new Date(value))
-  birthday: Date;
+  birthdate: Date;
 
   @IsNotEmpty()
   @IsString()

@@ -172,7 +172,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (res.status === 201) {
         setEmailToVerify(null);
-        setUser(res.data.user);
+        setUser({...res.data.user,birthdate:res.data.birthday});
         localStorage.setItem("token", res.data.token);
         setAuth(true);
         setUser(res.data);

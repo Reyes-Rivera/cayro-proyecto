@@ -10,8 +10,6 @@ import {
 import { CreateUserDto } from './dto/create-user.dto';
 import { PasswordUpdate, UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
 import * as crypto from 'crypto';
 import * as nodemailer from 'nodemailer';
 import axios from 'axios';
@@ -21,7 +19,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 type PasswordHistoryEntry = {
   password: string;
-  createdAt: string; // o Date si lo transformas después
+  createdAt: string;
 };
 
 @Injectable()
@@ -31,7 +29,6 @@ export class UsersService {
     private jwtSvc: JwtService,
     private prismaService: PrismaService,
   ) {}
-  //its okey
   async sendEmail(correo, subject, html) {
     var transporter = nodemailer.createTransport({
       service: 'gmail',
@@ -137,7 +134,6 @@ export class UsersService {
     }
   }
 
-  //its oikey
   async isPasswordCompromised(password: string): Promise<boolean> {
     const hashedPassword = crypto
       .createHash('sha1')
@@ -164,7 +160,6 @@ export class UsersService {
       return false; // Por precaución, devolver que no está comprometida en caso de error
     }
   }
-  //its okey
   async create(createUserDto: CreateUserDto) {
     try {
       const userFound = await this.prismaService.user.findUnique({
@@ -185,7 +180,7 @@ export class UsersService {
       const data = {
         ...createUserDto,
         password: hashPassword,
-        birthday: new Date(createUserDto.birthday),
+        birthdate: new Date(createUserDto.birthdate),
         passwordExpiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
         passwordsHistory: [{ password: hashPassword, createdAt: new Date() }],
       };
@@ -244,7 +239,6 @@ export class UsersService {
         throw new NotFoundException('El usuario no se encuentra registrado.');
       }
 
-      // Verifica si la nueva contraseña ha sido comprometida
       const compromised = await this.isPasswordCompromised(
         updatePasswordDto.password,
       );
@@ -254,7 +248,6 @@ export class UsersService {
         );
       }
 
-      // Verifica que la contraseña actual coincida
       const isMatch = bcrypt.compareSync(
         updatePasswordDto.currentPassword,
         userFound.password,
@@ -265,7 +258,6 @@ export class UsersService {
         );
       }
 
-      // Verifica si la nueva contraseña está en el historial de contraseñas
       const isInHistory = (
         userFound.passwordsHistory as PasswordHistoryEntry[]
       ).some((entry) =>
@@ -277,15 +269,13 @@ export class UsersService {
         );
       }
 
-      // Genera el hash de la nueva contraseña
       const hashPassword = await bcrypt.hash(updatePasswordDto.password, 10);
 
       const currentDate = new Date();
       const newPasswordExpiresAt = new Date(
-        Date.now() + 90 * 24 * 60 * 60 * 1000, // Contraseña válida por 90 días
+        Date.now() + 90 * 24 * 60 * 60 * 1000,
       );
 
-      // Actualiza el historial de contraseñas
       const passwordHistory = (userFound.passwordsHistory ||
         []) as PasswordHistoryEntry[];
       passwordHistory.push({
@@ -293,12 +283,10 @@ export class UsersService {
         createdAt: currentDate.toISOString(),
       });
 
-      // Mantén solo las últimas 5 contraseñas en el historial
       if (passwordHistory.length > 5) {
         passwordHistory.shift();
       }
 
-      // Actualiza el usuario en la base de datos
       const resUser = await this.prismaService.user.update({
         where: { id },
         data: {
@@ -316,8 +304,15 @@ export class UsersService {
           date: new Date(),
         },
       });
+      const {
+        password,
+        passwordsHistory,
+        passwordExpiresAt,
+        passwordSetAt,
+        ...rest
+      } = resUser;
 
-      return resUser;
+      return { ...rest };
     } catch (error) {
       console.error(error);
       if (error instanceof HttpException) {
@@ -464,7 +459,7 @@ export class UsersService {
         password,
         userFound.name,
         userFound.surname,
-        userFound.birthday,
+        userFound.birthdate,
       );
       if (!isValidPassword) {
         throw new ConflictException(
@@ -479,7 +474,6 @@ export class UsersService {
           );
         }
 
-        // Verifica si la nueva contraseña está en el historial de contraseñas
         const isInHistory = (
           userFound.passwordsHistory as PasswordHistoryEntry[]
         ).some((entry) => bcrypt.compareSync(password, entry.password));

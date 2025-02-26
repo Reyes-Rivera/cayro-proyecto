@@ -12,7 +12,7 @@ interface ProfileFormData {
   surname: string;
   email: string;
   phone: string;
-  birthday: string;
+  birthdate: string;
   gender: string;
 }
 
@@ -32,7 +32,7 @@ export function ProfileSection() {
       surname: user?.surname || "",
       email: user?.email || "",
       phone: user?.phone || "",
-      birthday: user?.birthdate
+      birthdate: user?.birthdate
         ? new Date(user.birthdate).toISOString().split("T")[0]
         : "",
       gender: user?.gender || "",
@@ -189,7 +189,7 @@ export function ProfileSection() {
             <input
               id="birthday"
               type="date"
-              {...register("birthday", {
+              {...register("birthdate", {
                 required: "La fecha de nacimiento es obligatoria",
               })}
               disabled={!isEditing}
@@ -199,9 +199,9 @@ export function ProfileSection() {
                   : "bg-gray-100 dark:bg-gray-600 dark:text-white"
               }`}
             />
-            {errors.birthday && (
+            {errors.birthdate && (
               <span className="text-sm text-red-500">
-                {errors.birthday.message}
+                {errors.birthdate.message}
               </span>
             )}
           </div>

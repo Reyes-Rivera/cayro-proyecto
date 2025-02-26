@@ -24,12 +24,11 @@ type UserOrEmployee =
       surname: string;
       email: string;
       phone: string;
-      birthday: Date;
+      birthdate: Date;
       password: string;
       passwordSetAt: Date;
       passwordExpiresAt: Date | null;
       passwordsHistory: JsonValue | null;
-      isDeleted: boolean;
       role: string;
       lockUntil: Date | null;
       loginAttempts: number;
@@ -40,7 +39,7 @@ type UserOrEmployee =
       surname: string;
       email: string;
       phone: string;
-      birthday: Date;
+      birthdate: Date;
       password: string;
       passwordSetAt: Date;
       passwordExpiresAt: Date;
@@ -133,7 +132,11 @@ export class AuthService {
       passwordsHistory,
       ...rest
     } = userFound;
-    const payload = { sub: userFound.id, role: userFound.role,email:userFound.email };
+    const payload = {
+      sub: userFound.id,
+      role: userFound.role,
+      email: userFound.email,
+    };
     const token = this.jwtSvc.sign(payload, { expiresIn });
     await this.prismaService.userActivity.create({
       data: {
@@ -234,7 +237,6 @@ export class AuthService {
       const employee = await this.prismaService.employee.findUnique({
         where: { email: loginDto.email },
       });
-      console.log(employee);
       userFound = employee;
 
       if (!userFound) {
@@ -362,14 +364,13 @@ export class AuthService {
   async verifyToken(@Request() request) {
     try {
       const user = await this.prismaService.user.findUnique({
-        where: { id: request.sub,email:request.email },
+        where: { id: request.sub, email: request.email },
       });
       const admin =
         !user &&
         (await this.prismaService.employee.findUnique({
-          where: { id: request.sub,email:request.email },
+          where: { id: request.sub, email: request.email },
         }));
-      
 
       if (user || admin) {
         const entity = user || admin;

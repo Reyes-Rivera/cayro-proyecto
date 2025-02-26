@@ -71,7 +71,7 @@ export class EmployeesService {
         data: {
           ...createEmployeeDto,
           password: hashPassword,
-          birthday: new Date(createEmployeeDto.birthday),
+          birthdate: new Date(createEmployeeDto.birthdate),
           passwordExpiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
           passwordsHistory: [{ password: hashPassword, createdAt: new Date() }],
         },
@@ -134,7 +134,7 @@ export class EmployeesService {
         where: { id: id },
         data: {
           ...updateEmployeeDto,
-          birthday: new Date(employeeFound.birthday),
+          birthdate: new Date(employeeFound.birthdate),
         },
       });
       const {

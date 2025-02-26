@@ -44,6 +44,11 @@ const NavBarUser = () => {
     setIsMenuOpen(false);
   };
 
+  // Obtener la primera letra del nombre del usuario
+  const getInitial = (name: string) => {
+    return name ? name.charAt(0).toUpperCase() : "";
+  };
+
   return (
     <div className="sticky bg-white dark:bg-gray-900 shadow-md top-0 z-50">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -61,7 +66,10 @@ const NavBarUser = () => {
 
           {/* Menú de navegación en escritorio */}
           <div className="hidden sm:flex sm:items-center sm:space-x-6">
-            <NavLink to="/" className="text-black dark:text-white hover:text-blue-600">
+            <NavLink
+              to="/"
+              className="text-black dark:text-white hover:text-blue-600"
+            >
               Inicio
             </NavLink>
 
@@ -99,25 +107,16 @@ const NavBarUser = () => {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <NavLink to="/contacto" className="text-black dark:text-white hover:text-blue-600">
+            <NavLink
+              to="/contacto"
+              className="text-black dark:text-white hover:text-blue-600"
+            >
               Contacto
             </NavLink>
           </div>
 
           {/* Iconos en escritorio */}
           <div className="hidden sm:flex items-center gap-4">
-            {auth ? (
-              <Link
-                to={user?.role === "ADMIN" ? "/perfil-admin" : "/perfil-usuario"}
-              >
-                <User className="h-6 w-6 text-black dark:text-white hover:text-blue-600" />
-              </Link>
-            ) : (
-              <Link to="/login">
-                <User className="h-6 w-6 text-black dark:text-white hover:text-blue-600" />
-              </Link>
-            )}
-
             <Link to="/carrito">
               <ShoppingCart className="h-6 w-6 text-black dark:text-white hover:text-blue-600" />
             </Link>
@@ -129,6 +128,29 @@ const NavBarUser = () => {
                 <Moon className="h-6 w-6 text-black dark:text-white hover:text-blue-600" />
               )}
             </button>
+            {auth ? (
+              <Link
+                to={
+                  user?.role === "ADMIN"
+                    ? "/perfil-admin"
+                    : user?.role === "EMPLOYEE"
+                    ? "/perfil-empleado"
+                    : "/perfil-usuario"
+                }
+                className="flex items-center gap-2 text-black dark:text-white hover:text-blue-600"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+                    {getInitial(user?.name || "")}
+                  </div>
+                  <span>{user?.name}</span>
+                </div>
+              </Link>
+            ) : (
+              <Link to="/login">
+                <User className="h-6 w-6 text-black dark:text-white hover:text-blue-600" />
+              </Link>
+            )}
           </div>
 
           {/* Menú móvil */}
@@ -137,7 +159,11 @@ const NavBarUser = () => {
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="p-2 rounded-md text-black dark:text-white hover:bg-gray-200 dark:hover:bg-gray-800"
             >
-              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {isMenuOpen ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
             </button>
           </div>
         </div>
@@ -146,12 +172,16 @@ const NavBarUser = () => {
         {isMenuOpen && (
           <div className="sm:hidden fixed inset-y-0 right-0 w-1/2 bg-white dark:bg-gray-800 shadow-lg z-50">
             <div className="flex flex-col space-y-4 p-6">
-              <NavLink to="/" onClick={closeMenu} className="text-black dark:text-white hover:text-blue-600">
+              <NavLink
+                to="/"
+                onClick={closeMenu}
+                className="text-black dark:text-white hover:text-blue-600"
+              >
                 Inicio
               </NavLink>
 
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+                <DropdownMenuTrigger asChild className="text-start">
                   <button className="text-black dark:text-white hover:text-blue-600">
                     Productos
                   </button>
@@ -187,36 +217,59 @@ const NavBarUser = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              <NavLink to="/contacto" onClick={closeMenu} className="text-black dark:text-white hover:text-blue-600">
+              <NavLink
+                to="/contacto"
+                onClick={closeMenu}
+                className="text-black dark:text-white hover:text-blue-600"
+              >
                 Contacto
               </NavLink>
 
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col  gap-4">
                 {auth ? (
                   <Link
-                    to={user?.role === "ADMIN" ? "/perfil-admin" : "/perfil-usuario"}
+                    to={
+                      user?.role === "ADMIN"
+                        ? "/perfil-admin"
+                        : "/perfil-usuario"
+                    }
+                    onClick={closeMenu}
+                    className="flex items-center gap-2 text-black dark:text-white hover:text-blue-600"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+                      {getInitial(user?.name || "")}
+                    </div>
+                    <span>{user?.name}</span>
+                  </Link>
+                ) : (
+                  <Link
+                    to="/login"
                     onClick={closeMenu}
                     className="text-black dark:text-white hover:text-blue-600"
                   >
                     <User className="h-6 w-6" />
                   </Link>
-                ) : (
-                  <Link to="/login" onClick={closeMenu} className="text-black dark:text-white hover:text-blue-600">
-                    <User className="h-6 w-6" />
-                  </Link>
                 )}
-
-                <Link to="/carrito" onClick={closeMenu} className="text-black dark:text-white hover:text-blue-600">
-                  <ShoppingCart className="h-6 w-6" />
-                </Link>
-
-                <button onClick={toggleTheme} className="text-black dark:text-white hover:text-blue-600">
+                <div className="flex flex-row justify-between">
+                  <Link
+                    to="/carrito"
+                    onClick={closeMenu}
+                    className="text-black dark:text-white hover:text-blue-600"
+                  >
+                    <ShoppingCart className="h-6 w-6" />
+                  </Link>
+                <button
+                  onClick={toggleTheme}
+                  className="text-black dark:text-white hover:text-blue-600"
+                >
                   {darkMode ? (
                     <Sun className="h-6 w-6" />
                   ) : (
                     <Moon className="h-6 w-6" />
                   )}
                 </button>
+                </div>
+
               </div>
             </div>
           </div>

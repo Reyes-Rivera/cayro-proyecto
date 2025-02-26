@@ -2,9 +2,7 @@
 import { useEffect, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   CameraIcon,
   Edit,
@@ -319,7 +317,7 @@ export function CompanyView() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="companyName">Nombre de la Empresa</Label>
-                  <Input
+                  <input
                     id="companyName"
                     {...register("title", {
                       required: "El nombre es obligatorio",
@@ -330,11 +328,11 @@ export function CompanyView() {
                       },
                     })}
                     disabled={!isEditing}
-                    className={`${
+                    className={`block w-full rounded-md p-3 ${
                       isEditing
-                        ? "bg-white dark:bg-gray-700 dark:text-gray-100"
+                        ? "bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600 focus:ring-1 focus:ring-blue-600 focus:outline-none"
                         : "bg-gray-100 dark:bg-gray-600 dark:text-white"
-                    } rounded-md`}
+                    }`}
                   />
 
                   {errors.title && (
@@ -345,7 +343,7 @@ export function CompanyView() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="slogan">Slogan</Label>
-                  <Input
+                  <input
                     id="slogan"
                     {...register("slogan", {
                       required: "El slogan es obligatorio",
@@ -356,11 +354,11 @@ export function CompanyView() {
                       },
                     })}
                     disabled={!isEditing}
-                    className={`${
+                    className={`block w-full rounded-md p-3 ${
                       isEditing
-                        ? "bg-white dark:bg-gray-700 dark:text-gray-100"
+                        ? "bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600 focus:ring-1 focus:ring-blue-600 focus:outline-none"
                         : "bg-gray-100 dark:bg-gray-600 dark:text-white"
-                    } rounded-md`}
+                    }`}
                   />
 
                   {errors.slogan && (
@@ -376,7 +374,7 @@ export function CompanyView() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Correo Electrónico</Label>
-                  <Input
+                  <input
                     id="email"
                     {...register("contactInfo.0.email", {
                       required: "El correo es obligatorio",
@@ -391,11 +389,11 @@ export function CompanyView() {
                       },
                     })}
                     disabled={!isEditing}
-                    className={`${
+                    className={`block w-full rounded-md p-3 ${
                       isEditing
-                        ? "bg-white dark:bg-gray-700 dark:text-gray-100"
+                        ? "bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600 focus:ring-1 focus:ring-blue-600 focus:outline-none"
                         : "bg-gray-100 dark:bg-gray-600 dark:text-white"
-                    } rounded-md`}
+                    }`}
                   />
 
                   {errors.contactInfo?.[0]?.email && (
@@ -406,7 +404,7 @@ export function CompanyView() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">Teléfono</Label>
-                  <Input
+                  <input
                     id="phone"
                     {...register("contactInfo.0.phone", {
                       required: "El teléfono es obligatorio",
@@ -417,11 +415,11 @@ export function CompanyView() {
                       },
                     })}
                     disabled={!isEditing}
-                    className={`${
+                    className={`block w-full rounded-md p-3 ${
                       isEditing
-                        ? "bg-white dark:bg-gray-700 dark:text-gray-100"
+                        ? "bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600 focus:ring-1 focus:ring-blue-600 focus:outline-none"
                         : "bg-gray-100 dark:bg-gray-600 dark:text-white"
-                    } rounded-md`}
+                    }`}
                   />
 
                   {errors.contactInfo?.[0]?.phone && (
@@ -432,7 +430,7 @@ export function CompanyView() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="address">Dirección</Label>
-                  <Textarea
+                  <textarea
                     id="address"
                     {...register("contactInfo.0.address", {
                       required: "La dirección es obligatoria",
@@ -448,11 +446,11 @@ export function CompanyView() {
                       },
                     })}
                     disabled={!isEditing}
-                    className={`${
+                    className={`block w-full rounded-md p-3 ${
                       isEditing
-                        ? "bg-white dark:bg-gray-700 dark:text-gray-100"
+                        ? "bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600 focus:ring-1 focus:ring-blue-600 focus:outline-none"
                         : "bg-gray-100 dark:bg-gray-600 dark:text-white"
-                    } rounded-md`}
+                    }`}
                   />
 
                   {errors.contactInfo?.[0]?.address && (
@@ -468,7 +466,8 @@ export function CompanyView() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="mission">Misión</Label>
-                  <Textarea
+                  <textarea
+                    rows={4}
                     id="mission"
                     {...register("mission", {
                       required: "La misión es obligatoria",
@@ -483,11 +482,11 @@ export function CompanyView() {
                       },
                     })}
                     disabled={!isEditing}
-                    className={`${
+                    className={`block w-full rounded-md p-3 ${
                       isEditing
-                        ? "bg-white dark:bg-gray-700 dark:text-gray-100"
+                        ? "bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600 focus:ring-1 focus:ring-blue-600 focus:outline-none"
                         : "bg-gray-100 dark:bg-gray-600 dark:text-white"
-                    } rounded-md min-h-[100px]`}
+                    }`}
                   />
 
                   {errors.mission && (
@@ -498,7 +497,8 @@ export function CompanyView() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="vision">Visión</Label>
-                  <Textarea
+                  <textarea
+                    rows={4}
                     id="vision"
                     {...register("vision", {
                       required: "La visión es obligatoria",
@@ -513,11 +513,11 @@ export function CompanyView() {
                       },
                     })}
                     disabled={!isEditing}
-                    className={`${
+                    className={`block w-full rounded-md p-3 ${
                       isEditing
-                        ? "bg-white dark:bg-gray-700 dark:text-gray-100"
+                        ? "bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600 focus:ring-1 focus:ring-blue-600 focus:outline-none"
                         : "bg-gray-100 dark:bg-gray-600 dark:text-white"
-                    } rounded-md min-h-[100px]`}
+                    }`}
                   />
 
                   {errors.vision && (

@@ -30,7 +30,7 @@ export class CreateEmployeeDto {
     @IsDate()
     @IsNotEmpty()
     @Transform(({ value }) => new Date(value)) 
-    birthday: Date;
+    birthdate: Date;
 
     @IsNotEmpty()
     @IsString()
