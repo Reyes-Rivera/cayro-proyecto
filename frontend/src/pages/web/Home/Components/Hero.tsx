@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import backgroundImage from "../assets/hero.jpg";
 import { NavLink } from "react-router-dom";
+import TypewriterComponent from "typewriter-effect"; // Importa el TypewriterComponent
 
 export default function Hero() {
   return (
@@ -16,7 +17,21 @@ export default function Hero() {
         className="relative z-10 max-w-2xl text-white"
       >
         <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-6">
-          Moda y Estilo con Calidad
+          <TypewriterComponent
+            options={{
+              strings: [
+                "Moda y Estilo con Calidad",
+                "Explora Nuestra Colección",
+                "Ropa Casual y Deportiva",
+                "Comodidad al vestir",
+                "Tendencias Actuales",
+              ],
+              autoStart: true, // Inicia automáticamente
+              loop: true, // Repite el efecto
+              delay: 80, // Velocidad de escritura
+              deleteSpeed: 50, // Velocidad de borrado
+            }}
+          />
         </h1>
         <p className="text-lg md:text-xl mb-8">
           Explora nuestra colección de prendas y accesorios. Desde ropa casual
@@ -24,10 +39,12 @@ export default function Hero() {
           increíble en cualquier ocasión.
         </p>
         <div className="flex justify-center gap-6">
-          <NavLink to={"/productos"}  className=" p-3 bg-blue-600 text-white font-bold rounded-md hover:bg-blue-700 transition-colors flex justify-center items-center">
+          <NavLink
+            to={"/productos"}
+            className="p-3 bg-blue-600 text-white font-bold rounded-md hover:bg-blue-700 transition-colors flex justify-center items-center"
+          >
             Ver catálogo
           </NavLink>
-         
         </div>
       </motion.div>
     </section>

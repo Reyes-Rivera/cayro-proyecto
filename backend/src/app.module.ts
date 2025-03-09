@@ -15,6 +15,7 @@ import { CategoryModule } from './products/category/category.module';
 import { SizeModule } from './products/size/size.module';
 import { SleeveModule } from './products/sleeve/sleeve.module';
 import { BrandModule } from './products/brand/brand.module';
+import { ProductModule } from './products/product/product.module';
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -32,6 +33,7 @@ import { BrandModule } from './products/brand/brand.module';
     SizeModule,
     SleeveModule,
     BrandModule,
+    ProductModule
   ],
   controllers: [],
   providers: [AppService],

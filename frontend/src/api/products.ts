@@ -1,3 +1,4 @@
+import { CreateProductDto } from "@/pages/employees/employee/profucts/data/sampleData";
 import axios from "./axios";
 // Categories
 export const addCategory = (data: { name: string }) =>
@@ -64,3 +65,10 @@ export const updateColor = (id: number, data: { name: string,hexValue:string }) 
 export const deleteColor = (id: number) => axios.delete(`/colors/${id}`);
 
 export const getColors = () => axios.get("/colors");
+
+// product
+
+export const getProducts = () => axios.get("/product");
+export const createProduct = (data:CreateProductDto) => axios.post("/product", data);
+export const updateProduct = (data:CreateProductDto,id:number) => axios.patch(`/product/${id}`, data);
+export const deleteProduct = (id:number) => axios.post(`/product/${id}`);

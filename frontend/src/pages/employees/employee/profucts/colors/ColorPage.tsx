@@ -35,7 +35,6 @@ const ColorPage = () => {
   const navigate = useNavigate();
 
   const onSubmit: SubmitHandler<FormData> = async (data) => {
-    console.log(data);
     try {
       if (!data.hexValue) {
         Swal.fire({
@@ -63,7 +62,11 @@ const ColorPage = () => {
           setItems((prev) =>
             prev.map((cat) =>
               cat.id === editId
-                ? { ...cat, name: data.name, hexValue: data.hexValue }
+                ? {
+                    ...cat,
+                    name: data.name.trim(),
+                    hexValue: data.hexValue.trim(),
+                  }
                 : cat
             )
           );
@@ -76,10 +79,9 @@ const ColorPage = () => {
         setEditId(null);
       } else {
         setIsLoading(true);
-        console.log(data);
         const newItem = await addColor({
-          name: data.name,
-          hexValue: data.hexValue,
+          name: data.name.trim(),
+          hexValue: data.hexValue.trim(),
         });
         if (newItem) {
           Swal.fire({
@@ -419,9 +421,7 @@ const ColorPage = () => {
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 dark:text-gray-300">
                   Color
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 dark:text-gray-300">
-                  Valor Hexadecimal
-                </th>
+
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 dark:text-gray-300">
                   Acciones
                 </th>
@@ -438,11 +438,15 @@ const ColorPage = () => {
                       {item.id}
                     </td>
                     <td className="px-4 py-4 text-gray-900 dark:text-gray-100 align-middle">
-                      {item.name}
+                      <div className="flex items-center gap-10">
+                        <div
+                          className={`w-8 h-8 rounded-full`}
+                          style={{ backgroundColor: item.hexValue }}
+                        ></div>
+                        {item.name}
+                      </div>
                     </td>
-                    <td className="px-4 py-4 text-gray-900 dark:text-gray-100 align-middle">
-                      {item.hexValue}
-                    </td>
+
                     <td className="px-4 py-4 flex items-center space-x-4">
                       <button
                         onClick={() => handleEdit(item)}

@@ -213,7 +213,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const res = await verifyToken();
       if (res) {
-        setUser({...res.data,birthdate:res.data.birthday});
+        setUser(res.data);
         console.log(res.data);
         setAuth(true);
         setLoading(false);

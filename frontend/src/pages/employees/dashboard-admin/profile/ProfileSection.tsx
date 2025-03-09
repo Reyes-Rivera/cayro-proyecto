@@ -19,7 +19,6 @@ interface ProfileFormData {
 export function ProfileSection() {
   const [isEditing, setIsEditing] = useState(false);
   const { user } = useAuth();
-
   // Configurar react-hook-form
   const {
     register,
