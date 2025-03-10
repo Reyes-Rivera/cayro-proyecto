@@ -1,57 +1,102 @@
+"use client";
+
 import { useState } from "react";
 import { ProfileSection } from "./ProfileSection";
 import { AddressSection } from "./AddressSection";
 import { PasswordSection } from "./PasswordSection";
-import { Key, MapPin, User } from "lucide-react";
+import { Key, MapPin, User, User2Icon } from "lucide-react";
 
 export function ProfileView() {
   const [activeTab, setActiveTab] = useState("profile");
 
+  // Definición de las pestañas con sus propiedades
+  const tabs = [
+    {
+      id: "profile",
+      label: "Perfil",
+      icon: <User size={20} />,
+      description: "Información personal",
+      color: "bg-blue-500",
+      lightColor: "bg-blue-50 text-blue-600 border-blue-200",
+      darkColor: "dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800",
+    },
+    {
+      id: "address",
+      label: "Dirección",
+      icon: <MapPin size={20} />,
+      description: "Datos de ubicación",
+      color: "bg-blue-500",
+      lightColor: "bg-blue-50 text-blue-600 border-blue-200",
+      darkColor: "dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800",
+    },
+    {
+      id: "password",
+      label: "Seguridad",
+      icon: <Key size={20} />,
+      description: "Contraseña y acceso",
+      color: "bg-blue-500",
+      lightColor: "bg-blue-50 text-blue-600 border-blue-200",
+      darkColor: "dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800",
+    },
+  ];
+
   return (
-    <div className="flex flex-col items-center sm:p-8 dark:bg-gray-900 dark:text-gray-100">
-      <div className="w-full max-w-7xl">
-        {/* Tabs */}
-        <div className="flex overflow-x-auto sm:justify-start">
-          {[
-            {
-              id: "profile",
-              label: "Perfil",
-              icon: <User size={20} />,
-            },
-            {
-              id: "address",
-              label: "Dirección",
-              icon: <MapPin size={20} />,
-            },
-            {
-              id: "password",
-              label: "Cambiar Contraseña",
-              icon: <Key size={20} />,
-            },
-          ].map((tab) => (
+    <div className="p-6 space-y-8">
+      {/* Contenedor principal */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700 mb-8">
+        <div className=" p-6 ">
+          <div className="flex items-center gap-3">
+            <div className="bg-white/20 p-3 rounded-lg">
+              <User2Icon className="w-6 h-6" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">Gestiona tu perfil.</h1>
+              <p className="text-gray-600">
+                Administra perfil de usuario.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700">
+        {/* Navegación por pestañas */}
+        <div className="flex border-b border-gray-200 dark:border-gray-700  dark:bg-gray-800/50 rounded-t-xl overflow-x-auto">
+          {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center justify-center sm:justify-start gap-2 px-4 sm:px-8 py-4 text-sm font-medium transition-all
-              ${
+              className={`flex items-center gap-2 px-6 py-4 font-medium transition-all relative ${
                 activeTab === tab.id
-                  ? "bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-300 border-b-4 border-blue-600 dark:border-blue-300 shadow-md"
-                  : "bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400"
+                  ? "text-gray-900 dark:text-white"
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
               }`}
             >
-              {tab.icon}
-              <span className="hidden sm:inline">{tab.label}</span>
+              <div
+                className={`p-2 rounded-full ${
+                  activeTab === tab.id
+                    ? `bg-gradient-to-r ${tab.color} text-white`
+                    : "bg-gray-100 dark:bg-gray-700"
+                }`}
+              >
+                {tab.icon}
+              </div>
+              <span>{tab.label}</span>
+
+              {/* Indicador de pestaña activa */}
+              {activeTab === tab.id && (
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-purple-600"></div>
+              )}
             </button>
           ))}
         </div>
-      </div>
-      {/* Content Section */}
-      <div className="bg-white dark:bg-gray-800 w-full max-w-7xl rounded-b-2xl rounded-r-2xl shadow-md p-6 sm:p-8 space-y-6">
-        {/* Render Section */}
-        <div className="min-h-[300px] sm:min-h-[400px]">
-          {activeTab === "profile" && <ProfileSection />}
-          {activeTab === "address" && <AddressSection />}
-          {activeTab === "password" && <PasswordSection />}
+
+        {/* Contenido de la pestaña activa */}
+        <div className="p-6">
+          <div className="min-h-[400px]">
+            {activeTab === "profile" && <ProfileSection />}
+            {activeTab === "address" && <AddressSection />}
+            {activeTab === "password" && <PasswordSection />}
+          </div>
         </div>
       </div>
     </div>
