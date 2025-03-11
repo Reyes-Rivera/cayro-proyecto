@@ -3,8 +3,8 @@ import { useState, useEffect } from "react";
 import ProductList from "./components/ProductList";
 import ProductDetails from "./components/ProductDetails";
 import ProductForm from "./components/ProductForm";
-import { type Product, type CreateProductDto } from "./data/sampleData";
-import { updateProduct, deleteProduct, getProducts } from "@/api/products";
+import { type Product } from "./data/sampleData";
+import { deleteProduct, getProducts } from "@/api/products";
 import { Loader2, Package2 } from "lucide-react";
 
 const Products: React.FC = () => {
@@ -34,19 +34,14 @@ const Products: React.FC = () => {
     window.scrollTo(0, 0);
   };
 
-  const handleEditProduct = async (updatedProduct: CreateProductDto) => {
+  const handleEditProduct = async (updatedProduct: Product) => {
     if (selectedProduct) {
       setIsLoading(true);
-
-      const updated = await updateProduct(
-        updatedProduct,
-        Number(selectedProduct.id)
-      );
       const updatedProducts = products.map((p) =>
-        p.id === selectedProduct.id ? updated.data : p
+        p.id === selectedProduct.id ? updatedProduct : p
       );
-
       setProducts(updatedProducts);
+      setIsLoading(false);
       setSelectedProduct(null);
       setIsEditing(false);
     }
@@ -99,21 +94,21 @@ const Products: React.FC = () => {
       {/* Contenedor principal */}
 
       <div className="w-full overflow-x-auto bg-white dark:bg-gray-800 p-6 ">
-      <div className="bg-blue-600 text-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700 mb-8">
-        <div className=" p-6 ">
-          <div className="flex items-center gap-3">
-            <div className="bg-white/20 p-3 rounded-lg">
-              <Package2 className="w-6 h-6" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">Gestión de Productos</h1>
-              <p className="text-gray-100">
-                Administra tu catalogo de productos.
-              </p>
+        <div className="bg-blue-600 text-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700 mb-8">
+          <div className=" p-6 ">
+            <div className="flex items-center gap-3">
+              <div className="bg-white/20 p-3 rounded-lg">
+                <Package2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold">Gestión de Productos</h1>
+                <p className="text-gray-100">
+                  Administra tu catalogo de productos.
+                </p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
         {/* Mostrar el formulario, los detalles o la lista según el estado */}
         {isEditing && !selectedProduct ? (
           // Formulario para Agregar Producto

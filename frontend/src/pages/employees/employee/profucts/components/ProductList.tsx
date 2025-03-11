@@ -714,11 +714,11 @@ const ProductList: React.FC<ProductListProps> = ({
                       <div className="font-medium text-gray-900">
                         {product.name}
                       </div>
-                      {product.description && (
-                        <div className="text-sm text-gray-500 truncate max-w-xs">
+                      {/* {product.description && (
+                        <div className="text-sm text-gray-500 truncate max-w-xs ">
                           {product.description}
                         </div>
-                      )}
+                      )} */}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="bg-purple-100 text-purple-800 text-xs px-2.5 py-1 rounded-full">
@@ -806,7 +806,10 @@ const ProductList: React.FC<ProductListProps> = ({
                           Limpiar filtros
                         </button>
                       ) : (
-                        <button className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium flex items-center transition-colors">
+                        <button
+                          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium flex items-center transition-colors"
+                          onClick={() => onAdd()}
+                        >
                           <Plus className="w-4 h-4 mr-2" />
                           Añadir Producto
                         </button>

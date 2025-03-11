@@ -197,7 +197,7 @@ const EmployeeDashboard = () => {
   };
 
   return (
-    <div className="flex min-h-screen dark:bg-gray-900">
+    <div className="flex min-h-screen dark:bg-gray-900 mt-16">
       {/* Sidebar para pantallas grandes */}
       <aside className="hidden sm:block bg-white dark:bg-gray-800 shadow-xl w-64 h-screen overflow-y-auto border-r border-gray-200 dark:border-gray-700 sticky top-0 left-0 mt-10">
         <div className="flex flex-col h-full">
@@ -601,7 +601,7 @@ const EmployeeDashboard = () => {
       )}
 
       {/* Contenido principal */}
-      <main className="flex-1 bg-gray-50  mt-14 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+      <main className="flex-1 bg-gray-50   dark:bg-gray-900 text-gray-900 dark:text-gray-100">
         <div className="min-h-screen">{tabs[activeTab]}</div>
       </main>
     </div>

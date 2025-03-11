@@ -106,7 +106,6 @@ export class EmployeesService {
 
   async update(id: number, updateEmployeeDto: UpdateEmployeeDto) {
     try {
-      console.log(updateEmployeeDto);
       const employeeFound = await this.prismaService.employee.findUnique({
         where: { email: updateEmployeeDto.email },
       });

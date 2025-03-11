@@ -1,182 +1,312 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import { policyApi } from "@/api/policy";
-import { DocumentInterface } from "./DocumentInterface";
+import type { DocumentInterface } from "./DocumentInterface";
 import { motion } from "framer-motion";
 import backgroundImage from "../Home/assets/hero.jpg";
 import Breadcrumbs from "@/components/web-components/Breadcrumbs";
+import {
+  Shield,
+  Info,
+  AlertTriangle,
+  Clock,
+  CheckCircle,
+  ChevronRight,
+} from "lucide-react";
 
 export default function Policies() {
   const [policy, setPolicy] = useState<DocumentInterface[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const getPolicy = async () => {
-    const res = await policyApi();
-    console.log(res);
-    setPolicy([res.data]);
+    setIsLoading(true);
+    try {
+      const res = await policyApi();
+      setPolicy([res.data]);
+    } catch (error) {
+      console.error("Error fetching policy:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
     getPolicy();
   }, []);
 
+  // Función para formatear la fecha de última actualización
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("es-ES", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 pt-14">
       {/* Hero Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="relative h-96 flex items-center justify-center bg-cover bg-center"
-        style={{ backgroundImage: `url(${backgroundImage})` }}
+      <div
+        style={{
+          backgroundImage: `url(${backgroundImage})`,
+          backgroundPosition: "center 30%",
+        }}
+        className="relative py-20 h-[400px] bg-cover bg-no-repeat bg-fixed"
       >
-        <div className="absolute inset-0 bg-black bg-opacity-50" />
+        {/* Overlay con gradiente */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 to-black/40" />
+
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="relative z-10 text-center text-white max-w-5xl px-4"
+          transition={{ duration: 0.7, ease: "easeOut" }}
+          className="relative container mx-auto px-6 flex flex-col items-center justify-center h-full text-center"
         >
-          <h1 className="text-5xl md:text-6xl font-extrabold mb-6">
-            Aviso de privacidad
+          <span className="inline-flex items-center justify-center rounded-full bg-blue-600/20 px-4 py-1.5 text-sm font-medium text-blue-100 backdrop-blur-sm mb-6">
+            INFORMACIÓN LEGAL
+          </span>
+          <h1 className="text-5xl md:text-6xl font-extrabold text-white tracking-tight mb-6 max-w-4xl">
+            Aviso de Privacidad
           </h1>
+          <p className="text-lg text-blue-50 max-w-2xl mb-8">
+            Conoce cómo protegemos y tratamos tu información personal
+          </p>
           <div className="text-white [&_*]:!text-white flex justify-center">
             <Breadcrumbs />
           </div>
         </motion.div>
-      </motion.div>
+      </div>
 
       {/* Main Content */}
-      <main  className="container mx-auto px-6 lg:px-20">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          className="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl overflow-hidden"
-        >
-          {/* Document Header */}
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="bg-gray-100 font-bold dark:bg-gray-900 p-8 border-b dark:border-gray-600"
-          >
-           
-            Aviso de privacidad
-          </motion.p>
-
-          {/* Document Content */}
+      <div className="container mx-auto px-6 py-16">
+        <div className="max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
-            className="p-8 lg:p-12 space-y-8 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-lg shadow-md"
+            transition={{ duration: 0.5 }}
+            className="bg-white dark:bg-gray-800 shadow-xl rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700"
           >
-            {policy?.length > 0 && policy[0]?.content ? (
-              <div
-                className="whitespace-pre-wrap leading-relaxed text-justify"
-                style={{
-                  fontFamily: "Arial, sans-serif",
-                  fontSize: "16px",
-                  lineHeight: "1.8",
-                }}
-              >
-                {policy[0].content.split("\n").map((section, index) => {
-                  // Detectamos secciones con "Sección N – Título"
-                  const match = section.match(/^(Sección \d+\s–)\s*(.+)$/);
-
-                  if (match) {
-                    return (
-                      <motion.div
-                        key={index}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: 0.1 * index }}
-                        className="mb-6"
-                      >
-                        <p className="font-bold text-lg">
-                          {match[1]} <span>{match[2]}</span>
-                        </p>
-                      </motion.div>
-                    );
-                  }
-
-                  // Resaltamos texto antes de ":" en negritas
-                  const colonMatch = section.match(/^(.+?):\s*(.+)$/);
-                  if (colonMatch) {
-                    return (
-                      <motion.p
-                        key={index}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: 0.1 * index }}
-                        className="mb-4"
-                      >
-                        <span className="font-bold">{colonMatch[1]}:</span>{" "}
-                        {colonMatch[2]}
-                      </motion.p>
-                    );
-                  }
-
-                  // Detectamos preguntas
-                  const questionMatch = section.match(/(.+\?)\s*(.+)$/);
-                  if (questionMatch) {
-                    return (
-                      <motion.p
-                        key={index}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: 0.1 * index }}
-                        className="mb-4"
-                      >
-                        <span className="font-bold">{questionMatch[1]}</span>{" "}
-                        {questionMatch[2]}
-                      </motion.p>
-                    );
-                  }
-
-                  // Detectamos incisos como "a)", "b)", "1)", etc.
-                  const itemMatch = section.match(/^([a-z0-9]+\))\s*(.+)$/i);
-                  if (itemMatch) {
-                    return (
-                      <motion.p
-                        key={index}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: 0.1 * index }}
-                        className="pl-6 mb-4"
-                      >
-                        <span className="font-bold">{itemMatch[1]}</span>{" "}
-                        {itemMatch[2]}
-                      </motion.p>
-                    );
-                  }
-
-                  // Renderizamos texto normal
-                  return (
-                    <motion.p
-                      key={index}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: 0.1 * index }}
-                      className="mb-4"
-                    >
-                      {section}
-                    </motion.p>
-                  );
-                })}
+            {/* Document Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-8">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="bg-white/20 p-3 rounded-full">
+                  <Shield className="h-8 w-8" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold">Aviso de Privacidad</h2>
+                  <p className="text-blue-100">
+                    Última actualización:{" "}
+                    {policy[0]?.updatedAt
+                      ? formatDate(policy[0].updatedAt)
+                      : "No disponible"}
+                  </p>
+                </div>
               </div>
-            ) : (
-              <motion.p
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="text-center text-gray-500"
-              >
-                No hay términos y condiciones disponibles.
-              </motion.p>
+
+              <p className="mt-4 text-blue-50 max-w-3xl">
+                Este aviso de privacidad describe cómo recopilamos, usamos y
+                compartimos tu información personal cuando visitas o realizas
+                una compra en nuestro sitio.
+              </p>
+            </div>
+
+            {/* Document Content */}
+            <div className="p-8 lg:p-12 bg-white dark:bg-gray-800">
+              {isLoading ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+                  <p className="text-gray-600 dark:text-gray-300">
+                    Cargando documento...
+                  </p>
+                </div>
+              ) : policy?.length > 0 && policy[0]?.content ? (
+                <div className="space-y-8">
+                  {/* Resumen informativo */}
+                  <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-xl border-l-4 border-blue-600 mb-8">
+                    <div className="flex items-start">
+                      <Info className="w-6 h-6 text-blue-600 dark:text-blue-400 mr-4 mt-1 flex-shrink-0" />
+                      <div>
+                        <h3 className="font-bold text-gray-900 dark:text-white mb-2">
+                          Resumen del aviso
+                        </h3>
+                        <p className="text-gray-700 dark:text-gray-300">
+                          Este documento explica cómo recopilamos, utilizamos y
+                          protegemos tu información personal. Te recomendamos
+                          leerlo detenidamente para entender nuestras prácticas
+                          respecto a tus datos.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Contenido principal */}
+                  <div className="prose prose-lg max-w-none dark:prose-invert prose-headings:text-gray-900 dark:prose-headings:text-white prose-p:text-gray-700 dark:prose-p:text-gray-300">
+                    {policy[0].content.split("\n").map((section, index) => {
+                      // Detectamos secciones con "Sección N – Título"
+                      const match = section.match(/^(Sección \d+\s–)\s*(.+)$/);
+
+                      if (match) {
+                        return (
+                          <motion.div
+                            key={index}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, delay: 0.05 * index }}
+                            className="mb-8 border-b border-gray-200 dark:border-gray-700 pb-4"
+                          >
+                            <h2 className="text-2xl font-bold text-blue-700 dark:text-blue-400 flex items-center">
+                              {match[1]}{" "}
+                              <span className="ml-2">{match[2]}</span>
+                            </h2>
+                          </motion.div>
+                        );
+                      }
+
+                      // Resaltamos texto antes de ":" en negritas
+                      const colonMatch = section.match(/^(.+?):\s*(.+)$/);
+                      if (colonMatch) {
+                        return (
+                          <motion.p
+                            key={index}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, delay: 0.05 * index }}
+                            className="mb-4"
+                          >
+                            <span className="font-bold text-gray-900 dark:text-white">
+                              {colonMatch[1]}:
+                            </span>{" "}
+                            {colonMatch[2]}
+                          </motion.p>
+                        );
+                      }
+
+                      // Detectamos preguntas
+                      const questionMatch = section.match(/(.+\?)\s*(.+)$/);
+                      if (questionMatch) {
+                        return (
+                          <motion.div
+                            key={index}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, delay: 0.05 * index }}
+                            className="mb-6 bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg"
+                          >
+                            <p className="font-bold text-gray-900 dark:text-white mb-2">
+                              {questionMatch[1]}
+                            </p>
+                            <p className="text-gray-700 dark:text-gray-300">
+                              {questionMatch[2]}
+                            </p>
+                          </motion.div>
+                        );
+                      }
+
+                      // Detectamos incisos como "a)", "b)", "1)", etc.
+                      const itemMatch = section.match(
+                        /^([a-z0-9]+\))\s*(.+)$/i
+                      );
+                      if (itemMatch) {
+                        return (
+                          <motion.p
+                            key={index}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, delay: 0.05 * index }}
+                            className="pl-6 mb-4 flex"
+                          >
+                            <span className="font-bold text-blue-600 dark:text-blue-400 mr-2">
+                              {itemMatch[1]}
+                            </span>
+                            <span>{itemMatch[2]}</span>
+                          </motion.p>
+                        );
+                      }
+
+                      // Renderizamos texto normal
+                      return section.trim() ? (
+                        <motion.p
+                          key={index}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.5, delay: 0.05 * index }}
+                          className="mb-4 text-gray-700 dark:text-gray-300"
+                        >
+                          {section}
+                        </motion.p>
+                      ) : (
+                        <div key={index} className="my-4"></div>
+                      ); // Espacio para líneas vacías
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <AlertTriangle className="w-12 h-12 text-amber-500 mb-4" />
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                    No hay información disponible
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 max-w-md">
+                    En este momento no podemos mostrar el aviso de privacidad.
+                    Por favor, intenta nuevamente más tarde.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Footer del documento */}
+            {policy?.length > 0 && policy[0]?.content && (
+              <div className="bg-gray-50 dark:bg-gray-700/50 p-6 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                  <div className="flex items-center text-gray-600 dark:text-gray-300">
+                    <Clock className="w-4 h-4 mr-2" />
+                    <span className="text-sm">
+                      Última actualización:{" "}
+                      {policy[0]?.updatedAt
+                        ? formatDate(policy[0].updatedAt)
+                        : "No disponible"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
+                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                      Este documento es de carácter informativo y cumple con las
+                      regulaciones vigentes.
+                    </span>
+                  </div>
+                </div>
+              </div>
             )}
           </motion.div>
-        </motion.div>
-      </main>
+
+          {/* Sección de contacto */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="mt-12 bg-blue-50 dark:bg-blue-900/20 p-8 rounded-xl border border-blue-100 dark:border-blue-800 text-center"
+          >
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+              ¿Tienes preguntas sobre nuestra política de privacidad?
+            </h3>
+            <p className="text-gray-700 dark:text-gray-300 mb-6 max-w-2xl mx-auto">
+              Si necesitas más información o tienes alguna duda sobre cómo
+              manejamos tus datos personales, no dudes en contactarnos.
+            </p>
+            <a
+              href="/contacto"
+              className="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+            >
+              Contáctanos
+              <ChevronRight className="ml-2 w-5 h-5" />
+            </a>
+          </motion.div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -138,13 +138,6 @@ export class AuthService {
       email: userFound.email,
     };
     const token = this.jwtSvc.sign(payload, { expiresIn });
-    await this.prismaService.userActivity.create({
-      data: {
-        email: userFound.email,
-        action: 'Inicio de sesión.',
-        date: new Date(),
-      },
-    });
     return { user: { ...rest, role: userFound.role }, token };
   }
   //its okey
@@ -240,7 +233,7 @@ export class AuthService {
       userFound = employee;
 
       if (!userFound) {
-        throw new NotFoundException('Usuario no registrado.');
+        throw new NotFoundException('Credenciales invalidas.');
       }
     }
 
@@ -323,7 +316,7 @@ export class AuthService {
       }
 
       throw new HttpException(
-        'La contraseña es incorrecta.',
+        'Credenciales invalidas.',
         HttpStatus.UNAUTHORIZED,
       );
     }

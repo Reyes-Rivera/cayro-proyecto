@@ -38,6 +38,7 @@ interface ProductVariant {
   price: number;
   stock: number;
   barcode: string;
+  imageUrl:string;
 }
 
 interface Product {
@@ -307,6 +308,9 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, onBack }) => {
               <thead>
                 <tr className="bg-indigo-50">
                   <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase tracking-wider border-b border-indigo-100">
+                    Imagen
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase tracking-wider border-b border-indigo-100">
                     Color
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase tracking-wider border-b border-indigo-100">
@@ -331,6 +335,20 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, onBack }) => {
                       index % 2 === 0 ? "bg-white" : "bg-indigo-50/30"
                     } hover:bg-indigo-50 transition-colors`}
                   >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="w-16 h-16 rounded-md overflow-hidden border border-gray-200">
+                        <img
+                          src={
+                            variant.imageUrl ||
+                            "/placeholder.svg?height=64&width=64"
+                          }
+                          alt={`${getColorName(variant.colorId)} ${getSizeName(
+                            variant.sizeId
+                          )}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div

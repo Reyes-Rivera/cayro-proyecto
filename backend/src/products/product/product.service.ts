@@ -13,6 +13,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class ProductService {
   constructor(private prismaService: PrismaService) {}
   async create(createProductDto: CreateProductDto) {
+    console.log(createProductDto);
     const { variants, ...productData } = createProductDto;
     try {
       const existingProduct = await this.prismaService.product.findFirst({

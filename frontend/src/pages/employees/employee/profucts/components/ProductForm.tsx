@@ -58,7 +58,7 @@ interface ColorSizeConfig {
 interface ProductFormProps {
   onAdd: (newProduct: Product) => Promise<void>;
   product?: Product;
-  onEdit: (updatedProduct: CreateProductDto) => Promise<void>;
+  onEdit: (updatedProduct: Product) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -146,7 +146,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
               prices: { [variant.sizeId]: variant.price },
               stocks: { [variant.sizeId]: variant.stock },
               image:
-                variant.imageUrl || "/placeholder.svg?height=200&width=200",
+                variant.imageUrl ||
+                "https://res.cloudinary.com/dhhv8l6ti/image/upload/v1741550306/a58jbqkjh7csdrlw3qfd.jpg",
             });
           }
           return acc;
@@ -193,7 +194,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
           sizes: [],
           prices: {},
           stocks: {},
-          image: "/placeholder.svg?height=200&width=200",
+          image:
+            "https://res.cloudinary.com/dhhv8l6ti/image/upload/v1741550306/a58jbqkjh7csdrlw3qfd.jpg",
         },
       ]);
       setSelectedColorId(numericColorId);
@@ -296,6 +298,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
       setIsUploading(false); // Desactivar el estado de carga
       return data.secure_url;
     } catch (error) {
+      console.log(error);
       setIsUploading(false); // Desactivar el estado de carga en caso de error
       Swal.fire({
         icon: "error",
@@ -341,9 +344,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
     if (imageUrl) {
       setColorConfigs((prev) =>
         prev.map((config) =>
-          config.colorId === colorId
-            ? { ...config, image: imageUrl }
-            : config
+          config.colorId === colorId ? { ...config, image: imageUrl } : config
         )
       );
     }
@@ -377,8 +378,14 @@ const ProductForm: React.FC<ProductFormProps> = ({
             sizeId,
             price: config.prices[sizeId] || 0,
             stock: config.stocks[sizeId] || 0,
-            barcode: `${data.name}-${colorName}-${sizeName}`.toUpperCase(),
-            imageUrl: config.image,
+            barcode: `${data.name.replace(/\s+/g, "-")}-${colorName.replace(
+              /\s+/g,
+              "-"
+            )}-${sizeName.replace(/\s+/g, "-")}`.toUpperCase(),
+
+            imageUrl:
+              config.image ||
+              "https://res.cloudinary.com/dhhv8l6ti/image/upload/v1741550306/a58jbqkjh7csdrlw3qfd.jpg",
           });
         });
       });
@@ -391,7 +398,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
         sleeveId: +data.sleeveId,
         categoryId: +data.categoryId,
       };
-
       // Llamada a la API para crear o actualizar el producto
       const response = product
         ? await updateProduct(payload, product.id)
@@ -415,8 +421,10 @@ const ProductForm: React.FC<ProductFormProps> = ({
           showConfirmButton: false,
           timerProgressBar: true,
         });
+        window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
       }
     } catch (error: any) {
+      console.log(error);
       setIsLoading(false);
       console.error(error);
       Swal.fire({
@@ -431,7 +439,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
       });
     }
   };
-
   return (
     <div className="container mx-auto">
       <form onSubmit={handleSubmit(onSubmitForm)} className="space-y-6">
@@ -773,7 +780,14 @@ const ProductForm: React.FC<ProductFormProps> = ({
                       {isBasicInfoComplete && (
                         <button
                           type="button"
-                          onClick={() => setActiveTab("variants")}
+                          onClick={() => {
+                            setActiveTab("variants");
+                            window.scrollTo({
+                              top: 0,
+                              left: 0,
+                              behavior: "smooth",
+                            });
+                          }}
                           className="flex items-center text-blue-600 hover:text-blue-800 font-medium"
                         >
                           Continuar a Variantes
@@ -952,8 +966,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
                                   colorConfigs.find(
                                     (c) => c.colorId === selectedColorId
                                   )?.image ||
-                                  "/placeholder.svg?height=200&width=200" ||
-                                  "/placeholder.svg"
+                                  "https://res.cloudinary.com/dhhv8l6ti/image/upload/v1741550306/a58jbqkjh7csdrlw3qfd.jpg" ||
+                                  "https://res.cloudinary.com/dhhv8l6ti/image/upload/v1741550306/a58jbqkjh7csdrlw3qfd.jpg"
                                 }
                                 alt={`Color ${
                                   colors?.find((c) => c.id === selectedColorId)
