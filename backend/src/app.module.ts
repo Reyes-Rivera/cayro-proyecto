@@ -33,7 +33,7 @@ import { ProductModule } from './products/product/product.module';
     SizeModule,
     SleeveModule,
     BrandModule,
-    ProductModule
+    ProductModule,
   ],
   controllers: [],
   providers: [AppService],

@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { SaveIcon, EditIcon, XIcon } from "lucide-react";
 import { useAuth } from "@/context/AuthContextType";
 import imgAddress from "./assets/rb_8256.png";
-import { getUserAddress } from "@/api/users"; // Asegúrate de tener estas funciones en tu API
+import { getUserAddress, updateProfileEmployee } from "@/api/users"; // Asegúrate de tener estas funciones en tu API
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
 
@@ -60,17 +60,17 @@ export function AddressSection() {
   const onSubmit: SubmitHandler<AddressFormData> = async (data) => {
     try {
       if (user?.id) {
-        // const res = await updateAddress(Number(user.id), data);
-        // if (res) {
-        //   Swal.fire({
-        //     icon: "success",
-        //     title: "Dirección actualizada.",
-        //     text: "Su información de dirección ha sido actualizada correctamente.",
-        //     confirmButtonColor: "#2563EB",
-        //   });
-        //   setAddress(data); // Actualizar el estado de la dirección
-        //   setIsEditing(false);
-        // }
+        const res = await updateProfileEmployee(Number(user.id), data);
+        if (res) {
+          Swal.fire({
+            icon: "success",
+            title: "Dirección actualizada.",
+            text: "Su información de dirección ha sido actualizada correctamente.",
+            confirmButtonColor: "#2563EB",
+          });
+          setAddress(data); // Actualizar el estado de la dirección
+          setIsEditing(false);
+        }
       }
     } catch (error) {
       console.error("Error al actualizar la dirección:", error);

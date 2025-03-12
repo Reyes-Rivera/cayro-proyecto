@@ -1,12 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import {
-  motion,
-  useScroll,
-  useTransform,
-  AnimatePresence,
-} from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
   ShoppingBag,
@@ -20,6 +15,7 @@ import {
   Shirt,
 } from "lucide-react";
 import img from "../Home/assets/hero.jpg"; // Asegúrate de que la ruta sea correcta
+import Breadcrumbs from "@/components/web-components/Breadcrumbs";
 
 type Product = {
   id: number;
@@ -231,9 +227,6 @@ export default function ProductPage() {
   }, []);
 
   // Scroll animation with framer-motion
-  const { scrollY } = useScroll();
-  const headerOpacity = useTransform(scrollY, [0, 300], [1, 0]);
-  const headerScale = useTransform(scrollY, [0, 300], [1, 0.8]);
 
   // Filter and sort products
   const filteredProducts = allProducts
@@ -324,46 +317,32 @@ export default function ProductPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-14 md:pt-0">
       {/* Hero Header with Background img */}
       <motion.div
-        className="relative h-[50vh] md:h-[60vh] w-full overflow-hidden"
-        style={{ opacity: headerOpacity, scale: headerScale }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8 }}
+        className="relative h-[500px] flex items-center justify-center bg-cover bg-center bg-fixed"
+        style={{ backgroundImage: `url(${img})` }}
       >
-        <img
-          src={img || "/placeholder.svg"}
-          alt="Banner de colección de moda"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 flex flex-col justify-center items-center px-8 md:px-16 bg-gradient-to-b from-black/60 to-black/40">
-          <motion.h1
-            className="text-4xl md:text-6xl font-bold mb-4 text-white text-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8 }}
-          >
-            Descubre nuestros productos
-          </motion.h1>
-          <motion.p
-            className="text-xl md:text-2xl text-white text-center max-w-2xl"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-          >
-            Calidad y estilo en cada prenda
-          </motion.p>
+        {/* Overlay con gradiente */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 to-black/40" />
 
-          <motion.div
-            className="mt-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-          >
-            <a
-              href="#products-grid"
-              className="bg-white hover:bg-gray-100 text-gray-900 font-medium px-8 py-3 rounded-full transition-all shadow-lg hover:shadow-xl"
-            >
-              Ver productos
-            </a>
-          </motion.div>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.2, ease: "easeOut" }}
+          className="relative z-10 text-center text-white max-w-5xl px-6"
+        >
+          <span className="inline-flex items-center justify-center rounded-full bg-blue-600/20 px-4 py-1.5 text-sm font-medium text-blue-100 backdrop-blur-sm mb-6">
+            Descubre nuestros productos
+          </span>
+          <h1 className="text-5xl md:text-6xl font-extrabold mb-6 tracking-tight">
+            Calidad y estilo en cada prenda
+          </h1>
+          
+          <div className="text-white [&_*]:!text-white flex justify-center">
+            <Breadcrumbs />
+          </div>
+        </motion.div>
       </motion.div>
 
       <section className="max-w-7xl mx-auto px-4 py-12" id="products-grid">

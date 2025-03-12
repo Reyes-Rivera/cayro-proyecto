@@ -444,14 +444,14 @@ const ProductForm: React.FC<ProductFormProps> = ({
       <form onSubmit={handleSubmit(onSubmitForm)} className="space-y-6">
         {/* Encabezado */}
         <div className="bg-white shadow-xl rounded-xl overflow-hidden border border-gray-100">
-          <div className=" bg-blue-600 p-6 text-white">
+          <div className=" bg-white p-6 border-b">
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-2xl font-bold mb-2 flex items-center">
                   <Package className="w-6 h-6 mr-2" />
                   {product ? "Editar Producto" : "Agregar Nuevo Producto"}
                 </h1>
-                <p className="text-blue-100">
+                <p className="text-gray-600">
                   Complete la información del producto y configure sus variantes
                   por color y talla.
                 </p>

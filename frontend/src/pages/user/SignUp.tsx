@@ -187,6 +187,7 @@ export default function SignUpPage() {
             data.password,
             data.gender
           );
+          console.log(res);
           if (
             res.success === false &&
             res.message === "El correo ya esta en uso."

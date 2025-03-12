@@ -62,7 +62,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [error, setError] = useState("");
   const [errorTimer, setErrorTimer] = useState("");
   const [emailToVerify, setEmailToVerify] = useState<string | null>(() => {
-    return localStorage.getItem("emailToVerify") || null; 
+    return localStorage.getItem("emailToVerify") || null;
   });
   const [isVerificationPending, setIsVerificationPending] = useState<boolean>(
     () => {
@@ -91,9 +91,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             "Error desconocido al iniciar sesión."
         );
       }
-      throw error; 
+      throw error;
     }
-    return null; 
+    return null;
   };
 
   const SignUp = async (
@@ -160,7 +160,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         };
         errorMessage = axiosError.response?.data?.message || errorMessage;
       }
-
       setError(errorMessage);
       return { status: 500, message: errorMessage };
     }
@@ -172,7 +171,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (res.status === 201) {
         setEmailToVerify(null);
-        setUser({...res.data.user,birthdate:res.data.birthday});
+        setUser({ ...res.data.user, birthdate: res.data.birthday });
         localStorage.setItem("token", res.data.token);
         setAuth(true);
         setUser(res.data);
@@ -244,13 +243,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     auth,
     loading,
     SignUp,
-    verifyCode, 
+    verifyCode,
     error,
     emailToVerify,
     isVerificationPending,
     setEmailToVerify,
     verifyCodeAuth,
-    errorTimer, 
+    errorTimer,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

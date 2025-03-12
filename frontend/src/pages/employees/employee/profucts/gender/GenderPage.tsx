@@ -298,7 +298,7 @@ const GenderPage = () => {
   return (
     <div className="p-6 space-y-8">
       {/* Encabezado de Página */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700">
+      <div className="bg-blue-600 text-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700">
         <div className="p-6">
           <div className="flex items-center gap-3">
             <div className="bg-white/20 p-3 rounded-lg">
@@ -306,7 +306,7 @@ const GenderPage = () => {
             </div>
             <div>
               <h1 className="text-2xl font-bold">Gestión de Géneros</h1>
-              <p className="text-gray-600">
+              <p className="text-gray-100">
                 Administra los géneros de los productos de tu catálogo
               </p>
             </div>
@@ -317,14 +317,14 @@ const GenderPage = () => {
       {/* Tabla de Géneros */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700">
         {/* Encabezado de la tabla con gradiente */}
-        <div className="bg-blue-600 p-6 text-white">
+        <div className="bg-white p-6 border-b">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h1 className="text-2xl font-bold mb-2 flex items-center">
                 <Users className="w-6 h-6 mr-2" />
                 Listado de Géneros
               </h1>
-              <p className="text-blue-100">
+              <p className="text-blue-700">
                 {filteredAndSortedItems.length}{" "}
                 {filteredAndSortedItems.length === 1 ? "género" : "géneros"} en
                 el catálogo
@@ -332,7 +332,7 @@ const GenderPage = () => {
             </div>
             <button
               onClick={openAddModal}
-              className="bg-white text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-lg font-medium flex items-center transition-colors shadow-sm"
+              className="bg-white text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-lg font-medium flex items-center transition-colors shadow-md"
             >
               <Plus className="w-4 h-4 mr-2" />
               Nuevo Género
@@ -341,7 +341,7 @@ const GenderPage = () => {
         </div>
 
         {/* Barra de búsqueda y filtros */}
-        <div className="bg-gray-50 dark:bg-gray-700/50 p-4 border-b border-gray-200 dark:border-gray-700 flex flex-wrap gap-4 items-center justify-between">
+        <div className="bg-white dark:bg-gray-700/50 p-4 border-b border-gray-200 dark:border-gray-700 flex flex-wrap gap-4 items-center justify-between">
           <div className="relative flex-grow max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input

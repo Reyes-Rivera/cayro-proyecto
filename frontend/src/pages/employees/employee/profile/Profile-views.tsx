@@ -43,7 +43,7 @@ export function ProfileView() {
   return (
     <div className="p-6 space-y-8">
       {/* Contenedor principal */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700 mb-8">
+      <div className="bg-blue-600 text-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700 mb-8">
         <div className=" p-6 ">
           <div className="flex items-center gap-3">
             <div className="bg-white/20 p-3 rounded-lg">
@@ -51,7 +51,7 @@ export function ProfileView() {
             </div>
             <div>
               <h1 className="text-2xl font-bold">Gestiona tu perfil.</h1>
-              <p className="text-gray-600">
+              <p className="text-gray-100">
                 Administra perfil de usuario.
               </p>
             </div>

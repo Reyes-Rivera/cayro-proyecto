@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
 import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -27,13 +28,18 @@ async function bootstrap() {
             'data:',
             'https://example.com',
             'https://cdn.example.com',
-          ], 
-          
+          ],
         },
       },
     }),
   );
-  
+  app.use(
+    rateLimit({
+      windowMs: 15 * 60 * 1000,
+      max: 100, 
+      message: 'Demasiadas solicitudes, intenta nuevamente más tarde.',
+    }),
+  );
   app.useGlobalPipes(new ValidationPipe());
   const port = process.env.PORT || 5000;
   app.use(cookieParser());

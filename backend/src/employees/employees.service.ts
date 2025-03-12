@@ -3,9 +3,10 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
-import { UpdateEmployeeDto } from './dto/update-employee.dto';
+import { UpdateAddressDto, UpdateEmployeeDto } from './dto/update-employee.dto';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import axios from 'axios';
@@ -96,7 +97,7 @@ export class EmployeesService {
     }
   }
 
-  findAll() {
+  async findAll() {
     return `This action returns all employees`;
   }
 
@@ -157,7 +158,77 @@ export class EmployeesService {
     }
   }
 
-  remove(id: number) {
+  async remove(id: number) {
     return `This action removes a #${id} employee`;
+  }
+  async findOneAddress(id: number) {
+    return await this.prismaService.address.findFirst({
+      where: {
+        employees: {
+          some: { id: id },
+        },
+      },
+    });
+  }
+
+  async upsertEmployeeAddress(
+    employeeId: number,
+    addressData: {
+      street: string;
+      city: string;
+      state: string;
+      country: string;
+      postalCode: string;
+      colony: string;
+    },
+  ) {
+    try {
+      // 📌 Verifica si el empleado realmente existe en la base de datos
+      const employeeExists = await this.prismaService.employee.findUnique({
+        where: { id: employeeId },
+      });
+      console.log(employeeExists);
+      if (!employeeExists) {
+        throw new Error(`El empleado con ID ${employeeId} no existe.`);
+      }
+
+      // 📌 Busca si el empleado ya tiene una dirección
+      const existingAddress = await this.prismaService.address.findFirst({
+        where: {
+          employees: {
+            some: { id: employeeId },
+          },
+        },
+      });
+
+      if (existingAddress) {
+        // 📌 Si ya tiene una dirección, la actualizamos
+        const updatedAddress = await this.prismaService.address.update({
+          where: { id: existingAddress.id },
+          data: { ...addressData },
+        });
+        return {
+          message: 'Dirección del empleado actualizada exitosamente.',
+          updatedAddress,
+        };
+      } else {
+        // 📌 Si no tiene dirección, la creamos y conectamos al empleado
+        const newAddress = await this.prismaService.address.create({
+          data: {
+            ...addressData,
+            employees: {
+              connect: { id: employeeId }, // Se conecta con el empleado en la tabla intermedia
+            },
+          },
+        });
+        return {
+          message: 'Nueva dirección del empleado creada exitosamente.',
+          newAddress,
+        };
+      }
+    } catch (error) {
+      console.error('Error al actualizar/crear la dirección:', error);
+      throw new Error('No se pudo procesar la dirección.');
+    }
   }
 }

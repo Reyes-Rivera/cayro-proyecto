@@ -262,6 +262,10 @@ export default function LoginPage() {
                         message: "Dirección de correo electrónico inválida",
                       },
                     })}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[<>='" ]/g, "");
+                      e.target.value = value;
+                    }}
                   />
                   {errors.email && (
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
