@@ -90,12 +90,12 @@ enum SaleStatus {
 
 model Address {
   id         Int        @id @default(autoincrement())
-  street     String
-  city       String
-  state      String
-  country    String
+  street     String     @db.VarChar(255)
+  city       String     @db.VarChar(255)
+  state      String     @db.VarChar(255)
+  country    String     @db.VarChar(255)
   postalCode String
-  colony     String
+  colony     String     @db.VarChar(255)
   users      User[]     @relation("UserAddresses")
   employees  Employee[] @relation("EmployeeAddresses")
   sales      Sale[]     @relation("SaleAddresses")
@@ -113,13 +113,13 @@ model Audit {
 
 model CompanyProfile {
   id          Int      @id @default(autoincrement())
-  title       String
+  title       String   @db.VarChar(255)
   slogan      String
   logoUrl     String
   contactInfo Json
   auditLog    Audit[]
-  mission     String
-  vision      String
+  mission     String   @db.VarChar(5000)
+  vision      String   @db.VarChar(5000)
   socialLinks Json
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -128,7 +128,7 @@ model CompanyProfile {
 model DocumentRegulatory {
   id                Int       @id @default(autoincrement())
   title             String    @db.VarChar(255) 
-  content           String    @db.Text
+  content           String    @db.VarChar(255)
   version           Int?     
   createdAt         DateTime? @default(now())
   updatedAt         DateTime? @updatedAt
@@ -156,7 +156,7 @@ enum DocumentTypeInter {
 model Product {
   id               Int      @id @default(autoincrement())
   name             String
-  description      String
+  description      String   @db.VarChar(500)
   active           Boolean  @default(true)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt

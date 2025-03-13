@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Home, Users, FileText, LogOut, Menu } from "lucide-react";
-import { ProfileView } from "./profile/Profile-views";
+import { ProfileView } from "../components/Profile-views";
 import LegalDocumentsView from "./legal/LegalDocumentsView";
 import { CompanyView } from "./Company-view";
 import { useAuth } from "@/context/AuthContextType";

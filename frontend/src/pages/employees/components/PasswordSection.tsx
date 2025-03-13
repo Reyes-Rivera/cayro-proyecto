@@ -199,21 +199,7 @@ export function PasswordSection() {
   return (
     <div className="p-6 space-y-8">
       {/* Encabezado */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700">
-        <div className="bg-blue-600 p-6 text-white">
-          <div className="flex items-center gap-3">
-            <div className="bg-white/20 p-3 rounded-lg">
-              <Key className="w-6 h-6" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">Seguridad de la Cuenta</h1>
-              <p className="text-blue-100">
-                Actualiza tu contraseña para mantener tu cuenta segura
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+     
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Tarjeta de información de seguridad */}

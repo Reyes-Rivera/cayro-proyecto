@@ -17,7 +17,7 @@ import {
   ChevronDown,
   ChevronRight,
 } from "lucide-react";
-import { ProfileView } from "./profile/Profile-views";
+import { ProfileView } from "../components/Profile-views";
 import { useAuth } from "@/context/AuthContextType";
 import Products from "./profucts/Products";
 import CategoryPage from "./profucts/category/CategoryPage";

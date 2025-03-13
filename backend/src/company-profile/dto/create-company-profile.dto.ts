@@ -5,12 +5,8 @@ import {
   MinLength,
   IsArray,
   IsOptional,
-  ValidateNested,
   Matches,
 } from "class-validator";
-import { Type } from "class-transformer";
-
-
 
 export class CreateCompanyProfileDto {
   @IsString({ message: "El título debe ser de tipo texto." })

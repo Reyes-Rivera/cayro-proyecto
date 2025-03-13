@@ -21,25 +21,18 @@ async function bootstrap() {
             "'self'",
             "'unsafe-inline'",
             "'unsafe-eval'",
-            'https://apis.google.com',
-          ],
-          imgSrc: [
-            "'self'",
-            'data:',
-            'https://example.com',
-            'https://cdn.example.com',
           ],
         },
       },
     }),
   );
-  app.use(
-    rateLimit({
-      windowMs: 15 * 60 * 1000,
-      max: 100, 
-      message: 'Demasiadas solicitudes, intenta nuevamente más tarde.',
-    }),
-  );
+  // app.use(
+  //   rateLimit({
+  //     windowMs: 15 * 60 * 1000,
+  //     max: 100, 
+  //     message: 'Demasiadas solicitudes, intenta nuevamente más tarde.',
+  //   }),
+  // );
   app.useGlobalPipes(new ValidationPipe());
   const port = process.env.PORT || 5000;
   app.use(cookieParser());
