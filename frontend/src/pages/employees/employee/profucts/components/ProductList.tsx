@@ -259,9 +259,9 @@ const ProductList: React.FC<ProductListProps> = ({
   }, []);
 
   return (
-    <div className="container mx-auto ">
+    <div className="container mx-auto">
       <div className="bg-white shadow-2xl rounded-xl overflow-hidden border border-gray-100 mb-8">
-        <div className=" bg-white border-b  p-6">
+        <div className="bg-white border-b p-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h1 className="text-2xl font-bold mb-2 flex items-center">
@@ -277,7 +277,7 @@ const ProductList: React.FC<ProductListProps> = ({
               </p>
             </div>
             <button
-              className="bg-white text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-lg font-medium flex items-center transition-colors shadow-md"
+              className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-lg font-medium flex items-center transition-colors shadow-md"
               onClick={() => onAdd()}
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -287,13 +287,13 @@ const ProductList: React.FC<ProductListProps> = ({
         </div>
 
         {/* Barra de búsqueda y filtros */}
-        <div className="bg-white  p-4 border-b border-gray-200 flex flex-wrap gap-4 items-center justify-between">
+        <div className="bg-white p-4 border-b border-gray-200 flex flex-wrap gap-4 items-center justify-between">
           <div className="relative flex-grow max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               type="text"
               placeholder="Buscar productos..."
-              className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+              className="pl-12 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -714,11 +714,6 @@ const ProductList: React.FC<ProductListProps> = ({
                       <div className="font-medium text-gray-900">
                         {product.name}
                       </div>
-                      {/* {product.description && (
-                        <div className="text-sm text-gray-500 truncate max-w-xs ">
-                          {product.description}
-                        </div>
-                      )} */}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="bg-purple-100 text-purple-800 text-xs px-2.5 py-1 rounded-full">

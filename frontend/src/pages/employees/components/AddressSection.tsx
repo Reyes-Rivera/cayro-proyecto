@@ -15,12 +15,14 @@ import {
   AlertCircle,
   Loader2,
   Map,
+  Navigation,
+  CheckCircle,
 } from "lucide-react";
-import pictureMen from "@/assets/rb_859.png";
 import { useAuth } from "@/context/AuthContextType";
 import { getUserAddress, updateAddress } from "@/api/users";
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
+import { motion } from "framer-motion";
 
 // Interfaz para la dirección como entidad separada
 interface Address {
@@ -125,7 +127,7 @@ export function AddressSection() {
           postalCode: data.postalCode,
           colony: data.colony,
         };
-        console.log(updatedAddress);
+
         const res = await updateAddress(Number(user.id), updatedAddress);
         if (res) {
           // Actualizar el estado local con los nuevos datos
@@ -199,26 +201,6 @@ export function AddressSection() {
           { value: "YUC", label: "Yucatán" },
           { value: "ZAC", label: "Zacatecas" },
         ];
-     
-        return [
-          { value: "AND", label: "Andalucía" },
-          { value: "ARA", label: "Aragón" },
-          { value: "AST", label: "Asturias" },
-          { value: "BAL", label: "Islas Baleares" },
-          { value: "CAN", label: "Canarias" },
-          { value: "CANT", label: "Cantabria" },
-          { value: "CYL", label: "Castilla y León" },
-          { value: "CLM", label: "Castilla-La Mancha" },
-          { value: "CAT", label: "Cataluña" },
-          { value: "VAL", label: "Comunidad Valenciana" },
-          { value: "EXT", label: "Extremadura" },
-          { value: "GAL", label: "Galicia" },
-          { value: "MAD", label: "Madrid" },
-          { value: "MUR", label: "Murcia" },
-          { value: "NAV", label: "Navarra" },
-          { value: "PVA", label: "País Vasco" },
-          { value: "RIO", label: "La Rioja" },
-        ];
       default:
         return [{ value: "", label: "Seleccione un país primero" }];
     }
@@ -226,57 +208,118 @@ export function AddressSection() {
 
   const states = getStatesByCountry(selectedCountry);
 
+  // Variantes para animaciones
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { type: "spring", stiffness: 100 },
+    },
+  };
+
   return (
-    <div className="p-6 space-y-8">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <motion.div
+      className="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 md:space-y-8 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 lg:gap-8 w-full">
         {/* Tarjeta de imagen de dirección */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700">
-          <div className="bg-blue-600 p-4 text-white">
-            <h2 className="text-xl font-semibold flex items-center gap-2">
-              <MapPin className="w-5 h-5" />
-              Dirección
+        <motion.div
+          variants={itemVariants}
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700 relative"
+        >
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-blue-700/10 rounded-full -mr-16 -mt-16 dark:from-blue-500/20 dark:to-blue-700/20"></div>
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-400/10 to-blue-600/10 rounded-full -ml-12 -mb-12 dark:from-blue-400/20 dark:to-blue-600/20"></div>
+
+          <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-3 sm:p-5 text-white">
+            <h2 className="text-base sm:text-lg md:text-xl font-semibold flex items-center gap-1 sm:gap-2">
+              <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />
+              Ubicación
             </h2>
           </div>
 
-          <div className="p-6 flex flex-col items-center space-y-6">
-            <div className="relative w-48 h-48 rounded-full overflow-hidden border-4 border-blue-100 dark:border-green-900 shadow-lg">
-              <img
-                src={pictureMen || "/placeholder.svg?height=200&width=200"}
-                alt="Imagen de ubicación"
-                className="w-full h-full object-cover"
-              />
+          <div className="p-3 sm:p-4 md:p-6 lg:p-8 flex flex-col items-center space-y-3 sm:space-y-4 md:space-y-6 relative z-10">
+            <div className="relative w-28 h-28 sm:w-32 sm:h-32 lg:w-40 lg:h-40 rounded-full overflow-hidden border-4 border-blue-100 dark:border-blue-900 shadow-lg">
+              <div className="absolute inset-0 bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
+                <Navigation className="w-16 h-16 text-blue-500 dark:text-blue-400" />
+              </div>
             </div>
 
             <div className="text-center">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+              <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100">
                 {user?.name} {user?.surname}
               </h3>
-              <p className="text-gray-500 dark:text-gray-400">{user?.email}</p>
-              <div className="mt-3">
-                <span className="bg-blue-600 text-white text-sm font-medium px-3 py-1 rounded-full">
+              <p className="text-gray-500 dark:text-gray-400 mt-1">
+                {user?.email}
+              </p>
+              <div className="mt-4">
+                <span className="bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-medium px-4 py-1.5 rounded-full shadow-sm">
                   Dirección Principal
                 </span>
               </div>
             </div>
+
+            {!isLoading && address && (
+              <div className="w-full bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-100 dark:border-blue-800/30 mt-4">
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-start gap-2">
+                    <MapPin className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                      {address.street}, {address.colony}, {address.city},{" "}
+                      {address.state}, {address.country}, CP{" "}
+                      {address.postalCode}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 mt-2">
+                    <CheckCircle className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    <span className="text-xs text-blue-700 dark:text-blue-400">
+                      Dirección verificada
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
+        </motion.div>
 
         {/* Tarjeta de información de dirección */}
-        <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700">
-          <div className="bg-blue-600 p-4 text-white">
+        <motion.div
+          variants={itemVariants}
+          className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700 relative"
+        >
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-blue-700/10 rounded-full -mr-16 -mt-16 dark:from-blue-500/20 dark:to-blue-700/20"></div>
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-400/10 to-blue-600/10 rounded-full -ml-12 -mb-12 dark:from-blue-400/20 dark:to-blue-600/20"></div>
+
+          <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-3 sm:p-5 text-white">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold flex items-center gap-2">
-                <Home className="w-5 h-5" />
-                Información de Dirección
+              <h2 className="text-base sm:text-lg md:text-xl font-semibold flex items-center gap-1 sm:gap-2">
+                <Home className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="truncate">Información de Dirección</span>
               </h2>
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 type="button"
                 onClick={toggleEditing}
                 disabled={isSubmitting || isLoading}
-                className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors ${
+                className={`px-2 sm:px-4 py-1 sm:py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-all ${
                   isEditing
-                    ? "bg-white/20 hover:bg-white/30"
-                    : "bg-white/20 hover:bg-white/30"
+                    ? "bg-white/20 hover:bg-white/30 backdrop-blur-sm"
+                    : "bg-white/20 hover:bg-white/30 backdrop-blur-sm"
                 } ${
                   isSubmitting || isLoading
                     ? "opacity-50 cursor-not-allowed"
@@ -286,20 +329,20 @@ export function AddressSection() {
                 {isEditing ? (
                   <>
                     <X className="w-4 h-4" />
-                    <span>Cancelar</span>
+                    <span className="hidden sm:inline">Cancelar</span>
                   </>
                 ) : (
                   <>
                     <Edit className="w-4 h-4" />
-                    <span>Editar</span>
+                    <span className="hidden sm:inline">Editar</span>
                   </>
                 )}
-              </button>
+              </motion.button>
             </div>
           </div>
 
           {isLoading ? (
-            <div className="p-6 flex justify-center items-center h-64">
+            <div className="p-8 flex justify-center items-center h-64 relative z-10">
               <div className="flex flex-col items-center">
                 <Loader2 className="w-10 h-10 text-blue-500 animate-spin mb-4" />
                 <p className="text-gray-500 dark:text-gray-400">
@@ -308,15 +351,18 @@ export function AddressSection() {
               </div>
             </div>
           ) : (
-            <form onSubmit={handleSubmit(onSubmit)} className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="p-3 sm:p-4 md:p-6 lg:p-8 relative z-10"
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 {/* País y Estado en la misma columna */}
                 <div className="space-y-2">
                   <Label
                     htmlFor="country"
-                    className="text-gray-700 dark:text-gray-300 flex items-center gap-2"
+                    className="text-sm md:text-base text-gray-700 dark:text-gray-300 flex items-center gap-1 sm:gap-2 font-medium"
                   >
-                    <Globe className="w-4 h-4 text-blue-500" />
+                    <Globe className="w-3 h-3 sm:w-4 sm:h-4 text-blue-500" />
                     País
                   </Label>
                   <div className="relative">
@@ -328,9 +374,9 @@ export function AddressSection() {
                       disabled={!isEditing || isSubmitting}
                       className={`w-full px-4 py-3 rounded-lg border ${
                         isEditing
-                          ? "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-0 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                          ? "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                      } transition-colors`}
+                      } transition-all duration-200 shadow-sm`}
                     >
                       <option value="">Seleccionar país</option>
                       <option value="MEX">México</option>
@@ -352,7 +398,7 @@ export function AddressSection() {
                 <div className="space-y-2">
                   <Label
                     htmlFor="state"
-                    className="text-gray-700 dark:text-gray-300 flex items-center gap-2"
+                    className="text-sm md:text-base text-gray-700 dark:text-gray-300 flex items-center gap-1 sm:gap-2 font-medium"
                   >
                     <Map className="w-4 h-4 text-blue-500" />
                     Estado/Provincia
@@ -366,9 +412,9 @@ export function AddressSection() {
                       disabled={!isEditing || isSubmitting || !selectedCountry}
                       className={`w-full px-4 py-3 rounded-lg border ${
                         isEditing
-                          ? "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-0 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                          ? "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                      } transition-colors`}
+                      } transition-all duration-200 shadow-sm`}
                     >
                       <option value="">Seleccionar estado</option>
                       {states.map((state) => (
@@ -395,7 +441,7 @@ export function AddressSection() {
                 <div className="space-y-2">
                   <Label
                     htmlFor="postalCode"
-                    className="text-gray-700 dark:text-gray-300 flex items-center gap-2"
+                    className="text-sm md:text-base text-gray-700 dark:text-gray-300 flex items-center gap-1 sm:gap-2 font-medium"
                   >
                     <MailIcon className="w-4 h-4 text-blue-500" />
                     Código Postal
@@ -414,9 +460,9 @@ export function AddressSection() {
                       disabled={!isEditing || isSubmitting}
                       className={`w-full px-4 py-3 rounded-lg border ${
                         isEditing
-                          ? "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-0 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                          ? "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                      } transition-colors`}
+                      } transition-all duration-200 shadow-sm`}
                     />
                     {errors.postalCode && (
                       <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -435,7 +481,7 @@ export function AddressSection() {
                 <div className="space-y-2">
                   <Label
                     htmlFor="city"
-                    className="text-gray-700 dark:text-gray-300 flex items-center gap-2"
+                    className="text-sm md:text-base text-gray-700 dark:text-gray-300 flex items-center gap-1 sm:gap-2 font-medium"
                   >
                     <Building className="w-4 h-4 text-blue-500" />
                     Ciudad
@@ -463,9 +509,9 @@ export function AddressSection() {
                       disabled={!isEditing || isSubmitting}
                       className={`w-full px-4 py-3 rounded-lg border ${
                         isEditing
-                          ? "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-0 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                          ? "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                      } transition-colors`}
+                      } transition-all duration-200 shadow-sm`}
                     />
                     {errors.city && (
                       <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -485,7 +531,7 @@ export function AddressSection() {
                 <div className="space-y-2">
                   <Label
                     htmlFor="colony"
-                    className="text-gray-700 dark:text-gray-300 flex items-center gap-2"
+                    className="text-sm md:text-base text-gray-700 dark:text-gray-300 flex items-center gap-1 sm:gap-2 font-medium"
                   >
                     <Building className="w-4 h-4 text-blue-500" />
                     Colonia
@@ -514,9 +560,9 @@ export function AddressSection() {
                       disabled={!isEditing || isSubmitting}
                       className={`w-full px-4 py-3 rounded-lg border ${
                         isEditing
-                          ? "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-0 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                          ? "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                      } transition-colors`}
+                      } transition-all duration-200 shadow-sm`}
                     />
                     {errors.colony && (
                       <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -535,7 +581,7 @@ export function AddressSection() {
                 <div className="space-y-2">
                   <Label
                     htmlFor="street"
-                    className="text-gray-700 dark:text-gray-300 flex items-center gap-2"
+                    className="text-sm md:text-base text-gray-700 dark:text-gray-300 flex items-center gap-1 sm:gap-2 font-medium"
                   >
                     <Home className="w-4 h-4 text-blue-500" />
                     Calle y Número
@@ -563,9 +609,9 @@ export function AddressSection() {
                       disabled={!isEditing || isSubmitting}
                       className={`w-full px-4 py-3 rounded-lg border ${
                         isEditing
-                          ? "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-0 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                          ? "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                      } transition-colors`}
+                      } transition-all duration-200 shadow-sm`}
                       placeholder="Calle, número exterior e interior"
                     />
                     {errors.street && (
@@ -585,11 +631,18 @@ export function AddressSection() {
 
               {/* Botones de acción */}
               {isEditing && (
-                <div className="flex justify-end mt-8">
-                  <button
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="flex justify-end mt-8"
+                >
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     type="submit"
                     disabled={isSubmitting}
-                    className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-lg shadow-md transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium rounded-lg shadow-md transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                   >
                     {isSubmitting ? (
                       <>
@@ -599,16 +652,18 @@ export function AddressSection() {
                     ) : (
                       <>
                         <Save className="h-5 w-5" />
-                        <span>Guardar Cambios</span>
+                        <span className="text-sm md:text-base">
+                          Guardar Cambios
+                        </span>
                       </>
                     )}
-                  </button>
-                </div>
+                  </motion.button>
+                </motion.div>
               )}
             </form>
           )}
-        </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }

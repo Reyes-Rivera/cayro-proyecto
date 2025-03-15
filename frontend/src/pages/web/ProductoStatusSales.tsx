@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -26,6 +26,9 @@ import {
   ChevronUp,
   XCircle,
   AlertCircle,
+  ShoppingCart,
+  TrendingUp,
+  Check,
 } from "lucide-react";
 
 // Register Chart.js components
@@ -43,11 +46,10 @@ ChartJS.register(
 interface Product {
   id: number;
   name: string;
-  sizes: string[];
-  colors: string[];
 }
 
 interface ProductVariant {
+  id: number;
   productId: number;
   size: string;
   color: string;
@@ -61,25 +63,20 @@ const products: Product[] = [
   {
     id: 1,
     name: "Polo Escolar",
-    sizes: ["XS", "S", "M", "L", "XL"],
-    colors: ["Blanco", "Azul", "Rojo"],
   },
   {
     id: 2,
     name: "Pantalón Uniforme",
-    sizes: ["28", "30", "32", "34", "36"],
-    colors: ["Gris", "Azul Marino", "Negro"],
   },
   {
     id: 3,
     name: "Playera Deportiva",
-    sizes: ["S", "M", "L", "XL"],
-    colors: ["Blanco", "Rojo", "Verde", "Azul"],
   },
 ];
 
 const productVariants: ProductVariant[] = [
   {
+    id: 1,
     productId: 1,
     size: "M",
     color: "Blanco",
@@ -88,6 +85,7 @@ const productVariants: ProductVariant[] = [
     salesWeek2: 100,
   },
   {
+    id: 2,
     productId: 1,
     size: "L",
     color: "Azul",
@@ -96,6 +94,16 @@ const productVariants: ProductVariant[] = [
     salesWeek2: 85,
   },
   {
+    id: 3,
+    productId: 1,
+    size: "S",
+    color: "Rojo",
+    stock: 750,
+    salesWeek1: 50,
+    salesWeek2: 130,
+  },
+  {
+    id: 4,
     productId: 2,
     size: "32",
     color: "Negro",
@@ -103,7 +111,33 @@ const productVariants: ProductVariant[] = [
     salesWeek1: 25,
     salesWeek2: 60,
   },
-  // More variants would be added here in a real application
+  {
+    id: 5,
+    productId: 2,
+    size: "30",
+    color: "Gris",
+    stock: 550,
+    salesWeek1: 30,
+    salesWeek2: 70,
+  },
+  {
+    id: 6,
+    productId: 3,
+    size: "M",
+    color: "Verde",
+    stock: 450,
+    salesWeek1: 20,
+    salesWeek2: 45,
+  },
+  {
+    id: 7,
+    productId: 3,
+    size: "L",
+    color: "Azul",
+    stock: 500,
+    salesWeek1: 15,
+    salesWeek2: 40,
+  },
 ];
 
 interface SalesProjection {
@@ -128,14 +162,15 @@ const sortOptions: SortOption[] = [
   { label: "Ventas (Menor a mayor)", value: "totalSales", direction: "asc" },
 ];
 
-const ProductStatusSales: React.FC = () => {
+const ProductoStatusSales: React.FC = () => {
   const [selectedProductId, setSelectedProductId] = useState<number | null>(
     null
   );
-  const [selectedSize, setSelectedSize] = useState<string>("");
-  const [selectedColor, setSelectedColor] = useState<string>("");
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
     null
+  );
+  const [filteredVariants, setFilteredVariants] = useState<ProductVariant[]>(
+    []
   );
   const [projections, setProjections] = useState<SalesProjection[]>([]);
   const [stockOutWeek, setStockOutWeek] = useState<number | null>(null);
@@ -151,52 +186,33 @@ const ProductStatusSales: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
 
-  // Filter available sizes based on selected product
-  const availableSizes = selectedProductId
-    ? products.find((p) => p.id === selectedProductId)?.sizes || []
-    : [];
-
-  // Filter available colors based on selected product
-  const availableColors = selectedProductId
-    ? products.find((p) => p.id === selectedProductId)?.colors || []
-    : [];
+  // Actualizar variantes filtradas cuando cambia el producto seleccionado
+  useEffect(() => {
+    if (selectedProductId) {
+      const variants = productVariants.filter(
+        (v) => v.productId === selectedProductId
+      );
+      // Ordenar por ventas (de mayor a menor)
+      variants.sort((a, b) => b.salesWeek2 - a.salesWeek2);
+      setFilteredVariants(variants);
+      setSelectedVariant(null);
+      setHasCalculated(false);
+    } else {
+      setFilteredVariants([]);
+    }
+  }, [selectedProductId]);
 
   // Handle product selection
   const handleProductChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const productId = Number.parseInt(e.target.value);
     setSelectedProductId(productId);
-    setSelectedSize("");
-    setSelectedColor("");
     setHasCalculated(false);
   };
 
-  // Handle size selection
-  const handleSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedSize(e.target.value);
+  // Handle variant selection
+  const handleVariantSelect = (variant: ProductVariant) => {
+    setSelectedVariant(variant);
     setHasCalculated(false);
-  };
-
-  // Handle color selection
-  const handleColorChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedColor(e.target.value);
-    setHasCalculated(false);
-  };
-
-  // Update selected variant when product, size, and color are all selected
-  const updateSelectedVariant = () => {
-    if (selectedProductId && selectedSize && selectedColor) {
-      const variant = productVariants.find(
-        (v) =>
-          v.productId === selectedProductId &&
-          v.size === selectedSize &&
-          v.color === selectedColor
-      );
-      setSelectedVariant(variant || null);
-      return variant;
-    } else {
-      setSelectedVariant(null);
-      return null;
-    }
   };
 
   // Format date to a more readable format
@@ -212,16 +228,15 @@ const ProductStatusSales: React.FC = () => {
   // Calculate sales projections
   const calculateProjections = () => {
     setIsRefreshing(true);
-    const variant = updateSelectedVariant();
 
-    if (!variant) {
+    if (!selectedVariant) {
       setIsRefreshing(false);
       return;
     }
 
     // Calculate weekly sales for week 1 and 2
-    const week1Sales = variant.salesWeek1;
-    const week2Sales = variant.salesWeek2 - variant.salesWeek1; // Sales during week 2
+    const week1Sales = selectedVariant.salesWeek1;
+    const week2Sales = selectedVariant.salesWeek2 - selectedVariant.salesWeek1; // Sales during week 2
 
     // Calculate growth rate based on first two weeks
     // Using the differential equation model: dp/dt = kp
@@ -248,7 +263,7 @@ const ProductStatusSales: React.FC = () => {
       date: week1Date.toISOString().split("T")[0],
       weeklySales: week1Sales,
       totalSales: totalSales,
-      remainingStock: variant.stock - totalSales,
+      remainingStock: selectedVariant.stock - totalSales,
     });
 
     // Week 2
@@ -258,7 +273,7 @@ const ProductStatusSales: React.FC = () => {
       date: week2Date.toISOString().split("T")[0],
       weeklySales: week2Sales,
       totalSales: totalSales,
-      remainingStock: variant.stock - totalSales,
+      remainingStock: selectedVariant.stock - totalSales,
     });
 
     // Project future weeks
@@ -266,7 +281,7 @@ const ProductStatusSales: React.FC = () => {
     const currentDate = new Date(today);
     let previousWeeklySales = week2Sales;
 
-    while (totalSales < variant.stock && weekCounter <= 30) {
+    while (totalSales < selectedVariant.stock && weekCounter <= 30) {
       // Limit to 30 weeks for projection
       // Calculate projected sales using the growth model
       // p(t) = p0 * e^(kt)
@@ -277,7 +292,7 @@ const ProductStatusSales: React.FC = () => {
       totalSales += projectedWeeklySales;
 
       // Check if stock will be depleted this week
-      if (totalSales >= variant.stock && !stockOutWeekFound) {
+      if (totalSales >= selectedVariant.stock && !stockOutWeekFound) {
         stockOutWeekFound = weekCounter;
       }
 
@@ -286,7 +301,7 @@ const ProductStatusSales: React.FC = () => {
         date: currentDate.toISOString().split("T")[0],
         weeklySales: projectedWeeklySales,
         totalSales: totalSales,
-        remainingStock: Math.max(0, variant.stock - totalSales),
+        remainingStock: Math.max(0, selectedVariant.stock - totalSales),
       });
 
       currentDate.setDate(currentDate.getDate() + 7);
@@ -295,7 +310,7 @@ const ProductStatusSales: React.FC = () => {
     }
 
     // If we didn't find a stock out week but reached our limit
-    if (!stockOutWeekFound && totalSales >= variant.stock) {
+    if (!stockOutWeekFound && totalSales >= selectedVariant.stock) {
       stockOutWeekFound = weekCounter - 1;
     }
 
@@ -370,8 +385,6 @@ const ProductStatusSales: React.FC = () => {
     },
   };
 
-  const allOptionsSelected = selectedProductId && selectedSize && selectedColor;
-
   // Filtrar y ordenar proyecciones
   const filteredAndSortedProjections = projections
     .filter(
@@ -416,7 +429,7 @@ const ProductStatusSales: React.FC = () => {
   };
 
   return (
-    <div className="p-6 space-y-8 mt-14">
+    <div className="p-6 space-y-8 ">
       {/* Encabezado de Página */}
       <div className="bg-blue-600 text-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700">
         <div className="p-6">
@@ -435,121 +448,195 @@ const ProductStatusSales: React.FC = () => {
         </div>
       </div>
 
-      {/* Formulario de Selección */}
+      {/* Selección de Producto */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700">
         <div className="bg-white p-6 border-b">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h1 className="text-2xl font-bold mb-2 flex items-center">
-                <Calendar className="w-6 h-6 mr-2" />
+                <ShoppingCart className="w-6 h-6 mr-2" />
                 Selección de Producto
               </h1>
               <p className="text-blue-700">
-                Seleccione un producto para calcular su proyección de ventas
+                Seleccione un producto para ver sus variantes
               </p>
             </div>
           </div>
         </div>
 
-        <div className="p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Product Selection */}
-            <div>
-              <label
-                htmlFor="product"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Producto
-              </label>
-              <select
-                id="product"
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                value={selectedProductId || ""}
-                onChange={handleProductChange}
-              >
-                <option value="">Seleccionar Producto</option>
-                {products.map((product) => (
-                  <option key={product.id} value={product.id}>
-                    {product.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Size Selection */}
-            <div>
-              <label
-                htmlFor="size"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Talla
-              </label>
-              <select
-                id="size"
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                value={selectedSize}
-                onChange={handleSizeChange}
-                disabled={!selectedProductId}
-              >
-                <option value="">Seleccionar Talla</option>
-                {availableSizes.map((size) => (
-                  <option key={size} value={size}>
-                    {size}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Color Selection */}
-            <div>
-              <label
-                htmlFor="color"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Color
-              </label>
-              <select
-                id="color"
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                value={selectedColor}
-                onChange={handleColorChange}
-                disabled={!selectedProductId}
-              >
-                <option value="">Seleccionar Color</option>
-                {availableColors.map((color) => (
-                  <option key={color} value={color}>
-                    {color}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="flex justify-center mt-6">
-            <button
-              onClick={calculateProjections}
-              disabled={!allOptionsSelected || isRefreshing}
-              className={`px-8 py-3 rounded-lg text-white font-medium text-lg transition-all flex items-center gap-2 ${
-                allOptionsSelected && !isRefreshing
-                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md"
-                  : "bg-gray-400 cursor-not-allowed"
-              }`}
+        <div className="p-6">
+          <div className="max-w-md mx-auto">
+            <label
+              htmlFor="product"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
-              {isRefreshing ? (
-                <>
-                  <RefreshCw className="w-5 h-5 animate-spin" />
-                  <span>Calculando...</span>
-                </>
-              ) : (
-                <>
-                  <BarChart3 className="w-5 h-5" />
-                  <span>Calcular Proyección</span>
-                </>
-              )}
-            </button>
+              Producto
+            </label>
+            <select
+              id="product"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              value={selectedProductId || ""}
+              onChange={handleProductChange}
+            >
+              <option value="">Seleccionar Producto</option>
+              {products.map((product) => (
+                <option key={product.id} value={product.id}>
+                  {product.name}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </div>
+
+      {/* Lista de Variantes */}
+      {selectedProductId && filteredVariants.length > 0 && (
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700">
+          <div className="bg-white p-6 border-b">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <h1 className="text-2xl font-bold mb-2 flex items-center">
+                  <TrendingUp className="w-6 h-6 mr-2" />
+                  Variantes del Producto
+                </h1>
+                <p className="text-blue-700">
+                  Seleccione una variante para realizar la proyección
+                </p>
+              </div>
+              {selectedVariant && (
+                <button
+                  onClick={calculateProjections}
+                  disabled={isRefreshing}
+                  className={`px-6 py-2 rounded-lg text-white font-medium transition-all flex items-center gap-2 ${
+                    !isRefreshing
+                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md"
+                      : "bg-gray-400 cursor-not-allowed"
+                  }`}
+                >
+                  {isRefreshing ? (
+                    <>
+                      <RefreshCw className="w-5 h-5 animate-spin" />
+                      <span>Calculando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <BarChart3 className="w-5 h-5" />
+                      <span>Calcular Proyección</span>
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-indigo-50 dark:bg-indigo-900/30">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 dark:text-indigo-300 uppercase tracking-wider border-b border-indigo-100 dark:border-indigo-800">
+                    Variante
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 dark:text-indigo-300 uppercase tracking-wider border-b border-indigo-100 dark:border-indigo-800">
+                    Talla
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 dark:text-indigo-300 uppercase tracking-wider border-b border-indigo-100 dark:border-indigo-800">
+                    Color
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 dark:text-indigo-300 uppercase tracking-wider border-b border-indigo-100 dark:border-indigo-800">
+                    Stock
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 dark:text-indigo-300 uppercase tracking-wider border-b border-indigo-100 dark:border-indigo-800">
+                    Ventas Totales
+                  </th>
+                  <th className="px-6 py-4 text-right text-xs font-medium text-indigo-600 dark:text-indigo-300 uppercase tracking-wider border-b border-indigo-100 dark:border-indigo-800">
+                    Acción
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                {filteredVariants.map((variant, index) => (
+                  <tr
+                    key={variant.id}
+                    className={`${
+                      index % 2 === 0
+                        ? "bg-white dark:bg-gray-800"
+                        : "bg-indigo-50/30 dark:bg-indigo-900/10"
+                    } ${
+                      selectedVariant?.id === variant.id
+                        ? "bg-blue-50 dark:bg-blue-900/20"
+                        : ""
+                    } hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors cursor-pointer`}
+                    onClick={() => handleVariantSelect(variant)}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="font-mono text-sm bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded border border-gray-200 dark:border-gray-600">
+                        #{variant.id}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                      {variant.size}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-4 h-4 rounded-full"
+                          style={{
+                            backgroundColor:
+                              variant.color === "Blanco"
+                                ? "#FFFFFF"
+                                : variant.color === "Azul"
+                                ? "#3B82F6"
+                                : variant.color === "Rojo"
+                                ? "#EF4444"
+                                : variant.color === "Negro"
+                                ? "#111827"
+                                : variant.color === "Gris"
+                                ? "#6B7280"
+                                : variant.color === "Verde"
+                                ? "#10B981"
+                                : "#CCCCCC",
+                          }}
+                        ></div>
+                        {variant.color}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                      {variant.stock} unidades
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <span className="font-mono bg-blue-100 dark:bg-blue-900/30 px-2 py-1 rounded border border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-300">
+                        {variant.salesWeek2} unidades
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleVariantSelect(variant);
+                        }}
+                        className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium ${
+                          selectedVariant?.id === variant.id
+                            ? "bg-blue-600 text-white"
+                            : "bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-800/50"
+                        }`}
+                      >
+                        {selectedVariant?.id === variant.id ? (
+                          <>
+                            <Check className="w-4 h-4 mr-1" />
+                            Seleccionado
+                          </>
+                        ) : (
+                          "Seleccionar"
+                        )}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {hasCalculated && selectedVariant ? (
         <>
@@ -564,8 +651,11 @@ const ProductStatusSales: React.FC = () => {
                   </h1>
                   <p className="text-blue-700">
                     Detalles y proyecciones para{" "}
-                    {products.find((p) => p.id === selectedProductId)?.name} -{" "}
-                    {selectedSize} - {selectedColor}
+                    {
+                      products.find((p) => p.id === selectedVariant.productId)
+                        ?.name
+                    }{" "}
+                    - {selectedVariant.size} - {selectedVariant.color}
                   </p>
                 </div>
               </div>
@@ -621,11 +711,11 @@ const ProductStatusSales: React.FC = () => {
               </div>
 
               {/* Gráfico */}
-              <div className="bg-white  dark:bg-gray-800 p-4 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 mb-6">
-                <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4 border-b pb-2 border-gray-200 dark:border-gray-700">
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 mb-6 mx-auto">
+                <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4 text-center border-b pb-3 border-gray-200 dark:border-gray-700">
                   Gráfico de Proyección
                 </h3>
-                <div className="h-80">
+                <div className="h-[500px] w-full max-w-5xl mx-auto">
                   <Line data={chartData} options={chartOptions} />
                 </div>
               </div>
@@ -827,9 +917,9 @@ const ProductStatusSales: React.FC = () => {
                           ) : (
                             <button
                               onClick={calculateProjections}
-                              disabled={!allOptionsSelected}
+                              disabled={!selectedVariant}
                               className={`px-4 py-2 rounded-lg font-medium flex items-center transition-colors ${
-                                allOptionsSelected
+                                selectedVariant
                                   ? "bg-blue-500 hover:bg-blue-600 text-white"
                                   : "bg-gray-300 text-gray-500 cursor-not-allowed"
                               }`}
@@ -1000,28 +1090,63 @@ const ProductStatusSales: React.FC = () => {
             </div>
           </div>
         </>
+      ) : !selectedProductId ? (
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700 p-8 text-center">
+          <div className="flex flex-col items-center py-6">
+            <ShoppingCart className="w-16 h-16 text-gray-300 dark:text-gray-600 mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+              Seleccione un producto
+            </h2>
+            <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-6">
+              Para comenzar, seleccione un producto del menú desplegable y luego
+              elija una variante específica para realizar la proyección.
+            </p>
+          </div>
+        </div>
+      ) : selectedProductId && !selectedVariant ? (
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700 p-8 text-center">
+          <div className="flex flex-col items-center py-6">
+            <TrendingUp className="w-16 h-16 text-gray-300 dark:text-gray-600 mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+              Seleccione una variante
+            </h2>
+            <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-6">
+              Ahora seleccione una variante específica de la tabla para
+              continuar con la proyección de inventario.
+            </p>
+          </div>
+        </div>
       ) : (
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700 p-8 text-center">
           <div className="flex flex-col items-center py-6">
             <BarChart3 className="w-16 h-16 text-gray-300 dark:text-gray-600 mb-4" />
             <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-              Sin proyecciones disponibles
+              Calcule la proyección
             </h2>
             <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-6">
-              Seleccione un producto, talla y color, y haga clic en "Calcular
-              Proyección" para ver los resultados.
+              Haga clic en "Calcular Proyección" para ver los resultados de la
+              proyección de inventario.
             </p>
             <button
               onClick={calculateProjections}
-              disabled={!allOptionsSelected}
+              disabled={!selectedVariant || isRefreshing}
               className={`px-6 py-3 rounded-lg font-medium text-lg transition-all flex items-center gap-2 ${
-                allOptionsSelected
+                selectedVariant && !isRefreshing
                   ? "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md"
                   : "bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
               }`}
             >
-              <BarChart3 className="w-5 h-5" />
-              <span>Calcular Proyección</span>
+              {isRefreshing ? (
+                <>
+                  <RefreshCw className="w-5 h-5 animate-spin" />
+                  <span>Calculando...</span>
+                </>
+              ) : (
+                <>
+                  <BarChart3 className="w-5 h-5" />
+                  <span>Calcular Proyección</span>
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -1030,4 +1155,4 @@ const ProductStatusSales: React.FC = () => {
   );
 };
 
-export default ProductStatusSales;
+export default ProductoStatusSales;

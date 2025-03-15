@@ -1,3 +1,4 @@
+/* eslint-disable no-constant-binary-expression */
 "use client";
 import {
   getBrands,
@@ -8,6 +9,7 @@ import {
   getSleeve,
 } from "@/api/products";
 import type React from "react";
+import { motion } from "framer-motion";
 import {
   ArrowLeft,
   Calendar,
@@ -22,7 +24,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import {
+import type {
   Size,
   Brand,
   Gender,
@@ -38,7 +40,7 @@ interface ProductVariant {
   price: number;
   stock: number;
   barcode: string;
-  imageUrl:string;
+  imageUrl: string;
 }
 
 interface Product {
@@ -60,13 +62,8 @@ interface ProductDetailsProps {
   onBack: () => void;
 }
 
-// Datos estáticos
-
-// Producto estático de ejemplo
-
 const ProductDetails: React.FC<ProductDetailsProps> = ({ product, onBack }) => {
   // Funciones para obtener nombres a partir de IDs
-
   const [sizes, setSizes] = useState<Size[]>();
   const [brands, setBrands] = useState<Brand[]>();
   const [genders, setGenders] = useState<Gender[]>();
@@ -86,6 +83,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, onBack }) => {
     sizes?.find((s) => s.id === sizeId)?.name || "Desconocido";
   const getColorName = (colorId: number) =>
     colors?.find((c) => c.id === colorId)?.name || "Desconocido";
+
   useEffect(() => {
     const getData = async () => {
       const res = await getSizes();
@@ -103,6 +101,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, onBack }) => {
     };
     getData();
   }, []);
+
   // Calcular el stock total
   const totalStock = product.variants.reduce(
     (sum, variant) => sum + variant.stock,
@@ -116,32 +115,65 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, onBack }) => {
         product.variants.length
       : 0;
 
-  return (
-    <div className="container mx-auto ">
-      {/* Header con navegación */}
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05,
+      },
+    },
+  };
 
-      <div className="grid gap-8">
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+        damping: 15,
+      },
+    },
+  };
+
+  return (
+    <motion.div
+      className="container mx-auto"
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+    >
+      {/* Header con navegación */}
+      <motion.div className="grid gap-8" variants={containerVariants}>
         {/* Tarjeta principal de información */}
-        <div className="bg-white shadow-xl rounded-xl overflow-hidden border border-gray-100">
-          <div className=" bg-white p-6 border-b">
+        <motion.div
+          variants={itemVariants}
+          className="bg-white shadow-xl rounded-xl overflow-hidden border border-gray-100"
+        >
+          <div className="bg-white p-6 border-b">
             <div className="flex justify-between items-center mb-4">
               {/* Título y ID del producto */}
               <div className="flex items-center gap-3">
                 <h1 className="text-3xl font-bold">{product.name}</h1>
-                <p className="text-sm bg-white/10 px-2 py-1 rounded-full">
+                <p className="text-sm bg-gray-100 px-2 py-1 rounded-full">
                   ID: #{product.id}
                 </p>
               </div>
 
               {/* Botón de volver */}
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 type="button"
                 onClick={onBack}
-                className="bg-black/20 hover:bg-black/30  px-4 py-2 rounded-lg font-medium flex items-center transition-colors"
+                className="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white px-4 py-2 rounded-lg font-medium flex items-center transition-colors shadow-md"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Volver
-              </button>
+              </motion.button>
             </div>
 
             {/* Estado, marca y categoría */}
@@ -182,31 +214,43 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, onBack }) => {
 
             {/* Estadísticas rápidas */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              <div className="bg-blue-50 rounded-lg p-4 flex flex-col items-center justify-center text-center">
+              <motion.div
+                whileHover={{ scale: 1.03 }}
+                className="bg-blue-50 rounded-lg p-4 flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md transition-all"
+              >
                 <ShoppingBag className="w-6 h-6 text-blue-500 mb-2" />
                 <span className="text-2xl font-bold text-blue-700">
                   {totalStock}
                 </span>
                 <span className="text-sm text-blue-600">Stock Total</span>
-              </div>
+              </motion.div>
 
-              <div className="bg-purple-50 rounded-lg p-4 flex flex-col items-center justify-center text-center">
+              <motion.div
+                whileHover={{ scale: 1.03 }}
+                className="bg-purple-50 rounded-lg p-4 flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md transition-all"
+              >
                 <Layers className="w-6 h-6 text-purple-500 mb-2" />
                 <span className="text-2xl font-bold text-purple-700">
                   {product.variants.length}
                 </span>
                 <span className="text-sm text-purple-600">Variantes</span>
-              </div>
+              </motion.div>
 
-              <div className="bg-green-50 rounded-lg p-4 flex flex-col items-center justify-center text-center">
+              <motion.div
+                whileHover={{ scale: 1.03 }}
+                className="bg-green-50 rounded-lg p-4 flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md transition-all"
+              >
                 <Award className="w-6 h-6 text-green-500 mb-2" />
                 <span className="text-2xl font-bold text-green-700">
                   ${averagePrice.toFixed(2)}
                 </span>
                 <span className="text-sm text-green-600">Precio Promedio</span>
-              </div>
+              </motion.div>
 
-              <div className="bg-amber-50 rounded-lg p-4 flex flex-col items-center justify-center text-center">
+              <motion.div
+                whileHover={{ scale: 1.03 }}
+                className="bg-amber-50 rounded-lg p-4 flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md transition-all"
+              >
                 <Calendar className="w-6 h-6 text-amber-500 mb-2" />
                 <span className="text-2xl font-bold text-amber-700">
                   {new Date(product.createdAt).toLocaleDateString("es-ES", {
@@ -215,7 +259,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, onBack }) => {
                   })}
                 </span>
                 <span className="text-sm text-amber-600">Fecha Creación</span>
-              </div>
+              </motion.div>
             </div>
 
             {/* Detalles del producto */}
@@ -227,33 +271,45 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, onBack }) => {
                 </h3>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-50 p-4 rounded-lg">
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    className="bg-gray-50 p-4 rounded-lg shadow-sm hover:shadow-md transition-all"
+                  >
                     <p className="text-sm text-gray-500 mb-1">Marca</p>
                     <p className="font-medium">
                       {getBrandName(product.brandId)}
                     </p>
-                  </div>
+                  </motion.div>
 
-                  <div className="bg-gray-50 p-4 rounded-lg">
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    className="bg-gray-50 p-4 rounded-lg shadow-sm hover:shadow-md transition-all"
+                  >
                     <p className="text-sm text-gray-500 mb-1">Categoría</p>
                     <p className="font-medium">
                       {getCategoryName(product.categoryId)}
                     </p>
-                  </div>
+                  </motion.div>
 
-                  <div className="bg-gray-50 p-4 rounded-lg">
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    className="bg-gray-50 p-4 rounded-lg shadow-sm hover:shadow-md transition-all"
+                  >
                     <p className="text-sm text-gray-500 mb-1">Género</p>
                     <p className="font-medium">
                       {getGenderName(product.genderId)}
                     </p>
-                  </div>
+                  </motion.div>
 
-                  <div className="bg-gray-50 p-4 rounded-lg">
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    className="bg-gray-50 p-4 rounded-lg shadow-sm hover:shadow-md transition-all"
+                  >
                     <p className="text-sm text-gray-500 mb-1">Tipo de Cuello</p>
                     <p className="font-medium">
                       {getNeckTypeName(product.sleeveId)}
                     </p>
-                  </div>
+                  </motion.div>
                 </div>
               </div>
 
@@ -264,7 +320,10 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, onBack }) => {
                 </h3>
 
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between bg-gray-50 p-4 rounded-lg">
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    className="flex items-center justify-between bg-gray-50 p-4 rounded-lg shadow-sm hover:shadow-md transition-all"
+                  >
                     <div>
                       <p className="text-sm text-gray-500">Fecha de creación</p>
                       <p className="font-medium">
@@ -272,9 +331,12 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, onBack }) => {
                       </p>
                     </div>
                     <Calendar className="w-5 h-5 text-gray-400" />
-                  </div>
+                  </motion.div>
 
-                  <div className="flex items-center justify-between bg-gray-50 p-4 rounded-lg">
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    className="flex items-center justify-between bg-gray-50 p-4 rounded-lg shadow-sm hover:shadow-md transition-all"
+                  >
                     <div>
                       <p className="text-sm text-gray-500">
                         Última actualización
@@ -284,16 +346,19 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, onBack }) => {
                       </p>
                     </div>
                     <Clock className="w-5 h-5 text-gray-400" />
-                  </div>
+                  </motion.div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Tabla de variantes */}
-        <div className="bg-white shadow-xl rounded-xl overflow-hidden border border-gray-100">
-          <div className=" bg-blue-600  p-4 text-white flex items-center justify-between">
+        <motion.div
+          variants={itemVariants}
+          className="bg-white shadow-xl rounded-xl overflow-hidden border border-gray-100"
+        >
+          <div className="bg-gradient-to-r from-blue-500 to-blue-700 p-4 text-white flex items-center justify-between">
             <h3 className="text-xl font-bold flex items-center">
               <Layers className="w-5 h-5 mr-2" />
               Variantes del Producto
@@ -329,8 +394,11 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, onBack }) => {
               </thead>
               <tbody>
                 {product.variants.map((variant, index) => (
-                  <tr
+                  <motion.tr
                     key={variant.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
                     className={`${
                       index % 2 === 0 ? "bg-white" : "bg-indigo-50/30"
                     } hover:bg-indigo-50 transition-colors`}
@@ -340,7 +408,8 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, onBack }) => {
                         <img
                           src={
                             variant.imageUrl ||
-                            "/placeholder.svg?height=64&width=64"
+                            "/placeholder.svg?height=64&width=64" ||
+                            "/placeholder.svg"
                           }
                           alt={`${getColorName(variant.colorId)} ${getSizeName(
                             variant.sizeId
@@ -399,7 +468,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, onBack }) => {
                         {variant.barcode}
                       </span>
                     </td>
-                  </tr>
+                  </motion.tr>
                 ))}
               </tbody>
             </table>
@@ -421,24 +490,35 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, onBack }) => {
             <span className="text-sm text-gray-500">
               Mostrando {product.variants.length} variantes
             </span>
-            <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+            >
               Administrar variantes
-            </button>
+            </motion.button>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Botón de volver flotante para móviles */}
-      <div className="md:hidden fixed bottom-6 right-6">
-        <button
+      <motion.div
+        className="md:hidden fixed bottom-6 right-6"
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        whileHover={{ scale: 1.1 }}
+      >
+        <motion.button
           onClick={onBack}
-          className="bg-primary text-white p-4 rounded-full shadow-lg hover:bg-primary/90 transition-colors"
+          className="bg-gradient-to-r from-blue-500 to-blue-700 text-white p-4 rounded-full shadow-lg hover:from-blue-600 hover:to-blue-800 transition-colors"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
         >
           <ArrowLeft className="w-6 h-6" />
           <span className="sr-only">Volver</span>
-        </button>
-      </div>
-    </div>
+        </motion.button>
+      </motion.div>
+    </motion.div>
   );
 };
 

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Package,
   LogOut,
@@ -14,8 +15,8 @@ import {
   Tag,
   X,
   Users,
-  ChevronDown,
   ChevronRight,
+  Calendar,
 } from "lucide-react";
 import { ProfileView } from "../components/Profile-views";
 import { useAuth } from "@/context/AuthContextType";
@@ -27,6 +28,9 @@ import GenderPage from "./profucts/gender/GenderPage";
 import BrandPage from "./profucts/brand/BrandPage";
 import ColorPage from "./profucts/colors/ColorPage";
 import userImage from "@/assets/rb_859.png";
+import ProductoStatusSales from "@/pages/web/ProductoStatusSales";
+import Panel from "./panel/Panel";
+import type { JSX } from "react";
 
 type TabKey =
   | "panel"
@@ -39,131 +43,50 @@ type TabKey =
   | "brands"
   | "colors"
   | "sales"
-  | "orders";
+  | "orders"
+  | "salesPrediction";
 
 const EmployeeDashboard = () => {
   const [activeTab, setActiveTab] = useState<TabKey>("panel");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showProducts, setShowProducts] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
   const { user, signOut } = useAuth();
 
-  // Datos de ejemplo para el panel principal
-  const statsData = [
-    {
-      title: "Productos",
-      value: "124",
-      icon: <Package className="w-6 h-6" />,
-      color: "from-blue-500 to-blue-600",
-    },
-    {
-      title: "Ventas Hoy",
-      value: "$1,240",
-      icon: <BarChart className="w-6 h-6" />,
-      color: "from-green-500 to-green-600",
-    },
-    {
-      title: "Pedidos Pendientes",
-      value: "8",
-      icon: <List className="w-6 h-6" />,
-      color: "from-amber-500 to-amber-600",
-    },
-    {
-      title: "Clientes",
-      value: "320",
-      icon: <Users className="w-6 h-6" />,
-      color: "from-purple-500 to-purple-600",
-    },
-  ];
+  // Update time every minute
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000);
+
+    // Check system preference for dark mode
+    const prefersDark = window.matchMedia(
+      "(prefers-color-scheme: dark)"
+    ).matches;
+
+    if (prefersDark) {
+      document.documentElement.classList.add("dark");
+    }
+
+    return () => clearInterval(timer);
+  }, []);
+
+  // Format time
+  const formattedTime = currentTime.toLocaleTimeString("es-ES", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  const formattedDate = currentTime.toLocaleDateString("es-ES", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
 
   // Componentes para cada pestaña
   const tabs: Record<TabKey, JSX.Element> = {
-    panel: (
-      <div className="p-6 space-y-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              Panel Principal
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400">
-              Bienvenido al panel de gestión, {user?.name}. Aquí tienes un
-              resumen de la actividad reciente.
-            </p>
-          </div>
-        </div>
-
-        {/* Tarjetas de estadísticas */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {statsData.map((stat, index) => (
-            <div
-              key={index}
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-700"
-            >
-              <div className={`bg-gradient-to-r ${stat.color} p-4 text-white`}>
-                <div className="flex justify-between items-center">
-                  <h3 className="font-medium">{stat.title}</h3>
-                  {stat.icon}
-                </div>
-                <p className="text-3xl font-bold mt-2">{stat.value}</p>
-              </div>
-              <div className="p-4 bg-white dark:bg-gray-800">
-                <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                  <span
-                    className={
-                      stat.title === "Pedidos Pendientes"
-                        ? "text-amber-500"
-                        : "text-green-500"
-                    }
-                  >
-                    {stat.title === "Pedidos Pendientes" ? "↑ 12%" : "↑ 8%"}
-                  </span>
-                  <span className="ml-2">desde el mes pasado</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Actividad reciente */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-700">
-          <div className="bg-gradient-to-r bg-blue-500  p-4 text-white">
-            <h3 className="font-semibold text-lg">Actividad Reciente</h3>
-          </div>
-          <div className="p-4">
-            <div className="space-y-4">
-              {[1, 2, 3, 4, 5].map((item) => (
-                <div
-                  key={item}
-                  className="flex items-center gap-4 p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                >
-                  <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300">
-                    {item % 2 === 0 ? (
-                      <Package className="w-5 h-5" />
-                    ) : (
-                      <Tag className="w-5 h-5" />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-gray-900 dark:text-gray-100 font-medium">
-                      {item % 2 === 0
-                        ? "Nuevo producto agregado"
-                        : "Categoría actualizada"}
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {item % 2 === 0
-                        ? "Camiseta Deportiva Premium"
-                        : "Categoría Pantalones"}
-                    </p>
-                  </div>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    Hace {item * 10} min
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    ),
+    panel: <Panel />,
     users: <ProfileView />,
     products: <Products />,
     categories: <CategoryPage />,
@@ -194,62 +117,150 @@ const EmployeeDashboard = () => {
         </p>
       </div>
     ),
+    salesPrediction: <ProductoStatusSales />,
+  };
+
+  // Animation variants
+  const sidebarVariants = {
+    hidden: { x: -300, opacity: 0 },
+    visible: {
+      x: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 30,
+      },
+    },
+  };
+
+  const contentVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { duration: 0.3 },
+    },
+  };
+
+  const menuItemVariants = {
+    hidden: { opacity: 0, x: -20 },
+    visible: (i: number) => ({
+      opacity: 1,
+      x: 0,
+      transition: {
+        delay: i * 0.05,
+        duration: 0.3,
+      },
+    }),
   };
 
   return (
-    <div className="flex min-h-screen dark:bg-gray-900 mt-16">
-      {/* Sidebar para pantallas grandes */}
-      <aside className="hidden sm:block bg-white dark:bg-gray-800 shadow-xl w-64 h-screen overflow-y-auto border-r border-gray-200 dark:border-gray-700 sticky top-0 left-0 mt-10">
+    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Sidebar for large screens */}
+      <motion.aside
+        className={`hidden sm:block bg-gradient-to-b from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 shadow-xl ${
+          isSidebarExpanded ? "w-64" : "w-20"
+        } h-screen overflow-y-auto border-r border-gray-200 dark:border-gray-700 fixed top-0 left-0 pt-16 transition-all duration-300 ease-in-out`}
+        initial="hidden"
+        animate="visible"
+        variants={sidebarVariants}
+        onMouseEnter={() => setIsSidebarExpanded(true)}
+        onMouseLeave={() => setIsSidebarExpanded(false)}
+      >
         <div className="flex flex-col h-full">
-
-          {/* Perfil del usuario */}
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-            <button
+          {/* User profile */}
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => setActiveTab("users")}
-              className="w-full flex flex-col items-center gap-3 p-4 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className={`w-full flex items-center ${
+                isSidebarExpanded ? "gap-4 justify-start" : "justify-center"
+              } p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors`}
             >
               <div className="relative">
-                <img
-                  src={userImage || "/placeholder.svg?height=80&width=80"}
-                  alt="Imagen del usuario"
-                  className="w-16 h-16 rounded-full object-cover border-2 border-blue-600"
-                />
-                <span className="absolute bottom-0 right-0 bg-green-500 w-4 h-4 rounded-full border-2 border-white dark:border-gray-800"></span>
+                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-blue-600 shadow-lg">
+                  <img
+                    src={userImage || "/placeholder.svg?height=80&width=80"}
+                    alt="Imagen del usuario"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <span className="absolute bottom-0 right-0 bg-green-500 w-3 h-3 rounded-full border-2 border-white dark:border-gray-800"></span>
               </div>
-              <div className="text-center">
-                <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                  {user?.name || "Usuario"}
-                </span>
-                <span className="bg-gradient-to-r bg-blue-500 text-white text-xs font-medium px-3 py-1 rounded-full block mt-1">
-                  Empleado
-                </span>
-              </div>
-            </button>
+              {isSidebarExpanded && (
+                <div className="flex flex-col">
+                  <span className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                    {user?.name || "Usuario"}
+                  </span>
+                  <span className="bg-gradient-to-r from-blue-600 to-blue-700 text-white text-xs font-medium px-2 py-0.5 rounded-full shadow-sm">
+                    Empleado
+                  </span>
+                </div>
+              )}
+            </motion.button>
           </div>
 
-          {/* Menú de navegación */}
+          {/* Date and time display */}
+          <div className="px-4 py-3 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-100 dark:border-blue-800/30">
+            <div
+              className={`flex items-center ${
+                isSidebarExpanded ? "gap-2 justify-start" : "justify-center"
+              }`}
+            >
+              <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              {isSidebarExpanded && (
+                <div className="text-sm text-gray-700 dark:text-gray-300">
+                  <div className="font-medium">{formattedTime}</div>
+                  <div className="capitalize">{formattedDate}</div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Navigation menu */}
           <nav className="flex-1 p-4 overflow-y-auto">
-            <ul className="space-y-1">
-              {/* Botón de Panel */}
-              <li>
-                <button
+            <ul className="space-y-2">
+              {/* Panel button */}
+              <motion.li
+                custom={0}
+                variants={menuItemVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                <motion.button
+                  whileHover={{ x: 5 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => setActiveTab("panel")}
-                  className={`flex items-center gap-3 w-full p-2.5 rounded-lg transition-colors ${
+                  className={`flex items-center ${
+                    isSidebarExpanded ? "gap-3 justify-start" : "justify-center"
+                  } w-full p-3 rounded-lg transition-all duration-200 ${
                     activeTab === "panel"
-                      ? "bg-gradient-to-r bg-blue-500 text-white"
+                      ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md"
                       : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
                 >
                   <Home className="w-5 h-5" />
-                  <span className="font-medium">Panel</span>
-                </button>
-              </li>
+                  {isSidebarExpanded && (
+                    <span className="font-medium">Panel</span>
+                  )}
+                </motion.button>
+              </motion.li>
 
-              {/* Botón de Productos */}
-              <li>
-                <button
+              {/* Products button */}
+              <motion.li
+                custom={1}
+                variants={menuItemVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                <motion.button
+                  whileHover={{ x: 5 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => setShowProducts(!showProducts)}
-                  className={`flex items-center justify-between w-full p-2.5 rounded-lg transition-colors ${
+                  className={`flex items-center ${
+                    isSidebarExpanded ? "justify-between" : "justify-center"
+                  } w-full p-3 rounded-lg transition-all duration-200 ${
                     [
                       "products",
                       "categories",
@@ -259,351 +270,450 @@ const EmployeeDashboard = () => {
                       "sleeves",
                       "brands",
                     ].includes(activeTab)
-                      ? "bg-blue-50 dark:bg-gray-700 text-blue-600 dark:text-blue-400"
+                      ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium"
                       : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <Package className="w-5 h-5" />
-                    <span className="font-medium">Productos</span>
+                    {isSidebarExpanded && (
+                      <span className="font-medium">Productos</span>
+                    )}
                   </div>
-                  {showProducts ? (
-                    <ChevronDown className="w-4 h-4" />
-                  ) : (
-                    <ChevronRight className="w-4 h-4" />
+                  {isSidebarExpanded && (
+                    <motion.div
+                      animate={{ rotate: showProducts ? 90 : 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </motion.div>
                   )}
-                </button>
-              </li>
+                </motion.button>
+              </motion.li>
 
-              {/* Submenú de productos */}
-              {showProducts && (
-                <div className="ml-4 pl-4 border-l border-gray-200 dark:border-gray-700 space-y-1 mt-1">
-                  <button
-                    onClick={() => setActiveTab("products")}
-                    className={`flex items-center gap-3 w-full p-2 rounded-lg transition-colors ${
-                      activeTab === "products"
-                        ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
-                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    }`}
+              {/* Products submenu */}
+              <AnimatePresence>
+                {showProducts && isSidebarExpanded && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="ml-4 pl-4 border-l-2 border-blue-200 dark:border-blue-800 space-y-1 mt-1"
                   >
-                    <Package className="w-4 h-4" />
-                    <span className="font-medium">Productos</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("categories")}
-                    className={`flex items-center gap-3 w-full p-2 rounded-lg transition-colors ${
-                      activeTab === "categories"
-                        ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
-                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    }`}
-                  >
-                    <Tag className="w-4 h-4" />
-                    <span className="font-medium">Categorías</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("colors")}
-                    className={`flex items-center gap-3 w-full p-2 rounded-lg transition-colors ${
-                      activeTab === "colors"
-                        ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
-                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    }`}
-                  >
-                    <Palette className="w-4 h-4" />
-                    <span className="font-medium">Colores</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("sizes")}
-                    className={`flex items-center gap-3 w-full p-2 rounded-lg transition-colors ${
-                      activeTab === "sizes"
-                        ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
-                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    }`}
-                  >
-                    <Ruler className="w-4 h-4" />
-                    <span className="font-medium">Tallas</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("gender")}
-                    className={`flex items-center gap-3 w-full p-2 rounded-lg transition-colors ${
-                      activeTab === "gender"
-                        ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
-                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    }`}
-                  >
-                    <Users className="w-4 h-4" />
-                    <span className="font-medium">Género</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("sleeves")}
-                    className={`flex items-center gap-3 w-full p-2 rounded-lg transition-colors ${
-                      activeTab === "sleeves"
-                        ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
-                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    }`}
-                  >
-                    <Shirt className="w-4 h-4" />
-                    <span className="font-medium">Tipo de Cuello</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("brands")}
-                    className={`flex items-center gap-3 w-full p-2 rounded-lg transition-colors ${
-                      activeTab === "brands"
-                        ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
-                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    }`}
-                  >
-                    <Tag className="w-4 h-4" />
-                    <span className="font-medium">Marcas</span>
-                  </button>
-                </div>
-              )}
+                    {[
+                      {
+                        key: "products",
+                        icon: <Package className="w-4 h-4" />,
+                        label: "Productos",
+                      },
+                      {
+                        key: "categories",
+                        icon: <Tag className="w-4 h-4" />,
+                        label: "Categorías",
+                      },
+                      {
+                        key: "colors",
+                        icon: <Palette className="w-4 h-4" />,
+                        label: "Colores",
+                      },
+                      {
+                        key: "sizes",
+                        icon: <Ruler className="w-4 h-4" />,
+                        label: "Tallas",
+                      },
+                      {
+                        key: "gender",
+                        icon: <Users className="w-4 h-4" />,
+                        label: "Género",
+                      },
+                      {
+                        key: "sleeves",
+                        icon: <Shirt className="w-4 h-4" />,
+                        label: "Tipo de Cuello",
+                      },
+                      {
+                        key: "brands",
+                        icon: <Tag className="w-4 h-4" />,
+                        label: "Marcas",
+                      },
+                    ].map((item, index) => (
+                      <motion.div
+                        key={item.key}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                      >
+                        <motion.button
+                          whileHover={{ x: 5 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => setActiveTab(item.key as TabKey)}
+                          className={`flex items-center gap-3 w-full p-2 rounded-lg transition-all duration-200 ${
+                            activeTab === item.key
+                              ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium"
+                              : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          }`}
+                        >
+                          {item.icon}
+                          <span className="font-medium">{item.label}</span>
+                        </motion.button>
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-              {/* Reportes de Ventas */}
-              <li>
-                <button
-                  onClick={() => setActiveTab("sales")}
-                  className={`flex items-center gap-3 w-full p-2.5 rounded-lg transition-colors ${
-                    activeTab === "sales"
-                      ? "bg-gradient-to-r bg-blue-500 text-white"
-                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  }`}
+              {/* Reports and other menu items */}
+              {[
+                {
+                  key: "sales",
+                  icon: <BarChart className="w-5 h-5" />,
+                  label: "Reportes de Ventas",
+                },
+                {
+                  key: "orders",
+                  icon: <List className="w-5 h-5" />,
+                  label: "Reportes de Pedidos",
+                },
+                {
+                  key: "salesPrediction",
+                  icon: <BarChart className="w-5 h-5" />,
+                  label: "Predicción de Ventas",
+                },
+              ].map((item, index) => (
+                <motion.li
+                  key={item.key}
+                  custom={index + 2}
+                  variants={menuItemVariants}
+                  initial="hidden"
+                  animate="visible"
                 >
-                  <BarChart className="w-5 h-5" />
-                  <span className="font-medium">Reportes de Ventas</span>
-                </button>
-              </li>
-
-              {/* Reportes de Pedidos */}
-              <li>
-                <button
-                  onClick={() => setActiveTab("orders")}
-                  className={`flex items-center gap-3 w-full p-2.5 rounded-lg transition-colors ${
-                    activeTab === "orders"
-                      ? "bg-gradient-to-r bg-blue-500 text-white"
-                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  }`}
-                >
-                  <List className="w-5 h-5" />
-                  <span className="font-medium">Reportes de Pedidos</span>
-                </button>
-              </li>
+                  <motion.button
+                    whileHover={{ x: 5 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setActiveTab(item.key as TabKey)}
+                    className={`flex items-center ${
+                      isSidebarExpanded
+                        ? "gap-3 justify-start"
+                        : "justify-center"
+                    } w-full p-3 rounded-lg transition-all duration-200 ${
+                      activeTab === item.key
+                        ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md"
+                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    }`}
+                  >
+                    {item.icon}
+                    {isSidebarExpanded && (
+                      <span className="font-medium">{item.label}</span>
+                    )}
+                  </motion.button>
+                </motion.li>
+              ))}
             </ul>
           </nav>
 
           {/* Logout */}
           <div className="p-4 border-t border-gray-200 dark:border-gray-700 mt-auto">
-            <button
+            <motion.button
+              whileHover={{ scale: 1.02, x: 5 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => signOut()}
-              className="flex items-center gap-3 w-full p-2.5 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              className={`flex items-center ${
+                isSidebarExpanded ? "gap-3 justify-start" : "justify-center"
+              } w-full p-3 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200`}
             >
               <LogOut className="w-5 h-5" />
-              <span className="font-medium">Cerrar sesión</span>
-            </button>
+              {isSidebarExpanded && (
+                <span className="font-medium">Cerrar sesión</span>
+              )}
+            </motion.button>
           </div>
         </div>
-      </aside>
+      </motion.aside>
 
-      {/* Botón de menú para móviles */}
-      <button
-        onClick={() => setIsMenuOpen(!isMenuOpen)}
-        className="fixed top-4 left-4 h-10 w-10 bg-gradient-to-r bg-blue-500 text-white rounded-full flex items-center justify-center shadow-lg z-50 sm:hidden"
-        aria-label="Abrir menú"
-      >
-        <Menu className="w-5 h-5" />
-      </button>
+      {/* Top navigation bar for mobile */}
+      <div className="fixed top-0 left-0 right-0 h-16 bg-white dark:bg-gray-800 shadow-md z-40 sm:pl-64 flex items-center justify-between px-4 sm:px-6">
+        <div className="flex items-center gap-4">
+          <h1 className="text-lg font-bold text-gray-900 dark:text-white">
+            Dashboard
+          </h1>
+        </div>
+      </div>
 
-      {/* Menú móvil */}
-      {isMenuOpen && (
-        <>
-          {/* Overlay para cerrar el menú al hacer clic fuera */}
-          <div
-            className="fixed inset-0 bg-black/50 z-40 sm:hidden"
-            onClick={() => setIsMenuOpen(false)}
-          ></div>
+      {/* Mobile menu button */}
+      <div className="fixed top-20 left-4 z-40 sm:hidden">
+        <motion.button
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          className="h-12 w-12 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-full flex items-center justify-center shadow-lg"
+          aria-label="Abrir menú"
+        >
+          <Menu className="w-6 h-6" />
+        </motion.button>
+      </div>
 
-          {/* Menú lateral */}
-          <div className="fixed top-0 left-0 h-full bg-white dark:bg-gray-800 shadow-2xl w-72 z-50 transition-all duration-300 sm:hidden overflow-y-auto">
-            
+      {/* Mobile menu */}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <>
+            {/* Overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 sm:hidden"
+              onClick={() => setIsMenuOpen(false)}
+            ></motion.div>
 
-            {/* Perfil del usuario */}
-            <div className="p-4 flex border-b border-gray-200 dark:border-gray-700">
-              <button
-                onClick={() => {
-                  setActiveTab("users");
-                  setIsMenuOpen(false);
-                }}
-                className="w-full flex items-center gap-4 p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              >
-                <img
-                  src={userImage || "/placeholder.svg?height=60&width=60"}
-                  alt="Imagen del usuario"
-                  className="w-12 h-12 rounded-full object-cover border-2 border-blue-600"
-                />
-                <div>
-                  <span className="text-base font-semibold text-gray-900 dark:text-gray-100 block">
-                    {user?.name || "Usuario"}
-                  </span>
-                  <span className="bg-gradient-to-r bg-blue-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">
-                    Empleado
-                  </span>
-                </div>
-              </button>
+            {/* Sidebar */}
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="fixed top-0 left-0 h-full bg-white dark:bg-gray-800 shadow-2xl w-72 z-50 sm:hidden overflow-y-auto"
+            >
+              {/* User profile */}
+              <div className="p-4 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
                 <button
+                  onClick={() => {
+                    setActiveTab("users");
+                    setIsMenuOpen(false);
+                  }}
+                  className="flex items-center gap-4 p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                >
+                  <div className="relative">
+                    <img
+                      src={userImage || "/placeholder.svg?height=60&width=60"}
+                      alt="Imagen del usuario"
+                      className="w-12 h-12 rounded-full object-cover border-2 border-blue-600 shadow-md"
+                    />
+                    <span className="absolute bottom-0 right-0 bg-green-500 w-3 h-3 rounded-full border-2 border-white dark:border-gray-800"></span>
+                  </div>
+                  <div>
+                    <span className="text-base font-semibold text-gray-900 dark:text-gray-100 block">
+                      {user?.name || "Usuario"}
+                    </span>
+                    <span className="bg-gradient-to-r from-blue-600 to-blue-700 text-white text-xs font-medium px-2 py-0.5 rounded-full shadow-sm">
+                      Empleado
+                    </span>
+                  </div>
+                </button>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
                   onClick={() => setIsMenuOpen(false)}
                   className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
                   aria-label="Cerrar menú"
                 >
                   <X className="w-5 h-5" />
-                </button>
-            </div>
+                </motion.button>
+              </div>
 
-            {/* Menú de navegación móvil */}
-            <nav className="p-4 overflow-y-auto">
-              <ul className="space-y-1">
-                <li>
-                  <button
-                    onClick={() => {
-                      setActiveTab("panel");
-                      setIsMenuOpen(false);
-                    }}
-                    className="flex items-center gap-3 w-full p-2.5 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <Home className="w-5 h-5" />
-                    <span className="font-medium">Panel</span>
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => {
-                      setActiveTab("products");
-                      setIsMenuOpen(false);
-                    }}
-                    className="flex items-center gap-3 w-full p-2.5 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <Package className="w-5 h-5" />
-                    <span className="font-medium">Productos</span>
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => {
-                      setActiveTab("categories");
-                      setIsMenuOpen(false);
-                    }}
-                    className="flex items-center gap-3 w-full p-2.5 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <Tag className="w-5 h-5" />
-                    <span className="font-medium">Categorías</span>
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => {
-                      setActiveTab("colors");
-                      setIsMenuOpen(false);
-                    }}
-                    className="flex items-center gap-3 w-full p-2.5 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <Palette className="w-5 h-5" />
-                    <span className="font-medium">Colores</span>
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => {
-                      setActiveTab("sizes");
-                      setIsMenuOpen(false);
-                    }}
-                    className="flex items-center gap-3 w-full p-2.5 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <Ruler className="w-5 h-5" />
-                    <span className="font-medium">Tallas</span>
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => {
-                      setActiveTab("gender");
-                      setIsMenuOpen(false);
-                    }}
-                    className="flex items-center gap-3 w-full p-2.5 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <Users className="w-5 h-5" />
-                    <span className="font-medium">Género</span>
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => {
-                      setActiveTab("sleeves");
-                      setIsMenuOpen(false);
-                    }}
-                    className="flex items-center gap-3 w-full p-2.5 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <Shirt className="w-5 h-5" />
-                    <span className="font-medium">Tipo de Cuello</span>
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => {
-                      setActiveTab("brands");
-                      setIsMenuOpen(false);
-                    }}
-                    className="flex items-center gap-3 w-full p-2.5 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <Tag className="w-5 h-5" />
-                    <span className="font-medium">Marcas</span>
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => {
-                      setActiveTab("sales");
-                      setIsMenuOpen(false);
-                    }}
-                    className="flex items-center gap-3 w-full p-2.5 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <BarChart className="w-5 h-5" />
-                    <span className="font-medium">Reportes de Ventas</span>
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => {
-                      setActiveTab("orders");
-                      setIsMenuOpen(false);
-                    }}
-                    className="flex items-center gap-3 w-full p-2.5 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <List className="w-5 h-5" />
-                    <span className="font-medium">Reportes de Pedidos</span>
-                  </button>
-                </li>
-              </ul>
-            </nav>
+              {/* Date and time display for mobile */}
+              <div className="px-4 py-3 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-100 dark:border-blue-800/30">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  <div className="text-sm text-gray-700 dark:text-gray-300">
+                    <div className="font-medium">{formattedTime}</div>
+                    <div className="capitalize">{formattedDate}</div>
+                  </div>
+                </div>
+              </div>
 
-            {/* Logout en móvil */}
-            <div className="p-4 border-t border-gray-200 dark:border-gray-700 mt-auto">
-              <button
-                onClick={() => {
-                  signOut();
-                  setIsMenuOpen(false);
-                }}
-                className="flex items-center gap-3 w-full p-2.5 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-              >
-                <LogOut className="w-5 h-5" />
-                <span className="font-medium">Cerrar sesión</span>
-              </button>
-            </div>
-          </div>
-        </>
-      )}
+              {/* Mobile navigation */}
+              <nav className="p-4 overflow-y-auto">
+                <ul className="space-y-2">
+                  {/* Panel */}
+                  <motion.li
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 }}
+                  >
+                    <motion.button
+                      whileHover={{ x: 5 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        setActiveTab("panel");
+                        setIsMenuOpen(false);
+                      }}
+                      className="flex items-center gap-3 w-full p-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
+                    >
+                      <Home className="w-5 h-5" />
+                      <span className="font-medium">Panel</span>
+                    </motion.button>
+                  </motion.li>
 
-      {/* Contenido principal */}
-      <main className="flex-1 bg-gray-50   dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-        <div className="min-h-screen">{tabs[activeTab]}</div>
-      </main>
+                  {/* Products section */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="space-y-1 border-l-2 border-blue-200 dark:border-blue-800 pl-2 ml-2"
+                  >
+                    <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-3 py-2">
+                      Gestión de Productos
+                    </h3>
+
+                    {[
+                      {
+                        key: "products",
+                        icon: <Package className="w-5 h-5" />,
+                        label: "Productos",
+                      },
+                      {
+                        key: "categories",
+                        icon: <Tag className="w-5 h-5" />,
+                        label: "Categorías",
+                      },
+                      {
+                        key: "colors",
+                        icon: <Palette className="w-5 h-5" />,
+                        label: "Colores",
+                      },
+                      {
+                        key: "sizes",
+                        icon: <Ruler className="w-5 h-5" />,
+                        label: "Tallas",
+                      },
+                      {
+                        key: "gender",
+                        icon: <Users className="w-5 h-5" />,
+                        label: "Género",
+                      },
+                      {
+                        key: "sleeves",
+                        icon: <Shirt className="w-5 h-5" />,
+                        label: "Tipo de Cuello",
+                      },
+                      {
+                        key: "brands",
+                        icon: <Tag className="w-5 h-5" />,
+                        label: "Marcas",
+                      },
+                    ].map((item, index) => (
+                      <motion.div
+                        key={item.key}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.2 + index * 0.05 }}
+                      >
+                        <motion.button
+                          whileHover={{ x: 5 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => {
+                            setActiveTab(item.key as TabKey);
+                            setIsMenuOpen(false);
+                          }}
+                          className="flex items-center gap-3 w-full p-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
+                        >
+                          {item.icon}
+                          <span className="font-medium">{item.label}</span>
+                        </motion.button>
+                      </motion.div>
+                    ))}
+                  </motion.div>
+
+                  {/* Reports section */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.6 }}
+                    className="space-y-1 border-l-2 border-blue-200 dark:border-blue-800 pl-2 ml-2 mt-4"
+                  >
+                    <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-3 py-2">
+                      Reportes y Análisis
+                    </h3>
+
+                    {[
+                      {
+                        key: "sales",
+                        icon: <BarChart className="w-5 h-5" />,
+                        label: "Reportes de Ventas",
+                      },
+                      {
+                        key: "orders",
+                        icon: <List className="w-5 h-5" />,
+                        label: "Reportes de Pedidos",
+                      },
+                      {
+                        key: "salesPrediction",
+                        icon: <BarChart className="w-5 h-5" />,
+                        label: "Predicción de Ventas",
+                      },
+                    ].map((item, index) => (
+                      <motion.div
+                        key={item.key}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.6 + index * 0.05 }}
+                      >
+                        <motion.button
+                          whileHover={{ x: 5 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => {
+                            setActiveTab(item.key as TabKey);
+                            setIsMenuOpen(false);
+                          }}
+                          className="flex items-center gap-3 w-full p-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
+                        >
+                          {item.icon}
+                          <span className="font-medium">{item.label}</span>
+                        </motion.button>
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                </ul>
+              </nav>
+
+              {/* Logout in mobile */}
+              <div className="p-4 border-t border-gray-200 dark:border-gray-700 mt-auto">
+                <motion.button
+                  whileHover={{ scale: 1.02, x: 5 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    signOut();
+                    setIsMenuOpen(false);
+                  }}
+                  className="flex items-center gap-3 w-full p-3 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200"
+                >
+                  <LogOut className="w-5 h-5" />
+                  <span className="font-medium">Cerrar sesión</span>
+                </motion.button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Main content */}
+      <motion.main
+        className={`flex-1 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 pt-16 transition-all duration-300 ${
+          isSidebarExpanded ? "sm:pl-64" : "sm:pl-20"
+        }`}
+        initial="hidden"
+        animate="visible"
+        variants={contentVariants}
+        key={activeTab}
+      >
+        <div className="min-h-screen p-4 sm:p-6">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              {tabs[activeTab]}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </motion.main>
     </div>
   );
 };

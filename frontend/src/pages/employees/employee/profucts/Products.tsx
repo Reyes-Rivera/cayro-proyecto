@@ -1,9 +1,12 @@
+"use client";
+
 import type React from "react";
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import ProductList from "./components/ProductList";
 import ProductDetails from "./components/ProductDetails";
 import ProductForm from "./components/ProductForm";
-import { type Product } from "./data/sampleData";
+import type { Product } from "./data/sampleData";
 import { deleteProduct, getProducts } from "@/api/products";
 import { Loader2, Package2 } from "lucide-react";
 
@@ -52,6 +55,7 @@ const Products: React.FC = () => {
 
     await deleteProduct(id);
     setProducts(products.filter((p) => p.id !== id));
+    setIsLoading(false);
   };
 
   const handleViewProduct = (id: number) => {
@@ -71,45 +75,88 @@ const Products: React.FC = () => {
       setIsViewing(false);
     }
   };
+
   const handleAddProductView = () => {
     setSelectedProduct(null);
     setIsEditing(true);
     setIsViewing(false);
   };
+
   const handleBack = () => {
     setSelectedProduct(null);
     setIsViewing(false); // Volver a la lista de productos
   };
 
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+        damping: 15,
+      },
+    },
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <Loader2 className="animate-spin" size={64} />
+        <Loader2 className="animate-spin text-blue-600" size={64} />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen dark:bg-gray-900 flex flex-col items-center dark:text-gray-100 ">
-      {/* Contenedor principal */}
-
-      <div className="w-full overflow-x-auto bg-white dark:bg-gray-800 p-6 ">
-        <div className="bg-blue-600 text-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700 mb-8">
-          <div className=" p-6 ">
-            <div className="flex items-center gap-3">
-              <div className="bg-white/20 p-3 rounded-lg">
-                <Package2 className="w-6 h-6" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold">Gestión de Productos</h1>
-                <p className="text-gray-100">
-                  Administra tu catalogo de productos.
-                </p>
+    <motion.div
+      className="p-2 sm:p-4 md:p-6 space-y-4 sm:space-y-6 md:space-y-8 bg-gray-50 dark:bg-gray-900 w-full"
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+    >
+      {/* Encabezado de Página */}
+      <motion.div variants={itemVariants} className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-blue-600 to-blue-800 opacity-10 dark:opacity-20 rounded-xl sm:rounded-2xl md:rounded-3xl"></div>
+        <div className="relative bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl md:rounded-3xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700">
+          <div className="p-4 sm:p-6 md:p-8">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6">
+              <div className="flex items-start gap-3 sm:gap-5">
+                <div className="bg-gradient-to-br from-blue-500 to-blue-700 p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-lg text-white">
+                  <Package2 className="w-6 h-6 sm:w-8 sm:h-8" />
+                </div>
+                <div>
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+                    Gestión de Productos
+                  </h1>
+                  <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mt-1 sm:mt-2 max-w-2xl">
+                    Administra el catálogo de productos de tu tienda. Añade,
+                    edita y visualiza todos tus productos.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
+
+          {/* Decorative elements */}
+          <div className="absolute top-0 right-0 w-24 sm:w-32 h-24 sm:h-32 bg-gradient-to-br from-blue-500/10 to-blue-700/10 rounded-full -mr-12 sm:-mr-16 -mt-12 sm:-mt-16 dark:from-blue-500/20 dark:to-blue-700/20"></div>
+          <div className="absolute bottom-0 left-0 w-16 sm:w-24 h-16 sm:h-24 bg-gradient-to-tr from-blue-400/10 to-blue-600/10 rounded-full -ml-8 sm:-ml-12 -mb-8 sm:-mb-12 dark:from-blue-400/20 dark:to-blue-600/20"></div>
         </div>
-        {/* Mostrar el formulario, los detalles o la lista según el estado */}
+      </motion.div>
+
+      {/* Mostrar el formulario, los detalles o la lista según el estado */}
+      <motion.div variants={itemVariants}>
         {isEditing && !selectedProduct ? (
           // Formulario para Agregar Producto
           <div>
@@ -155,8 +202,8 @@ const Products: React.FC = () => {
             />
           </div>
         )}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };
 

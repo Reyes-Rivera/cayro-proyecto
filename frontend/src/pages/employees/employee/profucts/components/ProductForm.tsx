@@ -1,10 +1,12 @@
 /* eslint-disable no-constant-binary-expression */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable react/prop-types */
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 "use client";
 
+import type React from "react";
+
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
 import { useForm, Controller } from "react-hook-form";
@@ -125,6 +127,38 @@ const ProductForm: React.FC<ProductFormProps> = ({
         Object.values(config.prices).every((price) => price > 0) &&
         Object.values(config.stocks).every((stock) => stock > 0)
     );
+
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+        damping: 15,
+      },
+    },
+  };
+
+  const fadeIn = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { duration: 0.3 },
+    },
+  };
 
   // Cargar las variantes del producto al inicializar el formulario
   useEffect(() => {
@@ -439,12 +473,21 @@ const ProductForm: React.FC<ProductFormProps> = ({
       });
     }
   };
+
   return (
-    <div className="container mx-auto">
+    <motion.div
+      className="container mx-auto"
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+    >
       <form onSubmit={handleSubmit(onSubmitForm)} className="space-y-6">
         {/* Encabezado */}
-        <div className="bg-white shadow-xl rounded-xl overflow-hidden border border-gray-100">
-          <div className=" bg-white p-6 border-b">
+        <motion.div
+          variants={itemVariants}
+          className="bg-white shadow-xl rounded-xl overflow-hidden border border-gray-100"
+        >
+          <div className="bg-white p-6 border-b">
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-2xl font-bold mb-2 flex items-center">
@@ -456,21 +499,24 @@ const ProductForm: React.FC<ProductFormProps> = ({
                   por color y talla.
                 </p>
               </div>
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 type="button"
                 onClick={onCancel}
-                className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-medium flex items-center transition-colors"
+                className="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white px-4 py-2 rounded-lg font-medium flex items-center transition-colors shadow-md"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Volver
-              </button>
+              </motion.button>
             </div>
           </div>
 
           {/* Pestañas */}
           <div className="bg-white p-6">
             <div className="flex space-x-2 border-b border-gray-200 mb-6">
-              <button
+              <motion.button
+                whileHover={{ scale: 1.03 }}
                 type="button"
                 onClick={() => setActiveTab("info")}
                 className={`px-4 py-3 text-sm font-medium flex items-center ${
@@ -485,8 +531,9 @@ const ProductForm: React.FC<ProductFormProps> = ({
                   }`}
                 />
                 Información Básica
-              </button>
-              <button
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.03 }}
                 type="button"
                 onClick={() => setActiveTab("variants")}
                 disabled={!isBasicInfoComplete}
@@ -509,13 +556,18 @@ const ProductForm: React.FC<ProductFormProps> = ({
                     {colorConfigs.length}
                   </span>
                 )}
-              </button>
+              </motion.button>
             </div>
 
             {/* Contenido de las pestañas */}
             <div className="space-y-6">
               {activeTab === "info" && (
-                <div className="space-y-6">
+                <motion.div
+                  className="space-y-6"
+                  variants={fadeIn}
+                  initial="hidden"
+                  animate="visible"
+                >
                   {/* Alerta informativa */}
                   <div className="bg-blue-50 rounded-lg p-4 flex items-start space-x-3">
                     <AlertCircle className="w-5 h-5 text-blue-500 mt-0.5" />
@@ -778,7 +830,9 @@ const ProductForm: React.FC<ProductFormProps> = ({
                       </div>
 
                       {isBasicInfoComplete && (
-                        <button
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
                           type="button"
                           onClick={() => {
                             setActiveTab("variants");
@@ -804,15 +858,20 @@ const ProductForm: React.FC<ProductFormProps> = ({
                               d="M9 5l7 7-7 7"
                             />
                           </svg>
-                        </button>
+                        </motion.button>
                       )}
                     </div>
                   </div>
-                </div>
+                </motion.div>
               )}
 
               {activeTab === "variants" && (
-                <div className="space-y-6">
+                <motion.div
+                  className="space-y-6"
+                  variants={fadeIn}
+                  initial="hidden"
+                  animate="visible"
+                >
                   {/* Alerta informativa */}
                   <div className="bg-blue-50 rounded-lg p-4 flex items-start space-x-3">
                     <AlertCircle className="w-5 h-5 text-blue-500 mt-0.5" />
@@ -834,7 +893,10 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
                   {/* Configuración de colores y tallas */}
                   <div className="space-y-6">
-                    <div className="bg-white rounded-lg border border-gray-200 p-4">
+                    <motion.div
+                      variants={itemVariants}
+                      className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm hover:shadow-md transition-all"
+                    >
                       <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                         <Palette className="w-5 h-5 mr-2 text-blue-500" />
                         Selección de Colores
@@ -884,50 +946,61 @@ const ProductForm: React.FC<ProductFormProps> = ({
                           </div>
                         )}
 
-                        {colorConfigs.map((config) => {
-                          const color = colors?.find(
-                            (c) => c.id === config.colorId
-                          );
-                          return (
-                            <div
-                              key={config.colorId}
-                              className={`px-3 py-2 rounded-lg text-sm font-medium cursor-pointer flex items-center ${
-                                selectedColorId === config.colorId
-                                  ? "bg-blue-600 text-white"
-                                  : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                              }`}
-                              onClick={() => setSelectedColorId(config.colorId)}
-                            >
-                              <div
-                                className="w-4 h-4 rounded-full mr-2 border border-gray-300"
-                                style={{
-                                  backgroundColor: color?.hexValue || "#ccc",
-                                }}
-                              ></div>
-                              {color?.name}
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleRemoveColor(config.colorId);
-                                }}
-                                className={`ml-2 p-1 rounded-full ${
+                        <AnimatePresence>
+                          {colorConfigs.map((config) => {
+                            const color = colors?.find(
+                              (c) => c.id === config.colorId
+                            );
+                            return (
+                              <motion.div
+                                key={config.colorId}
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.8 }}
+                                whileHover={{ scale: 1.05 }}
+                                className={`px-3 py-2 rounded-lg text-sm font-medium cursor-pointer flex items-center ${
                                   selectedColorId === config.colorId
-                                    ? "hover:bg-blue-700 text-blue-100"
-                                    : "hover:bg-gray-300 text-gray-500"
+                                    ? "bg-gradient-to-r from-blue-500 to-blue-700 text-white"
+                                    : "bg-gray-100 text-gray-800 hover:bg-gray-200"
                                 }`}
+                                onClick={() =>
+                                  setSelectedColorId(config.colorId)
+                                }
                               >
-                                <X className="h-3 w-3" />
-                              </button>
-                            </div>
-                          );
-                        })}
+                                <div
+                                  className="w-4 h-4 rounded-full mr-2 border border-gray-300"
+                                  style={{
+                                    backgroundColor: color?.hexValue || "#ccc",
+                                  }}
+                                ></div>
+                                {color?.name}
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRemoveColor(config.colorId);
+                                  }}
+                                  className={`ml-2 p-1 rounded-full ${
+                                    selectedColorId === config.colorId
+                                      ? "hover:bg-blue-700 text-blue-100"
+                                      : "hover:bg-gray-300 text-gray-500"
+                                  }`}
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </motion.div>
+                            );
+                          })}
+                        </AnimatePresence>
                       </div>
-                    </div>
+                    </motion.div>
 
                     {/* Configuración de tallas para el color seleccionado */}
                     {selectedColorId ? (
-                      <div className="bg-white rounded-lg border border-gray-200 p-6">
+                      <motion.div
+                        variants={itemVariants}
+                        className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md transition-all"
+                      >
                         <div className="flex items-center justify-between mb-4">
                           <h3 className="text-lg font-semibold text-gray-800 flex items-center">
                             <Palette className="w-5 h-5 mr-2 text-blue-500" />
@@ -967,7 +1040,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                                     (c) => c.colorId === selectedColorId
                                   )?.image ||
                                   "https://res.cloudinary.com/dhhv8l6ti/image/upload/v1741550306/a58jbqkjh7csdrlw3qfd.jpg" ||
-                                  "https://res.cloudinary.com/dhhv8l6ti/image/upload/v1741550306/a58jbqkjh7csdrlw3qfd.jpg"
+                                  "/placeholder.svg"
                                 }
                                 alt={`Color ${
                                   colors?.find((c) => c.id === selectedColorId)
@@ -976,14 +1049,16 @@ const ProductForm: React.FC<ProductFormProps> = ({
                                 className="w-full max-w-[200px] h-auto object-contain rounded-md mb-3"
                               />
 
-                              <label
+                              <motion.label
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
                                 htmlFor={`image-upload-${selectedColorId}`}
-                                className="bg-blue-50 text-blue-600 hover:bg-blue-100 px-4 py-2 rounded-lg cursor-pointer flex items-center transition-colors"
+                                className="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white px-4 py-2 rounded-lg cursor-pointer flex items-center transition-colors shadow-md"
                               >
                                 {isUploading ? (
                                   <>
                                     <svg
-                                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-600"
+                                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
                                       xmlns="http://www.w3.org/2000/svg"
                                       fill="none"
                                       viewBox="0 0 24 24"
@@ -1010,7 +1085,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                                     Subir imagen
                                   </>
                                 )}
-                              </label>
+                              </motion.label>
                               <input
                                 id={`image-upload-${selectedColorId}`}
                                 type="file"
@@ -1071,9 +1146,11 @@ const ProductForm: React.FC<ProductFormProps> = ({
                                         </option>
                                       ))}
                                 </select>
-                                <button
+                                <motion.button
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
                                   type="button"
-                                  className="bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition-colors"
+                                  className="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white p-3 rounded-lg transition-colors shadow-md"
                                   onClick={() => {
                                     const select = document.getElementById(
                                       "size"
@@ -1088,7 +1165,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                                   }}
                                 >
                                   <Plus className="w-5 h-5" />
-                                </button>
+                                </motion.button>
                               </div>
                             </div>
 
@@ -1108,33 +1185,41 @@ const ProductForm: React.FC<ProductFormProps> = ({
                               )}
 
                               <div className="flex flex-wrap gap-2">
-                                {colorConfigs
-                                  .find((c) => c.colorId === selectedColorId)
-                                  ?.sizes.map((sizeId) => {
-                                    const size = sizes?.find(
-                                      (s) => s.id === sizeId
-                                    );
-                                    return (
-                                      <div
-                                        key={sizeId}
-                                        className="bg-gray-100 text-gray-800 px-3 py-1 rounded-lg text-sm font-medium flex items-center"
-                                      >
-                                        {size?.name}
-                                        <button
-                                          type="button"
-                                          onClick={() =>
-                                            handleRemoveSize(
-                                              selectedColorId,
-                                              sizeId
-                                            )
-                                          }
-                                          className="ml-2 p-1 hover:bg-gray-300 rounded-full text-gray-500"
+                                <AnimatePresence>
+                                  {colorConfigs
+                                    .find((c) => c.colorId === selectedColorId)
+                                    ?.sizes.map((sizeId) => {
+                                      const size = sizes?.find(
+                                        (s) => s.id === sizeId
+                                      );
+                                      return (
+                                        <motion.div
+                                          key={sizeId}
+                                          initial={{ opacity: 0, scale: 0.8 }}
+                                          animate={{ opacity: 1, scale: 1 }}
+                                          exit={{ opacity: 0, scale: 0.8 }}
+                                          whileHover={{ scale: 1.05 }}
+                                          className="bg-gray-100 text-gray-800 px-3 py-1 rounded-lg text-sm font-medium flex items-center shadow-sm hover:shadow-md transition-all"
                                         >
-                                          <X className="h-3 w-3" />
-                                        </button>
-                                      </div>
-                                    );
-                                  })}
+                                          {size?.name}
+                                          <motion.button
+                                            whileHover={{ scale: 1.1 }}
+                                            whileTap={{ scale: 0.9 }}
+                                            type="button"
+                                            onClick={() =>
+                                              handleRemoveSize(
+                                                selectedColorId,
+                                                sizeId
+                                              )
+                                            }
+                                            className="ml-2 p-1 hover:bg-gray-300 rounded-full text-gray-500"
+                                          >
+                                            <X className="h-3 w-3" />
+                                          </motion.button>
+                                        </motion.div>
+                                      );
+                                    })}
+                                </AnimatePresence>
                               </div>
                             </div>
                           </div>
@@ -1161,91 +1246,102 @@ const ProductForm: React.FC<ProductFormProps> = ({
                               </div>
 
                               <div className="space-y-3">
-                                {colorConfigs
-                                  .find(
-                                    (config) =>
-                                      config.colorId === selectedColorId
-                                  )
-                                  ?.sizes.map((sizeId) => (
-                                    <div
-                                      key={sizeId}
-                                      className="grid grid-cols-12 gap-4 items-center bg-white rounded-lg p-3 border border-gray-200"
-                                    >
-                                      <div className="col-span-3 font-medium">
-                                        {
-                                          sizes?.find((s) => s.id === sizeId)
-                                            ?.name
-                                        }
-                                      </div>
-                                      <div className="col-span-4">
-                                        <div className="relative">
-                                          <DollarSign className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 transform -translate-y-1/2" />
+                                <AnimatePresence>
+                                  {colorConfigs
+                                    .find(
+                                      (config) =>
+                                        config.colorId === selectedColorId
+                                    )
+                                    ?.sizes.map((sizeId) => (
+                                      <motion.div
+                                        key={sizeId}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        className="grid grid-cols-12 gap-4 items-center bg-white rounded-lg p-3 border border-gray-200 shadow-sm hover:shadow-md transition-all"
+                                      >
+                                        <div className="col-span-3 font-medium">
+                                          {
+                                            sizes?.find((s) => s.id === sizeId)
+                                              ?.name
+                                          }
+                                        </div>
+                                        <div className="col-span-4">
+                                          <div className="relative">
+                                            <DollarSign className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 transform -translate-y-1/2" />
+                                            <input
+                                              type="number"
+                                              value={
+                                                colorConfigs.find(
+                                                  (c) =>
+                                                    c.colorId ===
+                                                    selectedColorId
+                                                )?.prices[sizeId] || ""
+                                              }
+                                              onChange={(e) =>
+                                                handlePriceChange(
+                                                  selectedColorId,
+                                                  sizeId,
+                                                  e.target.value
+                                                )
+                                              }
+                                              className="w-full pl-12 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                              placeholder="0.00"
+                                              step="0.01"
+                                              min="0"
+                                            />
+                                          </div>
+                                        </div>
+                                        <div className="col-span-4">
                                           <input
                                             type="number"
                                             value={
                                               colorConfigs.find(
                                                 (c) =>
                                                   c.colorId === selectedColorId
-                                              )?.prices[sizeId] || ""
+                                              )?.stocks[sizeId] || ""
                                             }
                                             onChange={(e) =>
-                                              handlePriceChange(
+                                              handleStockChange(
                                                 selectedColorId,
                                                 sizeId,
                                                 e.target.value
                                               )
                                             }
-                                            className="w-full pl-9 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                                            placeholder="0.00"
-                                            step="0.01"
-                                            min="0"
+                                            className="w-full py-2 px-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                            placeholder="0"
+                                            min="1"
                                           />
                                         </div>
-                                      </div>
-                                      <div className="col-span-4">
-                                        <input
-                                          type="number"
-                                          value={
-                                            colorConfigs.find(
-                                              (c) =>
-                                                c.colorId === selectedColorId
-                                            )?.stocks[sizeId] || ""
-                                          }
-                                          onChange={(e) =>
-                                            handleStockChange(
-                                              selectedColorId,
-                                              sizeId,
-                                              e.target.value
-                                            )
-                                          }
-                                          className="w-full py-2 px-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                                          placeholder="0"
-                                          min="1"
-                                        />
-                                      </div>
-                                      <div className="col-span-1 flex justify-center">
-                                        <button
-                                          type="button"
-                                          onClick={() =>
-                                            handleRemoveSize(
-                                              selectedColorId,
-                                              sizeId
-                                            )
-                                          }
-                                          className="p-1 hover:bg-red-100 text-red-500 rounded-full"
-                                        >
-                                          <X className="h-4 w-4" />
-                                        </button>
-                                      </div>
-                                    </div>
-                                  ))}
+                                        <div className="col-span-1 flex justify-center">
+                                          <motion.button
+                                            whileHover={{ scale: 1.1 }}
+                                            whileTap={{ scale: 0.9 }}
+                                            type="button"
+                                            onClick={() =>
+                                              handleRemoveSize(
+                                                selectedColorId,
+                                                sizeId
+                                              )
+                                            }
+                                            className="p-1 hover:bg-red-100 text-red-500 rounded-full"
+                                          >
+                                            <X className="h-4 w-4" />
+                                          </motion.button>
+                                        </div>
+                                      </motion.div>
+                                    ))}
+                                </AnimatePresence>
                               </div>
                             </div>
                           </div>
                         )}
-                      </div>
+                      </motion.div>
                     ) : colorConfigs.length > 0 ? (
-                      <div className="bg-blue-50 rounded-lg p-6 text-center">
+                      <motion.div
+                        variants={itemVariants}
+                        className="bg-blue-50 rounded-lg p-6 text-center shadow-sm"
+                      >
                         <Palette className="w-12 h-12 text-blue-500 mx-auto mb-3" />
                         <h3 className="text-lg font-medium text-gray-800 mb-2">
                           Seleccione un color
@@ -1254,9 +1350,12 @@ const ProductForm: React.FC<ProductFormProps> = ({
                           Haga clic en uno de los colores de arriba para
                           configurar sus tallas y precios.
                         </p>
-                      </div>
+                      </motion.div>
                     ) : (
-                      <div className="bg-gray-50 rounded-lg p-6 text-center">
+                      <motion.div
+                        variants={itemVariants}
+                        className="bg-gray-50 rounded-lg p-6 text-center shadow-sm"
+                      >
                         <Palette className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                         <h3 className="text-lg font-medium text-gray-800 mb-2">
                           No hay colores seleccionados
@@ -1265,10 +1364,10 @@ const ProductForm: React.FC<ProductFormProps> = ({
                           Seleccione al menos un color para comenzar a
                           configurar las variantes del producto.
                         </p>
-                      </div>
+                      </motion.div>
                     )}
                   </div>
-                </div>
+                </motion.div>
               )}
             </div>
           </div>
@@ -1316,20 +1415,24 @@ const ProductForm: React.FC<ProductFormProps> = ({
               </div>
 
               <div className="flex gap-3">
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   type="button"
                   onClick={onCancel}
-                  className="px-6 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="px-6 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors shadow-md"
                 >
                   Cancelar
-                </button>
+                </motion.button>
 
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   type="submit"
                   disabled={
                     (activeTab === "variants" && !isVariantsValid) || isLoading
                   }
-                  className={`px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all flex items-center ${
+                  className={`px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white rounded-lg transition-all flex items-center shadow-md ${
                     (activeTab === "variants" && !isVariantsValid) || isLoading
                       ? "opacity-70 cursor-not-allowed"
                       : ""
@@ -1365,13 +1468,13 @@ const ProductForm: React.FC<ProductFormProps> = ({
                       {product ? "Actualizar" : "Crear"} Producto
                     </>
                   )}
-                </button>
+                </motion.button>
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
       </form>
-    </div>
+    </motion.div>
   );
 };
 
