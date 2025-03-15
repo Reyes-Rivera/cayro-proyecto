@@ -16,6 +16,7 @@ import axios from 'axios';
 import { JwtService } from '@nestjs/jwt';
 import { Role } from 'src/auth/roles/role.enum';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { AppLogger } from 'src/utils/logger.service';
 
 type PasswordHistoryEntry = {
   password: string;
@@ -28,6 +29,7 @@ export class UsersService {
   constructor(
     private jwtSvc: JwtService,
     private prismaService: PrismaService,
+    private readonly logger:AppLogger
   ) {}
   async sendEmail(correo, subject, html) {
     var transporter = nodemailer.createTransport({

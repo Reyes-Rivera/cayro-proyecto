@@ -52,7 +52,7 @@ export class CreateCompanyProfileDto {
   @IsString({ message: "La visión debe ser de tipo texto." })
   @IsNotEmpty({ message: "La visión es requerida." })
   @MinLength(4, { message: "La visión debe tener al menos 4 caracteres." })
-  @MaxLength(500, { message: "La visión no debe superar los 500 caracteres." })
+  @MaxLength(1000, { message: "La visión no debe superar los 1000 caracteres." })
   @Matches(/^(?!.*[<>']).+$/, {
     message: "La visión no puede contener los caracteres '<', '>' o \"'\" (comilla simple).",
   })

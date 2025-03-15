@@ -2,10 +2,16 @@ import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import * as cookie from 'cookie'; // Importar para leer cookies
+import { AppLogger } from 'src/utils/logger.service';
+import { error } from 'console';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private jwtService: JwtService) {}
+  constructor(
+    private jwtService: JwtService,
+    private readonly logger:AppLogger
+
+  ) {}
 
   async canActivate(
     context: ExecutionContext,
@@ -28,7 +34,8 @@ export class AuthGuard implements CanActivate {
       
       // Guardar el payload en el request para su uso posterior
       request['user'] = payload;
-    } catch {
+    } catch(error) {
+      this.logger.error("Token no valido",error.stack)
       throw new UnauthorizedException('Token inválido');
     }
 

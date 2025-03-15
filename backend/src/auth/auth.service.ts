@@ -17,6 +17,7 @@ import * as crypto from 'crypto';
 import * as nodemailer from 'nodemailer';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { JsonValue } from '@prisma/client/runtime/library';
+import { AppLogger } from 'src/utils/logger.service';
 type UserOrEmployee =
   | {
       id: number;
@@ -54,8 +55,8 @@ export class AuthService {
   private codes = new Map<string, { code: string; expires: number }>();
   constructor(
     private jwtSvc: JwtService,
-    private readonly usersService: UsersService,
     private prismaService: PrismaService,
+    private readonly logger: AppLogger,
   ) {}
   //its okey
   async sendEmail(correo, subject, html) {
@@ -76,7 +77,9 @@ export class AuthService {
     try {
       await transporter.sendMail(mailOptions);
     } catch (error) {
-      console.log(error);
+      this.logger.error(
+        `Error al enviar el correo: \nStack: ${error.stack}`,
+      );
       throw new InternalServerErrorException(
         'Error al enviar el correo de recuperación,',
       );
@@ -84,61 +87,68 @@ export class AuthService {
   }
   //its okey
   async verifyCode(userEmail: string, code: string) {
-    const record = this.codes.get(userEmail);
-    let userFound: UserOrEmployee | null =
-      await this.prismaService.user.findUnique({
-        where: {
-          email: userEmail,
-          active: true,
-        },
-      });
+    try {
+      const record = this.codes.get(userEmail);
+      let userFound: UserOrEmployee | null =
+        await this.prismaService.user.findUnique({
+          where: {
+            email: userEmail,
+            active: true,
+          },
+        });
 
-    if (!userFound) {
-      userFound = await this.prismaService.employee.findUnique({
-        where: { email: userEmail },
-      });
       if (!userFound) {
-        throw new NotFoundException('Usuario no registrado.');
+        userFound = await this.prismaService.employee.findUnique({
+          where: { email: userEmail },
+        });
+        if (!userFound) {
+          throw new NotFoundException('Usuario no registrado.');
+        }
       }
-    }
 
-    if (!record || record.expires < Date.now()) {
-      throw new ConflictException('El codigo ha expirado o es invalido.');
-    }
+      if (!record || record.expires < Date.now()) {
+        throw new ConflictException('El codigo ha expirado o es invalido.');
+      }
 
-    if (record.code !== code) {
-      throw new ConflictException('Codigo invalido.');
-    }
+      if (record.code !== code) {
+        throw new ConflictException('Codigo invalido.');
+      }
 
-    this.codes.delete(userEmail);
-    let expiresIn: any;
-    switch (userFound.role) {
-      case Role.ADMIN:
-        expiresIn = '8h';
-        break;
-      case Role.USER:
-        expiresIn = '1d';
-        break;
-      case Role.EMPLOYEE:
-        expiresIn = '4h';
-        break;
-      default:
-        expiresIn = '1h';
+      this.codes.delete(userEmail);
+      let expiresIn: any;
+      switch (userFound.role) {
+        case Role.ADMIN:
+          expiresIn = '8h';
+          break;
+        case Role.USER:
+          expiresIn = '1d';
+          break;
+        case Role.EMPLOYEE:
+          expiresIn = '4h';
+          break;
+        default:
+          expiresIn = '1h';
+      }
+      const {
+        password,
+        passwordExpiresAt,
+        passwordSetAt,
+        passwordsHistory,
+        ...rest
+      } = userFound;
+      const payload = {
+        sub: userFound.id,
+        role: userFound.role,
+        email: userFound.email,
+      };
+      const token = this.jwtSvc.sign(payload, { expiresIn });
+      return { user: { ...rest, role: userFound.role }, token };
+    } catch (error) {
+      this.logger.error(
+        `Error al verificar el codigo: \nStack: ${error.stack}`,
+      );
+      throw new InternalServerErrorException('Error interno en el servidor.');
     }
-    const {
-      password,
-      passwordExpiresAt,
-      passwordSetAt,
-      passwordsHistory,
-      ...rest
-    } = userFound;
-    const payload = {
-      sub: userFound.id,
-      role: userFound.role,
-      email: userFound.email,
-    };
-    const token = this.jwtSvc.sign(payload, { expiresIn });
-    return { user: { ...rest, role: userFound.role }, token };
   }
   //its okey
   async sendCode(email: string) {
@@ -213,145 +223,152 @@ export class AuthService {
       await this.sendEmail(email, 'Codigo de verificación', html);
       return { message: 'Codigo de verificación enviado.' };
     } catch (error) {
-      console.log(error);
+      this.logger.error(
+        `Error al enviar el codigo: \nStack: ${error.stack}`,
+      );
+      throw new InternalServerErrorException('Error interno en el servidor.');
     }
   }
   async login(loginDto: LoginDto) {
-    const configInfo = await this.prismaService.configuration.findMany();
+    try {
+      const configInfo = await this.prismaService.configuration.findMany();
 
-    // Buscar primero en la tabla 'user'
-    const user = await this.prismaService.user.findUnique({
-      where: { email: loginDto.email, active: true },
-    });
-
-    let userFound: UserOrEmployee | null = user;
-
-    if (!userFound) {
-      const employee = await this.prismaService.employee.findUnique({
-        where: { email: loginDto.email },
+      const user = await this.prismaService.user.findUnique({
+        where: { email: loginDto.email, active: true },
       });
-      userFound = employee;
+
+      let userFound: UserOrEmployee | null = user;
 
       if (!userFound) {
-        throw new NotFoundException('Credenciales invalidas.');
-      }
-    }
-
-    // Verificar si la cuenta está bloqueada temporalmente
-    if (userFound.lockUntil && userFound.lockUntil > new Date()) {
-      const now = new Date();
-      const timeDifference = userFound.lockUntil.getTime() - now.getTime();
-
-      // Calcular minutos y segundos restantes
-      const minutesRemaining = Math.floor(timeDifference / (1000 * 60));
-      const secondsRemaining = Math.floor(
-        (timeDifference % (1000 * 60)) / 1000,
-      );
-
-      const formattedMessage =
-        minutesRemaining > 0
-          ? `${minutesRemaining} minutos y ${secondsRemaining} segundos`
-          : `${secondsRemaining} segundos`;
-
-      throw new ForbiddenException(
-        `Cuenta bloqueada temporalmente. Inténtalo de nuevo en ${formattedMessage}`,
-      );
-    }
-
-    // Validar contraseña
-    const isPasswordValid = await bcrypt.compare(
-      loginDto.password,
-      userFound.password,
-    );
-
-    if (!isPasswordValid) {
-      // Incrementar intentos fallidos
-      if ('active' in userFound) {
-        // Es un usuario
-        await this.prismaService.user.update({
+        const employee = await this.prismaService.employee.findUnique({
           where: { email: loginDto.email },
-          data: {
-            loginAttempts: (userFound.loginAttempts || 0) + 1,
-          },
         });
-      } else {
-        // Es un empleado
-        await this.prismaService.employee.update({
-          where: { email: loginDto.email },
-          data: {
-            loginAttempts: (userFound.loginAttempts || 0) + 1,
-          },
-        });
+        userFound = employee;
+
+        if (!userFound) {
+          throw new NotFoundException('Credenciales invalidas.');
+        }
       }
 
-      // Bloquear cuenta después de intentos fallidos
-      if (userFound.loginAttempts === configInfo[0].attemptsLogin) {
-        const lockUntil = new Date(Date.now() + 5 * 60 * 1000);
-        const updateData = {
-          lockUntil,
-          loginAttempts: 0,
-        };
+      if (userFound.lockUntil && userFound.lockUntil > new Date()) {
+        const now = new Date();
+        const timeDifference = userFound.lockUntil.getTime() - now.getTime();
 
+        const minutesRemaining = Math.floor(timeDifference / (1000 * 60));
+        const secondsRemaining = Math.floor(
+          (timeDifference % (1000 * 60)) / 1000,
+        );
+
+        const formattedMessage =
+          minutesRemaining > 0
+            ? `${minutesRemaining} minutos y ${secondsRemaining} segundos`
+            : `${secondsRemaining} segundos`;
+
+        throw new ForbiddenException(
+          `Cuenta bloqueada temporalmente. Inténtalo de nuevo en ${formattedMessage}`,
+        );
+      }
+
+      // Validar contraseña
+      const isPasswordValid = await bcrypt.compare(
+        loginDto.password,
+        userFound.password,
+      );
+
+      if (!isPasswordValid) {
+        // Incrementar intentos fallidos
         if ('active' in userFound) {
-          // Bloquear usuario
+          // Es un usuario
           await this.prismaService.user.update({
-            where: { email: userFound.email },
-            data: updateData,
+            where: { email: loginDto.email },
+            data: {
+              loginAttempts: (userFound.loginAttempts || 0) + 1,
+            },
           });
         } else {
-          // Bloquear empleado
+          // Es un empleado
           await this.prismaService.employee.update({
-            where: { email: userFound.email },
-            data: updateData,
+            where: { email: loginDto.email },
+            data: {
+              loginAttempts: (userFound.loginAttempts || 0) + 1,
+            },
           });
         }
 
-        await this.prismaService.userActivity.create({
-          data: {
-            email: loginDto.email,
-            action: 'Cuenta bloqueada por 5 minutos.',
-            date: new Date(),
-          },
-        });
+        // Bloquear cuenta después de intentos fallidos
+        if (userFound.loginAttempts === configInfo[0].attemptsLogin) {
+          const lockUntil = new Date(Date.now() + 5 * 60 * 1000);
+          const updateData = {
+            lockUntil,
+            loginAttempts: 0,
+          };
+
+          if ('active' in userFound) {
+            // Bloquear usuario
+            await this.prismaService.user.update({
+              where: { email: userFound.email },
+              data: updateData,
+            });
+          } else {
+            // Bloquear empleado
+            await this.prismaService.employee.update({
+              where: { email: userFound.email },
+              data: updateData,
+            });
+          }
+
+          await this.prismaService.userActivity.create({
+            data: {
+              email: loginDto.email,
+              action: 'Cuenta bloqueada por 5 minutos.',
+              date: new Date(),
+            },
+          });
+        }
+
+        throw new HttpException(
+          'Credenciales invalidas.',
+          HttpStatus.UNAUTHORIZED,
+        );
       }
 
-      throw new HttpException(
-        'Credenciales invalidas.',
-        HttpStatus.UNAUTHORIZED,
-      );
-    }
+      // Resetear intentos de inicio de sesión
+      if ('active' in userFound) {
+        // Usuario
+        await this.prismaService.user.update({
+          where: { email: loginDto.email },
+          data: { loginAttempts: 0 },
+        });
 
-    // Resetear intentos de inicio de sesión
-    if ('active' in userFound) {
-      // Usuario
-      await this.prismaService.user.update({
-        where: { email: loginDto.email },
-        data: { loginAttempts: 0 },
-      });
+        if (userFound.active === true) {
+          await this.sendCode(loginDto.email);
+        }
+      } else {
+        // Empleado
+        await this.prismaService.employee.update({
+          where: { email: loginDto.email },
+          data: { loginAttempts: 0 },
+        });
 
-      if (userFound.active === true) {
         await this.sendCode(loginDto.email);
       }
-    } else {
-      // Empleado
-      await this.prismaService.employee.update({
-        where: { email: loginDto.email },
-        data: { loginAttempts: 0 },
-      });
 
-      await this.sendCode(loginDto.email);
+      // Excluir información sensible
+      const {
+        password,
+        passwordsHistory,
+        passwordExpiresAt,
+        passwordSetAt,
+        ...rest
+      } = userFound;
+
+      return { ...rest };
+    } catch (error) {
+      this.logger.error(
+        `Error al iniciar sesion: \nStack: ${error.stack}`,
+      );
+      throw new InternalServerErrorException('Error interno en el servidor.');
     }
-
-    // Excluir información sensible
-    const {
-      password,
-      passwordsHistory,
-      passwordExpiresAt,
-      passwordSetAt,
-      ...rest
-    } = userFound;
-
-    return { ...rest };
   }
 
   async verifyToken(@Request() request) {
@@ -378,6 +395,9 @@ export class AuthService {
       }
       throw new NotFoundException('El usuario no se encuentra registrado');
     } catch (error) {
+      this.logger.error(
+        `Error al verificar el token: \nStack: ${error.stack}`,
+      );
       if (error instanceof HttpException) {
         throw error;
       }

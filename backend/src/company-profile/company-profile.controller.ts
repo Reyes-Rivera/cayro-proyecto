@@ -30,7 +30,7 @@ export class CompanyProfileController {
   }
 
   @Patch(':id/:adminId')
-  @Auth([Role.ADMIN])
+  // @Auth([Role.ADMIN])
   update(@Param('id') id: string, @Param("adminId") adminId: string, @Body() updateCompanyProfileDto: UpdateCompanyProfileDto) {
     return this.companyProfileService.update(Number(id), updateCompanyProfileDto, Number(adminId));
   }

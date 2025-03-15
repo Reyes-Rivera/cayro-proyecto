@@ -3,6 +3,7 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
@@ -11,10 +12,14 @@ import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import axios from 'axios';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { AppLogger } from 'src/utils/logger.service';
 
 @Injectable()
 export class EmployeesService {
-  constructor(private prismaService: PrismaService) {}
+  constructor(
+    private prismaService: PrismaService,
+    private readonly logger: AppLogger,
+  ) {}
   async isPasswordCompromised(password: string): Promise<boolean> {
     const hashedPassword = crypto
       .createHash('sha1')
@@ -37,8 +42,12 @@ export class EmployeesService {
       }
       return false;
     } catch (error) {
-      console.error('Error verificando contraseña comprometida:', error);
-      return false;
+      this.logger.error(
+        `Error verificando contraseña comprometida.: \nStack: ${error.stack}`,
+      );
+      throw new InternalServerErrorException(
+        'Error verificando contraseña comprometida.',
+      );
     }
   }
   async create(createEmployeeDto: CreateEmployeeDto) {
@@ -87,9 +96,13 @@ export class EmployeesService {
 
       return { ...rest };
     } catch (error) {
+     
       if (error instanceof HttpException) {
         throw error;
       }
+      this.logger.error(
+        `Error al crear un empleado: \nStack: ${error.stack}`,
+      );
       throw new HttpException(
         'Error interno del servidor',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -151,6 +164,9 @@ export class EmployeesService {
       if (error instanceof HttpException) {
         throw error;
       }
+      this.logger.error(
+        `Error al actualizar un empleado: \nStack: ${error.stack}`,
+      );
       throw new HttpException(
         'Error interno del servidor',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -227,6 +243,9 @@ export class EmployeesService {
         };
       }
     } catch (error) {
+      this.logger.error(
+        `Error al actualizar/crear la dirección: \nStack: ${error.stack}`,
+      );
       console.error('Error al actualizar/crear la dirección:', error);
       throw new Error('No se pudo procesar la dirección.');
     }
