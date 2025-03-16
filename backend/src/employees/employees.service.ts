@@ -7,13 +7,16 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
-import { UpdateAddressDto, UpdateEmployeeDto } from './dto/update-employee.dto';
+import { PasswordUpdate, UpdateAddressDto, UpdateEmployeeDto } from './dto/update-employee.dto';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import axios from 'axios';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AppLogger } from 'src/utils/logger.service';
-
+type PasswordHistoryEntry = {
+  password: string;
+  createdAt: string;
+};
 @Injectable()
 export class EmployeesService {
   constructor(
@@ -96,13 +99,10 @@ export class EmployeesService {
 
       return { ...rest };
     } catch (error) {
-     
       if (error instanceof HttpException) {
         throw error;
       }
-      this.logger.error(
-        `Error al crear un empleado: \nStack: ${error.stack}`,
-      );
+      this.logger.error(`Error al crear un empleado: \nStack: ${error.stack}`);
       throw new HttpException(
         'Error interno del servidor',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -111,7 +111,7 @@ export class EmployeesService {
   }
 
   async findAll() {
-    return `This action returns all employees`;
+    return this.prismaService.employee.findMany();
   }
 
   async findOne(id: number) {
@@ -248,6 +248,101 @@ export class EmployeesService {
       );
       console.error('Error al actualizar/crear la dirección:', error);
       throw new Error('No se pudo procesar la dirección.');
+    }
+  }
+  async updatePassword(id: number, updatePasswordDto: PasswordUpdate) {
+    try {
+      const userFound = await this.prismaService.employee.findUnique({
+        where: { id },
+      });
+
+      if (!userFound) {
+        throw new NotFoundException('El usuario no se encuentra registrado.');
+      }
+
+      const compromised = await this.isPasswordCompromised(
+        updatePasswordDto.password,
+      );
+      if (compromised) {
+        throw new ConflictException(
+          'Esta contraseña ha sido comprometida. Por favor elige una diferente.',
+        );
+      }
+
+      const isMatch = bcrypt.compareSync(
+        updatePasswordDto.currentPassword,
+        userFound.password,
+      );
+      if (!isMatch) {
+        throw new ConflictException(
+          'La contraseña actual es incorrecta, por favor intenta de nuevo.',
+        );
+      }
+
+      const isInHistory = (
+        userFound.passwordsHistory as PasswordHistoryEntry[]
+      ).some((entry) =>
+        bcrypt.compareSync(updatePasswordDto.password, entry.password),
+      );
+      if (isInHistory) {
+        throw new ConflictException(
+          'No puedes reutilizar contraseñas anteriores.',
+        );
+      }
+
+      const hashPassword = await bcrypt.hash(updatePasswordDto.password, 10);
+
+      const currentDate = new Date();
+      const newPasswordExpiresAt = new Date(
+        Date.now() + 90 * 24 * 60 * 60 * 1000,
+      );
+
+      const passwordHistory = (userFound.passwordsHistory ||
+        []) as PasswordHistoryEntry[];
+      passwordHistory.push({
+        password: hashPassword,
+        createdAt: currentDate.toISOString(),
+      });
+
+      if (passwordHistory.length > 5) {
+        passwordHistory.shift();
+      }
+
+      const resUser = await this.prismaService.employee.update({
+        where: { id },
+        data: {
+          password: hashPassword,
+          passwordSetAt: currentDate,
+          passwordExpiresAt: newPasswordExpiresAt,
+          passwordsHistory: passwordHistory,
+        },
+      });
+
+      await this.prismaService.userActivity.create({
+        data: {
+          email: userFound.email,
+          action: 'Cambio de contraseña.',
+          date: new Date(),
+        },
+      });
+      const {
+        password,
+        passwordsHistory,
+        passwordExpiresAt,
+        passwordSetAt,
+        ...rest
+      } = resUser;
+
+      return { ...rest };
+    } catch (error) {
+      console.error(error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Error interno del servidor',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }

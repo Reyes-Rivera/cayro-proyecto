@@ -213,7 +213,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const res = await verifyToken();
       if (res) {
         setUser(res.data);
-        console.log(res.data);
         setAuth(true);
         setLoading(false);
       } else {

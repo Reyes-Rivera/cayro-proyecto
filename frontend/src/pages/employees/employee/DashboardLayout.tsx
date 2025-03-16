@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Package,
   LogOut,
-  Menu,
   BarChart,
   List,
   Home,
@@ -30,7 +29,6 @@ import ColorPage from "./profucts/colors/ColorPage";
 import userImage from "@/assets/rb_859.png";
 import ProductoStatusSales from "@/pages/web/ProductoStatusSales";
 import Panel from "./panel/Panel";
-import type { JSX } from "react";
 
 type TabKey =
   | "panel"
@@ -51,7 +49,7 @@ const EmployeeDashboard = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showProducts, setShowProducts] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const { user, signOut } = useAuth();
 
   // Update time every minute
@@ -59,15 +57,6 @@ const EmployeeDashboard = () => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 60000);
-
-    // Check system preference for dark mode
-    const prefersDark = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-
-    if (prefersDark) {
-      document.documentElement.classList.add("dark");
-    }
 
     return () => clearInterval(timer);
   }, []);
@@ -97,39 +86,76 @@ const EmployeeDashboard = () => {
     colors: <ColorPage />,
     sales: (
       <div className="p-6">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-          Reportes de Ventas
-        </h2>
-        <p className="text-gray-600 dark:text-gray-400">
-          Esta sección está en desarrollo. Próximamente podrás ver estadísticas
-          detalladas de ventas.
-        </p>
+        <div className="overflow-hidden border-none rounded-lg shadow-lg">
+          <div className="relative bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/5 rounded-full -ml-32 -mb-32 blur-3xl"></div>
+
+            <div className="p-6 md:p-8">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="bg-white/10 p-2.5 rounded-lg backdrop-blur-sm">
+                      <BarChart className="w-5 h-5 text-yellow-300" />
+                    </div>
+                    <h2 className="text-2xl md:text-3xl font-bold">
+                      Reportes de Ventas
+                    </h2>
+                  </div>
+                  <p className="mt-2 text-white/80 max-w-xl">
+                    Esta sección está en desarrollo. Próximamente podrás ver
+                    estadísticas detalladas de ventas.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     ),
     orders: (
       <div className="p-6">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-          Reportes de Pedidos
-        </h2>
-        <p className="text-gray-600 dark:text-gray-400">
-          Esta sección está en desarrollo. Próximamente podrás gestionar los
-          pedidos.
-        </p>
+        <div className="overflow-hidden border-none rounded-lg shadow-lg">
+          <div className="relative bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/5 rounded-full -ml-32 -mb-32 blur-3xl"></div>
+
+            <div className="p-6 md:p-8">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="bg-white/10 p-2.5 rounded-lg backdrop-blur-sm">
+                      <List className="w-5 h-5 text-yellow-300" />
+                    </div>
+                    <h2 className="text-2xl md:text-3xl font-bold">
+                      Reportes de Pedidos
+                    </h2>
+                  </div>
+                  <p className="mt-2 text-white/80 max-w-xl">
+                    Esta sección está en desarrollo. Próximamente podrás
+                    gestionar los pedidos.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     ),
     salesPrediction: <ProductoStatusSales />,
   };
 
+
+
+
+
   // Animation variants
   const sidebarVariants = {
-    hidden: { x: -300, opacity: 0 },
+    hidden: { opacity: 0 },
     visible: {
-      x: 0,
       opacity: 1,
       transition: {
-        type: "spring",
-        stiffness: 300,
-        damping: 30,
+        duration: 0.3,
       },
     },
   };
@@ -155,12 +181,11 @@ const EmployeeDashboard = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Sidebar for large screens */}
+    <div className="flex mt-14 flex-col sm:flex-row min-h-screen bg-gray-50 dark:bg-gray-900">
       <motion.aside
-        className={`hidden sm:block bg-gradient-to-b from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 shadow-xl ${
+        className={`hidden sm:block bg-white dark:bg-gray-800 shadow-xl ${
           isSidebarExpanded ? "w-64" : "w-20"
-        } h-screen overflow-y-auto border-r border-gray-200 dark:border-gray-700 fixed top-0 left-0 pt-16 transition-all duration-300 ease-in-out`}
+        } h-screen sticky top-0 overflow-y-auto border-r border-gray-200 dark:border-gray-700 transition-all duration-300 ease-in-out z-30`}
         initial="hidden"
         animate="visible"
         variants={sidebarVariants}
@@ -417,7 +442,7 @@ const EmployeeDashboard = () => {
             <motion.button
               whileHover={{ scale: 1.02, x: 5 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => signOut()}
+              onClick={() => signOut?.()}
               className={`flex items-center ${
                 isSidebarExpanded ? "gap-3 justify-start" : "justify-center"
               } w-full p-3 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200`}
@@ -431,8 +456,8 @@ const EmployeeDashboard = () => {
         </div>
       </motion.aside>
 
-      {/* Top navigation bar for mobile */}
-      <div className="fixed top-0 left-0 right-0 h-16 bg-white dark:bg-gray-800 shadow-md z-40 sm:pl-64 flex items-center justify-between px-4 sm:px-6">
+      {/* Mobile header - fixed */}
+      <div className="fixed top-0 left-0 right-0 h-16 bg-white dark:bg-gray-800 shadow-md z-40 sm:hidden flex items-center justify-between px-4">
         <div className="flex items-center gap-4">
           <h1 className="text-lg font-bold text-gray-900 dark:text-white">
             Dashboard
@@ -440,8 +465,8 @@ const EmployeeDashboard = () => {
         </div>
       </div>
 
-      {/* Mobile menu button */}
-      <div className="fixed top-20 left-4 z-40 sm:hidden">
+      {/* Mobile menu button - fixed to bottom right */}
+      <div className="fixed bottom-4 right-4 z-40 sm:hidden">
         <motion.button
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -451,7 +476,7 @@ const EmployeeDashboard = () => {
           className="h-12 w-12 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-full flex items-center justify-center shadow-lg"
           aria-label="Abrir menú"
         >
-          <Menu className="w-6 h-6" />
+          <Package className="w-6 h-6" />
         </motion.button>
       </div>
 
@@ -676,7 +701,7 @@ const EmployeeDashboard = () => {
                   whileHover={{ scale: 1.02, x: 5 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => {
-                    signOut();
+                    signOut?.();
                     setIsMenuOpen(false);
                   }}
                   className="flex items-center gap-3 w-full p-3 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200"
@@ -692,9 +717,7 @@ const EmployeeDashboard = () => {
 
       {/* Main content */}
       <motion.main
-        className={`flex-1 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 pt-16 transition-all duration-300 ${
-          isSidebarExpanded ? "sm:pl-64" : "sm:pl-20"
-        }`}
+        className="flex-1 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 pt-16 sm:pt-0"
         initial="hidden"
         animate="visible"
         variants={contentVariants}

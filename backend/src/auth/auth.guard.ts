@@ -3,7 +3,6 @@ import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import * as cookie from 'cookie'; // Importar para leer cookies
 import { AppLogger } from 'src/utils/logger.service';
-import { error } from 'console';
 
 @Injectable()
 export class AuthGuard implements CanActivate {

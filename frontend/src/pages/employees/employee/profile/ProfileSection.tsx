@@ -169,7 +169,7 @@ export function ProfileSection() {
               </p>
               <div className="mt-4 flex flex-col gap-2">
                 <span className="bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-medium px-4 py-1.5 rounded-full shadow-sm">
-                  Empleado
+                  {user?.role ==="ADMIN" ? "Administrador" : "Empleado"}
                 </span>
                 <span className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium px-3 py-1 rounded-full flex items-center justify-center gap-1">
                   <CheckCircle className="w-3 h-3" /> Cuenta verificada

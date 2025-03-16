@@ -49,7 +49,6 @@ export class RegulatoryDocumentController {
   @Get("current-term")
   async findCurrentTerms() {
     const res = await this.regulatoryDocumentService.findCurrentTerms();
-    console.log(res);
 
     if (!res) throw new NotFoundException("No hay politicas todavia.");
     return res;

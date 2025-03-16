@@ -1,7 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Put, NotFoundException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Put,
+  NotFoundException,
+} from '@nestjs/common';
 import { EmployeesService } from './employees.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
-import { UpdateEmployeeDto } from './dto/update-employee.dto';
+import { PasswordUpdate, UpdateEmployeeDto } from './dto/update-employee.dto';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { Role } from 'src/auth/roles/role.enum';
 
@@ -29,17 +39,27 @@ export class EmployeesController {
   findOneAddress(@Param('id') id: string) {
     try {
       const res = this.employeesService.findOneAddress(+id);
-      if(!res) throw new NotFoundException("No se encontraron direcciones.");
+      if (!res) throw new NotFoundException('No se encontraron direcciones.');
       return res;
     } catch (error) {
       console.log(error);
     }
-    
+  }
+  @Auth([Role.EMPLOYEE, Role.ADMIN])
+  @Patch('change-password/:id')
+  async changePassword(
+    @Param('id') id: number,
+    @Body() updatePass: PasswordUpdate,
+  ) {
+    return this.employeesService.updatePassword(Number(id), updatePass);
   }
 
   @Patch(':id')
   // @Auth([Role.ADMIN])
-  async update(@Param('id') id: string, @Body() updateEmployeeDto: UpdateEmployeeDto) {
+  async update(
+    @Param('id') id: string,
+    @Body() updateEmployeeDto: UpdateEmployeeDto,
+  ) {
     return await this.employeesService.update(+id, updateEmployeeDto);
   }
 
@@ -48,7 +68,7 @@ export class EmployeesController {
     return this.employeesService.remove(+id);
   }
   @Put(':userId')
-  @Auth([Role.ADMIN,Role.EMPLOYEE])
+  @Auth([Role.ADMIN, Role.EMPLOYEE])
   async upsertUserAddress(
     @Param('userId') userId: number,
     @Body()

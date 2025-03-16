@@ -6,7 +6,28 @@ datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
+model FAQ {
+  id          Int      @id @default(autoincrement())
+  question    String   @db.VarChar(5000)
+  answer      String   @db.VarChar(5000)
+  categoryId  Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
+  category    FAQCategory @relation(fields: [categoryId], references: [id])
+}
+
+model FAQCategory {
+  id       Int    @id @default(autoincrement())
+  name     String @unique @db.VarChar(100)
+  faqs     FAQ[]
+}
+
+model SecurityQuestion {
+  id       Int    @id @default(autoincrement())
+  question String @unique @db.VarChar(255)
+  users    User[] 
+}
 model User {
   id                Int       @id @default(autoincrement())
   name              String    @db.VarChar(100)
@@ -30,6 +51,9 @@ model User {
   sales             Sale[]
   addresses         Address[] @relation("UserAddresses")
   cart              Cart?     @relation("UserCart")
+  securityQuestionId Int?
+  securityQuestion   SecurityQuestion? @relation(fields: [securityQuestionId], references: [id])
+  securityAnswer     String? @db.VarChar(255) 
 }
 //done
 model Configuration {
@@ -128,7 +152,7 @@ model CompanyProfile {
 model DocumentRegulatory {
   id                Int       @id @default(autoincrement())
   title             String    @db.VarChar(255) 
-  content           String    @db.VarChar(255)
+  content           String    @db.Text
   version           Int?     
   createdAt         DateTime? @default(now())
   updatedAt         DateTime? @updatedAt
@@ -156,7 +180,7 @@ enum DocumentTypeInter {
 model Product {
   id               Int      @id @default(autoincrement())
   name             String
-  description      String   @db.VarChar(500)
+  description      String   @db.VarChar(5000)
   active           Boolean  @default(true)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt

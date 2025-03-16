@@ -316,7 +316,6 @@ export class UsersService {
 
       return { ...rest };
     } catch (error) {
-      console.error(error);
       if (error instanceof HttpException) {
         throw error;
       }

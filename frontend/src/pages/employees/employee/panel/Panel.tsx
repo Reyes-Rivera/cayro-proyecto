@@ -193,7 +193,7 @@ const Panel = () => {
   });
 
   return (
-    <div className="p-6 space-y-8 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 min-h-screen">
+    <div className="p-6 space-y-8  dark:bg-gray-900 min-h-screen">
       {/* Header con bienvenida */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}

@@ -81,7 +81,6 @@ export function LegalSection() {
 
   const handleSave = () => {
     // Aquí iría la lógica para guardar o actualizar los datos
-    console.log("Guardado:", formData);
     handleCancel();
   };
 

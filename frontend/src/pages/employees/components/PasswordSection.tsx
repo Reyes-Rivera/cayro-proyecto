@@ -23,6 +23,10 @@ import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
 import { useForm } from "react-hook-form";
 import { motion, AnimatePresence } from "framer-motion";
+import { updatePasswordEmployee } from "@/api/users";
+import { useAuth } from "@/context/AuthContextType";
+import { logOutApi } from "@/api/auth";
+import { useNavigate } from "react-router-dom";
 
 interface PasswordFormData {
   currentPassword: string;
@@ -31,6 +35,7 @@ interface PasswordFormData {
 }
 
 export function PasswordSection() {
+  const { user } = useAuth();
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [passwordChecks, setPasswordChecks] = useState({
     length: false,
@@ -45,7 +50,7 @@ export function PasswordSection() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -165,16 +170,15 @@ export function PasswordSection() {
         setIsSubmitting(false);
         return;
       }
-
-      // Aquí iría la llamada a la API para actualizar la contraseña
-      // await updatePassword({
-      //   currentPassword: data.currentPassword,
-      //   newPassword: data.newPassword
-      // });
-
-      // Simulamos un retraso para mostrar el estado de carga
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
+      if (!user?.id) {
+        throw new Error("User ID is undefined");
+      }
+      await updatePasswordEmployee(+user.id, {
+        currentPassword: data.currentPassword,
+        password: data.newPassword,
+      });
+      await logOutApi();
+      navigate("/login");
       Swal.fire({
         icon: "success",
         title: "Contraseña actualizada",
@@ -192,11 +196,18 @@ export function PasswordSection() {
     } catch (error: any) {
       Swal.fire({
         icon: "error",
-        title: "Error",
+        title: "Error al iniciar sesión",
+        toast: true,
         text:
           error?.response?.data?.message ||
           "Hubo un error al actualizar la contraseña.",
-        confirmButtonColor: "#3B82F6",
+        position: "top-end",
+        timer: 3000,
+        showConfirmButton: false,
+        animation: true,
+        background: "#FEF2F2",
+        color: "#B91C1C",
+        iconColor: "#EF4444",
       });
     } finally {
       setIsSubmitting(false);

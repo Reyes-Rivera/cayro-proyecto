@@ -77,9 +77,7 @@ export class AuthService {
     try {
       await transporter.sendMail(mailOptions);
     } catch (error) {
-      this.logger.error(
-        `Error al enviar el correo: \nStack: ${error.stack}`,
-      );
+      this.logger.error(`Error al enviar el correo: \nStack: ${error.stack}`);
       throw new InternalServerErrorException(
         'Error al enviar el correo de recuperación,',
       );
@@ -144,6 +142,9 @@ export class AuthService {
       const token = this.jwtSvc.sign(payload, { expiresIn });
       return { user: { ...rest, role: userFound.role }, token };
     } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
       this.logger.error(
         `Error al verificar el codigo: \nStack: ${error.stack}`,
       );
@@ -223,9 +224,7 @@ export class AuthService {
       await this.sendEmail(email, 'Codigo de verificación', html);
       return { message: 'Codigo de verificación enviado.' };
     } catch (error) {
-      this.logger.error(
-        `Error al enviar el codigo: \nStack: ${error.stack}`,
-      );
+      this.logger.error(`Error al enviar el codigo: \nStack: ${error.stack}`);
       throw new InternalServerErrorException('Error interno en el servidor.');
     }
   }
@@ -364,9 +363,10 @@ export class AuthService {
 
       return { ...rest };
     } catch (error) {
-      this.logger.error(
-        `Error al iniciar sesion: \nStack: ${error.stack}`,
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error(`Error al iniciar sesion: \nStack: ${error.stack}`);
       throw new InternalServerErrorException('Error interno en el servidor.');
     }
   }
@@ -395,12 +395,10 @@ export class AuthService {
       }
       throw new NotFoundException('El usuario no se encuentra registrado');
     } catch (error) {
-      this.logger.error(
-        `Error al verificar el token: \nStack: ${error.stack}`,
-      );
       if (error instanceof HttpException) {
         throw error;
       }
+      this.logger.error(`Error al verificar el token: \nStack: ${error.stack}`);
       throw new HttpException(
         'Error interno del servidor',
         HttpStatus.INTERNAL_SERVER_ERROR,

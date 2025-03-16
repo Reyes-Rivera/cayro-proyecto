@@ -17,6 +17,8 @@ import { SleeveModule } from './products/sleeve/sleeve.module';
 import { BrandModule } from './products/brand/brand.module';
 import { ProductModule } from './products/product/product.module';
 import { LoggerModule } from './utils/logger.module';
+import { FaqCategoryModule } from './faqs/faq_category/faq_category.module';
+import { QuestionsModule } from './faqs/questions/questions.module';
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -36,6 +38,8 @@ import { LoggerModule } from './utils/logger.module';
     BrandModule,
     ProductModule,
     LoggerModule,
+    FaqCategoryModule,
+    QuestionsModule
   ],
   controllers: [],
   providers: [AppService],

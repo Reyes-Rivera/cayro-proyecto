@@ -70,7 +70,6 @@ export function CompanyView() {
   const uploadImageToCloudinary = async () => {
     setIsUpload(true);
     if (!image) return;
-    console.log("object");
     const formData = new FormData();
     formData.append("file", image);
     const uploadPreset = "ml_default";
@@ -167,7 +166,6 @@ export function CompanyView() {
   }, [setValue]);
   const navigate = useNavigate();
   const onSubmit: SubmitHandler<InfoCompany> = async (data) => {
-    // console.log(da);
     try {
       const res = await companyInfoUpdateApi(
         { ...data, logoUrl: logo },
