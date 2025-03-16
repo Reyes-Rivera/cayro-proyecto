@@ -15,11 +15,14 @@ export const updateAddress = async (id: number, data: object) =>
 export const updatePasswordEmployee = async (id: number, data: object) =>
   axios.patch(`/employees/change-password/${id}`, data);
 
+export const newPasswordEmployee = async (id: number, data: object) =>
+  axios.patch(`/employees/update-password/${id}`, data);
+
 export const addEmployee = async ( data: object) =>
   axios.post(`/employees`, data);
 
 export const deleteEmployee = async (id: number) =>
-  axios.patch(`/employees/${id}`);
+  axios.delete(`/employees/${id}`);
 
 export const getEmployees = async () =>
   axios.get(`/employees`);

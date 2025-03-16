@@ -10,8 +10,8 @@ import {
   addEmployee,
   deleteEmployee,
   getEmployees,
+  newPasswordEmployee,
   updateEmployee,
-  updatePasswordEmployee,
 } from "@/api/users";
 import { useNavigate } from "react-router-dom";
 
@@ -27,6 +27,7 @@ import { containsSequentialPatterns } from "./utils/password-utils";
 import EmployeeTable from "./components/employee-table";
 import EmployeeForm from "./components/employee-form";
 import PasswordUpdateForm from "./components/password-update-form";
+import EmployeeDetails from "./components/employee-details";
 
 const EmployeePage = () => {
   const [items, setItems] = useState<Employee[]>([]);
@@ -59,6 +60,12 @@ const EmployeePage = () => {
 
   // State for password update form
   const [showPasswordUpdateForm, setShowPasswordUpdateForm] = useState(false);
+
+  // State for employee details view
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
+    null
+  );
+  const [showDetails, setShowDetails] = useState(false);
 
   const employeeFormMethods = useForm<EmployeeFormData>();
   const passwordFormMethods = useForm<PasswordFormData>();
@@ -145,16 +152,17 @@ const EmployeePage = () => {
         }
       }
 
-     
+      // Remove confirmPassword before sending to server
       const submitData = {
         name: data.name,
-        surname:data.surname,
-        email:data.email,
-        phone:data.phone,
-        birthdate:data.birthdate,
-        gender:data.gender,
-        role:data.role
+        surname: data.surname,
+        email: data.email,
+        phone: data.phone,
+        birthdate: data.birthdate,
+        gender: data.gender,
+        role: data.role,
       };
+
       if (editId !== null) {
         setIsLoading(true);
         const updatedItem = await updateEmployee(editId, submitData);
@@ -184,8 +192,18 @@ const EmployeePage = () => {
         setIsLoading(false);
         setEditId(null);
       } else {
+        const submitDataAdd = {
+          name: data.name,
+          surname: data.surname,
+          email: data.email,
+          phone: data.phone,
+          birthdate: data.birthdate,
+          gender: data.gender,
+          role: data.role,
+          password:data.password
+        };
         setIsLoading(true);
-        const newItem = await addEmployee(submitData);
+        const newItem = await addEmployee(submitDataAdd);
         if (newItem) {
           Swal.fire({
             icon: "success",
@@ -266,8 +284,8 @@ const EmployeePage = () => {
         const passwordData = {
           password: data.password,
         };
-        console.log(passwordData);
-        const updatedItem = await updatePasswordEmployee(editId, passwordData);
+
+        const updatedItem = await newPasswordEmployee(editId, passwordData);
         if (updatedItem) {
           Swal.fire({
             icon: "success",
@@ -282,6 +300,10 @@ const EmployeePage = () => {
           });
           setIsLoading(false);
           setShowPasswordUpdateForm(false);
+          setShowForm(false);
+          setShowDetails(false);
+          setSelectedEmployee(null);
+          setEditId(null);
           passwordFormMethods.reset();
           return;
         }
@@ -316,6 +338,7 @@ const EmployeePage = () => {
     employeeFormMethods.setValue("role", employee.role);
     setEditId(employee.id);
     setShowForm(true);
+    setShowDetails(false);
   };
 
   const handleDelete = async (employee: Employee) => {
@@ -341,7 +364,6 @@ const EmployeePage = () => {
         const response = await deleteEmployee(employee.id);
         if (response) {
           setItems((prev) => prev.filter((emp) => emp.id !== employee.id));
-
           Swal.fire({
             title: "Eliminado",
             text: `El empleado "${employee.name} ${employee.surname}" ha sido eliminado.`,
@@ -353,6 +375,16 @@ const EmployeePage = () => {
             timer: 3000,
             timerProgressBar: true,
           });
+
+          // If we're viewing the details of the deleted employee, go back to the table
+          if (
+            showDetails &&
+            selectedEmployee &&
+            selectedEmployee.id === employee.id
+          ) {
+            setShowDetails(false);
+            setSelectedEmployee(null);
+          }
         } else {
           throw new Error("No se pudo eliminar el empleado.");
         }
@@ -370,11 +402,28 @@ const EmployeePage = () => {
     }
   };
 
+  // Handle viewing employee details
+  const handleViewDetails = (employee: Employee) => {
+    setSelectedEmployee(employee);
+    setShowDetails(true);
+  };
+
   const refreshData = async () => {
     setIsRefreshing(true);
     try {
       const res = await getEmployees();
       setItems(res.data || []);
+
+      // If we're viewing details, update the selected employee with fresh data
+      if (showDetails && selectedEmployee) {
+        const updatedEmployee = res.data.find(
+          (emp: Employee) => emp.id === selectedEmployee.id
+        );
+        if (updatedEmployee) {
+          setSelectedEmployee(updatedEmployee);
+        }
+      }
+
       setTimeout(() => {
         setIsRefreshing(false);
       }, 600); // Small delay to show animation
@@ -424,6 +473,7 @@ const EmployeePage = () => {
     setEditId(null);
     employeeFormMethods.reset();
     setShowForm(true);
+    setShowDetails(false);
   };
 
   // Close form
@@ -433,6 +483,12 @@ const EmployeePage = () => {
     setEditId(null);
     employeeFormMethods.reset();
     passwordFormMethods.reset();
+  };
+
+  // Close details view
+  const closeDetails = () => {
+    setShowDetails(false);
+    setSelectedEmployee(null);
   };
 
   useEffect(() => {
@@ -523,7 +579,7 @@ const EmployeePage = () => {
                   </p>
                 </div>
               </div>
-              {!showForm && (
+              {!showForm && !showDetails && (
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -543,7 +599,7 @@ const EmployeePage = () => {
         </div>
       </motion.div>
 
-      {/* Main content: Table or Form */}
+      {/* Main content: Table, Form, or Details */}
       <AnimatePresence mode="wait">
         {showForm ? (
           showPasswordUpdateForm ? (
@@ -586,6 +642,18 @@ const EmployeePage = () => {
               </form>
             </FormProvider>
           )
+        ) : showDetails && selectedEmployee ? (
+          <EmployeeDetails
+            employee={selectedEmployee}
+            onBack={closeDetails}
+            onEdit={handleEdit}
+            onPasswordUpdate={() => {
+              setEditId(selectedEmployee.id);
+              setShowPasswordUpdateForm(true);
+              setShowForm(true);
+              setShowDetails(false);
+            }}
+          />
         ) : (
           <EmployeeTable
             items={items}
@@ -608,6 +676,7 @@ const EmployeePage = () => {
             indexOfLastItem={indexOfLastItem}
             handleEdit={handleEdit}
             handleDelete={handleDelete}
+            handleViewDetails={handleViewDetails}
             refreshData={refreshData}
             openAddForm={openAddForm}
           />

@@ -193,3 +193,20 @@ export class PasswordUpdate {
   })
   currentPassword: string;
 }
+
+
+export class NewPassword {
+  @IsString({
+    message: 'La contraseña debe de ser de tipo texto.',
+  })
+  @IsNotEmpty({
+    message: 'La contraseña es requerida.',
+  })
+  @MinLength(8, {
+    message: 'La contraseña debe tener al menos 8 caracteres.',
+  })
+  @MaxLength(50, {
+    message: 'La contraseña no debe superar los 50 caracteres.',
+  })
+  password: string;
+}

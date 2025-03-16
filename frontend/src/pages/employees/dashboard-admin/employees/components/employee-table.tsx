@@ -1,7 +1,15 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Edit, Trash, MoreHorizontal, Plus, XCircle } from "lucide-react";
+import {
+  User,
+  Edit,
+  Trash,
+  MoreHorizontal,
+  Plus,
+  XCircle,
+  Eye,
+} from "lucide-react";
 import type { Employee } from "../types/employee";
 import Pagination from "./pagination";
 import SearchAndFilters from "./search-and-filters";
@@ -28,6 +36,7 @@ interface EmployeeTableProps {
   indexOfLastItem: number;
   handleEdit: (employee: Employee) => void;
   handleDelete: (employee: Employee) => void;
+  handleViewDetails: (employee: Employee) => void;
   refreshData: () => void;
   openAddForm: () => void;
 }
@@ -52,6 +61,7 @@ const EmployeeTable = ({
   indexOfLastItem,
   handleEdit,
   handleDelete,
+  handleViewDetails,
   refreshData,
   openAddForm,
 }: EmployeeTableProps) => {
@@ -159,6 +169,15 @@ const EmployeeTable = ({
                       </div>
 
                       <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => handleViewDetails(item)}
+                          className="bg-blue-100 dark:bg-blue-900/30 p-1.5 sm:p-2 rounded-lg text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                          title="Ver detalles"
+                        >
+                          <Eye size={16} className="sm:w-[18px] sm:h-[18px]" />
+                        </motion.button>
                         <motion.button
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}

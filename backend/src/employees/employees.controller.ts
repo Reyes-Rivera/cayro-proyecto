@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { EmployeesService } from './employees.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
-import { PasswordUpdate, UpdateEmployeeDto } from './dto/update-employee.dto';
+import { NewPassword, PasswordUpdate, UpdateEmployeeDto } from './dto/update-employee.dto';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { Role } from 'src/auth/roles/role.enum';
 
@@ -52,6 +52,15 @@ export class EmployeesController {
     @Body() updatePass: PasswordUpdate,
   ) {
     return this.employeesService.updatePassword(Number(id), updatePass);
+  }
+
+  @Auth([Role.EMPLOYEE, Role.ADMIN])
+  @Patch('update-password/:id')
+  async updatePassword(
+    @Param('id') id: number,
+    @Body() updatePass: NewPassword,
+  ) {
+    return this.employeesService.newPassword(Number(id), updatePass);
   }
 
   @Patch(':id')
