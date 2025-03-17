@@ -56,6 +56,12 @@ export default function ProductFilters({
   hasActiveFilters,
   clearAllFilters,
 }: ProductFiltersProps) {
+  const scrollToProducts = () => {
+    const productsSection = document.getElementById("products-grid");
+    if (productsSection) {
+      productsSection.scrollIntoView({ behavior: "smooth" });
+    }
+  };
   return (
     <motion.div
       initial={{ opacity: 0, x: -30 }}
@@ -94,7 +100,7 @@ export default function ProductFilters({
               }`}
               onClick={() => {
                 setActiveCategoryId(null);
-                window.scrollTo({ top: 0, behavior: "smooth" });
+                scrollToProducts();
               }}
             >
               Todas las Categorías
@@ -109,7 +115,7 @@ export default function ProductFilters({
                 }`}
                 onClick={() => {
                   setActiveCategoryId(category.id);
-                  window.scrollTo({ top: 0, behavior: "smooth" });
+                  scrollToProducts();
                 }}
               >
                 {category.name}
@@ -133,7 +139,7 @@ export default function ProductFilters({
               }`}
               onClick={() => {
                 setActiveBrandId(null);
-                window.scrollTo({ top: 0, behavior: "smooth" });
+                scrollToProducts();
               }}
             >
               Todas las Marcas
@@ -148,7 +154,7 @@ export default function ProductFilters({
                 }`}
                 onClick={() => {
                   setActiveBrandId(brand.id);
-                  window.scrollTo({ top: 0, behavior: "smooth" });
+                  scrollToProducts();
                 }}
               >
                 {brand.name}
@@ -172,7 +178,7 @@ export default function ProductFilters({
               } transition-all duration-200 hover:scale-110 flex items-center justify-center`}
               onClick={() => {
                 setActiveColorId(null);
-                window.scrollTo({ top: 0, behavior: "smooth" });
+                scrollToProducts();
               }}
               aria-label="Todos los colores"
             >
@@ -189,7 +195,7 @@ export default function ProductFilters({
                 style={{ backgroundColor: color.hexValue }}
                 onClick={() => {
                   setActiveColorId(color.id);
-                  window.scrollTo({ top: 0, behavior: "smooth" });
+                  scrollToProducts();
                 }}
                 aria-label={`Color: ${color.name}`}
               />
@@ -212,7 +218,7 @@ export default function ProductFilters({
               }`}
               onClick={() => {
                 setActiveSizeId(null);
-                window.scrollTo({ top: 0, behavior: "smooth" });
+                scrollToProducts();
               }}
             >
               Todas
@@ -227,7 +233,7 @@ export default function ProductFilters({
                 }`}
                 onClick={() => {
                   setActiveSizeId(size.id);
-                  window.scrollTo({ top: 0, behavior: "smooth" });
+                  scrollToProducts();
                 }}
               >
                 {size.name}
@@ -251,7 +257,7 @@ export default function ProductFilters({
               }`}
               onClick={() => {
                 setActiveGenderId(null);
-                window.scrollTo({ top: 0, behavior: "smooth" });
+                scrollToProducts();
               }}
             >
               Todos los Géneros
@@ -266,7 +272,7 @@ export default function ProductFilters({
                 }`}
                 onClick={() => {
                   setActiveGenderId(gender.id);
-                  window.scrollTo({ top: 0, behavior: "smooth" });
+                  scrollToProducts();
                 }}
               >
                 {gender.name}
@@ -290,7 +296,7 @@ export default function ProductFilters({
               }`}
               onClick={() => {
                 setActiveSort("default");
-                window.scrollTo({ top: 0, behavior: "smooth" });
+                scrollToProducts();
               }}
             >
               Predeterminado
@@ -303,7 +309,7 @@ export default function ProductFilters({
               }`}
               onClick={() => {
                 setActiveSort("price-low");
-                window.scrollTo({ top: 0, behavior: "smooth" });
+                scrollToProducts();
               }}
             >
               Precio: Menor a Mayor
@@ -316,7 +322,7 @@ export default function ProductFilters({
               }`}
               onClick={() => {
                 setActiveSort("price-high");
-                window.scrollTo({ top: 0, behavior: "smooth" });
+                scrollToProducts();
               }}
             >
               Precio: Mayor a Menor
@@ -329,7 +335,7 @@ export default function ProductFilters({
               }`}
               onClick={() => {
                 setActiveSort("newest");
-                window.scrollTo({ top: 0, behavior: "smooth" });
+                scrollToProducts();
               }}
             >
               Más Recientes

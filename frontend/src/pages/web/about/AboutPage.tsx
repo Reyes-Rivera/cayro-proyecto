@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   Leaf,
   Users,
@@ -9,18 +10,18 @@ import {
   Clock,
   Shield,
 } from "lucide-react";
-import imgInfo from "../Home/assets/hero.jpg";
 import mission from "./assets/mission.jpg";
 import vision from "./assets/vision.jpg";
 import about from "./assets/about.jpg";
-import { useEffect, useState } from "react";
 import { getCompanyInfoApi } from "@/api/company";
 import type { CompanyProfile } from "@/types/CompanyInfo";
-import Breadcrumbs from "@/components/web-components/Breadcrumbs";
 import { motion } from "framer-motion";
+import AboutHero from "./components/About-hero";
+import { NavLink } from "react-router-dom";
 
 export default function AboutPage() {
   const [info, setInfo] = useState<CompanyProfile>();
+
   useEffect(() => {
     const getInfo = async () => {
       const res = await getCompanyInfoApi();
@@ -32,42 +33,13 @@ export default function AboutPage() {
   }, []);
 
   return (
-    <div className="bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 pt-14">
-      {/* Hero Section */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.8 }}
-        className="relative h-[500px] flex items-center justify-center bg-cover bg-center bg-fixed"
-        style={{ backgroundImage: `url(${imgInfo})` }}
-      >
-        {/* Overlay con gradiente */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 to-black/40" />
-
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.2, ease: "easeOut" }}
-          className="relative z-10 text-center text-white max-w-5xl px-6"
-        >
-          <span className="inline-flex items-center justify-center rounded-full bg-blue-600/20 px-4 py-1.5 text-sm font-medium text-blue-100 backdrop-blur-sm mb-6">
-            CONÓCENOS
-          </span>
-          <h1 className="text-5xl md:text-6xl font-extrabold mb-6 tracking-tight">
-            ¿Quiénes Somos?
-          </h1>
-          <p className="text-lg text-blue-50 max-w-2xl mx-auto mb-8">
-            Descubre nuestra historia, valores y lo que nos hace únicos en la
-            industria textil
-          </p>
-          <div className="text-white [&_*]:!text-white flex justify-center">
-            <Breadcrumbs />
-          </div>
-        </motion.div>
-      </motion.div>
+    <div className="bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
+      {/* New Hero Section */}
+      <AboutHero />
 
       {/* About Section */}
       <motion.section
+        id="about-section"
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
@@ -144,7 +116,7 @@ export default function AboutPage() {
               <div className="absolute -top-4 -left-4 w-24 h-24 bg-blue-600/10 rounded-full z-0"></div>
               <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-blue-600/10 rounded-full z-0"></div>
               <img
-                src={about || "/placeholder.svg"}
+                src={about || "/placeholder.svg?height=600&width=600"}
                 alt="Quienes-somos"
                 className="rounded-lg shadow-2xl w-full relative z-10 transform transition-transform duration-500 hover:scale-105"
               />
@@ -172,7 +144,7 @@ export default function AboutPage() {
             <div className="relative">
               <div className="absolute inset-0 border-2 border-blue-600 rounded-lg transform translate-x-4 translate-y-4 z-0"></div>
               <img
-                src={mission || "/placeholder.svg"}
+                src={mission || "/placeholder.svg?height=600&width=600"}
                 alt="Misión"
                 className="rounded-lg shadow-xl w-full relative z-10 transform transition-all duration-500 hover:translate-x-2 hover:translate-y-2"
               />
@@ -285,7 +257,7 @@ export default function AboutPage() {
             <div className="relative">
               <div className="absolute inset-0 border-2 border-blue-600 rounded-lg transform -translate-x-4 -translate-y-4 z-0"></div>
               <img
-                src={vision || "/placeholder.svg"}
+                src={vision || "/placeholder.svg?height=600&width=600"}
                 alt="Visión"
                 className="rounded-lg shadow-xl w-full relative z-10 transform transition-all duration-500 hover:-translate-x-2 hover:-translate-y-2"
               />
@@ -413,13 +385,13 @@ export default function AboutPage() {
             Permítenos ayudarte a crear las prendas perfectas para tu empresa,
             equipo o evento especial.
           </p>
-          <a
-            href="/contacto"
-            className="inline-flex items-center px-8 py-3 bg-white text-blue-700 font-semibold rounded-lg shadow-lg hover:bg-blue-50 transition-colors duration-300"
+          <NavLink
+            to="/contacto"
+            className="group  w-48 sm:w-64 m-auto px-8 py-4 bg-transparent text-white font-bold rounded-full hover:bg-white/10 transition-all border-2 border-white flex items-center justify-center relative overflow-hidden"
           >
-            Contáctanos
-            <ChevronRight className="ml-2 w-5 h-5" />
-          </a>
+            <span className="relative z-10">Contáctanos</span>
+            <span className="absolute inset-0 bg-white/10 transform scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300"></span>
+          </NavLink>
         </div>
       </motion.section>
     </div>

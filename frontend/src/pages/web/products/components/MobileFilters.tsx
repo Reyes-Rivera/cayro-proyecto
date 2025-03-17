@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { useRef, useEffect } from "react";
 import type { Brand, Category, Color, Gender, Size } from "../utils/products";
-import { SortOption } from "../ProductsSection";
+import type { SortOption } from "../ProductsSection";
 
 interface MobileFiltersButtonProps {
   setMobileFiltersOpen: (open: boolean) => void;

@@ -8,9 +8,7 @@ import {
   ChevronRight,
   Minus,
   Plus,
-  Heart,
   Share2,
-  Star,
   Truck,
   RefreshCw,
   Shield,
@@ -62,7 +60,7 @@ interface ProductVariant {
 interface Color {
   id: number;
   name: string;
-  hexValue: string;
+  hexValue?: string;
 }
 
 interface Size {
@@ -101,9 +99,6 @@ export default function ProductDetail() {
   const [selectedSizeId, setSelectedSizeId] = useState<number | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [mainImage, setMainImage] = useState<string>("");
-  const [activeTab, setActiveTab] = useState<
-    "description" | "details" | "reviews"
-  >("description");
 
   // Fetch product data
   useEffect(() => {
@@ -215,8 +210,6 @@ export default function ProductDetail() {
     }
   };
 
-
-
   // Animation variants
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },
@@ -227,10 +220,10 @@ export default function ProductDetail() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-14 flex items-center justify-center">
         <div className="flex flex-col items-center">
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 rounded-full shadow-md mb-4">
+          <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 rounded-full shadow-lg mb-4">
             <Loader2 className="w-12 h-12 animate-spin" />
           </div>
-          <p className="text-gray-600 dark:text-gray-300 text-lg">
+          <p className="text-gray-600 dark:text-gray-300 text-lg font-medium">
             Cargando producto...
           </p>
         </div>
@@ -241,8 +234,10 @@ export default function ProductDetail() {
   if (error || !product) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-14 flex items-center justify-center p-4">
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 max-w-md w-full text-center">
-          <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-8 max-w-md w-full text-center">
+          <div className="bg-red-100 dark:bg-red-900/20 p-4 rounded-full inline-flex mb-4">
+            <AlertTriangle className="w-12 h-12 text-red-500" />
+          </div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
             Producto no encontrado
           </h2>
@@ -251,7 +246,7 @@ export default function ProductDetail() {
           </p>
           <Link
             to="/products"
-            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-lg hover:from-blue-700 hover:to-blue-800 shadow-md"
+            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-lg hover:from-blue-700 hover:to-blue-800 shadow-md transition-all duration-300"
           >
             Volver a productos
             <ChevronRight className="ml-2 w-5 h-5" />
@@ -265,6 +260,23 @@ export default function ProductDetail() {
   const availableSizes = getAvailableSizes();
   const selectedVariant = getSelectedVariant();
 
+  // Color map for colors without hexValue
+  const colorMap: Record<string, string> = {
+    Negro: "#000000",
+    Blanco: "#FFFFFF",
+    Azul: "#1E40AF",
+    "Azul cielo": "#7DD3FC",
+    "Azul marino": "#1E3A8A",
+    Rojo: "#DC2626",
+    Verde: "#10B981",
+    Amarillo: "#FBBF24",
+    Morado: "#8B5CF6",
+    Rosa: "#EC4899",
+    Naranja: "#F97316",
+    Gris: "#6B7280",
+    Marrón: "#92400E",
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-14">
       <div className="container mx-auto px-4 py-8">
@@ -273,54 +285,27 @@ export default function ProductDetail() {
           <Breadcrumbs />
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6 md:p-8">
-            {/* Product Images */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6 md:p-10">
+            {/* Product Images - Improved design */}
             <motion.div
               initial="hidden"
               animate="visible"
               variants={fadeIn}
-              className="space-y-4"
+              className="flex justify-center items-center"
             >
-              <div className="aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+              <div className="aspect-square w-full max-w-md rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all duration-300 bg-white dark:bg-gray-800">
                 <img
                   src={
                     mainImage ||
                     selectedVariant?.imageUrl ||
-                    "/placeholder.svg?height=600&width=600" ||
+                    "/placeholder.svg?height=400&width=400" ||
                     "/placeholder.svg" ||
                     "/placeholder.svg"
                   }
                   alt={product.name}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain p-4"
                 />
-              </div>
-
-              {/* Thumbnail gallery */}
-              <div className="flex space-x-2 overflow-x-auto pb-2">
-                {product.variants
-                  .filter((v) => v.colorId === selectedColorId)
-                  .map((variant) => (
-                    <button
-                      key={variant.id}
-                      onClick={() => setMainImage(variant.imageUrl)}
-                      className={`w-20 h-20 rounded-md overflow-hidden border-2 transition-all ${
-                        mainImage === variant.imageUrl
-                          ? "border-blue-500 shadow-md"
-                          : "border-gray-200 dark:border-gray-700"
-                      }`}
-                    >
-                      <img
-                        src={
-                          variant.imageUrl ||
-                          "/placeholder.svg?height=80&width=80" ||
-                          "/placeholder.svg"
-                        }
-                        alt={`${product.name} - ${variant.color.name}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </button>
-                  ))}
               </div>
             </motion.div>
 
@@ -332,7 +317,7 @@ export default function ProductDetail() {
               className="space-y-6"
             >
               <div>
-                <div className="flex items-center mb-2">
+                <div className="flex items-center mb-3">
                   <span className="text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 px-3 py-1 rounded-full">
                     {product.brand.name}
                   </span>
@@ -343,30 +328,23 @@ export default function ProductDetail() {
                     {product.category.name}
                   </span>
                 </div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-3 leading-tight">
                   {product.name}
                 </h1>
 
-                {/* Rating */}
-                <div className="flex items-center mb-4">
-                  <div className="flex">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className="w-5 h-5 text-yellow-400 fill-yellow-400"
-                      />
-                    ))}
-                  </div>
-                  <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                    (24 reseñas)
-                  </span>
+                {/* Description below product name */}
+                <div className="mb-4 text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
+                  {product.description}
                 </div>
 
                 {/* Price */}
-                <div className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                  ${selectedVariant ? selectedVariant.price.toFixed(2) : "N/A"}
+                <div className="flex items-center">
+                  <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
+                    $
+                    {selectedVariant ? selectedVariant.price.toFixed(2) : "N/A"}
+                  </span>
                   {selectedVariant && selectedVariant.stock < 5 && (
-                    <span className="ml-3 text-sm font-medium text-red-600 dark:text-red-400">
+                    <span className="ml-3 text-sm font-medium text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/20 px-3 py-1 rounded-full">
                       ¡Solo {selectedVariant.stock} en stock!
                     </span>
                   )}
@@ -374,7 +352,7 @@ export default function ProductDetail() {
               </div>
 
               {/* Color Selection */}
-              <div>
+              <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
                 <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3 flex items-center">
                   <Palette className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
                   Color:{" "}
@@ -386,23 +364,29 @@ export default function ProductDetail() {
                 </h3>
                 <div className="flex flex-wrap gap-3">
                   {uniqueColors.map((color) => (
-                    <button
+                    <motion.button
                       key={color.id}
                       onClick={() => handleColorSelect(color.id)}
-                      className={`w-10 h-10 rounded-full transition-all duration-200 hover:scale-110 ${
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      className={`w-10 h-10 rounded-full transition-all duration-200 ${
                         selectedColorId === color.id
-                          ? "ring-2 ring-offset-2 ring-blue-500"
-                          : ""
+                          ? "ring-2 ring-offset-2 ring-blue-500 shadow-md"
+                          : "hover:shadow-md"
                       }`}
-                      style={{ backgroundColor: color.hexValue }}
+                      style={{
+                        backgroundColor:
+                          color.hexValue || colorMap[color.name] || "#6B7280",
+                      }}
                       aria-label={`Color: ${color.name}`}
+                      title={color.name}
                     />
                   ))}
                 </div>
               </div>
 
               {/* Size Selection */}
-              <div>
+              <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
                 <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3 flex items-center">
                   <Ruler className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
                   Talla:{" "}
@@ -415,38 +399,43 @@ export default function ProductDetail() {
                 </h3>
                 <div className="grid grid-cols-5 gap-2">
                   {availableSizes.map((size) => (
-                    <button
+                    <motion.button
                       key={size.id}
                       onClick={() => setSelectedSizeId(size.id)}
-                      className={`py-2 rounded-md text-sm font-medium transition-all duration-200 hover:scale-105 ${
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className={`py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                         selectedSizeId === size.id
-                          ? "bg-blue-600 text-white"
+                          ? "bg-blue-600 text-white shadow-md"
                           : "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600"
                       }`}
                     >
                       {size.name}
-                    </button>
+                    </motion.button>
                   ))}
                 </div>
               </div>
 
               {/* Quantity */}
-              <div>
-                <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
+              <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+                <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3 flex items-center">
+                  <ShoppingCart className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
                   Cantidad
                 </h3>
                 <div className="flex items-center">
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
                     onClick={decreaseQuantity}
                     disabled={quantity <= 1}
-                    className={`p-2 rounded-l-md ${
+                    className={`p-2 rounded-l-lg ${
                       quantity <= 1
                         ? "bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500"
                         : "bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500"
                     }`}
                   >
                     <Minus className="w-4 h-4" />
-                  </button>
+                  </motion.button>
                   <input
                     type="number"
                     min="1"
@@ -462,290 +451,224 @@ export default function ProductDetail() {
                         setQuantity(val);
                       }
                     }}
-                    className="w-16 text-center py-2 border-y border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                    className="w-16 text-center py-2 border-y border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-lg font-medium"
                   />
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
                     onClick={increaseQuantity}
                     disabled={
                       !selectedVariant || quantity >= selectedVariant.stock
                     }
-                    className={`p-2 rounded-r-md ${
+                    className={`p-2 rounded-r-lg ${
                       !selectedVariant || quantity >= selectedVariant.stock
                         ? "bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500"
                         : "bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500"
                     }`}
                   >
                     <Plus className="w-4 h-4" />
-                  </button>
+                  </motion.button>
                 </div>
               </div>
 
               {/* Add to Cart Button */}
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
                 {product && selectedVariant ? (
-                  <AddToCartButton
-                    product={product}
-                    variant={selectedVariant}
-                    quantity={quantity}
-                    fullWidth={true}
-                  />
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex-1"
+                  >
+                    <AddToCartButton
+                      product={product}
+                      variant={selectedVariant}
+                      quantity={quantity}
+                      fullWidth={true}
+                    />
+                  </motion.div>
                 ) : (
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     disabled={true}
-                    className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                    className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-medium bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
                   >
                     <ShoppingCart className="w-5 h-5" />
                     Selecciona opciones
                   </motion.button>
                 )}
 
+              
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="flex items-center justify-center p-3 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                >
-                  <Heart className="w-5 h-5" />
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="flex items-center justify-center p-3 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="flex items-center justify-center p-3 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
                 >
                   <Share2 className="w-5 h-5" />
                 </motion.button>
               </div>
-
-              {/* Product Features */}
-              <div className="border-t border-gray-200 dark:border-gray-700 pt-6 space-y-4">
-                <div className="flex items-start">
-                  <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-full mr-3">
-                    <Truck className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-900 dark:text-white">
-                      Envío gratuito
-                    </h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      En pedidos superiores a $50
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-full mr-3">
-                    <RefreshCw className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-900 dark:text-white">
-                      Devoluciones sencillas
-                    </h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      30 días para devoluciones
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-full mr-3">
-                    <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-900 dark:text-white">
-                      Garantía de calidad
-                    </h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Productos de alta calidad garantizados
-                    </p>
-                  </div>
-                </div>
-              </div>
             </motion.div>
           </div>
-
-          {/* Product Details Tabs */}
+          {/* Product Features */}
+          <div className="border-t flex justify-between items-center border-gray-200 dark:border-gray-700 p-10">
+            <div className="flex items-start">
+              <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-full mr-3">
+                <Truck className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <h4 className="font-medium text-gray-900 dark:text-white">
+                  Envío gratuito
+                </h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  En pedidos superiores a $50
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start">
+              <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-full mr-3">
+                <RefreshCw className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <h4 className="font-medium text-gray-900 dark:text-white">
+                  Devoluciones sencillas
+                </h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  30 días para devoluciones
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start">
+              <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-full mr-3">
+                <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <h4 className="font-medium text-gray-900 dark:text-white">
+                  Garantía de calidad
+                </h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Productos de alta calidad garantizados
+                </p>
+              </div>
+            </div>
+          </div>
+          {/* Product Details Tabs - Only details tab now */}
           <div className="border-t border-gray-200 dark:border-gray-700">
-            <div className="flex border-b border-gray-200 dark:border-gray-700">
-              <button
-                onClick={() => setActiveTab("description")}
-                className={`px-6 py-3 text-sm font-medium ${
-                  activeTab === "description"
-                    ? "border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400"
-                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-                }`}
-              >
-                Descripción
-              </button>
-              <button
-                onClick={() => setActiveTab("details")}
-                className={`px-6 py-3 text-sm font-medium ${
-                  activeTab === "details"
-                    ? "border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400"
-                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-                }`}
-              >
-                Detalles
-              </button>
-              <button
-                onClick={() => setActiveTab("reviews")}
-                className={`px-6 py-3 text-sm font-medium ${
-                  activeTab === "reviews"
-                    ? "border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400"
-                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-                }`}
-              >
-                Reseñas
-              </button>
+            <div className="px-6 md:px-10 py-3 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Detalles del producto
+              </h3>
             </div>
 
             <div className="p-6 md:p-8">
               <AnimatePresence mode="wait">
-                {activeTab === "description" && (
-                  <motion.div
-                    key="description"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.3 }}
-                    className="prose prose-lg max-w-none dark:prose-invert"
-                  >
-                    <div className="text-gray-700 dark:text-gray-300 whitespace-pre-line">
-                      {product.description}
-                    </div>
-                  </motion.div>
-                )}
-
-                {activeTab === "details" && (
-                  <motion.div
-                    key="details"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-4">
-                        <div className="flex items-center">
-                          <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-full mr-3">
-                            <Tag className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                          </div>
-                          <div>
-                            <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                              Marca
-                            </h4>
-                            <p className="text-gray-900 dark:text-white">
-                              {product.brand.name}
-                            </p>
-                          </div>
+                <motion.div
+                  key="details"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+                        <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full mr-4">
+                          <Tag className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                         </div>
-                        <div className="flex items-center">
-                          <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-full mr-3">
-                            <Shirt className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                          </div>
-                          <div>
-                            <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                              Categoría
-                            </h4>
-                            <p className="text-gray-900 dark:text-white">
-                              {product.category.name}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center">
-                          <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-full mr-3">
-                            <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                          </div>
-                          <div>
-                            <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                              Género
-                            </h4>
-                            <p className="text-gray-900 dark:text-white">
-                              {product.gender.name}
-                            </p>
-                          </div>
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                            Marca
+                          </h4>
+                          <p className="text-gray-900 dark:text-white font-medium">
+                            {product.brand.name}
+                          </p>
                         </div>
                       </div>
-                      <div className="space-y-4">
-                        <div className="flex items-center">
-                          <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-full mr-3">
-                            <Palette className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                          </div>
-                          <div>
-                            <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                              Colores disponibles
-                            </h4>
-                            <div className="flex gap-1 mt-1">
-                              {uniqueColors.map((color) => (
-                                <div
-                                  key={color.id}
-                                  className="w-5 h-5 rounded-full"
-                                  style={{ backgroundColor: color.hexValue }}
-                                  title={color.name}
-                                />
-                              ))}
-                            </div>
-                          </div>
+                      <div className="flex items-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+                        <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full mr-4">
+                          <Shirt className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                         </div>
-                        <div className="flex items-center">
-                          <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-full mr-3">
-                            <Ruler className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                          </div>
-                          <div>
-                            <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                              Tallas disponibles
-                            </h4>
-                            <p className="text-gray-900 dark:text-white">
-                              {[
-                                ...new Set(
-                                  product.variants.map((v) => v.size.name)
-                                ),
-                              ].join(", ")}
-                            </p>
-                          </div>
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                            Categoría
+                          </h4>
+                          <p className="text-gray-900 dark:text-white font-medium">
+                            {product.category.name}
+                          </p>
                         </div>
-                        <div className="flex items-center">
-                          <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-full mr-3">
-                            <RefreshCw className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                          </div>
-                          <div>
-                            <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                              Última actualización
-                            </h4>
-                            <p className="text-gray-900 dark:text-white">
-                              {new Date(product.updatedAt).toLocaleDateString()}
-                            </p>
-                          </div>
+                      </div>
+                      <div className="flex items-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+                        <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full mr-4">
+                          <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                            Género
+                          </h4>
+                          <p className="text-gray-900 dark:text-white font-medium">
+                            {product.gender.name}
+                          </p>
                         </div>
                       </div>
                     </div>
-                  </motion.div>
-                )}
-
-                {activeTab === "reviews" && (
-                  <motion.div
-                    key="reviews"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.3 }}
-                    className="space-y-6"
-                  >
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                        Reseñas de clientes
-                      </h3>
-                      <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium">
-                        Escribir una reseña
-                      </button>
+                    <div className="space-y-4">
+                      <div className="flex items-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+                        <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full mr-4">
+                          <Palette className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                            Colores disponibles
+                          </h4>
+                          <div className="flex gap-2 mt-2">
+                            {uniqueColors.map((color) => (
+                              <div
+                                key={color.id}
+                                className="w-6 h-6 rounded-full border border-gray-200 dark:border-gray-600"
+                                style={{
+                                  backgroundColor:
+                                    color.hexValue ||
+                                    colorMap[color.name] ||
+                                    "#6B7280",
+                                }}
+                                title={color.name}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+                        <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full mr-4">
+                          <Ruler className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                            Tallas disponibles
+                          </h4>
+                          <p className="text-gray-900 dark:text-white font-medium">
+                            {[
+                              ...new Set(
+                                product.variants.map((v) => v.size.name)
+                              ),
+                            ].join(", ")}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+                        <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full mr-4">
+                          <RefreshCw className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                            Última actualización
+                          </h4>
+                          <p className="text-gray-900 dark:text-white font-medium">
+                            {new Date(product.updatedAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
                     </div>
-
-                    <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-lg text-center">
-                      <p className="text-gray-700 dark:text-gray-300 mb-4">
-                        Aún no hay reseñas para este producto. ¡Sé el primero en
-                        compartir tu opinión!
-                      </p>
-                    </div>
-                  </motion.div>
-                )}
+                  </div>
+                </motion.div>
               </AnimatePresence>
             </div>
           </div>

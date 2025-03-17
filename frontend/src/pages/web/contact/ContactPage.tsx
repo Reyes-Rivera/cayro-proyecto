@@ -19,16 +19,17 @@ import {
   FileText,
   Clock,
   CheckCircle,
+  ChevronDown,
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import type { CompanyProfile } from "@/types/CompanyInfo";
 import { getCompanyInfoApi } from "@/api/company";
-import Breadcrumbs from "@/components/web-components/Breadcrumbs";
 import backgroundImage from "../Home/assets/hero.jpg";
 
 export default function ContactPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -38,6 +39,24 @@ export default function ContactPage() {
     subject: "",
     message: "",
   });
+
+  // Handle parallax effect on scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Smooth scroll function
+  const scrollToContent = () => {
+    const contactSection = document.getElementById("contact-cards");
+    if (contactSection) {
+      contactSection.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -123,24 +142,27 @@ export default function ContactPage() {
   ]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 pt-14">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 relative z-0">
       {/* Hero Section */}
-      <motion.div
-        ref={heroRef}
-        initial="hidden"
-        animate={heroControls}
-        variants={{
-          hidden: { opacity: 0 },
-          visible: { opacity: 1, transition: { duration: 0.8 } },
-        }}
-        style={{
-          backgroundImage: `url(${backgroundImage})`,
-          backgroundPosition: "center 30%",
-        }}
-        className="relative py-20 h-[500px] bg-cover bg-no-repeat bg-fixed"
-      >
-        {/* Overlay con gradiente */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 to-black/40" />
+      <div className="relative overflow-hidden h-screen flex flex-col justify-center">
+        {/* Background with parallax effect */}
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: `url(${backgroundImage})`,
+            transform: `translateY(${scrollY * 0.2}px)`,
+            filter: "brightness(0.85)",
+          }}
+        />
+
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/70" />
+
+        {/* Decorative elements */}
+        <div className="absolute inset-0">
+          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_20%,rgba(30,30,30,0.2)_0%,rgba(0,0,0,0)_50%)]" />
+          <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_70%_80%,rgba(30,30,30,0.2)_0%,rgba(0,0,0,0)_50%)]" />
+        </div>
 
         {/* Animated particles */}
         <div className="absolute inset-0 overflow-hidden">
@@ -166,50 +188,148 @@ export default function ContactPage() {
           ))}
         </div>
 
+        {/* Content */}
+        <div className="relative max-w-7xl mx-auto px-4 flex flex-col justify-center flex-grow">
+          <div className="grid md:grid-cols-1 gap-8 items-center text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.2, ease: "easeOut" }}
+              className="text-white space-y-6"
+            >
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="inline-flex items-center justify-center rounded-full bg-blue-600/30 backdrop-blur-sm border border-blue-500/20 px-4 py-1.5 text-sm font-medium text-blue-100"
+              >
+                ESTAMOS AQUÍ PARA AYUDARTE
+              </motion.div>
+
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+                className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight"
+              >
+                <span className="block">Nos encantaría</span>
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-200 to-white">
+                  hablar contigo
+                </span>
+              </motion.h1>
+
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                className="text-lg text-gray-300 max-w-2xl mx-auto"
+              >
+                Estamos listos para convertir tus ideas en prendas excepcionales
+                que representen tu visión. Cuéntanos sobre tu proyecto y
+                hagámoslo realidad juntos.
+              </motion.p>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.5 }}
+                className="flex flex-col sm:flex-row gap-4 pt-4 justify-center"
+              >
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="group px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-full hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg flex items-center justify-center overflow-hidden relative"
+                  onClick={scrollToContent}
+                >
+                  <span className="relative z-10 flex items-center">
+                    Contáctanos ahora
+                  </span>
+                  <span className="absolute inset-0 bg-gradient-to-r from-blue-700 to-blue-800 transform scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300"></span>
+                </motion.button>
+
+                <motion.a
+                  href={`tel:${info?.contactInfo[0]?.phone || "+521234567890"}`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="group px-8 py-4 bg-white/10 backdrop-blur-md text-white font-bold rounded-full hover:bg-white/20 transition-all border border-white/30 flex items-center justify-center overflow-hidden relative"
+                >
+                  <span className="relative z-10 flex items-center">
+                    <Phone className="mr-2 h-5 w-5" />
+                    Llamar ahora
+                  </span>
+                  <span className="absolute inset-0 bg-white/10 transform scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300"></span>
+                </motion.a>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.7 }}
+                className="flex flex-wrap gap-4 pt-4 justify-center"
+              >
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20"
+                >
+                  <Mail className="w-5 h-5 text-blue-300" />
+                  <span className="text-sm">
+                    {info?.contactInfo[0]?.email || "contacto@empresa.com"}
+                  </span>
+                </motion.div>
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20"
+                >
+                  <MapPin className="w-5 h-5 text-red-400" />
+                  <span className="text-sm">Visítanos</span>
+                </motion.div>
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20"
+                >
+                  <Clock className="w-5 h-5 text-green-400" />
+                  <span className="text-sm">Lun-Vie: 9am - 6pm</span>
+                </motion.div>
+              </motion.div>
+            </motion.div>
+          </div>
+        </div>
+
+        {/* Enhanced scroll indicator */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: "easeOut" }}
-          className="relative container mx-auto px-6 flex flex-col items-center justify-center h-full text-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1, duration: 1 }}
+          className="absolute bottom-10 left-1/2 transform -translate-x-1/2 cursor-pointer"
+          onClick={scrollToContent}
         >
-          <motion.span
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="inline-flex items-center justify-center rounded-full bg-blue-600/30 backdrop-blur-sm px-4 py-1.5 text-sm font-medium text-blue-100 mb-6 border border-blue-500/20"
-          >
-            ESTAMOS AQUÍ PARA AYUDARTE
-          </motion.span>
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.3 }}
-            className="text-5xl md:text-6xl font-extrabold text-white tracking-tight mb-6 max-w-4xl"
-          >
-            Nos encantaría hablar contigo
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.4 }}
-            className="text-lg text-blue-50 max-w-2xl mb-8"
-          >
-            Estamos listos para convertir tus ideas en prendas excepcionales que
-            representen tu visión
-          </motion.p>
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.5 }}
-            className="text-white [&_*]:!text-white flex justify-center"
+            animate={{ y: [0, 10, 0] }}
+            transition={{
+              duration: 2,
+              repeat: Number.POSITIVE_INFINITY,
+              repeatType: "loop",
+            }}
+            className="flex flex-col items-center gap-2"
           >
-            <Breadcrumbs />
+            <p className="text-white/80 text-sm font-medium">Descubre más</p>
+            <div className="flex flex-col items-center gap-1">
+              <div className="w-1 h-6 rounded-full bg-gradient-to-b from-white/80 to-white/0" />
+              <motion.div
+                animate={{ opacity: [0.4, 1, 0.4] }}
+                transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
+                className="w-6 h-6 rounded-full flex items-center justify-center bg-white/10 backdrop-blur-sm"
+              >
+                <ChevronDown className="w-4 h-4 text-white" />
+              </motion.div>
+            </div>
           </motion.div>
         </motion.div>
-      </motion.div>
+      </div>
 
       {/* Contact Info Cards */}
       <motion.div
+        id="contact-cards"
         ref={cardsRef}
         initial="hidden"
         animate={cardsControls}
@@ -217,7 +337,7 @@ export default function ContactPage() {
           hidden: { opacity: 0 },
           visible: { opacity: 1, transition: { staggerChildren: 0.2 } },
         }}
-        className="container mx-auto px-6 -mt-16 relative z-10"
+        className="container mx-auto px-6 pt-20 relative z-10"
       >
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-20">
           <motion.div
@@ -238,7 +358,7 @@ export default function ContactPage() {
                 Llámanos
               </h3>
               <p className="text-gray-600 dark:text-gray-300 text-center font-medium">
-                {info?.contactInfo[0].phone || "+52 123 456 7890"}
+                {info?.contactInfo[0]?.phone || "+52 123 456 7890"}
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 flex items-center">
                 <Clock className="w-4 h-4 mr-1 inline" />
@@ -269,7 +389,7 @@ export default function ContactPage() {
                 Escríbenos
               </h3>
               <p className="text-gray-600 dark:text-gray-300 text-center font-medium">
-                {info?.contactInfo[0].email || "contacto@empresa.com"}
+                {info?.contactInfo[0]?.email || "contacto@empresa.com"}
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 flex items-center">
                 <CheckCircle className="w-4 h-4 mr-1 inline" />
@@ -300,7 +420,8 @@ export default function ContactPage() {
                 Visítanos
               </h3>
               <p className="text-gray-600 dark:text-gray-300 text-center font-medium">
-                {info?.contactInfo[0].address || "Calle Principal #123, Ciudad"}
+                {info?.contactInfo[0]?.address ||
+                  "Calle Principal #123, Ciudad"}
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 flex items-center">
                 <Clock className="w-4 h-4 mr-1 inline" />
@@ -401,7 +522,7 @@ export default function ContactPage() {
                       <Phone className="h-5 w-5" />
                     </div>
                     <span className="group-hover:translate-x-1 transition-transform duration-300">
-                      {info?.contactInfo[0].phone || "+52 123 456 7890"}
+                      {info?.contactInfo[0]?.phone || "+52 123 456 7890"}
                     </span>
                   </motion.div>
 
@@ -415,7 +536,7 @@ export default function ContactPage() {
                       <Mail className="h-5 w-5" />
                     </div>
                     <span className="group-hover:translate-x-1 transition-transform duration-300">
-                      {info?.contactInfo[0].email || "contacto@empresa.com"}
+                      {info?.contactInfo[0]?.email || "contacto@empresa.com"}
                     </span>
                   </motion.div>
 
@@ -429,7 +550,7 @@ export default function ContactPage() {
                       <MapPin className="h-5 w-5" />
                     </div>
                     <span className="group-hover:translate-x-1 transition-transform duration-300">
-                      {info?.contactInfo[0].address ||
+                      {info?.contactInfo[0]?.address ||
                         "Calle Principal #123, Ciudad"}
                     </span>
                   </motion.div>
@@ -799,7 +920,7 @@ export default function ContactPage() {
               </a>
 
               <a
-                href={`tel:${info?.contactInfo[0].phone || "+521234567890"}`}
+                href={`tel:${info?.contactInfo[0]?.phone || "+521234567890"}`}
                 className="px-6 py-3 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white rounded-full font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-all flex items-center gap-2"
               >
                 <Phone className="w-5 h-5" />

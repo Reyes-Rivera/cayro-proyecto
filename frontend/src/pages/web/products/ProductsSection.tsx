@@ -193,6 +193,31 @@ export default function ProductsPage() {
     searchTerm,
   ]);
 
+  // Add this useEffect to read URL parameters when the component mounts
+  // Place it after the other useEffect hooks in the ProductsPage component
+  useEffect(() => {
+    // Read URL parameters
+    const params = new URLSearchParams(window.location.search);
+    const categoryParam = params.get("categoria");
+
+    // If a category parameter exists, find the matching category and set it as active
+    if (categoryParam && categories.length > 0) {
+      const matchedCategory = categories.find(
+        (category) =>
+          category.name.toLowerCase() === categoryParam.toLowerCase()
+      );
+
+      if (matchedCategory) {
+        setActiveCategoryId(matchedCategory.id);
+        // Scroll to products section
+        const productsSection = document.getElementById("products-grid");
+        if (productsSection) {
+          productsSection.scrollIntoView({ behavior: "smooth" });
+        }
+      }
+    }
+  }, [categories]); // Only run when categories are loaded
+
   // Function to clear all filters
   const clearAllFilters = () => {
     setActiveCategoryId(null);
@@ -202,19 +227,30 @@ export default function ProductsPage() {
     setActiveBrandId(null);
     setActiveSort("default");
     setSearchTerm("");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    // Limpiar los parámetros de URL
+    window.history.pushState({}, "", window.location.pathname);
+
+    const productsSection = document.getElementById("products-grid");
+    if (productsSection) {
+      productsSection.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  // Handler para cambiar la categoría
+  const handleCategoryChange = (categoryId: number | null) => {
+    setActiveCategoryId(categoryId);
   };
 
   // Check if there are active filters
   const hasActiveFilters =
-      activeCategoryId !== null ||
-      activeGenderId !== null ||
-      activeColorId !== null ||
-      activeSizeId !== null ||
-      activeBrandId !== null ||
-      !!searchTerm || // Ensure searchTerm is coerced to a boolean
-      activeSort !== "default";
-
+    activeCategoryId !== null ||
+    activeGenderId !== null ||
+    activeColorId !== null ||
+    activeSizeId !== null ||
+    activeBrandId !== null ||
+    !!searchTerm || // Ensure searchTerm is coerced to a boolean
+    activeSort !== "default";
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-14 md:pt-0">
@@ -262,7 +298,7 @@ export default function ProductsPage() {
             sizes={sizes}
             genders={genders}
             activeCategoryId={activeCategoryId}
-            setActiveCategoryId={setActiveCategoryId}
+            setActiveCategoryId={handleCategoryChange} // Usar la nueva función
             activeBrandId={activeBrandId}
             setActiveBrandId={setActiveBrandId}
             activeColorId={activeColorId}

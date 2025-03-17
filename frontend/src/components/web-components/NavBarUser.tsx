@@ -9,14 +9,23 @@ import {
   ShoppingCart,
   ChevronDown,
   ShoppingBag,
-  Shirt,
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { NavLink, Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContextType";
 import { getCompanyInfoApi } from "@/api/company";
+import { getCategories } from "@/api/products"; // Import the categories API
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/context/CartConrexr";
+
+// Define a type for category
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  icon: string;
+}
 
 const NavBarUser = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -27,6 +36,21 @@ const NavBarUser = () => {
   const [menuNeedsScroll, setMenuNeedsScroll] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { itemCount } = useCart();
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  // Effect to fetch categories from API
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await getCategories();
+        setCategories(response.data);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   // Effect to check if menu content exceeds viewport height
   useEffect(() => {
@@ -111,6 +135,39 @@ const NavBarUser = () => {
     return name ? name.charAt(0).toUpperCase() : "";
   };
 
+  // Function to get icon color based on category index
+  const getCategoryColor = (index: number) => {
+    const colors = [
+      {
+        bg: "bg-blue-100 dark:bg-blue-900/30",
+        text: "text-blue-600 dark:text-blue-400",
+      },
+      {
+        bg: "bg-green-100 dark:bg-green-900/30",
+        text: "text-green-600 dark:text-green-400",
+      },
+      {
+        bg: "bg-amber-100 dark:bg-amber-900/30",
+        text: "text-amber-600 dark:text-amber-400",
+      },
+      {
+        bg: "bg-purple-100 dark:bg-purple-900/30",
+        text: "text-purple-600 dark:text-purple-400",
+      },
+      {
+        bg: "bg-rose-100 dark:bg-rose-900/30",
+        text: "text-rose-600 dark:text-rose-400",
+      },
+    ];
+
+    return colors[index % colors.length];
+  };
+
+  const getCategoryIcon = () => {
+    // Default to ShoppingBag if no icon specified or not found
+    return <ShoppingBag className="w-4 h-4" />;
+  };
+
   return (
     <>
       {/* Spacer div to prevent content from being hidden under the navbar */}
@@ -161,7 +218,7 @@ const NavBarUser = () => {
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 dark:bg-blue-400 transition-all duration-200 group-hover:w-full"></span>
               </NavLink>
 
-              {/* Reemplazar el menú desplegable de Productos en la sección de navegación de escritorio con: */}
+              {/* Menú desplegable de Productos con categorías dinámicas */}
               <div className="relative group">
                 <button className="text-base font-medium text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200 flex items-center gap-1 group">
                   Productos
@@ -196,37 +253,31 @@ const NavBarUser = () => {
                         </div>
                       </Link>
 
-                      <Link
-                        to="/productos?categoria=uniformes-escolares"
-                        className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors mt-1"
-                      >
-                        <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                          <Shirt className="w-4 h-4 text-green-600 dark:text-green-400" />
-                        </div>
-                        <div>
-                          <span className="font-medium">
-                            Uniformes Escolares
-                          </span>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            Para todos los niveles
-                          </p>
-                        </div>
-                      </Link>
-
-                      <Link
-                        to="/productos?categoria=deportivos"
-                        className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors mt-1"
-                      >
-                        <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                          <ShoppingBag className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                        </div>
-                        <div>
-                          <span className="font-medium">Deportivos</span>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            Ropa y accesorios deportivos
-                          </p>
-                        </div>
-                      </Link>
+                      {categories.map((category, index) => (
+                        <Link
+                          key={category.id}
+                          to={`/productos?categoria=${encodeURIComponent(
+                            category.name
+                          )}`}
+                          className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors mt-1"
+                        >
+                          <div
+                            className={`w-8 h-8 rounded-full ${
+                              getCategoryColor(index).bg
+                            } flex items-center justify-center`}
+                          >
+                            <span className={getCategoryColor(index).text}>
+                              {getCategoryIcon()}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="font-medium">{category.name}</span>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {category.description}
+                            </p>
+                          </div>
+                        </Link>
+                      ))}
                     </div>
                   </div>
                 </motion.div>
@@ -409,20 +460,20 @@ const NavBarUser = () => {
                         >
                           Todos los productos
                         </Link>
-                        <Link
-                          to="/productos?categoria=uniformes-escolares"
-                          onClick={closeMenu}
-                          className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-                        >
-                          Uniformes Escolares
-                        </Link>
-                        <Link
-                          to="/productos?categoria=deportivos"
-                          onClick={closeMenu}
-                          className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-                        >
-                          Deportivos
-                        </Link>
+
+                        {/* Categorías dinámicas en el menú móvil */}
+                        {categories.map((category) => (
+                          <Link
+                            key={category.id}
+                            to={`/productos?categoria=${encodeURIComponent(
+                              category.name
+                            )}`}
+                            onClick={closeMenu}
+                            className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                          >
+                            {category.name}
+                          </Link>
+                        ))}
                       </div>
                     </div>
 
