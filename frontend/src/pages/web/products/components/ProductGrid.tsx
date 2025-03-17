@@ -12,7 +12,6 @@ interface ProductGridProps {
   noProductsFound: boolean;
   clearAllFilters: () => void;
 }
-
 export default function ProductGrid({
   products,
   hoveredProduct,
@@ -30,12 +29,10 @@ export default function ProductGrid({
       },
     },
   };
-
   // Check if products have variants
   const validProducts = products.filter(
     (product) => product.variants && product.variants.length > 0
   );
-
   // If there are products but none have variants, show a message
   if (products.length > 0 && validProducts.length === 0) {
     return (

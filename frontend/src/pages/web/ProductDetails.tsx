@@ -1,3 +1,4 @@
+/* eslint-disable no-constant-binary-expression */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -7,7 +8,6 @@ import {
   ChevronRight,
   Minus,
   Plus,
-  ShoppingCart,
   Heart,
   Share2,
   Star,
@@ -21,9 +21,11 @@ import {
   Loader2,
   AlertTriangle,
   Users,
+  ShoppingCart,
 } from "lucide-react";
 import Breadcrumbs from "@/components/web-components/Breadcrumbs";
 import { getProductById } from "@/api/products";
+import AddToCartButton from "../web/cart/components/add-to-cart-button";
 
 // Interfaces based on the database schema
 interface Product {
@@ -87,7 +89,6 @@ interface Sleeve {
   id: number;
   name: string;
 }
-
 
 export default function ProductDetail() {
   const params = useParams<{ id: string }>();
@@ -214,6 +215,8 @@ export default function ProductDetail() {
     }
   };
 
+
+
   // Animation variants
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },
@@ -284,7 +287,9 @@ export default function ProductDetail() {
                   src={
                     mainImage ||
                     selectedVariant?.imageUrl ||
-                    "/placeholder.svg?height=600&width=600"
+                    "/placeholder.svg?height=600&width=600" ||
+                    "/placeholder.svg" ||
+                    "/placeholder.svg"
                   }
                   alt={product.name}
                   className="w-full h-full object-cover"
@@ -308,7 +313,8 @@ export default function ProductDetail() {
                       <img
                         src={
                           variant.imageUrl ||
-                          "/placeholder.svg?height=80&width=80"
+                          "/placeholder.svg?height=80&width=80" ||
+                          "/placeholder.svg"
                         }
                         alt={`${product.name} - ${variant.color.name}`}
                         className="w-full h-full object-cover"
@@ -476,21 +482,25 @@ export default function ProductDetail() {
 
               {/* Add to Cart Button */}
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  disabled={!selectedVariant || selectedVariant.stock === 0}
-                  className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium ${
-                    !selectedVariant || selectedVariant.stock === 0
-                      ? "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
-                      : "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 shadow-md"
-                  }`}
-                >
-                  <ShoppingCart className="w-5 h-5" />
-                  {!selectedVariant || selectedVariant.stock === 0
-                    ? "Agotado"
-                    : "Añadir al carrito"}
-                </motion.button>
+                {product && selectedVariant ? (
+                  <AddToCartButton
+                    product={product}
+                    variant={selectedVariant}
+                    quantity={quantity}
+                    fullWidth={true}
+                  />
+                ) : (
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    disabled={true}
+                    className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                  >
+                    <ShoppingCart className="w-5 h-5" />
+                    Selecciona opciones
+                  </motion.button>
+                )}
+
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -738,46 +748,6 @@ export default function ProductDetail() {
                 )}
               </AnimatePresence>
             </div>
-          </div>
-        </div>
-
-        {/* Related Products Section */}
-        <div className="mt-16">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-            Productos relacionados
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {/* This would be populated with actual related products */}
-            {[1, 2, 3, 4].map((i) => (
-              <div
-                key={i}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
-              >
-                <div className="aspect-[3/4] relative">
-                  <img
-                    src={`/placeholder.svg?height=400&width=300&text=Producto+${i}`}
-                    alt={`Producto relacionado ${i}`}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="p-4">
-                  <h3 className="font-medium text-gray-900 dark:text-white">
-                    Producto relacionado {i}
-                  </h3>
-                  <div className="flex items-center mt-1 mb-2">
-                    {[...Array(5)].map((_, j) => (
-                      <Star
-                        key={j}
-                        className="w-3 h-3 text-yellow-400 fill-yellow-400"
-                      />
-                    ))}
-                  </div>
-                  <p className="font-bold text-blue-600 dark:text-blue-400">
-                    $19.99
-                  </p>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </div>

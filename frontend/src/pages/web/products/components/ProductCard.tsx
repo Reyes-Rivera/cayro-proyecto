@@ -1,9 +1,12 @@
 "use client";
 
+import type React from "react";
+
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ShoppingCart, Heart, Eye } from "lucide-react";
-import type { Product, Color } from "../utils/products";
+import type { Product } from "../utils/products";
+import { useCart } from "@/context/CartConrexr";
 
 interface ProductCardProps {
   product: Product;
@@ -18,37 +21,25 @@ export default function ProductCard({
   onHover,
   onLeave,
 }: ProductCardProps) {
+  const { addItem } = useCart();
   // Get unique colors for a product
   const getUniqueColors = (product: Product) => {
-    const uniqueColorIds = [...new Set(product.variants.map((v) => v.colorId))];
-    return uniqueColorIds
-      .map((id) => {
-        const variant = product.variants.find((v) => v.colorId === id);
-        if (variant && variant.color) {
-          // Asignar un valor hexadecimal si no existe
-          const colorMap: Record<string, string> = {
-            Negro: "#000000",
-            Blanco: "#FFFFFF",
-            Azul: "#1E40AF",
-            Rojo: "#DC2626",
-            Verde: "#10B981",
-            Amarillo: "#FBBF24",
-            Morado: "#8B5CF6",
-            Rosa: "#EC4899",
-            Naranja: "#F97316",
-            Gris: "#6B7280",
-            Marrón: "#92400E",
-          };
+    const uniqueColors: Record<
+      number,
+      { id: number; name: string; hexValue: string }
+    > = {};
 
-          return {
-            id: variant.color.id,
-            name: variant.color.name,
-            hexValue: colorMap[variant.color.name] || "#6B7280", // Gris por defecto
-          };
-        }
-        return null;
-      })
-      .filter(Boolean) as Color[];
+    product.variants.forEach((variant) => {
+      if (variant.color && !uniqueColors[variant.color.id]) {
+        uniqueColors[variant.color.id] = {
+          id: variant.color.id,
+          name: variant.color.name,
+          hexValue: variant.color.hexValue || "#6B7280", // Usar el hexValue del backend, o gris por defecto
+        };
+      }
+    });
+
+    return Object.values(uniqueColors);
   };
 
   const lowestPriceVariant = product.variants.reduce((prev, current) =>
@@ -56,6 +47,16 @@ export default function ProductCard({
   );
 
   const uniqueColors = getUniqueColors(product);
+
+  // Handle add to cart
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (lowestPriceVariant.stock > 0) {
+      addItem(product, lowestPriceVariant, 1);
+    }
+  };
 
   // Animation variants
   const itemVariants = {
@@ -78,8 +79,10 @@ export default function ProductCard({
         <div className="relative overflow-hidden aspect-[3/4]">
           <img
             src={
+              // eslint-disable-next-line no-constant-binary-expression
               lowestPriceVariant.imageUrl ||
-              "/placeholder.svg?height=400&width=300"
+              "/placeholder.svg?height=400&width=300" ||
+              "/placeholder.svg"
             }
             alt={product.name}
             width={300}
@@ -98,6 +101,8 @@ export default function ProductCard({
                 }}
                 whileTap={{ scale: 0.95 }}
                 className="p-2.5 bg-white/90 backdrop-blur-sm text-gray-700 rounded-full shadow-lg transition-all duration-200"
+                onClick={handleAddToCart}
+                disabled={lowestPriceVariant.stock <= 0}
               >
                 <ShoppingCart className="h-5 w-5" />
               </motion.button>

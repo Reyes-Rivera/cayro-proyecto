@@ -16,6 +16,7 @@ import { NavLink, Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContextType";
 import { getCompanyInfoApi } from "@/api/company";
 import { motion, AnimatePresence } from "framer-motion";
+import { useCart } from "@/context/CartConrexr";
 
 const NavBarUser = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -25,6 +26,7 @@ const NavBarUser = () => {
   const [scrolled, setScrolled] = useState(false);
   const [menuNeedsScroll, setMenuNeedsScroll] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const { itemCount } = useCart();
 
   // Effect to check if menu content exceeds viewport height
   useEffect(() => {
@@ -250,7 +252,7 @@ const NavBarUser = () => {
               <Link to="/carrito" className="relative group">
                 <ShoppingCart className="h-6 w-6 text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200" />
                 <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                  0
+                  {itemCount}
                 </span>
                 <span className="sr-only">Carrito de compras</span>
               </Link>
@@ -305,7 +307,7 @@ const NavBarUser = () => {
               <Link to="/carrito" className="relative mr-4">
                 <ShoppingCart className="h-6 w-6 text-gray-800 dark:text-gray-200" />
                 <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                  0
+                  {itemCount}
                 </span>
               </Link>
 
@@ -436,6 +438,20 @@ const NavBarUser = () => {
                       }
                     >
                       Contacto
+                    </NavLink>
+
+                    <NavLink
+                      to="/carrito"
+                      onClick={closeMenu}
+                      className={({ isActive }) =>
+                        `block px-4 py-3 rounded-lg text-base font-medium ${
+                          isActive
+                            ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                            : "text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        }`
+                      }
+                    >
+                      Carrito ({itemCount})
                     </NavLink>
                   </div>
 

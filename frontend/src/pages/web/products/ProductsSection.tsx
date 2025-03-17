@@ -41,7 +41,7 @@ export default function ProductsPage() {
   const [colors, setColors] = useState<Color[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  // console.log(products);
   // State for active filters
   const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
   const [activeGenderId, setActiveGenderId] = useState<number | null>(null);
@@ -78,7 +78,6 @@ export default function ProductsPage() {
         ]);
 
         if (productsResponse.data) {
-          console.log("Productos cargados:", productsResponse.data);
           setProducts(productsResponse.data);
         } else {
           console.log("No se recibieron productos");
@@ -216,11 +215,6 @@ export default function ProductsPage() {
       !!searchTerm || // Ensure searchTerm is coerced to a boolean
       activeSort !== "default";
 
-  // Añade un console.log para ver los productos filtrados
-  useEffect(() => {
-    console.log("Productos filtrados:", filteredProducts);
-    console.log("Productos actuales:", currentProducts);
-  }, [filteredProducts, currentProducts]);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-14 md:pt-0">

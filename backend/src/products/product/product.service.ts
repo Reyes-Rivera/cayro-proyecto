@@ -67,6 +67,7 @@ export class ProductService {
               select: {
                 id: true,
                 name: true,
+                hexValue:true
               },
             },
             size: {
@@ -95,6 +96,7 @@ export class ProductService {
               select: {
                 id: true,
                 name: true,
+                hexValue:true
               },
             },
             size: {
