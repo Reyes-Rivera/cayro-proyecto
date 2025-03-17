@@ -9,32 +9,40 @@ const routeNames: Record<string, string> = {
 
 export default function Breadcrumbs() {
   const location = useLocation();
-  const [breadcrumbs, setBreadcrumbs] = useState<string[]>(
-    () => JSON.parse(localStorage.getItem("breadcrumbs") || "[]")
+  const [breadcrumbs, setBreadcrumbs] = useState<string[]>(() =>
+    JSON.parse(localStorage.getItem("breadcrumbs") || "[]")
   );
 
   useEffect(() => {
-    if (location.pathname === "/") {
+    if (!location.pathname) {
       setBreadcrumbs([]);
       localStorage.removeItem("breadcrumbs");
     } else {
       setBreadcrumbs((prev) => {
         const currentPathIndex = prev.indexOf(location.pathname);
 
-        if (currentPathIndex === -1) {
-          const updatedBreadcrumbs = [...prev, location.pathname];
-          localStorage.setItem("breadcrumbs", JSON.stringify(updatedBreadcrumbs));
+        if (currentPathIndex !== -1) {
+          // Si la página seleccionada ya estaba en la lista, eliminar las posteriores y conservar la seleccionada
+          const updatedBreadcrumbs = prev.slice(0, currentPathIndex + 1);
+          localStorage.setItem(
+            "breadcrumbs",
+            JSON.stringify(updatedBreadcrumbs)
+          );
           return updatedBreadcrumbs;
         } else {
-          const updatedBreadcrumbs = prev.slice(0, currentPathIndex + 1);
-          localStorage.setItem("breadcrumbs", JSON.stringify(updatedBreadcrumbs));
+          // Si la página es nueva, agregarla a la lista
+          const updatedBreadcrumbs = [...prev, location.pathname];
+          localStorage.setItem(
+            "breadcrumbs",
+            JSON.stringify(updatedBreadcrumbs)
+          );
           return updatedBreadcrumbs;
         }
       });
     }
   }, [location.pathname]);
 
-  if (location.pathname === "/") {
+  if (breadcrumbs.length === 0) {
     return null;
   }
 
@@ -42,19 +50,25 @@ export default function Breadcrumbs() {
     <nav aria-label="Breadcrumb" className="py-2 px-4">
       <ol className="flex items-center space-x-1 text-sm">
         <li>
-          <Link to="/" className="text-gray-500 hover:text-blue-600 flex items-center">
+          <Link
+            to="/"
+            className="text-gray-500 hover:text-blue-600 flex items-center"
+            onClick={() => localStorage.removeItem("breadcrumbs")}
+          >
             <Home className="w-4 h-4 mr-1" />
             <span className="hidden sm:inline">Inicio</span>
           </Link>
         </li>
         {breadcrumbs.map((path, index) => {
           const isLast = index === breadcrumbs.length - 1;
-          const title = routeNames[path] || path
-            .split("/")
-            .filter((p) => p)
-            .pop()
-            ?.replace(/-/g, " ")
-            .replace(/^\w/, (c) => c.toUpperCase());
+          const title =
+            routeNames[path] ||
+            path
+              .split("/")
+              .filter((p) => p)
+              .pop()
+              ?.replace(/-/g, " ")
+              .replace(/^\w/, (c) => c.toUpperCase());
 
           return (
             <li key={path} className="flex items-center">

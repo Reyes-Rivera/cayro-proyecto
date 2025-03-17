@@ -7,8 +7,14 @@ import ProductList from "./components/ProductList";
 import ProductDetails from "./components/ProductDetails";
 import ProductForm from "./components/ProductForm";
 import type { Product } from "./data/sampleData";
-import { deleteProduct, getProducts } from "@/api/products";
+import {
+  getProducts,
+  activateProduct,
+  deactivateProduct,
+} from "@/api/products";
 import { Loader2, Package2 } from "lucide-react";
+import "sweetalert2/dist/sweetalert2.min.css";
+import Swal from "sweetalert2";
 
 const Products: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -17,15 +23,14 @@ const Products: React.FC = () => {
   const [isViewing, setIsViewing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const loadProducts = async () => {
+    setIsLoading(true);
+    const data = await getProducts();
+    setProducts(data.data);
+    setIsLoading(false);
+  };
+
   useEffect(() => {
-    const loadProducts = async () => {
-      setIsLoading(true);
-
-      const data = await getProducts();
-      setProducts(data.data);
-      setIsLoading(false);
-    };
-
     loadProducts();
   }, []);
 
@@ -50,12 +55,44 @@ const Products: React.FC = () => {
     }
   };
 
-  const handleDeleteProduct = async (id: number) => {
+  const handleActivateProduct = async (id: number) => {
     setIsLoading(true);
+    try {
+      // Llamar a la API para activar el producto
+      await activateProduct(id);
+      // Recargar la lista de productos
+      await loadProducts();
+    } catch (error) {
+      console.error("Error al activar el producto:", error);
+      Swal.fire({
+        title: "Error",
+        text: "No se pudo activar el producto. Inténtalo de nuevo.",
+        icon: "error",
+        confirmButtonColor: "#2563eb",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    await deleteProduct(id);
-    setProducts(products.filter((p) => p.id !== id));
-    setIsLoading(false);
+  const handleDeactivateProduct = async (id: number) => {
+    setIsLoading(true);
+    try {
+      // Llamar a la API para desactivar el producto
+      await deactivateProduct(id);
+      // Recargar la lista de productos
+      await loadProducts();
+    } catch (error) {
+      console.error("Error al desactivar el producto:", error);
+      Swal.fire({
+        title: "Error",
+        text: "No se pudo desactivar el producto. Inténtalo de nuevo.",
+        icon: "error",
+        confirmButtonColor: "#2563eb",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleViewProduct = (id: number) => {
@@ -196,9 +233,10 @@ const Products: React.FC = () => {
             <ProductList
               products={products}
               onEdit={handleEdit}
-              onDelete={handleDeleteProduct}
               onView={handleViewProduct}
               onAdd={handleAddProductView}
+              onActivate={handleActivateProduct}
+              onDeactivate={handleDeactivateProduct}
             />
           </div>
         )}

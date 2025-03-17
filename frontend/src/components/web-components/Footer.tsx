@@ -136,11 +136,11 @@ export function Footer() {
                 </li>
                 <li>
                   <Link
-                    to="/productos"
+                    to="/preguntas-frecuentes"
                     className="text-gray-400 hover:text-blue-400 transition-colors duration-300 flex items-center group"
                   >
                     <ChevronRight className="w-4 h-4 mr-2 opacity-0 group-hover:opacity-100 transform -translate-x-2 group-hover:translate-x-0 transition-all duration-300" />
-                    Productos
+                    FAQS
                   </Link>
                 </li>
               </ul>

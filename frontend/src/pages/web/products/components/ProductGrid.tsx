@@ -1,173 +1,181 @@
-import { useState, useEffect } from "react";
+"use client";
+
+import { motion } from "framer-motion";
+import type { Product } from "../utils/products";
 import ProductCard from "./ProductCard";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Filter } from "lucide-react";
-import { products } from "../utils/products";
-import { useSearchParams } from "react-router-dom";
+import { Shirt, AlertCircle } from "lucide-react";
 
 interface ProductGridProps {
-  toggleSidebar: () => void;
-  filters: {
-    categories: string[];
-    priceRange: [number, number];
-    colors: string[];
-    sizes: string[];
-  };
-  searchQuery: string;
+  products: Product[];
+  hoveredProduct: number | null;
+  setHoveredProduct: (id: number | null) => void;
+  noProductsFound: boolean;
+  clearAllFilters: () => void;
 }
 
 export default function ProductGrid({
-  toggleSidebar,
-  filters,
-  searchQuery,
+  products,
+  hoveredProduct,
+  setHoveredProduct,
+  noProductsFound,
+  clearAllFilters,
 }: ProductGridProps) {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [filteredProducts, setFilteredProducts] = useState(products);
-  const productsPerPage = 12;
-  const [searchParams] = useSearchParams();
-  const color = searchParams.get("color");
-  const size = searchParams.get("talla");
-  const gender = searchParams.get("genero");
-  const searchQueryparam = searchParams.get("search") || "";
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  };
 
-  // Obtener la categoría seleccionada desde filters
-  const selectedCategory =
-    filters.categories.length > 0 ? filters.categories[0] : null;
-
-  useEffect(() => {
-    const searchTerm =
-      searchQuery.toLowerCase().trim() || searchQueryparam.toLowerCase().trim();
-
-    const filtered = products.filter((product) => {
-      // Filtros por parámetros de URL
-      const matchesColor = !color || product.color === color;
-      const matchesSize = !size || product.size === size;
-      const matchesGender = !gender || product.sex === gender;
-      const matchesSearch =
-        !searchTerm || product.name.toLowerCase().includes(searchTerm);
-
-      // Filtros adicionales desde el estado de filtros
-      const matchesFilterCategory =
-        filters.categories.length === 0 ||
-        filters.categories.includes(product.category);
-      const matchesFilterPrice =
-        product.price >= filters.priceRange[0] &&
-        product.price <= filters.priceRange[1];
-      const matchesFilterColor =
-        filters.colors.length === 0 || filters.colors.includes(product.color);
-      const matchesFilterSize =
-        filters.sizes.length === 0 || filters.sizes.includes(product.size);
-
-      // Aplicar todos los filtros simultáneamente con AND lógico
-      return (
-        matchesColor &&
-        matchesSize &&
-        matchesGender &&
-        matchesSearch &&
-        matchesFilterCategory &&
-        matchesFilterPrice &&
-        matchesFilterColor &&
-        matchesFilterSize
-      );
-    });
-
-    setFilteredProducts(filtered);
-    setCurrentPage(1);
-  }, [color, size, gender, searchQuery, searchQueryparam, filters]);
-
-  const indexOfLastProduct = currentPage * productsPerPage;
-  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
-  const currentProducts = filteredProducts.slice(
-    indexOfFirstProduct,
-    indexOfLastProduct
+  // Check if products have variants
+  const validProducts = products.filter(
+    (product) => product.variants && product.variants.length > 0
   );
-  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
 
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col justify-between">
-
-        {/* Mostrar la categoría seleccionada o "Productos" */}
-        <h2 className="text-xl font-bold mt-2">
-          {selectedCategory ? selectedCategory : "Productos"}
-        </h2>
-
-        <div className="flex items-center gap-2 justify-between md:justify-start">
-          <p className="text-sm text-gray-500">
-            Mostrando {currentProducts.length} de {filteredProducts.length}{" "}
-            productos
+  // If there are products but none have variants, show a message
+  if (products.length > 0 && validProducts.length === 0) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center"
+      >
+        <div className="flex flex-col items-center justify-center">
+          <AlertCircle className="h-16 w-16 text-amber-500 mb-4" />
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+            No hay productos disponibles
+          </h3>
+          <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md">
+            Los productos no tienen variantes disponibles. Por favor, contacte
+            al administrador.
           </p>
-          <Button
-            className="flex md:hidden"
-            variant="outline"
-            size="icon"
-            onClick={toggleSidebar}
-          >
-            <Filter className="h-4 w-4" />
-          </Button>
         </div>
-      </div>
+      </motion.div>
+    );
+  }
 
-      {filteredProducts.length === 0 ? (
-        <p className="text-center text-gray-500 pt-28">
-          No se encontraron productos
-        </p>
-      ) : (
-        <>
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {currentProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
+  // Check if there are products without variants
+  const productsWithoutVariants = products.filter(
+    (product) => !product.variants || product.variants.length === 0
+  );
+
+  const hasProductsWithoutVariants = productsWithoutVariants.length > 0;
+
+  // Filter out products without variants for display
+  //const validProducts = products.filter((product) => product.variants && product.variants.length > 0)
+
+  // No products found after filtering
+  if (noProductsFound) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center"
+      >
+        <div className="flex flex-col items-center justify-center">
+          <Shirt className="h-16 w-16 text-gray-300 dark:text-gray-600 mb-4" />
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+            No se encontraron productos
+          </h3>
+          <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md">
+            No se encontraron productos que coincidan con los filtros
+            seleccionados.
+          </p>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={clearAllFilters}
+            className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-lg hover:from-blue-700 hover:to-blue-800 shadow-md"
+          >
+            Limpiar filtros
+          </motion.button>
+        </div>
+      </motion.div>
+    );
+  }
+
+  // All products have no variants
+  //if (validProducts.length === 0 && products.length > 0) {
+  //  return (
+  //    <motion.div
+  //      initial={{ opacity: 0, y: 20 }}
+  //      animate={{ opacity: 1, y: 0 }}
+  //      transition={{ duration: 0.5 }}
+  //      className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center"
+  //    >
+  //      <div className="flex flex-col items-center justify-center">
+  //        <AlertCircle className="h-16 w-16 text-amber-500 mb-4" />
+  //        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">No hay productos disponibles</h3>
+  //        <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md">
+  //          Los productos no tienen variantes disponibles. Por favor, contacte al administrador.
+  //        </p>
+  //      </div>
+  //    </motion.div>
+  //  )
+  //}
+
+  // Some products have no variants - show warning and valid products
+  if (hasProductsWithoutVariants && validProducts.length > 0) {
+    return (
+      <>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="bg-amber-50 dark:bg-amber-900/20 rounded-xl shadow-sm border border-amber-200 dark:border-amber-800 p-4 mb-6 text-left"
+        >
+          <div className="flex items-center">
+            <AlertCircle className="h-5 w-5 text-amber-500 mr-2 flex-shrink-0" />
+            <p className="text-amber-700 dark:text-amber-400 text-sm">
+              Algunos productos ({productsWithoutVariants.length}) no tienen
+              variantes disponibles y no se muestran.
+            </p>
           </div>
+        </motion.div>
 
-          <div className="flex flex-col justify-end h-full">
-            <div className="flex items-center justify-center gap-2 mt-auto pt-6">
-              {/* Botón de página anterior */}
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => {
-                  window.scrollTo(0, 0);
-                  setCurrentPage((prev) => Math.max(prev - 1, 1));
-                }}
-                disabled={currentPage === 1}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+        >
+          {validProducts.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              isHovered={hoveredProduct === product.id}
+              onHover={() => setHoveredProduct(product.id)}
+              onLeave={() => setHoveredProduct(null)}
+            />
+          ))}
+        </motion.div>
+      </>
+    );
+  }
 
-              {/* Botones de páginas */}
-              {Array.from({ length: totalPages }).map((_, index) => (
-                <Button
-                  key={index + 1}
-                  variant="outline" 
-                  className={`min-w-[40px] ${
-                    currentPage === index + 1
-                      ? "bg-blue-100 text-blue-600 font-bold hover:bg-blue-500" 
-                      : "bg-white text-gray-700 hover:bg-gray-100" 
-                  }`}
-                  onClick={() => {
-                    window.scrollTo(0, 0);
-                    setCurrentPage(index + 1);
-                  }}
-                >
-                  {index + 1}
-                </Button>
-              ))}
-              {/* Botón de página siguiente */}
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                }
-                disabled={currentPage === totalPages}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </>
-      )}
-    </div>
+  // All products have variants - normal display
+  return (
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+    >
+      {validProducts.map((product) => (
+        <ProductCard
+          key={product.id}
+          product={product}
+          isHovered={hoveredProduct === product.id}
+          onHover={() => setHoveredProduct(product.id)}
+          onLeave={() => setHoveredProduct(null)}
+        />
+      ))}
+    </motion.div>
   );
 }

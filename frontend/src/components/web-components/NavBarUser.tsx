@@ -128,6 +128,9 @@ const NavBarUser = () => {
               <NavLink
                 to="/"
                 className="flex-shrink-0 transition-transform duration-300 hover:scale-105"
+                onClick={() => {
+                  localStorage.removeItem("breadcrumbs");
+                }}
               >
                 <img
                   src={logo || "/placeholder.svg?height=80&width=120"}
@@ -141,6 +144,9 @@ const NavBarUser = () => {
             <div className="hidden sm:flex sm:items-center sm:space-x-8">
               <NavLink
                 to="/"
+                onClick={() => {
+                  localStorage.removeItem("breadcrumbs");
+                }}
                 className={({ isActive }) =>
                   `text-base font-medium transition-colors duration-200 relative group ${
                     isActive
@@ -373,7 +379,10 @@ const NavBarUser = () => {
                   <div className="space-y-1 mb-6">
                     <NavLink
                       to="/"
-                      onClick={closeMenu}
+                      onClick={() => {
+                        localStorage.removeItem("breadcrumbs");
+                        closeMenu();
+                      }}
                       className={({ isActive }) =>
                         `block px-4 py-3 rounded-lg text-base font-medium ${
                           isActive

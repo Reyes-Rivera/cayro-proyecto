@@ -1,73 +1,175 @@
-import { Eye, Star } from "lucide-react"; // Importar íconos
-import { motion } from "framer-motion";
+"use client";
 
-interface Product {
-  id: number;
-  name: string;
-  price: number;
-  image: string;
-  color: string;
-  category: string;
-  rating: number; // Nueva propiedad para las estrellas
+import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+import { ShoppingCart, Heart, Eye } from "lucide-react";
+import type { Product, Color } from "../utils/products";
+
+interface ProductCardProps {
+  product: Product;
+  isHovered: boolean;
+  onHover: () => void;
+  onLeave: () => void;
 }
 
-export default function ProductCard({ product }: { product: Product }) {
+export default function ProductCard({
+  product,
+  isHovered,
+  onHover,
+  onLeave,
+}: ProductCardProps) {
+  // Get unique colors for a product
+  const getUniqueColors = (product: Product) => {
+    const uniqueColorIds = [...new Set(product.variants.map((v) => v.colorId))];
+    return uniqueColorIds
+      .map((id) => {
+        const variant = product.variants.find((v) => v.colorId === id);
+        if (variant && variant.color) {
+          // Asignar un valor hexadecimal si no existe
+          const colorMap: Record<string, string> = {
+            Negro: "#000000",
+            Blanco: "#FFFFFF",
+            Azul: "#1E40AF",
+            Rojo: "#DC2626",
+            Verde: "#10B981",
+            Amarillo: "#FBBF24",
+            Morado: "#8B5CF6",
+            Rosa: "#EC4899",
+            Naranja: "#F97316",
+            Gris: "#6B7280",
+            Marrón: "#92400E",
+          };
+
+          return {
+            id: variant.color.id,
+            name: variant.color.name,
+            hexValue: colorMap[variant.color.name] || "#6B7280", // Gris por defecto
+          };
+        }
+        return null;
+      })
+      .filter(Boolean) as Color[];
+  };
+
+  const lowestPriceVariant = product.variants.reduce((prev, current) =>
+    prev.price < current.price ? prev : current
+  );
+
+  const uniqueColors = getUniqueColors(product);
+
+  // Animation variants
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5 },
+    },
+  };
+
   return (
-    <div className="group bg-white dark:bg-gray-900 hover:shadow-xl transition-all duration-300 overflow-hidden relative rounded-lg flex flex-col h-full">
-      {/* Imagen del producto */}
-      <div className="relative aspect-square overflow-hidden bg-gray-100 rounded-t-lg">
-        {/* Botón del carrito en la esquina superior derecha */}
-     
+    <motion.div
+      variants={itemVariants}
+      className="group bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+      onMouseEnter={onHover}
+      onMouseLeave={onLeave}
+    >
+      <Link to={`/producto/${product.id}`} className="block">
+        <div className="relative overflow-hidden aspect-[3/4]">
+          <img
+            src={
+              lowestPriceVariant.imageUrl ||
+              "/placeholder.svg?height=400&width=300"
+            }
+            alt={product.name}
+            width={300}
+            height={400}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-        <img
-          src={product.image || "/placeholder.svg"}
-          alt={product.name}
-          className="object-cover w-full h-full transition-all duration-300 group-hover:opacity-50 group-hover:scale-105"
-        />
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+            <div className="flex gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+              <motion.button
+                whileHover={{
+                  scale: 1.1,
+                  backgroundColor: "#2563EB",
+                  color: "#ffffff",
+                }}
+                whileTap={{ scale: 0.95 }}
+                className="p-2.5 bg-white/90 backdrop-blur-sm text-gray-700 rounded-full shadow-lg transition-all duration-200"
+              >
+                <ShoppingCart className="h-5 w-5" />
+              </motion.button>
+              <motion.button
+                whileHover={{
+                  scale: 1.1,
+                  backgroundColor: "#2563EB",
+                  color: "#ffffff",
+                }}
+                whileTap={{ scale: 0.95 }}
+                className="p-2.5 bg-white/90 backdrop-blur-sm text-gray-700 rounded-full shadow-lg transition-all duration-200 delay-75"
+              >
+                <Heart className="h-5 w-5" />
+              </motion.button>
+              <motion.button
+                whileHover={{
+                  scale: 1.1,
+                  backgroundColor: "#2563EB",
+                  color: "#ffffff",
+                }}
+                whileTap={{ scale: 0.95 }}
+                className="p-2.5 bg-white/90 backdrop-blur-sm text-gray-700 rounded-full shadow-lg transition-all duration-200 delay-150"
+              >
+                <Eye className="h-5 w-5" />
+              </motion.button>
+            </div>
+          </div>
 
-        {/* Botón "Ver detalles" en el centro de la imagen */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }} // Inicia fuera de la vista (arriba)
-          whileHover={{ opacity: 1, y: 0 }} // Aparece y baja suavemente
-          transition={{ duration: 0.3 }} // Duración de la animación
-          className="absolute inset-0 flex items-center justify-center"
-        >
-          <button className="flex items-center justify-center px-4 py-2  font-bold rounded-lg  transition-colors">
-            <Eye className="mr-2 h-4 w-4" />
-            Ver detalles
-          </button>
-        </motion.div>
-      </div>
+          {/* Category badge */}
+          <div className="absolute top-2 right-2 bg-blue-600/80 backdrop-blur-sm text-white text-xs font-medium px-2.5 py-1 rounded-md">
+            {product.category.name}
+          </div>
 
-      {/* Detalles del producto */}
-      <div className="p-6 flex flex-col flex-grow dark:border-gray-600 rounded-b-lg">
-        {/* Nombre del producto */}
-        <h2 className="font-bold text-lg text-gray-900 dark:text-gray-100 mb-2">
-          {product.name}
-        </h2>
+          {/* Low stock warning */}
+          {lowestPriceVariant.stock <= 3 && lowestPriceVariant.stock > 0 && (
+            <div className="absolute bottom-2 left-2 bg-red-500/80 backdrop-blur-sm text-white text-xs font-medium px-2.5 py-1 rounded-md">
+              ¡Últimas {lowestPriceVariant.stock} unidades!
+            </div>
+          )}
+        </div>
 
-        {/* Precio y estrellas en la misma fila */}
-        <div className="flex items-center justify-between mt-2">
-          {/* Precio */}
-          <p className="font-semibold text-lg text-gray-600 dark:text-blue-400">
-            ${product.price.toFixed(2)}
-          </p>
+        <div className="p-4">
+          <div className="flex items-start justify-between">
+            <h3 className="font-medium text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 line-clamp-2">
+              {product.name}
+            </h3>
+            <span className="text-sm font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
+              ${lowestPriceVariant.price.toFixed(2)}
+            </span>
+          </div>
 
-          {/* Estrellas (rating) */}
-          <div className="flex items-center">
-            {[...Array(5)].map((_, index) => (
-              <Star
-                key={index}
-                className={`h-5 w-5 ${
-                  index < product.rating
-                    ? "text-yellow-400 fill-yellow-400" // Estrellas llenas
-                    : "text-gray-300 dark:text-gray-500" // Estrellas vacías
-                }`}
-              />
-            ))}
+          <div className="mt-3 flex items-center justify-between">
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              {product.brand.name}
+            </div>
+
+            <div className="flex gap-1">
+              {uniqueColors.map((color) => (
+                <div
+                  key={color.id}
+                  className={`w-4 h-4 rounded-full border border-gray-200 dark:border-gray-600 transition-transform duration-200 ${
+                    isHovered ? "scale-125" : ""
+                  }`}
+                  style={{ backgroundColor: color.hexValue }}
+                  aria-label={`Color: ${color.name}`}
+                  title={color.name}
+                ></div>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      </Link>
+    </motion.div>
   );
 }

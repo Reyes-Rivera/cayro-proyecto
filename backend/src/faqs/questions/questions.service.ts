@@ -3,6 +3,7 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
@@ -57,8 +58,27 @@ export class QuestionsService {
     }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} question`;
+  findByCategory(id: number) {
+    try {
+      const res = this.prismaService.fAQ.findMany({
+        where: { categoryId: id },
+      });
+      if (!res)
+        throw new NotFoundException(
+          'No se encontraron preguntas para la categoria',
+        );
+      return res;
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      this.logger.error(
+        'Error al obtener las preguntas por categoria.',
+        error.stack,
+      );
+      throw new HttpException(
+        'Error interno en el servidor.',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   async update(id: number, updateQuestionDto: UpdateQuestionDto): Promise<FAQ> {

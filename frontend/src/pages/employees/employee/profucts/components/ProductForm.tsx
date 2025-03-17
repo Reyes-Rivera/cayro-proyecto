@@ -476,7 +476,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
   return (
     <motion.div
-      className="container mx-auto"
       initial="hidden"
       animate="visible"
       variants={containerVariants}

@@ -54,3 +54,10 @@ export const deleteFaqs = async (id: number) => {
   });
   return res;
 };
+
+export const getFaqsByCategory = async (id: number) => {
+  const res = await axios.delete(`/questions/${id}`, {
+    withCredentials: true,
+  });
+  return res;
+};

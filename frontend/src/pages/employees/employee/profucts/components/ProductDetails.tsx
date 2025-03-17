@@ -141,7 +141,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, onBack }) => {
 
   return (
     <motion.div
-      className="container mx-auto"
+      className=""
       initial="hidden"
       animate="visible"
       variants={containerVariants}

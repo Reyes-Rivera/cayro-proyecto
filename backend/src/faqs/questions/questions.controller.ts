@@ -18,8 +18,8 @@ export class QuestionsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.questionsService.findOne(+id);
+  findByCategory(@Param('id') id: string) {
+    return this.questionsService.findByCategory(+id);
   }
 
   @Patch(':id')

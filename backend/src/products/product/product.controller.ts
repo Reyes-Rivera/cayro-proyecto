@@ -58,4 +58,14 @@ export class ProductController {
       console.log(error);
     }
   }
+  @Patch('active/:id')
+  async active(@Param('id') id: string) {
+    try {
+      const res = await this.productService.active(+id);
+      if(!res) throw new NotFoundException('Producto no encontrado.');
+      return res;
+    } catch (error) {
+      console.log(error);
+    }
+  }
 }

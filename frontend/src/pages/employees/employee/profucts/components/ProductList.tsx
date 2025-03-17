@@ -33,13 +33,15 @@ import {
   SlidersHorizontal,
   XCircle,
 } from "lucide-react";
+import Swal from "sweetalert2";
 
 interface ProductListProps {
   products: Product[];
   onEdit: (id: number) => void;
-  onDelete: (id: number) => void;
   onView: (id: number) => void;
   onAdd: () => void;
+  onActivate: (id: number) => void;
+  onDeactivate: (id: number) => void;
 }
 
 // Opciones de ordenación
@@ -61,9 +63,10 @@ const sortOptions: SortOption[] = [
 const ProductList: React.FC<ProductListProps> = ({
   products,
   onEdit,
-  onDelete,
   onView,
   onAdd,
+  onActivate,
+  onDeactivate,
 }) => {
   // Estado para búsqueda
   const [searchTerm, setSearchTerm] = useState("");
@@ -259,7 +262,7 @@ const ProductList: React.FC<ProductListProps> = ({
   }, []);
 
   return (
-    <div className="container mx-auto">
+    <div >
       <div className="bg-white shadow-2xl rounded-xl overflow-hidden border border-gray-100 mb-8">
         <div className="bg-white border-b p-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -764,17 +767,72 @@ const ProductList: React.FC<ProductListProps> = ({
                           </span>
                         </button>
 
-                        {/* Botón Eliminar */}
-                        <button
-                          onClick={() => onDelete(product.id)}
-                          className="bg-red-100 p-2 rounded-lg text-red-600 hover:bg-red-200 transition-colors group relative"
-                          title="Eliminar producto"
-                        >
-                          <Trash size={18} />
-                          <span className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                            Eliminar producto
-                          </span>
-                        </button>
+                        {/* Botón Activar/Desactivar */}
+                        {product.active ? (
+                          <button
+                            onClick={() => {
+                              Swal.fire({
+                                title: "¿Desactivar producto?",
+                                text: `¿Estás seguro de que deseas desactivar "${product.name}"?`,
+                                icon: "warning",
+                                showCancelButton: true,
+                                confirmButtonColor: "#d33",
+                                cancelButtonColor: "#6b7280",
+                                confirmButtonText: "Sí, desactivar",
+                                cancelButtonText: "Cancelar",
+                              }).then((result) => {
+                                if (result.isConfirmed) {
+                                  onDeactivate(product.id);
+                                  Swal.fire({
+                                    title: "Desactivado!",
+                                    text: `El producto "${product.name}" ha sido desactivado.`,
+                                    icon: "success",
+                                    confirmButtonColor: "#2563eb",
+                                  });
+                                }
+                              });
+                            }}
+                            className="bg-red-100 p-2 rounded-lg text-red-600 hover:bg-red-200 transition-colors group relative"
+                            title="Desactivar producto"
+                          >
+                            <Trash size={18} />
+                            <span className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                              Desactivar producto
+                            </span>
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              Swal.fire({
+                                title: "¿Activar producto?",
+                                text: `¿Estás seguro de que deseas activar "${product.name}"?`,
+                                icon: "question",
+                                showCancelButton: true,
+                                confirmButtonColor: "#2563eb",
+                                cancelButtonColor: "#6b7280",
+                                confirmButtonText: "Sí, activar",
+                                cancelButtonText: "Cancelar",
+                              }).then((result) => {
+                                if (result.isConfirmed) {
+                                  onActivate(product.id);
+                                  Swal.fire({
+                                    title: "Activado!",
+                                    text: `El producto "${product.name}" ha sido activado.`,
+                                    icon: "success",
+                                    confirmButtonColor: "#2563eb",
+                                  });
+                                }
+                              });
+                            }}
+                            className="bg-green-100 p-2 rounded-lg text-green-600 hover:bg-green-200 transition-colors group relative"
+                            title="Activar producto"
+                          >
+                            <Check size={18} />
+                            <span className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                              Activar producto
+                            </span>
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

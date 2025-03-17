@@ -177,4 +177,10 @@ export class ProductService {
       data: { active: false },
     });
   }
+  async active(id: number) {
+    return await this.prismaService.product.update({
+      where: { id },
+      data: { active: true },
+    });
+  }
 }

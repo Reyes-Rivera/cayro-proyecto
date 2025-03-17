@@ -27,7 +27,7 @@ import Error400 from "@/pages/web/error/Error400";
 import ContactPage from "@/pages/web/contact/ContactPage";
 import EmployeeDashboard from "@/pages/employees/employee/DashboardLayout";
 import ProtectedRouterEmployee from "@/utils/ProtectedRouterEmpleado";
-import ProductoStatusSales from "@/pages/web/ProductoStatusSales";
+import Faq from "@/pages/web/faqs/Faqs";
 const AppRoutes = () => {
   useEffect(() => {
     const getInfoPage = async () => {
@@ -45,7 +45,7 @@ const AppRoutes = () => {
         <ScrollToTop />
 
         <Routes>
-          <Route path="/estado-ventas" element={<ProductoStatusSales />} />
+          <Route path="/preguntas-frecuentes" element={<Faq />} />
           <Route path="/" element={<HomePage />} />
           <Route path="/aviso-privacidad" element={<Policies />} />
           <Route path="/sobre-nosotros" element={<AboutPage />} />
@@ -55,7 +55,7 @@ const AppRoutes = () => {
           <Route path="/registro" element={<SignUpPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/productos" element={<ProductsSection />} />
-          <Route path="/detalles-producto" element={<ProductDetails />} />
+          <Route path="/producto/:id" element={<ProductDetails />} />
           <Route
             path="/recuperar-password"
             element={<PasswordRecoveryPage />}
