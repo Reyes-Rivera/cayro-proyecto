@@ -2,63 +2,53 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --radius: 0.5rem;
+@layer utilities {
+  .animation-delay-2000 {
+    animation-delay: 2s;
   }
-  @layer utilities {
-    .drop-shadow-white {
-      filter: drop-shadow(0 4px 4px rgba(216, 204, 204, 0.966)); /* Ajusta los valores según lo que prefieras */
-    }
-  }
-  
-  /* Estilos para modo claro */
- 
-
-  /* Estilos para modo oscuro */
-  .dark body {
-    @apply bg-gray-900 text-gray-100;
-  }
-
-  .container-bg {
-    @apply bg-white dark:bg-gray-800/70;
-  }
-
-  a, p, h1, h2, h3, h4, h5, h6, input, div, ul, li {
-    font-family: sans-serif !important;
-  }
-
-}
-@keyframes fadeInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-50px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
+  .animation-delay-4000 {
+    animation-delay: 4s;
   }
 }
 
-@keyframes fadeInRight {
-  from {
-    opacity: 0;
-    transform: translateX(50px);
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
   }
-  to {
-    opacity: 1;
-    transform: translateX(0);
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
   }
 }
 
-.animate-fadeInLeft {
-  animation: fadeInLeft 1.5s ease-out;
-}
-
-.animate-fadeInRight {
-  animation: fadeInRight 1.5s ease-out;
+.animate-blob {
+  animation: blob 7s infinite;
 }
 
 
 
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
 
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+}

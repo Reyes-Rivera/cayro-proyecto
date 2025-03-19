@@ -1,7 +1,10 @@
+"use client";
+
+import type React from "react";
+
 import { useEffect, useRef, useState } from "react";
 import { motion, useAnimation, useInView } from "framer-motion";
-import imagenCustom from "./assets/personalizar.jpg";
-import imgWhyUs from "./assets/whyus.jpg";
+import { NavLink } from "react-router-dom";
 import {
   ShoppingBag,
   Shirt,
@@ -16,24 +19,44 @@ import {
   RefreshCw,
   Check,
   Sparkles,
-  TrendingUp,
   ChevronDown,
 } from "lucide-react";
-import type {
-  AnimatedSectionProps,
-  Category,
-  CategoryCardProps,
-  ProductCardProps,
-} from "./types";
-import Hero from "./assets/hero.jpg";
+import type { JSX } from "react/jsx-runtime";
+
+// Import your images
+import imagenCustom from "./assets/personalizar.jpg";
+import imgWhyUs from "./assets/whyus.jpg";
 import Playeras from "./assets/playeras.jpg.jpg";
 import Camisas from "./assets/camisas.jpg";
 import Polos from "./assets/polos.jpg.jpg";
 import Pantalones from "./assets/pantalones.jpg.jpg";
 import Deportivos from "./assets/deportivos.jpg.jpg";
 
-import { NavLink } from "react-router-dom";
-import type { JSX } from "react/jsx-runtime";
+// Types
+interface AnimatedSectionProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+interface Category {
+  title: string;
+  image: string;
+}
+
+interface CategoryCardProps {
+  image: string;
+  title: string;
+  isActive: boolean;
+  index: number;
+}
+
+interface ProductCardProps {
+  image: string;
+  title: string;
+  price: string;
+  discount?: string;
+  tag?: string;
+}
 
 const categories: Category[] = [
   { title: "Polos", image: Polos },
@@ -43,14 +66,209 @@ const categories: Category[] = [
   { title: "Deportivos", image: Deportivos },
 ];
 
+// TypewriterText Component
+const TypewriterText = ({
+  texts,
+  delay = 100,
+  deleteSpeed = 50,
+}: {
+  texts: string[];
+  delay?: number;
+  deleteSpeed?: number;
+}) => {
+  const [currentTextIndex, setCurrentTextIndex] = useState(0);
+  const [displayedText, setDisplayedText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+
+    const type = () => {
+      const i = currentTextIndex % texts.length;
+      const fullText = texts[i];
+
+      if (isDeleting) {
+        setDisplayedText(fullText.substring(0, displayedText.length - 1));
+      } else {
+        setDisplayedText(fullText.substring(0, displayedText.length + 1));
+      }
+
+      timeout = setTimeout(() => {
+        if (!isDeleting && displayedText === fullText) {
+          setIsDeleting(true);
+          timeout = setTimeout(() => {
+            type();
+          }, deleteSpeed); // Delay before deleting
+        } else if (isDeleting && displayedText === "") {
+          setIsDeleting(false);
+          setCurrentTextIndex((prevIndex) => prevIndex + 1);
+          timeout = setTimeout(type, 500); // Delay before typing next word
+        } else {
+          type();
+        }
+      }, delay);
+    };
+
+    timeout = setTimeout(type, 500);
+
+    return () => clearTimeout(timeout);
+  }, [currentTextIndex, displayedText, isDeleting, texts, delay, deleteSpeed]);
+
+  return <>{displayedText}</>;
+};
+
+// Animated Section Component
+const AnimatedSection: React.FC<AnimatedSectionProps> = ({
+  children,
+  className,
+}) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true });
+  const mainControls = useAnimation();
+
+  useEffect(() => {
+    if (isInView) {
+      mainControls.start("visible");
+    }
+  }, [isInView, mainControls]);
+
+  return (
+    <motion.section
+      ref={ref}
+      variants={{
+        hidden: { opacity: 0, y: 75 },
+        visible: { opacity: 1, y: 0 },
+      }}
+      initial="hidden"
+      animate={mainControls}
+      transition={{ duration: 0.5, delay: 0.25, ease: "easeOut" }}
+      className={className}
+    >
+      {children}
+    </motion.section>
+  );
+};
+
+// Category Card Component
+const CategoryCard: React.FC<CategoryCardProps> = ({
+  image,
+  title,
+  isActive,
+  index,
+}) => {
+  const animationControls = useAnimation();
+
+  useEffect(() => {
+    if (isActive) {
+      animationControls.start({
+        scale: 1.1,
+        boxShadow: "0px 0px 20px rgba(0, 0, 0, 0.3)",
+      });
+    } else {
+      animationControls.start({
+        scale: 1,
+        boxShadow: "none",
+      });
+    }
+  }, [isActive, animationControls]);
+
+  return (
+    <motion.div
+     
+      animate={animationControls}
+      transition={{ duration: 0.3 }}
+      className="relative group overflow-hidden rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300"
+    >
+      <img
+        src={image || "/placeholder.svg?height=300&width=300"}
+        alt={title}
+        className="w-full h-48 object-cover transform transition-transform duration-300 group-hover:scale-110"
+      />
+      <div className="absolute inset-0 bg-black/40 group-hover:bg-black/60 transition-colors duration-300"></div>
+      <div className="absolute bottom-0 left-0 p-4 w-full">
+        <h3 className="text-lg font-bold text-white">{title}</h3>
+      </div>
+      <div className="absolute top-2 right-2 bg-blue-600 text-white text-sm font-bold px-3 py-1 rounded-full shadow-md">
+        {index + 1}
+      </div>
+    </motion.div>
+  );
+};
+
+// Product Card Component
+const ProductCard: React.FC<ProductCardProps> = ({
+  image,
+  title,
+  price,
+  discount,
+  tag,
+}) => {
+
+  return (
+    <motion.div
+      className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden transform transition-transform duration-300 hover:scale-105"
+      
+    >
+      <div className="relative">
+        <img
+          src={image || "/placeholder.svg?height=500&width=400"}
+          alt={title}
+          className="w-full h-56 object-cover"
+        />
+        {tag && (
+          <div className="absolute top-2 left-2 bg-blue-600 text-white text-sm font-bold px-3 py-1 rounded-full shadow-md">
+            {tag}
+          </div>
+        )}
+        <div className="absolute top-2 right-2">
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-full p-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+          >
+            <Heart className="w-5 h-5" />
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-full p-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors mt-2"
+          >
+            <Eye className="w-5 h-5" />
+          </motion.button>
+        </div>
+      </div>
+      <div className="p-4">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+          {title}
+        </h3>
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="text-xl font-bold text-blue-600">${price}</span>
+            {discount && (
+              <span className="text-gray-500 dark:text-gray-400 line-through ml-2">
+                ${discount}
+              </span>
+            )}
+          </div>
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="bg-blue-600 text-white font-bold py-2 px-4 rounded-full hover:bg-blue-700 transition-colors"
+          >
+            Añadir
+          </motion.button>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 export default function Home(): JSX.Element {
   const [activeCategory, setActiveCategory] = useState<number>(0);
-  const [scrollY, setScrollY] = useState(0);
 
   // Handle parallax effect on scroll
   useEffect(() => {
     const handleScroll = () => {
-      setScrollY(window.scrollY);
     };
 
     window.addEventListener("scroll", handleScroll);
@@ -68,7 +286,7 @@ export default function Home(): JSX.Element {
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveCategory((prev) => (prev + 1) % categories.length);
-    }, 3000); // Cambiar cada 3 segundos
+    }, 3000);
 
     return () => clearInterval(interval);
   }, []);
@@ -121,234 +339,224 @@ export default function Home(): JSX.Element {
 
   return (
     <main className="min-h-screen bg-white dark:bg-gray-900">
-      {/* Hero Section - Redesigned based on ProductHero */}
-      <div className="relative overflow-hidden h-screen flex flex-col justify-center">
-        {/* Background with parallax effect */}
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage: `url(${Hero})`,
-            transform: `translateY(${scrollY * 0.2}px)`,
-            filter: "brightness(0.85)",
-          }}
-        />
-
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/70" />
-
-        {/* Decorative elements */}
-        <div className="absolute inset-0">
-          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_20%,rgba(30,30,30,0.2)_0%,rgba(0,0,0,0)_50%)]" />
-          <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_70%_80%,rgba(30,30,30,0.2)_0%,rgba(0,0,0,0)_50%)]" />
-        </div>
-
-        {/* Animated particles */}
-        <div className="absolute inset-0 overflow-hidden">
-          {[...Array(20)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-1 h-1 md:w-2 md:h-2 bg-blue-400 rounded-full opacity-70"
-              initial={{
-                x: Math.random() * 100 + "%",
-                y: Math.random() * 100 + "%",
-                opacity: Math.random() * 0.5 + 0.3,
-              }}
-              animate={{
-                y: [null, "-100%"],
-                opacity: [null, 0],
-              }}
-              transition={{
-                duration: Math.random() * 10 + 15,
-                repeat: Number.POSITIVE_INFINITY,
-                ease: "linear",
-              }}
-            />
-          ))}
-        </div>
-
-        {/* Content */}
-        <div className="relative max-w-7xl mx-auto px-4 flex flex-col justify-center flex-grow">
-          <div className="grid md:grid-cols-2 gap-8 items-center">
+      {/* Hero Section - Two column layout with content left, images right */}
+      <div className="relative min-h-screen bg-white dark:bg-gray-900 flex items-center">
+        <div className="container mx-auto px-6 py-16 relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            {/* Left column - Content */}
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.7, ease: "easeOut" }}
-              className="text-white space-y-6"
+              transition={{ duration: 0.8 }}
+              className="space-y-8"
             >
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="inline-flex items-center rounded-full bg-blue-600/30 backdrop-blur-sm border border-blue-500/20 px-4 py-1.5 text-sm font-medium text-blue-100"
+                transition={{ duration: 0.6, delay: 0.2 }}
               >
-                <ShoppingBag className="w-4 h-4 mr-2 text-blue-300" />
-                BIENVENIDO A NUESTRA TIENDA
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5 }}
+                  className="mb-6 inline-flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-4 py-1.5"
+                >
+                  <ShoppingBag className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
+                  <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                    NUEVA COLECCIÓN
+                  </span>
+                </motion.div>
+
+                <motion.h1
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                  className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white leading-tight"
+                >
+                  Estilo que <span className="text-blue-600">define</span> tu
+                  personalidad
+                </motion.h1>
+
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.6, delay: 0.4 }}
+                  className="mt-6 flex items-center text-lg text-gray-700 dark:text-gray-300"
+                >
+                  <span className="mr-2">Descubre</span>
+                  <span className="text-blue-600 dark:text-blue-400 font-medium">
+                    <TypewriterText
+                      texts={[
+                        "calidad premium",
+                        "diseños exclusivos",
+                        "tendencias actuales",
+                        "comodidad garantizada",
+                      ]}
+                      delay={80}
+                      deleteSpeed={50}
+                    />
+                  </span>
+                </motion.div>
               </motion.div>
 
-              <motion.h1
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight"
-              >
-                <span className="block">Moda y estilo con</span>
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-200 to-white">
-                  {/* Replace TypewriterComponent with custom implementation */}
-                  <TypewriterText
-                    texts={[
-                      "calidad premium",
-                      "diseños exclusivos",
-                      "tendencias actuales",
-                      "comodidad garantizada",
-                    ]}
-                    delay={80}
-                    deleteSpeed={50}
-                  />
-                </span>
-              </motion.h1>
-
               <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-                className="text-lg text-gray-300 max-w-md"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.5 }}
+                className="text-gray-600 dark:text-gray-400 text-lg leading-relaxed max-w-lg"
               >
-                Explora nuestra colección de prendas y accesorios. Desde ropa
-                casual hasta ropa deportiva, tenemos todo lo que necesitas para
-                lucir increíble en cualquier ocasión.
+                Nuestra nueva colección combina estilo contemporáneo con
+                materiales sostenibles. Cada prenda está diseñada para destacar
+                tu personalidad y brindarte la máxima comodidad.
               </motion.p>
 
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.5 }}
-                className="flex flex-col sm:flex-row gap-4 pt-4"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.6 }}
+                className="flex flex-wrap gap-6 mt-8"
               >
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="group px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-full hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg flex items-center justify-center overflow-hidden relative"
-                >
-                  <NavLink
-                    to="/productos"
-                    className="relative z-10 flex items-center"
-                  >
-                    Ver catálogo
-                    <motion.span
-                      initial={{ x: 0 }}
-                      whileHover={{ x: 5 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <ArrowRight className="ml-2 w-5 h-5" />
-                    </motion.span>
-                  </NavLink>
-                  <span className="absolute inset-0 bg-gradient-to-r from-blue-700 to-blue-800 transform scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300"></span>
-                </motion.button>
-
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="group px-8 py-4 bg-white/10 backdrop-blur-md text-white font-bold rounded-full hover:bg-white/20 transition-all border border-white/30 flex items-center justify-center overflow-hidden relative"
-                >
-                  <NavLink to="/contacto" className="relative z-10">
-                    Contáctanos
-                  </NavLink>
-                  <span className="absolute inset-0 bg-white/10 transform scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300"></span>
-                </motion.button>
+                <div className="flex items-center gap-2">
+                  <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                    <Check className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <span className="text-gray-700 dark:text-gray-300 text-sm">
+                    Envío rápido
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                    <Star className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <span className="text-gray-700 dark:text-gray-300 text-sm">
+                    Calidad premium
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                    <RefreshCw className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <span className="text-gray-700 dark:text-gray-300 text-sm">
+                    Devolución fácil
+                  </span>
+                </div>
               </motion.div>
 
               <motion.div
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.7 }}
-                className="flex flex-wrap gap-4 pt-4"
+                transition={{ duration: 0.6, delay: 0.7 }}
+                className="flex flex-col sm:flex-row gap-4 mt-8"
               >
-                <motion.div
+                <motion.button
                   whileHover={{ scale: 1.05 }}
-                  className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20"
+                  whileTap={{ scale: 0.95 }}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-full transition-all flex items-center justify-center shadow-lg shadow-blue-600/20"
                 >
-                  <Star className="w-5 h-5 text-yellow-400" />
-                  <span className="text-sm">Calidad Premium</span>
-                </motion.div>
-                <motion.div
+                  <NavLink to="/productos" className="flex items-center">
+                    Explorar colección
+                    <ArrowRight className="ml-2 w-4 h-4" />
+                  </NavLink>
+                </motion.button>
+
+                <motion.button
                   whileHover={{ scale: 1.05 }}
-                  className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20"
+                  whileTap={{ scale: 0.95 }}
+                  className="border border-gray-300 dark:border-gray-700 hover:border-blue-600 dark:hover:border-blue-500 text-gray-900 dark:text-white font-medium py-3 px-6 rounded-full transition-all"
                 >
-                  <Check className="w-5 h-5 text-green-400" />
-                  <span className="text-sm">Envío Garantizado</span>
-                </motion.div>
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20"
-                >
-                  <TrendingUp className="w-5 h-5 text-blue-400" />
-                  <span className="text-sm">Tendencias 2025</span>
-                </motion.div>
+                  <NavLink to="/contacto">Contactar</NavLink>
+                </motion.button>
               </motion.div>
             </motion.div>
 
+            {/* Right column - Images */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.7, delay: 0.3 }}
-              className="hidden md:block relative"
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+              className="relative"
             >
-              <div className="relative flex justify-center">
-                {/* Decorative circle */}
-                <div className="absolute -top-10 -right-10 w-64 h-64 rounded-full bg-gradient-to-br from-blue-400/10 to-blue-600/10 blur-2xl" />
+              {/* Main featured image */}
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                className="relative z-20 rounded-2xl overflow-hidden shadow-2xl"
+              >
+                <img
+                  src={Playeras || "/placeholder.svg?height=400&width=600"}
+                  alt="Featured collection"
+                  className="w-full h-auto object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                <div className="absolute bottom-4 left-4 text-white">
+                  <span className="text-sm font-medium bg-blue-600 px-3 py-1 rounded-full">
+                    Destacado
+                  </span>
+                  <h3 className="text-xl font-bold mt-2">Categoría destacada</h3>
+                </div>
+              </motion.div>
 
-                {/* Featured product image */}
-                <motion.div
-                  initial={{ y: 20 }}
-                  animate={{ y: [0, -10, 0] }}
-                  transition={{
-                    duration: 6,
-                    repeat: Number.POSITIVE_INFINITY,
-                    repeatType: "reverse",
-                    ease: "easeInOut",
-                  }}
-                  className="relative z-10 bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-2xl"
-                >
-                  <div className="grid grid-cols-2 gap-4">
-                    <img
-                      src={Playeras || "/placeholder.svg?height=300&width=250"}
-                      alt="Producto destacado"
-                      className="w-full h-auto rounded-lg object-cover shadow-lg transform transition-all duration-500 hover:scale-105"
-                    />
-                    <img
-                      src={Camisas || "/placeholder.svg?height=300&width=250"}
-                      alt="Producto destacado"
-                      className="w-full h-auto rounded-lg object-cover shadow-lg transform transition-all duration-500 hover:scale-105"
-                    />
-                    <img
-                      src={Polos || "/placeholder.svg?height=300&width=250"}
-                      alt="Producto destacado"
-                      className="w-full h-auto rounded-lg object-cover shadow-lg transform transition-all duration-500 hover:scale-105"
-                    />
+              {/* Grid of category images */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.6 }}
+                className="grid grid-cols-2 gap-4 mt-4"
+              >
+                {categories.slice(0, 4).map((category, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ duration: 0.5, delay: 0.4 + index * 0.1 }}
+                    className="relative overflow-hidden rounded-xl group shadow-lg"
+                    whileHover={{ y: -5, scale: 1.02 }}
+                  >
                     <img
                       src={
-                        Pantalones || "/placeholder.svg?height=300&width=250"
+                        category.image ||
+                        "/placeholder.svg?height=150&width=150"
                       }
-                      alt="Producto destacado"
-                      className="w-full h-auto rounded-lg object-cover shadow-lg transform transition-all duration-500 hover:scale-105"
+                      alt={category.title}
+                      className="w-full h-32 object-cover transition-transform duration-500 group-hover:scale-110"
                     />
-                  </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                    <div className="absolute bottom-2 left-3 text-white font-medium text-sm">
+                      {category.title}
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
 
-                  <div className="absolute -bottom-4 -right-4 bg-blue-600 text-white text-sm font-bold px-4 py-2 rounded-full shadow-lg">
-                    DESTACADOS
-                  </div>
-                </motion.div>
-              </div>
+              {/* Decorative elements */}
+              <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-100 dark:bg-blue-900/20 rounded-full filter blur-3xl opacity-70 z-0"></div>
+              <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-blue-100 dark:bg-blue-900/20 rounded-full filter blur-3xl opacity-70 z-0"></div>
+
+              {/* Floating badge */}
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.8 }}
+                className="absolute top-4 -right-4 bg-white dark:bg-gray-800 shadow-lg rounded-full px-4 py-2 z-30"
+              >
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-yellow-500" />
+                  <span className="font-bold text-gray-900 dark:text-white text-sm">
+                    Nueva Temporada
+                  </span>
+                </div>
+              </motion.div>
             </motion.div>
           </div>
         </div>
 
-        {/* Enhanced scroll indicator */}
+        {/* Scroll indicator */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1, duration: 1 }}
-          className="absolute bottom-10 left-1/2 transform -translate-x-1/2 cursor-pointer"
+          transition={{ delay: 1.5, duration: 1 }}
+          className="absolute bottom-6 left-1/2 transform -translate-x-1/2 cursor-pointer z-20"
           onClick={scrollToCategories}
         >
           <motion.div
@@ -360,23 +568,27 @@ export default function Home(): JSX.Element {
             }}
             className="flex flex-col items-center gap-2"
           >
-            <p className="text-white/80 text-sm font-medium">Descubre más</p>
-            <div className="flex flex-col items-center gap-1">
-              <div className="w-1 h-6 rounded-full bg-gradient-to-b from-white/80 to-white/0" />
-              <motion.div
-                animate={{ opacity: [0.4, 1, 0.4] }}
-                transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
-                className="w-6 h-6 rounded-full flex items-center justify-center bg-white/10 backdrop-blur-sm"
-              >
-                <ChevronDown className="w-4 h-4 text-white" />
-              </motion.div>
-            </div>
+            <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">
+              Descubre más
+            </p>
+            <motion.div
+              animate={{
+                y: [0, 5, 0],
+              }}
+              transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
+              className="w-8 h-8 rounded-full flex items-center justify-center border border-gray-300 dark:border-gray-700"
+            >
+              <ChevronDown className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            </motion.div>
           </motion.div>
         </motion.div>
       </div>
 
       {/* Benefits Section - Enhanced with hover effects */}
-      <section className="py-24 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 relative overflow-hidden">
+      <section
+        id="categories-section"
+        className="py-24 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 relative overflow-hidden"
+      >
         {/* Background decoration */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
           <div className="absolute -top-24 -left-24 w-64 h-64 bg-blue-500/5 rounded-full"></div>
@@ -448,9 +660,7 @@ export default function Home(): JSX.Element {
       </section>
 
       {/* Featured Categories - Enhanced with 3D effect */}
-      <AnimatedSection
-        className="py-24 bg-white dark:bg-gray-900 relative overflow-hidden"
-      >
+      <AnimatedSection className="py-24 bg-white dark:bg-gray-900 relative overflow-hidden">
         {/* Background decoration */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <svg
@@ -585,22 +795,26 @@ export default function Home(): JSX.Element {
               title="Camiseta Premium"
               price="29.99"
               discount="39.99"
+              tag="Oferta"
             />
             <ProductCard
               image="/placeholder.svg?height=500&width=400"
               title="Jeans Slim Fit"
               price="49.99"
+              tag="Nuevo"
             />
             <ProductCard
               image="/placeholder.svg?height=500&width=400"
               title="Chaqueta de Cuero"
               price="89.99"
               discount="119.99"
+              tag="Oferta"
             />
             <ProductCard
               image="/placeholder.svg?height=500&width=400"
               title="Vestido Elegante"
               price="59.99"
+              tag="Exclusivo"
             />
           </div>
 
@@ -1103,230 +1317,4 @@ export default function Home(): JSX.Element {
       </section>
     </main>
   );
-}
-
-// Animated Section Component
-function AnimatedSection({
-  children,
-  className = "",
-}: AnimatedSectionProps): JSX.Element {
-  const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { once: true, amount: 0.2 });
-  const controls = useAnimation();
-
-  useEffect(() => {
-    if (isInView) {
-      controls.start("visible");
-    }
-  }, [controls, isInView]);
-
-  return (
-    <motion.section
-      ref={ref}
-      initial="hidden"
-      animate={controls}
-      variants={{
-        hidden: { opacity: 0, y: 50 },
-        visible: {
-          opacity: 1,
-          y: 0,
-          transition: { duration: 0.6, ease: "easeOut" },
-        },
-      }}
-      className={className}
-    >
-      {children}
-    </motion.section>
-  );
-}
-
-// Category Card Component
-function CategoryCard({
-  image,
-  title,
-  isActive,
-  index,
-}: CategoryCardProps): JSX.Element {
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: -50 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-      whileHover={{
-        scale: 1.05,
-        boxShadow:
-          "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-      }}
-      className="relative h-48 rounded-xl shadow-lg overflow-hidden group cursor-pointer transform transition-all duration-300"
-    >
-      <motion.div
-        className="absolute inset-0 bg-white dark:bg-gray-800"
-        initial={false}
-        animate={{
-          opacity: isActive ? 0 : 1,
-        }}
-        transition={{ duration: 0.5 }}
-      />
-      <motion.div
-        className="absolute inset-0"
-        initial={false}
-        animate={{
-          opacity: isActive ? 1 : 0,
-        }}
-        transition={{ duration: 0.5 }}
-      >
-        <img
-          src={image || "/placeholder.svg"}
-          alt={title}
-          className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-      </motion.div>
-      <div className="relative h-full flex items-end justify-center p-6">
-        <h3
-          className={`text-xl font-bold text-center py-3 px-6 rounded-lg ${
-            isActive ? "text-white" : "text-gray-800 dark:text-white"
-          } transition-all duration-300 transform group-hover:scale-110`}
-        >
-          {title}
-        </h3>
-      </div>
-    </motion.div>
-  );
-}
-
-// Product Card Component
-function ProductCard({
-  image,
-  title,
-  price,
-  discount,
-}: ProductCardProps): JSX.Element {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5 }}
-      whileHover={{
-        y: -10,
-        boxShadow:
-          "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-      }}
-      className="group bg-white dark:bg-gray-800 rounded-xl p-4 transition-all duration-300"
-    >
-      <div className="relative overflow-hidden rounded-xl mb-4 shadow-lg border border-gray-100 dark:border-gray-700 group-hover:shadow-xl transition-all duration-300">
-        <img
-          src={image || "/placeholder.svg"}
-          alt={title}
-          width={400}
-          height={500}
-          className="w-full h-[350px] object-cover transition-transform duration-700 group-hover:scale-110"
-        />
-
-        {/* Overlay con botones de acción */}
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
-          <div className="flex gap-2">
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-white p-3 rounded-full shadow-lg hover:bg-blue-600 hover:text-white transition-colors"
-            >
-              <ShoppingBag className="w-5 h-5" />
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-white p-3 rounded-full shadow-lg hover:bg-blue-600 hover:text-white transition-colors"
-            >
-              <Heart className="w-5 h-5" />
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-white p-3 rounded-full shadow-lg hover:bg-blue-600 hover:text-white transition-colors"
-            >
-              <Eye className="w-5 h-5" />
-            </motion.button>
-          </div>
-        </div>
-
-        {discount && (
-          <div className="absolute top-0 left-0 bg-gradient-to-r from-red-500 to-pink-500 text-white px-4 py-1 m-3 rounded-full font-medium">
-            Oferta
-          </div>
-        )}
-      </div>
-      <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2">
-        {title}
-      </h3>
-      <div className="flex items-center gap-2">
-        <span className="font-bold text-blue-700 dark:text-blue-400 text-lg">
-          ${price}
-        </span>
-        {discount && (
-          <span className="text-gray-500 dark:text-gray-400 line-through text-sm">
-            ${discount}
-          </span>
-        )}
-      </div>
-
-      {/* Rating stars */}
-      <div className="flex items-center mt-2">
-        {[...Array(5)].map((_, i) => (
-          <Star key={i} className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-        ))}
-        <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">
-          (24 reseñas)
-        </span>
-      </div>
-    </motion.div>
-  );
-}
-
-// Custom TypewriterText Component
-function TypewriterText({
-  texts,
-  delay = 80,
-  deleteSpeed = 50,
-}: {
-  texts: string[];
-  delay?: number;
-  deleteSpeed?: number;
-}): JSX.Element {
-  const [currentTextIndex, setCurrentTextIndex] = useState(0);
-  const [currentText, setCurrentText] = useState("");
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  useEffect(() => {
-    const text = texts[currentTextIndex];
-
-    const timeout = setTimeout(
-      () => {
-        if (!isDeleting) {
-          // Adding characters
-          if (currentText.length < text.length) {
-            setCurrentText(text.substring(0, currentText.length + 1));
-          } else {
-            // Start deleting after a pause
-            setTimeout(() => setIsDeleting(true), 1500);
-          }
-        } else {
-          // Removing characters
-          if (currentText.length > 0) {
-            setCurrentText(text.substring(0, currentText.length - 1));
-          } else {
-            // Move to next text
-            setIsDeleting(false);
-            setCurrentTextIndex((currentTextIndex + 1) % texts.length);
-          }
-        }
-      },
-      isDeleting ? deleteSpeed : delay
-    );
-
-    return () => clearTimeout(timeout);
-  }, [currentText, currentTextIndex, isDeleting, texts, delay, deleteSpeed]);
-
-  return <span>{currentText || "\u00A0"}</span>;
 }

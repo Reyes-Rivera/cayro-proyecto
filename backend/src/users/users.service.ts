@@ -7,7 +7,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
+import { AnswerQuestion, CreateUserDto } from './dto/create-user.dto';
 import { PasswordUpdate, UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
@@ -29,7 +29,7 @@ export class UsersService {
   constructor(
     private jwtSvc: JwtService,
     private prismaService: PrismaService,
-    private readonly logger:AppLogger
+    private readonly logger: AppLogger,
   ) {}
   async sendEmail(correo, subject, html) {
     var transporter = nodemailer.createTransport({
@@ -50,7 +50,7 @@ export class UsersService {
       await transporter.sendMail(mailOptions);
       console.log('codigo enviado');
     } catch (error) {
-      console.log(error);
+      this.logger.error(`Error al enviar el email: \nStack: ${error.stack}`);
       throw new InternalServerErrorException(
         'Error al enviar el correo de recuperación,',
       );
@@ -132,7 +132,7 @@ export class UsersService {
       await this.sendEmail(email, 'Codigo de verificación', html);
       return { message: 'Codigo de verificación enviado.' };
     } catch (error) {
-      console.log(error);
+      this.logger.error(`Error al enviar el codigo: \nStack: ${error.stack}`);
     }
   }
 
@@ -158,47 +158,13 @@ export class UsersService {
       }
       return false; // Contraseña segura
     } catch (error) {
-      console.error('Error verificando contraseña comprometida:', error);
-      return false; // Por precaución, devolver que no está comprometida en caso de error
+      this.logger.error(
+        `Error verificando contraseña comprometida: \nStack: ${error.stack}`,
+      );
+      return false;
     }
   }
-  async create(createUserDto: CreateUserDto) {
-    try {
-      const userFound = await this.prismaService.user.findUnique({
-        where: { email: createUserDto.email },
-      });
-      if (userFound) {
-        throw new ConflictException('El correo ya esta en uso.');
-      }
-      const compromised = await this.isPasswordCompromised(
-        createUserDto.password,
-      );
-      if (compromised) {
-        throw new ConflictException(
-          'Esta contraseña ha sido comprometida. Por favor elige una diferente.',
-        );
-      }
-      const hashPassword = await bcrypt.hash(createUserDto.password, 10);
-      const data = {
-        ...createUserDto,
-        password: hashPassword,
-        birthdate: new Date(createUserDto.birthdate),
-        passwordExpiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
-        passwordsHistory: [{ password: hashPassword, createdAt: new Date() }],
-      };
 
-      await this.sendCode(createUserDto.email);
-      return this.prismaService.user.create({ data });
-    } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
-      }
-      throw new HttpException(
-        'Error interno del servidor',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-  }
   //its okey
   async verifyCode(userEmail: string, code: string) {
     const record = this.codes.get(userEmail);
@@ -311,6 +277,8 @@ export class UsersService {
         passwordsHistory,
         passwordExpiresAt,
         passwordSetAt,
+        securityAnswer,
+        securityQuestionId,
         ...rest
       } = resUser;
 
@@ -319,6 +287,9 @@ export class UsersService {
       if (error instanceof HttpException) {
         throw error;
       }
+      this.logger.error(
+        `Error al actualizar contraseña: \nStack: ${error.stack}`,
+      );
       throw new HttpException(
         'Error interno del servidor',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -412,10 +383,12 @@ export class UsersService {
       });
       return { message: 'Correo de recuperación enviado.' };
     } catch (error) {
-      console.log(error);
       if (error instanceof HttpException) {
         throw error;
       }
+      this.logger.error(
+        `Error al solicitar recuperar contraseña: \nStack: ${error.stack}`,
+      );
       throw new HttpException(
         'Error interno del servidor',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -500,7 +473,7 @@ export class UsersService {
         if (passwordHistory.length > 5) {
           passwordHistory.shift();
         }
-        const resUser = await this.prismaService.user.update({
+        await this.prismaService.user.update({
           where: { id: userFound.id },
           data: {
             password: hashedPassword,
@@ -531,6 +504,9 @@ export class UsersService {
       if (error instanceof HttpException) {
         throw error;
       }
+      this.logger.error(
+        `Error al restaurar contraseña: \nStack: ${error.stack}`,
+      );
       throw new HttpException(
         'Error interno del servidor',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -566,11 +542,485 @@ export class UsersService {
   findOne(id: number) {
     return `This action returns a #${id} user`;
   }
+  async create(createUserDto: CreateUserDto) {
+    try {
+      const userFound = await this.prismaService.user.findUnique({
+        where: { email: createUserDto.email },
+      });
+      if (userFound) {
+        throw new ConflictException('El correo ya esta en uso.');
+      }
+      const compromised = await this.isPasswordCompromised(
+        createUserDto.password,
+      );
+      if (compromised) {
+        throw new ConflictException(
+          'Esta contraseña ha sido comprometida. Por favor elige una diferente.',
+        );
+      }
+      const hashPassword = await bcrypt.hash(createUserDto.password, 10);
+      const data = {
+        ...createUserDto,
+        password: hashPassword,
+        birthdate: new Date(createUserDto.birthdate),
+        passwordExpiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+        passwordsHistory: [{ password: hashPassword, createdAt: new Date() }],
+      };
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+      await this.sendCode(createUserDto.email);
+      return this.prismaService.user.create({ data });
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error(`Error al crear usuario: \nStack: ${error.stack}`);
+      throw new HttpException(
+        'Error interno del servidor',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+  async update(id: number, updateUserDto: UpdateUserDto) {
+    try {
+      const user = await this.prismaService.employee.findUnique({
+        where: { email: updateUserDto.email },
+      });
+      if (user)
+        throw new ConflictException(
+          'El correo electrónico ya está en uso por otro usuario.',
+        );
+      if (updateUserDto.email) {
+        const userFound = await this.prismaService.user.findUnique({
+          where: { email: updateUserDto.email },
+        });
+
+        if (userFound && userFound.id !== id) {
+          throw new ConflictException(
+            'El correo electrónico ya está en uso por otro usuario.',
+          );
+        }
+      }
+
+      const currentUser = await this.prismaService.user.findUnique({
+        where: { id },
+      });
+
+      if (!currentUser) {
+        throw new HttpException('Usuario no encontrado.', HttpStatus.NOT_FOUND);
+      }
+
+      const data = {
+        ...updateUserDto,
+        birthdate: updateUserDto.birthdate
+          ? new Date(updateUserDto.birthdate)
+          : currentUser.birthdate,
+      };
+
+      // Si el correo cambia, enviar código de verificación
+      if (updateUserDto.email && currentUser.email !== updateUserDto.email) {
+        await this.sendCode(updateUserDto.email);
+        await this.prismaService.user.update({
+          where: { id },
+          data: { ...data, active: false },
+        });
+
+        return {
+          message:
+            'Correo actualizado. Se ha enviado un código de verificación.',
+        };
+      }
+
+      await this.prismaService.user.update({
+        where: { id },
+        data,
+      });
+
+      return { message: 'Usuario actualizado correctamente.' };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      this.logger.error(`Error al actualizar usuario: \nStack: ${error.stack}`);
+      throw new HttpException(
+        'Error interno del servidor',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
+  async updateAnswerQuestion(id: number, updateAnswer: AnswerQuestion) {
+    try {
+      const currentUser = await this.prismaService.user.findUnique({
+        where: { id },
+      });
+      if (!currentUser) {
+        throw new HttpException('Usuario no encontrado.', HttpStatus.NOT_FOUND);
+      }
+      const hashAnswer = await bcrypt.hash(updateAnswer.securityAnswer, 10);
+      const answerUser = await this.prismaService.user.update({
+        where: { id },
+        data: {
+          securityAnswer: hashAnswer,
+          securityQuestionId: updateAnswer.securityQuestionId,
+        },
+      });
+      const {
+        password,
+        passwordExpiresAt,
+        passwordSetAt,
+        passwordsHistory,
+        securityAnswer,
+        ...rest
+      } = answerUser;
+      return rest;
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error(
+        `Error al actualizar la respuesta : \nStack: ${error.stack}`,
+      );
+      throw new HttpException(
+        'Error interno del servidor',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async compareAnswer(answer: AnswerQuestion) {
+    try {
+      const currentUser = await this.prismaService.user.findUnique({
+        where: { email: answer.email },
+      });
+      if (!currentUser) {
+        throw new HttpException('Usuario no encontrado.', HttpStatus.NOT_FOUND);
+      }
+
+      const isAnswerValid = await bcrypt.compare(
+        answer.securityAnswer,
+        currentUser.securityAnswer,
+      );
+      if (
+        !isAnswerValid ||
+        currentUser.securityQuestionId !== answer.securityQuestionId
+      ) {
+        throw new HttpException(
+          'Respuesta no válida.',
+          HttpStatus.UNAUTHORIZED,
+        );
+      }
+
+      const companyInfo = await this.prismaService.companyProfile.findMany();
+      const configInfo = await this.prismaService.configuration.findMany();
+      const dataConfig = configInfo[0].emailVerificationInfo[0];
+      // Crear payload y generar token con tiempo de expiración
+      const payload = {
+        sub: currentUser.id,
+        role: Role.USER,
+        email: currentUser.email,
+      };
+      const expirationTime = configInfo[0]?.timeTokenEmail || 10;
+      const token = this.jwtSvc.sign(payload, {
+        expiresIn: `${expirationTime}m`,
+      });
+
+      // Contenido del correo de recuperación
+      const currentYear = new Date().getFullYear();
+      const html = `
+          <!DOCTYPE html>
+          <html lang="es">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Recupera tu contraseña de tu cuenta en Cayro</title>
+          </head>
+          <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+                  <tr>
+                      <td align="center">
+                          <img src=${companyInfo[0].logoUrl} alt="Cayro Uniformes" style="display: block; width: 150px; max-width: 100%; height: auto;">
+                      </td>
+                  </tr>
+                  <tr>
+                      <td style="padding: 0px 30px;">
+                          <h1 style="color: #333333; font-size: 24px; margin-bottom: 20px; text-align: center;">
+                          ${dataConfig?.title || 'Recuperación de Contraseña'} 
+                          </h1>
+                          <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
+                              ${dataConfig?.greeting || 'Hola,'}
+                          </p>
+                          <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
+                          ${dataConfig?.maininstruction || 'Para recuperar tu contraseña, haz clic en el enlace siguiente:'}
+                          </p>
+
+                          <div style="background-color: #f0f0f0; border-radius: 4px; padding: 20px; text-align: center; margin-bottom: 20px;">
+                              <a href="http://localhost:5173/restaurar-password/${token}" style="font-size: 32px; font-weight: bold; color: #0099FF;">Recuperar contraseña</a>
+                          </div>
+                          <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
+                          ${dataConfig?.secondaryinstruction || 'Si no solicitaste esta acción, ignora este mensaje.'}
+                          </p>
+                          <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
+                          ${dataConfig?.expirationtime || 'Este enlace expira en 10 minutos.'}
+                          </p>
+                          <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
+                          ${dataConfig?.finalMessage || 'Gracias, Cayro Uniformes'}
+                          </p>
+                      </td>
+                  </tr>
+                  <tr>
+                      <td style="background-color: #27272A; padding: 20px 30px;">
+                          <p style="color: #ffffff; font-size: 14px; line-height: 1.5; margin: 0; text-align: center;">
+                              © ${currentYear} Cayro Uniformes. Todos los derechos reservados.
+                          </p>
+                      </td>
+                  </tr>
+              </table>
+          </body>
+          </html>
+        `;
+
+      // Enviar el correo electrónico
+      await this.sendEmail(currentUser.email, 'Recuperar contraseña', html);
+      await this.prismaService.userActivity.create({
+        data: {
+          email: currentUser.email,
+          action: 'Solicitud de recuperación de contraseña.',
+          date: new Date(),
+        },
+      });
+      return { message: 'Correo de recuperación enviado.' };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error(
+        `Error al actualizar la respuesta : \nStack: ${error.stack}`,
+      );
+      throw new HttpException(
+        'Error interno del servidor',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+  async upsertUserAddress(
+    userId: number,
+    addressData: {
+      street: string;
+      city: string;
+      state: string;
+      country: string;
+      postalCode: string;
+      colony: string;
+    },
+  ) {
+    try {
+      // Verificar si el usuario existe
+      const userExists = await this.prismaService.user.findUnique({
+        where: { id: userId },
+      });
+
+      if (!userExists) {
+        throw new Error(`El usuario con ID ${userId} no existe.`);
+      }
+
+      // Buscar si la dirección ya existe en la BD
+      let existingAddress = await this.prismaService.address.findFirst({
+        where: {
+          street: addressData.street,
+          city: addressData.city,
+          state: addressData.state,
+          country: addressData.country,
+          postalCode: addressData.postalCode,
+          colony: addressData.colony,
+        },
+      });
+
+      if (existingAddress) {
+        // Verificar si la dirección ya está asociada al usuario
+        const isAddressLinked = await this.prismaService.address.findFirst({
+          where: {
+            id: existingAddress.id,
+            users: { some: { id: userId } },
+          },
+        });
+
+        if (isAddressLinked) {
+          throw new ConflictException(
+            'Esta dirección ya está registrada para este usuario.',
+          );
+        }
+
+        // Si la dirección ya existe pero no está relacionada, solo la vinculamos
+        await this.prismaService.address.update({
+          where: { id: existingAddress.id },
+          data: {
+            users: { connect: { id: userId } },
+          },
+        });
+
+        return {
+          message: 'Dirección existente vinculada al usuario exitosamente.',
+          existingAddress,
+        };
+      }
+
+      // Si no existe, crear y asociar la dirección al usuario
+      const newAddress = await this.prismaService.address.create({
+        data: {
+          street: addressData.street || '',
+          city: addressData.city || '',
+          state: addressData.state || '',
+          country: addressData.country || '',
+          postalCode: addressData.postalCode || '',
+          colony: addressData.colony || '',
+          users: { connect: { id: userId } },
+        },
+      });
+
+      return {
+        message: 'Nueva dirección creada y vinculada al usuario exitosamente.',
+        newAddress,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      this.logger.error(
+        `Error al registrar la dirección: \nStack: ${error.stack}`,
+      );
+      throw new HttpException(
+        'Error interno en el servidor',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async updateUserAddress(
+    userId: number,
+    addressId: number,
+    addressData: {
+      street?: string;
+      city?: string;
+      state?: string;
+      country?: string;
+      postalCode?: string;
+      colony?: string;
+    },
+  ) {
+    try {
+      // Verificar si la dirección está actualmente asociada al usuario
+      const existingAddress = await this.prismaService.address.findFirst({
+        where: {
+          id: addressId,
+          users: { some: { id: userId } },
+        },
+      });
+
+      if (!existingAddress) {
+        throw new Error(
+          `No se encontró la dirección con ID ${addressId} para el usuario ${userId}.`,
+        );
+      }
+
+      // Desvincular la dirección antigua del usuario
+      await this.prismaService.address.update({
+        where: { id: addressId },
+        data: {
+          users: { disconnect: { id: userId } },
+        },
+      });
+
+      // Verificar si la nueva dirección ya existe en la base de datos
+      let newAddress = await this.prismaService.address.findFirst({
+        where: {
+          street: addressData.street,
+          city: addressData.city,
+          state: addressData.state,
+          country: addressData.country,
+          postalCode: addressData.postalCode,
+          colony: addressData.colony,
+        },
+      });
+
+      if (newAddress) {
+        // Si la dirección ya existe, solo la vinculamos al usuario
+        await this.prismaService.address.update({
+          where: { id: newAddress.id },
+          data: {
+            users: { connect: { id: userId } },
+          },
+        });
+
+        return {
+          message:
+            'Dirección actualizada exitosamente al vincular con una existente.',
+          newAddress,
+        };
+      }
+
+      newAddress = await this.prismaService.address.create({
+        data: {
+          street: addressData.street || '',
+          city: addressData.city || '',
+          state: addressData.state || '',
+          country: addressData.country || '',
+          postalCode: addressData.postalCode || '',
+          colony: addressData.colony || '',
+          users: { connect: { id: userId } },
+        },
+      });
+
+      return {
+        message: 'Nueva dirección creada y vinculada al usuario exitosamente.',
+        newAddress,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Error al actualizar la dirección: \nStack: ${error.stack}`,
+      );
+      throw new HttpException(
+        'No se pudo actualizar la dirección.',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async findAddresses(id: number) {
+    return await this.prismaService.address.findMany({
+      where: {
+        users: {
+          some: { id: id },
+        },
+      },
+    });
+  }
+  async unlinkUserAddress(userId: number, addressId: number) {
+    try {
+      // Verificar si la dirección está asociada al usuario
+      const existingRelation = await this.prismaService.address.findFirst({
+        where: {
+          id: addressId,
+          users: { some: { id: userId } },
+        },
+      });
+
+      if (!existingRelation) {
+        throw new Error(`El usuario ${userId} no tiene esta dirección asociada.`);
+      }
+
+      // Eliminar solo la relación, sin borrar la dirección
+      await this.prismaService.address.update({
+        where: { id: addressId },
+        data: {
+          users: { disconnect: { id: userId } },
+        },
+      });
+
+      return { message: 'Dirección desvinculada del usuario exitosamente.' };
+    } catch (error) {
+      this.logger.error(`Error al desvincular la dirección: \nStack: ${error.stack}`);
+      throw new HttpException('No se pudo desvincular la dirección.', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
   remove(id: number) {
     return `This action removes a #${id} user`;
   }

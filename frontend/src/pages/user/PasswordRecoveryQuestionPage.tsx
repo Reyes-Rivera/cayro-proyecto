@@ -1,161 +1,123 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import {
-  Check,
-  Eye,
-  EyeOff,
-  Lock,
+  ArrowLeft,
   Loader2,
-  AlertCircle,
-  CheckCircle,
-  Shield,
+  HelpCircle,
   ArrowRight,
+  Lock,
+  CheckCircle,
+  Mail,
+  Shield,
+  AlertCircle,
   KeyRound,
   Sparkles,
+  ChevronDown,
 } from "lucide-react";
-import backgroundImage from "../web/Home/assets/hero.jpg";
 import { Label } from "@/components/ui/label";
-import { useForm } from "react-hook-form";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
-import type { User } from "@/types/User";
-import { useNavigate, useParams, Link } from "react-router-dom";
-import { restorePassword } from "@/api/auth";
 import { motion, AnimatePresence } from "framer-motion";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import backgroundImage from "../web/Home/assets/hero.jpg";
+import { compareQuestion, getQuestions } from "@/api/auth";
 
-export default function PasswordResetPage() {
-  const [password, setPassword] = useState("");
-  const [passwordStrength, setPasswordStrength] = useState(0);
-  const [passwordChecks, setPasswordChecks] = useState({
-    length: false,
-    uppercase: false,
-    lowercase: false,
-    number: false,
-    special: false,
-    noSequential: false,
-  });
+type FormData = {
+  email: string;
+  securityQuestion: string;
+  securityAnswer: string;
+};
+
+type QuestionData = {
+  id: number;
+  question: string;
+};
+
+export default function PasswordRecoveryQuestionPage() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [questions, setQuestions] = useState<QuestionData[]>([]);
+  const navigate = useNavigate();
 
   const {
     register,
     handleSubmit,
-    clearErrors,
     formState: { errors },
-  } = useForm<User>();
+    watch,
+    clearErrors,
+  } = useForm<FormData>({
+    defaultValues: {
+      email: "",
+      securityQuestion: "",
+      securityAnswer: "",
+    },
+  });
 
-  const navigate = useNavigate();
-  const { token } = useParams();
+  const email = watch("email");
 
-  useEffect(() => {
-    const checks = {
-      length: password.length >= 8,
-      uppercase: /[A-Z]/.test(password),
-      lowercase: /[a-z]/.test(password),
-      number: /[0-9]/.test(password),
-      special: /[!@#$%^&*(),.?":{}|]/.test(password),
-      noSequential: !containsSequentialPatterns(password),
-    };
-    setPasswordChecks(checks);
-    setPasswordStrength(Object.values(checks).filter(Boolean).length * 20);
-  }, [password]);
+  const onSubmit = async (data: FormData) => {
+    try {
+      setIsSubmitting(true);
+      const newData = {
+        email: data.email,
+        securityQuestionId: +data.securityQuestion,
+        securityAnswer: data.securityAnswer,
+      };
 
-  const containsSequentialPatterns = (password: string): boolean => {
-    const commonPatterns = [
-      "1234",
-      "abcd",
-      "qwerty",
-      "password",
-      "1111",
-      "aaaa",
-    ];
-
-    const sequentialPatternRegex =
-      /(01234|12345|23456|34567|45678|56789|67890|abcd|bcde|cdef|defg|efgh|fghi)/;
-
-    return (
-      commonPatterns.some((pattern) => password.includes(pattern)) ||
-      sequentialPatternRegex.test(password)
-    );
-  };
-
-  const getStrengthColor = (strength: number) => {
-    if (strength <= 20) return "bg-red-500";
-    if (strength <= 40) return "bg-orange-500";
-    if (strength <= 60) return "bg-yellow-500";
-    if (strength <= 80) return "bg-lime-500";
-    return "bg-green-500";
-  };
-
-  const getStrengthName = (strength: number) => {
-    if (strength <= 20) return "Muy débil";
-    if (strength <= 40) return "Débil";
-    if (strength <= 60) return "Moderada";
-    if (strength <= 80) return "Fuerte";
-    return "Muy fuerte";
-  };
-
-  const onSubmit = handleSubmit(async (data: User) => {
-    if (Object.values(passwordChecks).every(Boolean)) {
-      setIsLoading(true);
-      try {
-        const res = await restorePassword(token, { password: data.password });
-        if (res) {
-          setIsSubmitted(true);
-          Swal.fire({
-            icon: "success",
-            title: "Contraseña actualizada",
-            text: "Tu contraseña ha sido restablecida correctamente.",
-            confirmButtonColor: "#3B82F6",
-            iconColor: "#10B981",
-            showClass: {
-              popup: "animate__animated animate__fadeInDown",
-            },
-            hideClass: {
-              popup: "animate__animated animate__fadeOutUp",
-            },
-          });
-        }
-      } catch (error: any) {
+      await compareQuestion(newData);
+      setTimeout(() => {
+        setIsSubmitted(true);
         Swal.fire({
-          icon: "error",
-          title: "Error de Contraseña",
-          text:
-            error?.response?.data?.message ||
-            "Ha ocurrido un error al restablecer la contraseña.",
-          confirmButtonColor: "#3B82F6",
-          iconColor: "#EF4444",
-          showClass: {
-            popup: "animate__animated animate__fadeInDown",
-          },
-          hideClass: {
-            popup: "animate__animated animate__fadeOutUp",
-          },
+          icon: "success",
+          title: "Verificación exitosa",
+          text: "La respuesta a tu pregunta de seguridad es correcta.",
+          confirmButtonColor: "#2563EB",
         });
-        navigate("/recuperar-password");
-      } finally {
-        setIsLoading(false);
-      }
-    } else {
+      }, 1000);
+    } catch (error: any) {
       Swal.fire({
         icon: "error",
-        title: "Error de Contraseña",
-        text: "La contraseña no cumple con todos los requisitos de seguridad.",
-        confirmButtonColor: "#3B82F6",
+        title: "Error de verificación",
+        toast: true,
+        text:
+          error.response?.data?.message ||
+          "La respuesta no es correcta. Inténtalo de nuevo.",
+        position: "top-end",
+        timer: 3000,
+        showConfirmButton: false,
+        animation: true,
+        background: "#FEF2F2",
+        color: "#B91C1C",
         iconColor: "#EF4444",
-        showClass: {
-          popup: "animate__animated animate__fadeInDown",
-        },
-        hideClass: {
-          popup: "animate__animated animate__fadeOutUp",
-        },
       });
+    } finally {
+      setIsSubmitting(false);
     }
-  });
+  };
+
+  const handleContinue = () => {
+    navigate("/reset-password", { state: { email } });
+  };
+
+  useEffect(() => {
+    const getQuestionsApi = async () => {
+      try {
+        const res = await getQuestions();
+        setQuestions(res.data);
+      } catch (error) {
+        console.error("Error al cargar preguntas de seguridad:", error);
+      }
+    };
+    getQuestionsApi();
+  }, []);
+
+  // Función para sanitizar la entrada y eliminar caracteres no permitidos
+  const sanitizeInput = (value: string) => {
+    return value.replace(/[<>'"`]/g, "");
+  };
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
@@ -176,9 +138,9 @@ export default function PasswordResetPage() {
                 transition={{ duration: 0.6, delay: 0.2 }}
                 className="mb-6 inline-flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-4 py-1.5"
               >
-                <KeyRound className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
+                <HelpCircle className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
                 <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                  NUEVA CONTRASEÑA
+                  PREGUNTA DE SEGURIDAD
                 </span>
               </motion.div>
 
@@ -188,7 +150,8 @@ export default function PasswordResetPage() {
                 transition={{ duration: 0.6, delay: 0.2 }}
                 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white leading-tight mb-4"
               >
-                Restablece tu <span className="text-blue-600">contraseña</span>
+                Recupera tu acceso a{" "}
+                <span className="text-blue-600">Cayro Uniformes</span>
               </motion.h1>
 
               <motion.p
@@ -197,193 +160,170 @@ export default function PasswordResetPage() {
                 transition={{ duration: 0.6, delay: 0.4 }}
                 className="text-lg text-gray-600 dark:text-gray-400 mb-8"
               >
-                Crea una nueva contraseña segura para tu cuenta en Cayro
-                Uniformes.
+                Responde tu pregunta de seguridad para verificar tu identidad y
+                recuperar el acceso a tu cuenta.
               </motion.p>
             </div>
 
             <AnimatePresence mode="wait">
               {!isSubmitted ? (
                 <motion.form
-                  key="reset-form"
+                  key="recovery-form"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.3 }}
                   className="space-y-6"
-                  onSubmit={onSubmit}
+                  onSubmit={handleSubmit(onSubmit)}
                 >
                   <div className="space-y-2">
                     <Label
-                      htmlFor="password"
+                      htmlFor="email"
                       className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center"
                     >
-                      <Lock className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                      Nueva contraseña
+                      <Mail className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
+                      Correo electrónico
                     </Label>
                     <div className="relative">
                       <input
-                        {...register("password", {
-                          required: "La contraseña es requerida",
+                        id="email"
+                        type="email"
+                        autoComplete="email"
+                        placeholder="correo@ejemplo.com"
+                        className={`block w-full rounded-lg border ${
+                          errors.email
+                            ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                            : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
+                        } bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3.5 shadow-sm transition-colors focus:outline-none`}
+                        {...register("email", {
+                          required: "El correo electrónico es obligatorio",
                           pattern: {
-                            value:
-                              /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?:{}|])(?!.*[<>]).{8,}$/,
-                            message:
-                              "Introduce caracteres especiales como !@#$%^&*(),.?:{}|",
+                            value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                            message: "Dirección de correo electrónico inválida",
+                          },
+                          onChange: (e) => {
+                            const sanitizedValue = sanitizeInput(
+                              e.target.value
+                            );
+                            e.target.value = sanitizedValue;
+                            if (
+                              /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(
+                                sanitizedValue
+                              )
+                            ) {
+                              clearErrors("email");
+                            }
                           },
                         })}
-                        id="password"
-                        type={showPassword ? "text" : "password"}
-                        value={password}
-                        onChange={(e) => {
-                          setPassword(e.target.value);
-                          clearErrors("password");
-                          clearErrors("confirmPassword");
-                        }}
-                        autoComplete="new-password"
-                        className={`block w-full rounded-lg border ${
-                          errors.password
-                            ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                            : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
-                        } bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3.5 shadow-sm transition-colors focus:outline-none`}
-                        placeholder="••••••••"
                       />
-                      <button
-                        type="button"
-                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none"
-                        onClick={() => setShowPassword(!showPassword)}
-                        tabIndex={-1}
-                      >
-                        {showPassword ? (
-                          <EyeOff size={20} />
-                        ) : (
-                          <Eye size={20} />
-                        )}
-                      </button>
-                    </div>
-                    {errors.password && (
-                      <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1 mt-1">
-                        <AlertCircle className="h-4 w-4" />
-                        {errors.password.message}
-                      </p>
-                    )}
 
-                    {!Object.values(passwordChecks).every(Boolean) &&
-                      password && (
-                        <div className="mt-4 bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                          <div className="flex justify-between items-center mb-2">
-                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center">
-                              <Shield className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                              Fortaleza de la contraseña:
-                            </span>
-                            <span
-                              className={`text-sm font-medium ${getStrengthColor(
-                                passwordStrength
-                              ).replace("bg-", "text-")}`}
-                            >
-                              {getStrengthName(passwordStrength)}
-                            </span>
-                          </div>
-                          <div className="w-full h-2 rounded-full bg-gray-200 dark:bg-gray-700">
-                            <div
-                              className={`h-full rounded-full ${getStrengthColor(
-                                passwordStrength
-                              )}`}
-                              style={{ width: `${passwordStrength}%` }}
-                            ></div>
-                          </div>
-
-                          <ul className="mt-3 space-y-2 text-sm">
-                            {Object.entries(passwordChecks).map(
-                              ([key, isValid]) => {
-                                const labels: Record<string, string> = {
-                                  length: "Mínimo 8 caracteres",
-                                  uppercase: "Al menos una mayúscula",
-                                  lowercase: "Al menos una minúscula",
-                                  number: "Al menos un número",
-                                  special:
-                                    'Al menos un carácter especial (!@#$%^&*(),.?":{}|)',
-                                  noSequential:
-                                    'Sin secuencias obvias como "12345" o "abcd"',
-                                };
-
-                                return (
-                                  <li
-                                    key={key}
-                                    className={`flex items-start ${
-                                      isValid
-                                        ? "text-green-600 dark:text-green-400"
-                                        : "text-gray-500 dark:text-gray-400"
-                                    }`}
-                                  >
-                                    <div
-                                      className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mr-2 ${
-                                        isValid
-                                          ? "bg-green-100 dark:bg-green-900/30"
-                                          : "bg-gray-100 dark:bg-gray-700"
-                                      }`}
-                                    >
-                                      {isValid ? (
-                                        <Check className="w-3 h-3" />
-                                      ) : null}
-                                    </div>
-                                    {labels[key]}
-                                  </li>
-                                );
-                              }
-                            )}
-                          </ul>
+                      {errors.email && (
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                          <AlertCircle className="h-5 w-5 text-red-500" />
                         </div>
                       )}
+
+                      {!errors.email && email && (
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                        </div>
+                      )}
+                    </div>
+                    {errors.email && (
+                      <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1 mt-1">
+                        <AlertCircle className="h-4 w-4" />
+                        {errors.email.message}
+                      </p>
+                    )}
                   </div>
 
-                  {/* Confirmar Contraseña */}
                   <div className="space-y-2">
                     <Label
-                      htmlFor="password-confirm"
+                      htmlFor="securityQuestion"
+                      className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center"
+                    >
+                      <HelpCircle className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
+                      Pregunta de seguridad
+                    </Label>
+                    <div className="relative">
+                      <select
+                        id="securityQuestion"
+                        className={`block w-full rounded-lg border ${
+                          errors.securityQuestion
+                            ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                            : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
+                        } bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3.5 shadow-sm transition-colors focus:outline-none appearance-none`}
+                        {...register("securityQuestion", {
+                          required:
+                            "Debes seleccionar una pregunta de seguridad",
+                        })}
+                      >
+                        <option value="">Selecciona una pregunta</option>
+                        {questions &&
+                          questions.map((question) => (
+                            <option key={question.id} value={question.id}>
+                              {question.question}
+                            </option>
+                          ))}
+                      </select>
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                        <ChevronDown className="h-5 w-5 text-gray-500" />
+                      </div>
+                    </div>
+                    {errors.securityQuestion && (
+                      <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1 mt-1">
+                        <AlertCircle className="h-4 w-4" />
+                        {errors.securityQuestion.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="securityAnswer"
                       className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center"
                     >
                       <Lock className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                      Confirmar contraseña
+                      Respuesta
                     </Label>
                     <div className="relative">
                       <input
-                        {...register("confirmPassword", {
-                          required:
-                            "La confirmación de la contraseña es requerida",
-                          validate: (value) =>
-                            value === password ||
-                            "Las contraseñas no coinciden",
-                        })}
-                        id="password-confirm"
-                        type={showConfirmPassword ? "text" : "password"}
-                        autoComplete="new-password"
+                        id="securityAnswer"
+                        type="text"
+                        placeholder="Tu respuesta a la pregunta de seguridad"
                         className={`block w-full rounded-lg border ${
-                          errors.confirmPassword
+                          errors.securityAnswer
                             ? "border-red-500 focus:ring-red-500 focus:border-red-500"
                             : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
                         } bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3.5 shadow-sm transition-colors focus:outline-none`}
-                        placeholder="••••••••"
+                        {...register("securityAnswer", {
+                          required: "La respuesta es obligatoria",
+                          minLength: {
+                            value: 2,
+                            message:
+                              "La respuesta debe tener al menos 2 caracteres",
+                          },
+                          onChange: (e) => {
+                            const sanitizedValue = sanitizeInput(
+                              e.target.value
+                            );
+                            e.target.value = sanitizedValue;
+                            if (sanitizedValue.length >= 2) {
+                              clearErrors("securityAnswer");
+                            }
+                          },
+                        })}
                       />
-                      <button
-                        type="button"
-                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none"
-                        onClick={() =>
-                          setShowConfirmPassword(!showConfirmPassword)
-                        }
-                        tabIndex={-1}
-                      >
-                        {showConfirmPassword ? (
-                          <EyeOff size={20} />
-                        ) : (
-                          <Eye size={20} />
-                        )}
-                      </button>
+                      {errors.securityAnswer && (
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                          <AlertCircle className="h-5 w-5 text-red-500" />
+                        </div>
+                      )}
                     </div>
-                    {errors.confirmPassword && (
+                    {errors.securityAnswer && (
                       <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1 mt-1">
                         <AlertCircle className="h-4 w-4" />
-                        {errors.confirmPassword.message}
+                        {errors.securityAnswer.message}
                       </p>
                     )}
                   </div>
@@ -393,8 +333,8 @@ export default function PasswordResetPage() {
                     <div>
                       <p className="font-medium mb-1">Información importante</p>
                       <p>
-                        Crea una contraseña segura y única que no utilices en
-                        otros sitios web.
+                        Asegúrate de que la respuesta sea exactamente igual a la
+                        que proporcionaste al registrarte.
                       </p>
                     </div>
                   </div>
@@ -402,21 +342,21 @@ export default function PasswordResetPage() {
                   <motion.button
                     type="submit"
                     className="w-full p-3.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex justify-center items-center gap-2 relative overflow-hidden group"
-                    disabled={isLoading}
+                    disabled={isSubmitting}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
                     {/* Button background animation */}
                     <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-500/0 via-blue-500/30 to-blue-500/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
 
-                    {isLoading ? (
+                    {isSubmitting ? (
                       <>
                         <Loader2 className="animate-spin mr-2 h-5 w-5" />
-                        <span>Procesando...</span>
+                        <span>Verificando respuesta...</span>
                       </>
                     ) : (
                       <>
-                        <span>Restablecer contraseña</span>
+                        <span>Verificar respuesta</span>
                         <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                       </>
                     )}
@@ -451,15 +391,15 @@ export default function PasswordResetPage() {
                       </div>
                       <div>
                         <AlertTitle className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                          Contraseña restablecida con éxito
+                          Verificación exitosa
                         </AlertTitle>
                         <AlertDescription className="text-gray-700 dark:text-gray-300">
                           <p>
-                            Tu nueva contraseña ha sido configurada
-                            correctamente.
+                            La respuesta a tu pregunta de seguridad es correcta.
                           </p>
                           <p className="mt-2">
-                            Ahora puedes iniciar sesión con tu nueva contraseña.
+                            Ahora puedes continuar con el proceso para
+                            establecer una nueva contraseña.
                           </p>
                         </AlertDescription>
                       </div>
@@ -468,15 +408,23 @@ export default function PasswordResetPage() {
 
                   <div className="flex flex-col items-center gap-4 mt-8">
                     <motion.button
-                      onClick={() => navigate("/login")}
+                      onClick={handleContinue}
                       className="px-6 py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2 relative overflow-hidden group"
                       whileHover={{ scale: 1.03 }}
                       whileTap={{ scale: 0.97 }}
                     >
                       <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-500/0 via-blue-500/30 to-blue-500/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
-                      <span>Ir a iniciar sesión</span>
+                      <span>Continuar al restablecimiento</span>
                       <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                     </motion.button>
+
+                    <Link
+                      to="/login"
+                      className="mt-4 inline-flex items-center text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300 font-medium transition-colors"
+                    >
+                      <ArrowLeft className="mr-2 h-5 w-5" />
+                      Volver a iniciar sesión
+                    </Link>
                   </div>
                 </motion.div>
               )}
@@ -525,11 +473,9 @@ export default function PasswordResetPage() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
               <div className="absolute bottom-4 left-4 text-white">
                 <span className="text-sm font-medium bg-blue-600 px-3 py-1 rounded-full">
-                  Último paso
+                  Pregunta de seguridad
                 </span>
-                <h3 className="text-xl font-bold mt-2">
-                  Crea tu nueva contraseña
-                </h3>
+                <h3 className="text-xl font-bold mt-2">Verificación segura</h3>
               </div>
             </motion.div>
 
@@ -553,7 +499,7 @@ export default function PasswordResetPage() {
                   </h3>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Contraseña cifrada y segura
+                  Verificación de identidad segura
                 </p>
               </motion.div>
 
@@ -563,14 +509,14 @@ export default function PasswordResetPage() {
               >
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                    <Check className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    <HelpCircle className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   </div>
                   <h3 className="font-medium text-gray-900 dark:text-white">
-                    Sencillo
+                    Preguntas
                   </h3>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Proceso rápido y fácil
+                  Método alternativo de recuperación
                 </p>
               </motion.div>
 
@@ -583,11 +529,11 @@ export default function PasswordResetPage() {
                     <KeyRound className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   </div>
                   <h3 className="font-medium text-gray-900 dark:text-white">
-                    Acceso
+                    Nueva clave
                   </h3>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Recupera tu cuenta al instante
+                  Restablece tu contraseña fácilmente
                 </p>
               </motion.div>
 
@@ -597,14 +543,14 @@ export default function PasswordResetPage() {
               >
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                    <CheckCircle className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    <Mail className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   </div>
                   <h3 className="font-medium text-gray-900 dark:text-white">
-                    Verificado
+                    Sin email
                   </h3>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Identidad confirmada
+                  Recupera acceso sin revisar tu correo
                 </p>
               </motion.div>
             </motion.div>
@@ -619,7 +565,7 @@ export default function PasswordResetPage() {
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-yellow-500" />
                 <span className="font-bold text-gray-900 dark:text-white text-sm">
-                  Último paso
+                  Proceso sencillo
                 </span>
               </div>
             </motion.div>

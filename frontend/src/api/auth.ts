@@ -51,7 +51,14 @@ export const recoverPassword = async (email: object) => {
   return res;
 };
 
-export const restorePassword = async (token: string|undefined, password: object) => {
+export const restorePassword = async (
+  token: string | undefined,
+  password: object
+) => {
   const res = await axios.post(`/users/reset-password/${token}`, password);
   return res;
 };
+
+export const getQuestions = () => axios.get("/securityquestion");
+export const compareQuestion = async (data: object) =>
+  await axios.post("/users/compare-answer", data);

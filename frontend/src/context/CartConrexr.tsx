@@ -8,9 +8,9 @@ import {
   type ReactNode,
 } from "react";
 
-// Update the CartItem interface to match the product detail page structure
+// Definición de la interfaz CartItem
 export interface CartItem {
-  id: string; // Unique ID for cart item (product ID + variant ID)
+  id: string;
   product: {
     id: number;
     name: string;
@@ -48,26 +48,22 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([]);
-
-  // Load cart from localStorage on initial render
-  useEffect(() => {
-    const savedCart = localStorage.getItem("cart");
-    if (savedCart) {
-      try {
-        setItems(JSON.parse(savedCart));
-      } catch (error) {
-        console.error("Failed to parse cart from localStorage:", error);
-      }
+  // ✅ Usar `lazy initializer` para cargar desde `localStorage` solo una vez
+  const [items, setItems] = useState<CartItem[]>(() => {
+    try {
+      const savedCart = localStorage.getItem("cart");
+      return savedCart ? JSON.parse(savedCart) : [];
+    } catch (error) {
+      console.error("Failed to parse cart from localStorage:", error);
+      return [];
     }
-  }, []);
+  });
 
-  // Save cart to localStorage whenever it changes
+  // ✅ Guardar cambios en `localStorage` solo cuando `items` cambia
   useEffect(() => {
     localStorage.setItem("cart", JSON.stringify(items));
   }, [items]);
 
-  // Update the addItem function to handle the product detail page structure
   const addItem = (product: any, variant: any, quantity = 1) => {
     if (variant.stock <= 0) {
       console.error("Cannot add out-of-stock item to cart");
@@ -77,24 +73,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const cartItemId = `${product.id}-${variant.id}`;
 
     setItems((prevItems) => {
-      // Check if item already exists in cart
       const existingItemIndex = prevItems.findIndex(
         (item) => item.id === cartItemId
       );
 
       if (existingItemIndex >= 0) {
-        // Update quantity if item exists
         const updatedItems = [...prevItems];
         const newQuantity = updatedItems[existingItemIndex].quantity + quantity;
 
-        // Ensure quantity doesn't exceed stock
         updatedItems[existingItemIndex].quantity = Math.min(
           newQuantity,
           variant.stock
         );
         return updatedItems;
       } else {
-        // Add new item if it doesn't exist
         return [
           ...prevItems,
           {
@@ -108,37 +100,28 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  // Remove item from cart
   const removeItem = (cartItemId: string) => {
     setItems((prevItems) => prevItems.filter((item) => item.id !== cartItemId));
   };
 
-  // Update item quantity
   const updateQuantity = (cartItemId: string, quantity: number) => {
     setItems((prevItems) =>
-      prevItems.map((item) => {
-        if (item.id === cartItemId) {
-          // Ensure quantity doesn't exceed stock and is at least 1
-          const newQuantity = Math.max(
-            1,
-            Math.min(quantity, item.variant.stock)
-          );
-          return { ...item, quantity: newQuantity };
-        }
-        return item;
-      })
+      prevItems.map((item) =>
+        item.id === cartItemId
+          ? {
+              ...item,
+              quantity: Math.max(1, Math.min(quantity, item.variant.stock)),
+            }
+          : item
+      )
     );
   };
 
-  // Clear cart
   const clearCart = () => {
     setItems([]);
   };
 
-  // Calculate total number of items
   const itemCount = items.reduce((total, item) => total + item.quantity, 0);
-
-  // Calculate subtotal
   const subtotal = items.reduce(
     (total, item) => total + item.variant.price * item.quantity,
     0

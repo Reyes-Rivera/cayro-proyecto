@@ -29,6 +29,8 @@ import EmployeeDashboard from "@/pages/employees/employee/DashboardLayout";
 import ProtectedRouterEmployee from "@/utils/ProtectedRouterEmpleado";
 import Faq from "@/pages/web/faqs/Faqs";
 import CartPage from "@/pages/web/cart/cart-page";
+import PasswordRecoveryQuestionPage from "@/pages/user/PasswordRecoveryQuestionPage";
+import ProductoStatusSales from "@/pages/web/ProductoStatusSales";
 const AppRoutes = () => {
   useEffect(() => {
     const getInfoPage = async () => {
@@ -47,6 +49,8 @@ const AppRoutes = () => {
 
         <Routes>
           <Route path="/carrito" element={<CartPage />} />
+          <Route path="/carrito" element={<CartPage />} />
+          <Route path="/prediccion-ventas" element={<ProductoStatusSales />} />
           <Route path="/preguntas-frecuentes" element={<Faq />} />
           <Route path="/" element={<HomePage />} />
           <Route path="/aviso-privacidad" element={<Policies />} />
@@ -61,6 +65,10 @@ const AppRoutes = () => {
           <Route
             path="/recuperar-password"
             element={<PasswordRecoveryPage />}
+          />
+          <Route
+            path="/recuperar-password-pregunta"
+            element={<PasswordRecoveryQuestionPage />}
           />
           <Route
             path="/restaurar-password/:token"

@@ -1,5 +1,3 @@
-"use client";
-
 import type React from "react";
 import { useState, useEffect } from "react";
 import { Line } from "react-chartjs-2";
@@ -385,7 +383,6 @@ const ProductoStatusSales: React.FC = () => {
     },
   };
 
-  // Filtrar y ordenar proyecciones
   const filteredAndSortedProjections = projections
     .filter(
       (projection) =>
@@ -429,7 +426,7 @@ const ProductoStatusSales: React.FC = () => {
   };
 
   return (
-    <div className="p-6 space-y-8 ">
+    <div className="p-6 space-y-8 mt-14 ">
       {/* Encabezado de Página */}
       <div className="bg-blue-600 text-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700">
         <div className="p-6">

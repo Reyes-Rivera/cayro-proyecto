@@ -6,9 +6,10 @@ import {
   Patch,
   Param,
   Delete,
+  Put,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
+import { AnswerQuestion, CreateUserDto } from './dto/create-user.dto';
 import { PasswordUpdate, UpdateUserDto } from './dto/update-user.dto';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { Role } from 'src/auth/roles/role.enum';
@@ -79,9 +80,69 @@ export class UsersController {
     return this.usersService.update(+id, updateUserDto);
   }
 
+  @Patch('update-answer/:id')
+  updateAnswer(@Param('id') id: string, @Body() updateAnswer: AnswerQuestion) {
+    return this.usersService.updateAnswerQuestion(+id, updateAnswer);
+  }
+
+  @Post('compare-answer')
+  compareAnswer(@Body() updateAnswer: AnswerQuestion) {
+    return this.usersService.compareAnswer(updateAnswer);
+  }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.usersService.remove(+id);
+  }
+
+  @Put('address/:userId')
+  @Auth([Role.USER])
+  async upsertUserAddress(
+    @Param('userId') userId: number,
+    @Body()
+    addressData: {
+      street: string;
+      city: string;
+      state: string;
+      country: string;
+      postalCode: string;
+      colony: string;
+    },
+  ) {
+    return this.usersService.upsertUserAddress(+userId, addressData);
+  }
+
+  @Put('address/:userId/:addressId')
+  @Auth([Role.USER])
+  async updateUserAddress(
+    @Param('userId') userId: number,
+    @Param('addressId') addressId: number,
+    @Body()
+    addressData: {
+      street: string;
+      city: string;
+      state: string;
+      country: string;
+      postalCode: string;
+      colony: string;
+    },
+  ) {
+    return this.usersService.updateUserAddress(
+      +userId,
+      +addressId,
+      addressData,
+    );
+  }
+  @Get('addresses/:id')
+  findAddresses(@Param('id') id: string) {
+    return this.usersService.findAddresses(+id);
+  }
+
+  @Delete('address/:id/:addressId')
+  removeAddressUser(
+    @Param('id') id: string,
+    @Param('addressId') addressId: number,
+  ) {
+    return this.usersService.unlinkUserAddress(+id, +addressId);
   }
 }

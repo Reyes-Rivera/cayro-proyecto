@@ -233,7 +233,7 @@ export class AuthService {
       const configInfo = await this.prismaService.configuration.findMany();
 
       const user = await this.prismaService.user.findUnique({
-        where: { email: loginDto.email, active: true },
+        where: { email: loginDto.email },
       });
 
       let userFound: UserOrEmployee | null = user;
@@ -389,6 +389,7 @@ export class AuthService {
           passwordsHistory,
           passwordExpiresAt,
           passwordSetAt,
+          loginAttempts,
           ...rest
         } = entity;
         return { ...rest };

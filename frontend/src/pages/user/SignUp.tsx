@@ -17,6 +17,9 @@ import {
   AlertCircle,
   CheckCircle,
   Shield,
+  Sparkles,
+  Star,
+  Truck,
 } from "lucide-react";
 import backgroundImage from "../web/Home/assets/hero.jpg";
 import { Label } from "@/components/ui/label";
@@ -26,7 +29,6 @@ import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
 import { useAuth } from "@/context/AuthContextType";
 import { useNavigate, NavLink } from "react-router-dom";
-import Breadcrumbs from "@/components/web-components/Breadcrumbs";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function SignUpPage() {
@@ -187,7 +189,6 @@ export default function SignUpPage() {
             data.password,
             data.gender
           );
-          console.log(res);
           if (
             res.success === false &&
             res.message === "El correo ya esta en uso."
@@ -241,129 +242,78 @@ export default function SignUpPage() {
   });
 
   return (
-    <div className="min-h-screen flex-col flex items-center justify-center  dark:bg-gray-900 pt-20">
-      <div className="w-full  flex overflow-hidden">
-        {/* Columna izquierda - Imagen de fondo */}
-        <div
-          className="hidden h-[770px]  justify-center items-center md:flex md:w-1/2 bg-cover bg-center relative"
-          style={{ backgroundImage: `url(${backgroundImage})` }}
+    <div className="min-h-screen bg-white dark:bg-gray-900">
+      {/* Contenedor principal con dos columnas */}
+      <div className="flex flex-col md:flex-row min-h-screen">
+        {/* Columna izquierda - Formulario de registro */}
+        <motion.div
+          initial={{ opacity: 0, x: -30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8 }}
+          className="w-full md:w-1/2 flex flex-col justify-center items-center p-8 md:p-16 lg:p-24"
         >
-          {/* Overlay con gradiente */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/70 to-black/40"></div>
-
-          {/* Contenido de la columna izquierda */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="relative z-10 p-10 text-white max-w-xl"
-          >
-            <div className="text-white [&_*]:!text-white flex justify-center mb-8">
-              <Breadcrumbs />
-            </div>
-            <h2 className="text-4xl font-extrabold mb-6 leading-tight">
-              Bienvenido a{" "}
-              <span className="text-blue-100">Cayro Uniformes</span>
-            </h2>
-            <p className="text-lg mb-10 text-blue-50">
-              Regístrate para acceder a ofertas exclusivas, gestionar tus
-              pedidos y más.
-            </p>
-
-            {/* Características destacadas */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-8">
+          <div className="max-w-xl w-full">
+            <div className="mb-8">
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                className="flex flex-col items-center"
-              >
-                <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-tr from-blue-400 to-blue-600 rounded-full shadow-lg transform transition-transform hover:scale-110">
-                  <Check size={32} className="text-white" />
-                </div>
-                <p className="mt-4 text-sm text-white font-medium">
-                  Pedidos rápidos
-                </p>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
-                className="flex flex-col items-center"
+                className="mb-6 inline-flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-4 py-1.5"
               >
-                <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-tr from-green-400 to-green-600 rounded-full shadow-lg transform transition-transform hover:scale-110">
-                  <Lock size={32} className="text-white" />
-                </div>
-                <p className="mt-4 text-sm text-white font-medium">
-                  Seguridad garantizada
-                </p>
+                <User className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
+                <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                  CREAR CUENTA
+                </span>
               </motion.div>
 
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
+              <motion.h1
+                initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                className="flex flex-col items-center"
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white leading-tight mb-4"
               >
-                <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-tr from-yellow-400 to-yellow-600 rounded-full shadow-lg transform transition-transform hover:scale-110">
-                  <Package size={32} className="text-white" />
-                </div>
-                <p className="mt-4 text-sm text-white font-medium">
-                  Gestión personalizada
-                </p>
-              </motion.div>
+                Únete a <span className="text-blue-600">Cayro Uniformes</span>
+              </motion.h1>
+
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                className="text-lg text-gray-600 dark:text-gray-400 mb-8"
+              >
+                Regístrate para acceder a ofertas exclusivas, gestionar tus
+                pedidos y más.
+              </motion.p>
             </div>
-          </motion.div>
-        </div>
 
-        {/* Columna derecha - Formulario de registro */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6 }}
-          className="flex flex-col items-center w-full md:w-1/2 bg-white dark:bg-gray-900 "
-        >
-          <div className="w-full max-w-md">
-            <div className="text-center mb-6">
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                Crea tu cuenta
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400">
-                {currentStep === 1
-                  ? "Completa tus datos personales"
-                  : "Configura tu cuenta y contraseña"}
-              </p>
-
-              {/* Indicador de pasos */}
-              <div className="flex items-center justify-center mt-6">
-                <div className="flex items-center">
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                      currentStep >= 1
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
-                    }`}
-                  >
-                    1
-                  </div>
-                  <div
-                    className={`h-1 w-16 ${
-                      currentStep > 1
-                        ? "bg-blue-600"
-                        : "bg-gray-200 dark:bg-gray-700"
-                    }`}
-                  ></div>
-                </div>
+            {/* Indicador de pasos */}
+            <div className="flex items-center justify-center mb-8">
+              <div className="flex items-center">
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    currentStep >= 2
+                  className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                    currentStep >= 1
                       ? "bg-blue-600 text-white"
                       : "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
                   }`}
                 >
-                  2
+                  1
                 </div>
+                <div
+                  className={`h-1 w-16 ${
+                    currentStep > 1
+                      ? "bg-blue-600"
+                      : "bg-gray-200 dark:bg-gray-700"
+                  }`}
+                ></div>
+              </div>
+              <div
+                className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                  currentStep >= 2
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
+                }`}
+              >
+                2
               </div>
             </div>
 
@@ -671,7 +621,7 @@ export default function SignUpPage() {
                               value:
                                 /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?:{}|])(?!.*[<>]).{8,}$/,
                               message:
-                                'Introduce caracteres especiales como !@#$%^&*(),.?:{}|',
+                                "Introduce caracteres especiales como !@#$%^&*(),.?:{}|",
                             },
                           })}
                           id="password"
@@ -890,6 +840,135 @@ export default function SignUpPage() {
                 </div>
               )}
             </form>
+          </div>
+        </motion.div>
+
+        {/* Columna derecha - Imágenes y elementos visuales */}
+        <motion.div
+          initial={{ opacity: 0, x: 30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8, delay: 0.3 }}
+          className="w-full md:w-1/2 bg-blue-50 dark:bg-blue-900/10 relative overflow-hidden"
+        >
+          {/* Decorative elements */}
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-100 dark:bg-blue-900/20 rounded-full filter blur-3xl opacity-70 z-0"></div>
+          <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-blue-100 dark:bg-blue-900/20 rounded-full filter blur-3xl opacity-70 z-0"></div>
+
+          {/* Main content container */}
+          <div className="relative h-full flex flex-col justify-center items-center p-8 z-10">
+            {/* Main featured image */}
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="relative z-20 rounded-2xl overflow-hidden shadow-2xl max-w-md w-full mb-8"
+            >
+              <img
+                src={backgroundImage || "/placeholder.svg?height=400&width=600"}
+                alt="Cayro Uniformes"
+                className="w-full h-auto object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+              <div className="absolute bottom-4 left-4 text-white">
+                <span className="text-sm font-medium bg-blue-600 px-3 py-1 rounded-full">
+                  Únete ahora
+                </span>
+                <h3 className="text-xl font-bold mt-2">
+                  Beneficios exclusivos
+                </h3>
+              </div>
+            </motion.div>
+
+            {/* Features */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+              className="grid grid-cols-2 gap-4 max-w-md w-full"
+            >
+              <motion.div
+                className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md"
+                whileHover={{ y: -5 }}
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                    <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <h3 className="font-medium text-gray-900 dark:text-white">
+                    Seguridad
+                  </h3>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Tus datos siempre protegidos con nosotros
+                </p>
+              </motion.div>
+
+              <motion.div
+                className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md"
+                whileHover={{ y: -5 }}
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                    <Star className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <h3 className="font-medium text-gray-900 dark:text-white">
+                    Calidad
+                  </h3>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Materiales premium en todos nuestros productos
+                </p>
+              </motion.div>
+
+              <motion.div
+                className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md"
+                whileHover={{ y: -5 }}
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                    <Truck className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <h3 className="font-medium text-gray-900 dark:text-white">
+                    Envío rápido
+                  </h3>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Entrega garantizada en tiempo y forma
+                </p>
+              </motion.div>
+
+              <motion.div
+                className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md"
+                whileHover={{ y: -5 }}
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                    <Package className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <h3 className="font-medium text-gray-900 dark:text-white">
+                    Gestión
+                  </h3>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Administra tus pedidos fácilmente
+                </p>
+              </motion.div>
+            </motion.div>
+
+            {/* Floating badge */}
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.8 }}
+              className="absolute top-8 right-8 bg-white dark:bg-gray-800 shadow-lg rounded-full px-4 py-2 z-30"
+            >
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-yellow-500" />
+                <span className="font-bold text-gray-900 dark:text-white text-sm">
+                  Registro sencillo
+                </span>
+              </div>
+            </motion.div>
           </div>
         </motion.div>
       </div>

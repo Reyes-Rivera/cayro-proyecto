@@ -18,6 +18,7 @@ import { User } from "@/types/User";
 interface AuthContextType {
   user: User | null; // Usuario autenticado o null si no hay usuario
   login: (email: string, password: string) => Promise<User | null>;
+  verifyUser: () => Promise<User | null>;
   signOut: () => Promise<unknown>;
   isAuthenticated: boolean;
   auth: boolean;
@@ -207,6 +208,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
     return false;
   };
+  const verifyUser = async (): Promise<User | null> => {
+    await verifyAuth();
+    return user;
+  };
   const verifyAuth = async () => {
     setLoading(true);
     try {
@@ -220,14 +225,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setAuth(false);
         setUser(null);
       }
-    } catch (error) {
+    } catch (error: any) {
       setUser(null);
       setAuth(false);
       setLoading(false);
-      console.log(error);
+      setError(error.response.data.message);
     }
   };
   useEffect(() => {
+    const email = localStorage.getItem("emailToVerify");
+    if (email) {
+      setIsVerificationPending(true);
+      setEmailToVerify(email);
+    }
     verifyAuth();
   }, []);
 
@@ -249,6 +259,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setEmailToVerify,
     verifyCodeAuth,
     errorTimer,
+    verifyUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

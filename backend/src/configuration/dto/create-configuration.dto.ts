@@ -1,7 +1,12 @@
-import { IsArray, IsInt, IsNotEmpty, ValidateNested } from 'class-validator';
+import {  IsInt, IsNotEmpty, IsString } from 'class-validator';
 
 export class EmailDataDto {
-  @IsNotEmpty()
+  @IsString({
+    message:"El titulo debe ser de tipo texto."
+  })
+  @IsNotEmpty({
+    message:"El titulo es requerido."
+  })
   title: string;
 
   @IsNotEmpty()

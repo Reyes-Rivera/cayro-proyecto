@@ -1,31 +1,12 @@
 "use client";
-
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ShoppingBag, ChevronDown } from "lucide-react";
-import Breadcrumbs from "@/components/web-components/Breadcrumbs";
+import { ShoppingBag, ChevronDown, ArrowRight } from "lucide-react";
+import { NavLink } from "react-router-dom";
+import Playeras from "../../Home/assets/playeras.jpg.jpg";
+import Camisas from "../../Home/assets/camisas.jpg";
 import backgroundImage from "../../Home/assets/hero.jpg";
-import { getProducts } from "@/api/products";
-import type { Product } from "../utils/products";
-
 export default function ProductHero() {
-  const [scrollY, setScrollY] = useState(0);
-  const [product, setProduct] = useState<Product>();
-
-  // Handle parallax effect on scroll
-  useEffect(() => {
-    const getProduct = async () => {
-      const res = await getProducts();
-      setProduct(res.data[0]);
-    };
-    getProduct();
-    const handleScroll = () => {
-      setScrollY(window.scrollY);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+ 
 
   // Smooth scroll function
   const scrollToProducts = () => {
@@ -36,142 +17,204 @@ export default function ProductHero() {
   };
 
   return (
-    <div className="relative overflow-hidden h-screen flex flex-col justify-center">
-      {/* Background with parallax effect - increased brightness */}
-      <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{
-          backgroundImage: `url(${backgroundImage})`,
-          transform: `translateY(${scrollY * 0.2}px)`,
-          filter: "brightness(0.85)", // Increased from 0.7 to 0.85
-        }}
-      />
-      {/* Gradient overlay - reduced opacity */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/70" />{" "}
-      {/* Reduced opacity values */}
-      {/* Decorative elements */}
-      <div className="absolute inset-0">
-        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_20%,rgba(30,30,30,0.2)_0%,rgba(0,0,0,0)_50%)]" />
-        <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_70%_80%,rgba(30,30,30,0.2)_0%,rgba(0,0,0,0)_50%)]" />
+    <div className="relative min-h-screen bg-white dark:bg-gray-900 flex items-center">
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/5 rounded-full"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-500/5 rounded-full"></div>
       </div>
-      {/* Content */}
-      <div className="relative max-w-7xl mx-auto px-4 flex flex-col justify-center flex-grow">
-        <div className="grid md:grid-cols-2 gap-8 items-center">
+
+      <div className="container mx-auto px-6 py-16 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+          {/* Left column - Content */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.7, ease: "easeOut" }}
-            className="text-white space-y-6"
+            transition={{ duration: 0.8 }}
+            className="space-y-8"
           >
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="inline-flex items-center rounded-full bg-blue-600/30 backdrop-blur-sm border border-blue-500/20 px-4 py-1.5 text-sm font-medium text-blue-100"
+              transition={{ duration: 0.6, delay: 0.2 }}
             >
-              <ShoppingBag className="w-4 h-4 mr-2 text-blue-300" />
-              CATÁLOGO DE PRODUCTOS
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5 }}
+                className="mb-6 inline-flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-4 py-1.5"
+              >
+                <ShoppingBag className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
+                <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                  CATÁLOGO DE PRODUCTOS
+                </span>
+              </motion.div>
+
+              <motion.h1
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white leading-tight"
+              >
+                Descubre nuestra{" "}
+                <span className="text-blue-600">colección exclusiva</span>
+              </motion.h1>
             </motion.div>
 
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight"
-            >
-              <span className="block">Descubre nuestra</span>
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-200 to-white">
-                colección exclusiva
-              </span>
-            </motion.h1>
-
             <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="text-lg text-gray-300 max-w-md"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+              className="text-gray-600 dark:text-gray-400 text-lg leading-relaxed max-w-lg"
             >
               Explora nuestra selección de prendas diseñadas con los mejores
               materiales y acabados de alta calidad para todos los estilos.
             </motion.p>
 
             <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+              className="flex flex-wrap gap-6 mt-8"
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                  <ShoppingBag className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <span className="text-gray-700 dark:text-gray-300 text-sm">
+                  Envío rápido
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                  <ShoppingBag className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <span className="text-gray-700 dark:text-gray-300 text-sm">
+                  Calidad premium
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                  <ShoppingBag className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <span className="text-gray-700 dark:text-gray-300 text-sm">
+                  Devolución fácil
+                </span>
+              </div>
+            </motion.div>
+
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.5 }}
-              className="pt-4"
+              transition={{ duration: 0.6, delay: 0.7 }}
+              className="flex flex-col sm:flex-row gap-4 mt-8"
             >
               <motion.button
-                onClick={scrollToProducts}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all duration-200"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-full transition-all flex items-center justify-center shadow-lg shadow-blue-600/20"
+                onClick={scrollToProducts}
               >
-                Ver productos
-                <ChevronDown className="w-4 h-4" />
+                <span className="flex items-center">
+                  Ver productos
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </span>
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="border border-gray-300 dark:border-gray-700 hover:border-blue-600 dark:hover:border-blue-500 text-gray-900 dark:text-white font-medium py-3 px-6 rounded-full transition-all"
+              >
+                <NavLink to="/contacto">Contactar</NavLink>
               </motion.button>
             </motion.div>
           </motion.div>
 
+          {/* Right column - Images */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.7, delay: 0.3 }}
-            className="hidden md:block relative"
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="relative"
           >
-            <div className="relative flex justify-center">
-              {" "}
-              {/* Added flex and justify-center */}
-              {/* Decorative circle */}
-              <div className="absolute -top-10 -right-10 w-64 h-64 rounded-full bg-gradient-to-br from-blue-400/10 to-blue-600/10 blur-2xl" />
-              {/* Featured product image - made smaller */}
+            {/* Main featured image */}
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="relative z-20 rounded-2xl overflow-hidden shadow-2xl"
+            >
+              <img
+                src={backgroundImage}
+                alt="Producto destacado"
+                className="w-full h-auto object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+              <div className="absolute bottom-4 left-4 text-white">
+                <span className="text-sm font-medium bg-blue-600 px-3 py-1 rounded-full">
+                  PRODUCTOS
+                </span>
+              </div>
+            </motion.div>
+
+            {/* Grid of smaller images */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+              className="grid grid-cols-2 gap-4 mt-4"
+            >
               <motion.div
-                initial={{ y: 20 }}
-                animate={{ y: [0, -10, 0] }}
-                transition={{
-                  duration: 6,
-                  repeat: Number.POSITIVE_INFINITY,
-                  repeatType: "reverse",
-                  ease: "easeInOut",
-                }}
-                className="relative z-10 bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-2xl max-w-[280px]" // Added max-width and reduced padding
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.5 }}
+                className="relative overflow-hidden rounded-xl group shadow-lg"
+                whileHover={{ y: -5, scale: 1.02 }}
               >
                 <img
-                  src={
-                    product?.variants[0]?.imageUrl ||
-                    "/placeholder.svg?height=400&width=300"
-                  }
-                  alt="Producto destacado"
-                  className="w-full h-auto rounded-lg object-cover"
-                  style={{ maxHeight: "350px" }} // Added max-height
+                  src={Playeras}
+                  alt="Categoría 1"
+                  className="w-full h-32 object-cover transition-transform duration-500 group-hover:scale-110"
                 />
-
-                <div className="absolute -bottom-3 -right-3 bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
-                  {" "}
-                  {/* Made badge smaller */}
-                  DESTACADO
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                <div className="absolute bottom-2 left-3 text-white font-medium text-sm">
+                  Playeras
                 </div>
               </motion.div>
-            </div>
+
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.6 }}
+                className="relative overflow-hidden rounded-xl group shadow-lg"
+                whileHover={{ y: -5, scale: 1.02 }}
+              >
+                <img
+                  src={Camisas}
+                  alt="Categoría 2"
+                  className="w-full h-32 object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                <div className="absolute bottom-2 left-3 text-white font-medium text-sm">
+                  Camisas
+                </div>
+              </motion.div>
+            </motion.div>
+
+            {/* Decorative elements */}
+            <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-100 dark:bg-blue-900/20 rounded-full filter blur-3xl opacity-70 z-0"></div>
+            <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-blue-100 dark:bg-blue-900/20 rounded-full filter blur-3xl opacity-70 z-0"></div>
           </motion.div>
         </div>
-
-        {/* Breadcrumbs */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
-          className="mt-12 text-white [&_*]:!text-white/80 hover:[&_*]:!text-white"
-        >
-          <Breadcrumbs />
-        </motion.div>
       </div>
-      {/* Enhanced scroll indicator */}
+
+      {/* Scroll indicator */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 1, duration: 1 }}
-        className="absolute bottom-10 left-1/2 transform -translate-x-1/2 cursor-pointer"
+        transition={{ delay: 1.5, duration: 1 }}
+        className="absolute bottom-6 left-1/2 transform -translate-x-1/2 cursor-pointer z-20"
         onClick={scrollToProducts}
       >
         <motion.div
@@ -183,17 +226,18 @@ export default function ProductHero() {
           }}
           className="flex flex-col items-center gap-2"
         >
-          <p className="text-white/80 text-sm font-medium">Descubre más</p>
-          <div className="flex flex-col items-center gap-1">
-            <div className="w-1 h-6 rounded-full bg-gradient-to-b from-white/80 to-white/0" />
-            <motion.div
-              animate={{ opacity: [0.4, 1, 0.4] }}
-              transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
-              className="w-6 h-6 rounded-full flex items-center justify-center bg-white/10 backdrop-blur-sm"
-            >
-              <ChevronDown className="w-4 h-4 text-white" />
-            </motion.div>
-          </div>
+          <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">
+            Descubre más
+          </p>
+          <motion.div
+            animate={{
+              y: [0, 5, 0],
+            }}
+            transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
+            className="w-8 h-8 rounded-full flex items-center justify-center border border-gray-300 dark:border-gray-700"
+          >
+            <ChevronDown className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+          </motion.div>
         </motion.div>
       </motion.div>
     </div>

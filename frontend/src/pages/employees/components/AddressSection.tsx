@@ -42,7 +42,7 @@ interface Address {
 interface AddressFormData {
   street: string;
   city: string;
-  state: string; // Agregado campo de estado
+  state: string;
   country: string;
   postalCode: string;
   colony: string;
