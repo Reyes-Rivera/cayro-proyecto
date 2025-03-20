@@ -68,10 +68,27 @@ export default function PasswordRecoveryPage() {
         return;
       }
     } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message || "Error desconocido.";
+      Swal.fire({
+        icon: "error",
+        title: "Error al iniciar sesión",
+        toast: true,
+        text: errorMessage,
+        position: "top-end",
+        timer: 3000,
+        showConfirmButton: false,
+        animation: true,
+        background: "#FEF2F2",
+        color: "#B91C1C",
+        iconColor: "#EF4444",
+      });
       if (error.response && error.response.status === 400) {
         navigate("/400");
       }
-      navigate("/500", { state: { fromError: true } });
+      if (error.response && error.response.status === 500) {
+        navigate("/500");
+      }
     } finally {
       setIsSubmitting(false);
     }

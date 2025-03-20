@@ -10,7 +10,7 @@ export class CompanyProfileController {
   constructor(private readonly companyProfileService: CompanyProfileService) { }
 
   @Post()
-  // @Auth([Role.ADMIN])
+  @Auth([Role.ADMIN])
   async create(@Body() createCompanyProfileDto: CreateCompanyProfileDto) {
     const res = await this.companyProfileService.create(createCompanyProfileDto);
     if (!res) throw new ConflictException("No se pudo crear el perfil de la empresa.");

@@ -194,7 +194,7 @@ const NavBarUser = () => {
                 <img
                   src={logo || "/placeholder.svg?height=80&width=120"}
                   alt="Logo"
-                  className="h-14 w-auto object-contain dark:brightness-110 dark:contrast-125"
+                  className="h-24 dark:drop-shadow-[0_0_10px_rgba(255,255,255,1.0)] w-auto object-contain dark:brightness-110 dark:contrast-125"
                 />
               </NavLink>
             </div>
