@@ -174,7 +174,6 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
 
   return (
     <motion.div
-     
       animate={animationControls}
       transition={{ duration: 0.3 }}
       className="relative group overflow-hidden rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300"
@@ -182,7 +181,7 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
       <img
         src={image || "/placeholder.svg?height=300&width=300"}
         alt={title}
-        className="w-full h-48 object-cover transform transition-transform duration-300 group-hover:scale-110"
+        className="w-full h-48 object-cover transform transition-transform duration-300 group-hover:scale-110 max-w-full"
       />
       <div className="absolute inset-0 bg-black/40 group-hover:bg-black/60 transition-colors duration-300"></div>
       <div className="absolute bottom-0 left-0 p-4 w-full">
@@ -203,12 +202,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
   discount,
   tag,
 }) => {
-
   return (
-    <motion.div
-      className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden transform transition-transform duration-300 hover:scale-105"
-      
-    >
+    <motion.div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden transform transition-transform duration-300 hover:scale-105">
       <div className="relative">
         <img
           src={image || "/placeholder.svg?height=500&width=400"}
@@ -268,8 +263,7 @@ export default function Home(): JSX.Element {
 
   // Handle parallax effect on scroll
   useEffect(() => {
-    const handleScroll = () => {
-    };
+    const handleScroll = () => {};
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
@@ -338,10 +332,10 @@ export default function Home(): JSX.Element {
   };
 
   return (
-    <main className="min-h-screen bg-white dark:bg-gray-900">
+    <main className="min-h-screen bg-white dark:bg-gray-900 overflow-x-hidden">
       {/* Hero Section - Two column layout with content left, images right */}
       <div className="relative min-h-screen bg-white dark:bg-gray-900 flex items-center">
-        <div className="container mx-auto px-6 py-16 relative z-10">
+        <div className="container mx-auto px-6 py-16 relative z-10 max-w-full">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             {/* Left column - Content */}
             <motion.div
@@ -493,7 +487,9 @@ export default function Home(): JSX.Element {
                   <span className="text-sm font-medium bg-blue-600 px-3 py-1 rounded-full">
                     Destacado
                   </span>
-                  <h3 className="text-xl font-bold mt-2">Categoría destacada</h3>
+                  <h3 className="text-xl font-bold mt-2">
+                    Categoría destacada
+                  </h3>
                 </div>
               </motion.div>
 
@@ -514,10 +510,7 @@ export default function Home(): JSX.Element {
                     whileHover={{ y: -5, scale: 1.02 }}
                   >
                     <img
-                      src={
-                        category.image ||
-                        "/placeholder.svg?height=150&width=150"
-                      }
+                      src={category.image}
                       alt={category.title}
                       className="w-full h-32 object-cover transition-transform duration-500 group-hover:scale-110"
                     />
@@ -596,7 +589,7 @@ export default function Home(): JSX.Element {
           <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-blue-500/5 rounded-full"></div>
         </div>
 
-        <div className="container mx-auto px-6 relative z-10">
+        <div className="container mx-auto px-6 relative z-10 max-w-full">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -686,7 +679,7 @@ export default function Home(): JSX.Element {
           </svg>
         </div>
 
-        <div className="container mx-auto px-6 relative z-10">
+        <div className="container mx-auto px-6 relative z-10 max-w-full">
           <div className="text-center mb-16">
             <motion.span
               initial={{ opacity: 0, y: -10 }}
@@ -759,7 +752,7 @@ export default function Home(): JSX.Element {
           <div className="absolute bottom-0 left-0 w-1/3 h-1/3 bg-gradient-to-t from-blue-500/5 to-transparent rounded-full blur-3xl"></div>
         </div>
 
-        <div className="container mx-auto px-6 relative z-10">
+        <div className="container mx-auto px-6 relative z-10 max-w-full">
           <div className="text-center mb-16">
             <motion.span
               initial={{ opacity: 0, y: -10 }}
@@ -853,7 +846,7 @@ export default function Home(): JSX.Element {
           <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-blue-500/5 rounded-full"></div>
         </div>
 
-        <div className="container mx-auto px-6 relative z-10">
+        <div className="container mx-auto px-6 relative z-10 max-w-full">
           <div className="text-center mb-16">
             <motion.span
               initial={{ opacity: 0, y: -10 }}
@@ -1019,7 +1012,7 @@ export default function Home(): JSX.Element {
           </svg>
         </div>
 
-        <div className="container mx-auto px-6 relative z-10">
+        <div className="container mx-auto px-6 relative z-10 max-w-full">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -1218,7 +1211,7 @@ export default function Home(): JSX.Element {
           </svg>
         </div>
 
-        <div className="container mx-auto px-6 text-center relative z-10">
+        <div className="container mx-auto px-6 text-center relative z-10 max-w-full">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}

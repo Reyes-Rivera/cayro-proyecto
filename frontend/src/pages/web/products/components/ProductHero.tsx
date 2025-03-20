@@ -17,7 +17,7 @@ export default function ProductHero() {
   };
 
   return (
-    <div className="relative min-h-screen bg-white dark:bg-gray-900 flex items-center">
+    <div className="relative min-h-screen bg-white dark:bg-gray-900 flex items-center  overflow-x-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/5 rounded-full"></div>

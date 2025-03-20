@@ -139,7 +139,7 @@ const UserDashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 md:mt-24">
+    <div className="min-h-screen bg-white dark:bg-gray-900 md:pt-24">
       <div className="flex flex-col md:flex-row min-h-screen">
         {/* Desktop Sidebar */}
         <motion.div

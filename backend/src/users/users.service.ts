@@ -539,8 +539,32 @@ export class UsersService {
     return `This action returns all users`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findOne(email: string) {
+    try {
+      const user = await this.prismaService.user.findUnique({
+        where: { email },
+      });
+      if (!user) {
+        throw new NotFoundException('Usuario no encontrado.');
+      }
+      const {
+        password,
+        passwordsHistory,
+        passwordExpiresAt,
+        passwordSetAt,
+        securityAnswer,
+        securityQuestionId,
+        ...rest
+      } = user;
+      return { ...rest };
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      this.logger.error(`Error al encontrar usuario: \nStack: ${error.stack}`);
+      throw new HttpException(
+        'Error interno del servidor',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
   async create(createUserDto: CreateUserDto) {
     try {
@@ -1004,7 +1028,9 @@ export class UsersService {
       });
 
       if (!existingRelation) {
-        throw new Error(`El usuario ${userId} no tiene esta dirección asociada.`);
+        throw new Error(
+          `El usuario ${userId} no tiene esta dirección asociada.`,
+        );
       }
 
       // Eliminar solo la relación, sin borrar la dirección
@@ -1017,8 +1043,13 @@ export class UsersService {
 
       return { message: 'Dirección desvinculada del usuario exitosamente.' };
     } catch (error) {
-      this.logger.error(`Error al desvincular la dirección: \nStack: ${error.stack}`);
-      throw new HttpException('No se pudo desvincular la dirección.', HttpStatus.INTERNAL_SERVER_ERROR);
+      this.logger.error(
+        `Error al desvincular la dirección: \nStack: ${error.stack}`,
+      );
+      throw new HttpException(
+        'No se pudo desvincular la dirección.',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
   remove(id: number) {

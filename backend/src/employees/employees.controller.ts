@@ -20,22 +20,25 @@ export class EmployeesController {
   constructor(private readonly employeesService: EmployeesService) {}
 
   @Post()
-  // @Auth([Role.ADMIN])
+  @Auth([Role.ADMIN])
   create(@Body() createEmployeeDto: CreateEmployeeDto) {
     return this.employeesService.create(createEmployeeDto);
   }
 
   @Get()
+  @Auth([Role.ADMIN])
   findAll() {
     return this.employeesService.findAll();
   }
 
   @Get(':id')
+  @Auth([Role.ADMIN,Role.EMPLOYEE])
   findOne(@Param('id') id: string) {
     return this.employeesService.findOne(+id);
   }
 
   @Get('address/:id')
+  @Auth([Role.ADMIN,Role.EMPLOYEE])
   findOneAddress(@Param('id') id: string) {
     try {
       const res = this.employeesService.findOneAddress(+id);
@@ -64,7 +67,7 @@ export class EmployeesController {
   }
 
   @Patch(':id')
-  // @Auth([Role.ADMIN])
+  @Auth([Role.ADMIN,Role.EMPLOYEE])
   async update(
     @Param('id') id: string,
     @Body() updateEmployeeDto: UpdateEmployeeDto,
@@ -73,6 +76,7 @@ export class EmployeesController {
   }
 
   @Delete(':id')
+  @Auth([Role.ADMIN])
   remove(@Param('id') id: string) {
     return this.employeesService.remove(+id);
   }

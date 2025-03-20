@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import {
   Filter,
   Shirt,
-  Tag,
   Palette,
   Ruler,
   Users,
@@ -37,14 +36,12 @@ interface ProductFiltersProps {
 
 export default function ProductFilters({
   categories,
-  brands,
   colors,
   sizes,
   genders,
   activeCategoryId,
   setActiveCategoryId,
-  activeBrandId,
-  setActiveBrandId,
+
   activeColorId,
   setActiveColorId,
   activeSizeId,
@@ -124,45 +121,6 @@ export default function ProductFilters({
           </div>
         </div>
 
-        {/* Marcas */}
-        <div className="mb-6">
-          <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-            <Tag className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-            Marcas
-          </h4>
-          <div className="space-y-2">
-            <button
-              className={`block w-full text-left px-3 py-2 text-sm rounded-md ${
-                activeBrandId === null
-                  ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
-                  : "hover:bg-gray-100 dark:hover:bg-gray-700"
-              }`}
-              onClick={() => {
-                setActiveBrandId(null);
-                scrollToProducts();
-              }}
-            >
-              Todas las Marcas
-            </button>
-            {brands.map((brand) => (
-              <button
-                key={brand.id}
-                className={`block w-full text-left px-3 py-2 text-sm rounded-md ${
-                  activeBrandId === brand.id
-                    ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
-                    : "hover:bg-gray-100 dark:hover:bg-gray-700"
-                }`}
-                onClick={() => {
-                  setActiveBrandId(brand.id);
-                  scrollToProducts();
-                }}
-              >
-                {brand.name}
-              </button>
-            ))}
-          </div>
-        </div>
-
         {/* Colores */}
         <div className="mb-6">
           <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
@@ -191,14 +149,18 @@ export default function ProductFilters({
                   activeColorId === color.id
                     ? "ring-2 ring-offset-2 ring-blue-500"
                     : ""
-                }`}
+                } relative group border border-gray-300 dark:border-gray-600`}
                 style={{ backgroundColor: color.hexValue }}
                 onClick={() => {
                   setActiveColorId(color.id);
                   scrollToProducts();
                 }}
                 aria-label={`Color: ${color.name}`}
-              />
+              >
+                <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap z-10">
+                  {color.name}
+                </span>
+              </button>
             ))}
           </div>
         </div>

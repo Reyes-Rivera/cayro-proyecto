@@ -46,3 +46,9 @@ export const updateAddressUser = async (id: number,addressId:number, data: objec
 
 export const deleteAddressUser = async (id: number,addressId:number) =>
   axios.delete(`/users/address/${id}/${addressId}`);
+
+export const getUserByEmail = async (email: object) =>
+  axios.post(`/users/verifyUserExist`,email);
+
+export const updateAnswer = async (id: number, data: object) =>
+  axios.patch(`/users/update-answer/${id}`, data);

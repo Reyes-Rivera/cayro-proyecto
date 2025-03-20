@@ -106,10 +106,10 @@ export default function AboutPage() {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900">
+    <div className="bg-white dark:bg-gray-900 overflow-x-hidden">
       {/* Hero Section - Two column layout with content left, images right */}
       <div className="relative min-h-screen bg-white dark:bg-gray-900 flex items-center">
-        <div className="container mx-auto px-6 py-16 relative z-10">
+        <div className="container mx-auto px-6 py-16 relative z-10 max-w-full">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             {/* Left column - Content */}
             <motion.div
@@ -235,7 +235,7 @@ export default function AboutPage() {
                 <img
                   src={about || "/placeholder.svg?height=400&width=600"}
                   alt="Nuestra empresa"
-                  className="w-full h-auto object-cover"
+                  className="w-full h-auto object-cover max-w-full"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                 <div className="absolute bottom-4 left-4 text-white">
@@ -263,7 +263,7 @@ export default function AboutPage() {
                   <img
                     src={mission || "/placeholder.svg?height=150&width=150"}
                     alt="Misión"
-                    className="w-full h-32 object-cover transition-transform duration-500 group-hover:scale-110"
+                    className="w-full h-32 object-cover transition-transform duration-500 group-hover:scale-110 max-w-full"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
                   <div className="absolute bottom-2 left-3 text-white font-medium text-sm">
@@ -281,7 +281,7 @@ export default function AboutPage() {
                   <img
                     src={vision || "/placeholder.svg?height=150&width=150"}
                     alt="Visión"
-                    className="w-full h-32 object-cover transition-transform duration-500 group-hover:scale-110"
+                    className="w-full h-32 object-cover transition-transform duration-500 group-hover:scale-110 max-w-full"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
                   <div className="absolute bottom-2 left-3 text-white font-medium text-sm">
@@ -346,9 +346,7 @@ export default function AboutPage() {
       </div>
 
       {/* About Section */}
-      <AnimatedSection
-        className="py-24 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 relative overflow-hidden"
-      >
+      <AnimatedSection className="py-24 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 relative overflow-hidden">
         {/* Background decoration */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
           <div className="absolute -top-24 -left-24 w-64 h-64 bg-blue-500/5 rounded-full"></div>
@@ -356,7 +354,7 @@ export default function AboutPage() {
           <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-blue-500/5 rounded-full"></div>
         </div>
 
-        <div className="container mx-auto px-6 relative z-10">
+        <div className="container mx-auto px-6 relative z-10 max-w-full">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -452,7 +450,7 @@ export default function AboutPage() {
               <img
                 src={about || "/placeholder.svg?height=600&width=600"}
                 alt="Quienes-somos"
-                className="rounded-lg shadow-2xl w-full relative z-10 transform transition-transform duration-500 hover:scale-105"
+                className="rounded-lg shadow-2xl w-full relative z-10 transform transition-transform duration-500 hover:scale-105 max-w-full"
               />
 
               {/* Floating badge */}
@@ -501,7 +499,7 @@ export default function AboutPage() {
           </svg>
         </div>
 
-        <div className="container mx-auto px-6 relative z-10">
+        <div className="container mx-auto px-6 relative z-10 max-w-full">
           <div className="text-center mb-16">
             <motion.span
               initial={{ opacity: 0, y: -10 }}
@@ -624,7 +622,7 @@ export default function AboutPage() {
           <div className="absolute bottom-0 left-0 w-1/3 h-1/3 bg-gradient-to-t from-blue-500/5 to-transparent rounded-full blur-3xl"></div>
         </div>
 
-        <div className="container mx-auto px-6 relative z-10">
+        <div className="container mx-auto px-6 relative z-10 max-w-full">
           <div className="text-center mb-16">
             <motion.span
               initial={{ opacity: 0, y: -10 }}
@@ -800,7 +798,7 @@ export default function AboutPage() {
           </svg>
         </div>
 
-        <div className="container mx-auto px-6 text-center relative z-10">
+        <div className="container mx-auto px-6 text-center relative z-10 max-w-full">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}

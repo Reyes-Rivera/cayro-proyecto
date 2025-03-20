@@ -214,6 +214,7 @@ const AddressView = () => {
             address.id === editingAddressId ? { ...address, ...data } : address
           )
         );
+        window.scrollTo(0, 0);
       } else {
         const newData = {
           street: data.street,
@@ -242,17 +243,11 @@ const AddressView = () => {
           id: Date.now().toString(),
         };
         setAddresses([...addresses, newAddress]);
+        window.scrollTo(0, 0);
       }
 
       setIsAddingAddress(false);
       setEditingAddressId(null);
-
-      // Scroll back to address list
-      setTimeout(() => {
-        document
-          .getElementById("address-list")
-          ?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 100);
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message || "Error desconocido.";

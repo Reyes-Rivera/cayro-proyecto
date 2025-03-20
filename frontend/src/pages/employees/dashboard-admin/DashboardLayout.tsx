@@ -33,7 +33,7 @@ type TabKey =
   | "employees";
 
 const AdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState<TabKey>("faq");
+  const [activeTab, setActiveTab] = useState<TabKey>("users");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showFaqs, setShowFaqs] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -63,7 +63,7 @@ const AdminDashboard = () => {
 
   // Definir las opciones del menú
   const menuOptions = [
-    { key: "users", label: "Usuarios", icon: <Users className="w-5 h-5" /> },
+    { key: "users", label: "Perfil", icon: <Users className="w-5 h-5" /> },
     { key: "company", label: "Empresa", icon: <Home className="w-5 h-5" /> },
     { key: "legal", label: "Legal", icon: <FileText className="w-5 h-5" /> },
     {
@@ -73,15 +73,13 @@ const AdminDashboard = () => {
     },
   ];
 
-
-
   const tabs: Record<TabKey, JSX.Element> = {
+    users: <ProfileView />,
     faq: <FaqPage />,
     faqCategories: <FaqCategoryPage />,
     company: <CompanyView />,
-    users: <ProfileView  />,
-    legal: <LegalSection  />,
-    employees: <EmployeePage  />,
+    legal: <LegalSection />,
+    employees: <EmployeePage />,
   };
 
   // Animation variants
@@ -183,6 +181,37 @@ const AdminDashboard = () => {
           <nav className="flex-1 p-4 overflow-y-auto">
             <ul className="space-y-2">
               {/* FAQ button with dropdown */}
+
+              {/* Other menu items */}
+              {menuOptions.map((option, index) => (
+                <motion.li
+                  key={option.key}
+                  custom={index + 1}
+                  variants={menuItemVariants}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  <motion.button
+                    whileHover={{ x: 5 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setActiveTab(option.key as TabKey)}
+                    className={`flex items-center ${
+                      isSidebarExpanded
+                        ? "gap-3 justify-start"
+                        : "justify-center"
+                    } w-full p-3 rounded-lg transition-all duration-200 ${
+                      activeTab === option.key
+                        ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md"
+                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    }`}
+                  >
+                    {option.icon}
+                    {isSidebarExpanded && (
+                      <span className="font-medium">{option.label}</span>
+                    )}
+                  </motion.button>
+                </motion.li>
+              ))}
               <motion.li
                 custom={0}
                 variants={menuItemVariants}
@@ -264,37 +293,6 @@ const AdminDashboard = () => {
                   </motion.div>
                 )}
               </AnimatePresence>
-
-              {/* Other menu items */}
-              {menuOptions.map((option, index) => (
-                <motion.li
-                  key={option.key}
-                  custom={index + 1}
-                  variants={menuItemVariants}
-                  initial="hidden"
-                  animate="visible"
-                >
-                  <motion.button
-                    whileHover={{ x: 5 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setActiveTab(option.key as TabKey)}
-                    className={`flex items-center ${
-                      isSidebarExpanded
-                        ? "gap-3 justify-start"
-                        : "justify-center"
-                    } w-full p-3 rounded-lg transition-all duration-200 ${
-                      activeTab === option.key
-                        ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md"
-                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    }`}
-                  >
-                    {option.icon}
-                    {isSidebarExpanded && (
-                      <span className="font-medium">{option.label}</span>
-                    )}
-                  </motion.button>
-                </motion.li>
-              ))}
             </ul>
           </nav>
 

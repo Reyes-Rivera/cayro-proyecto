@@ -15,15 +15,17 @@ import {
   KeyRound,
   Sparkles,
   ChevronDown,
+  Send,
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
 import { motion, AnimatePresence } from "framer-motion";
 import backgroundImage from "../web/Home/assets/hero.jpg";
 import { compareQuestion, getQuestions } from "@/api/auth";
+import { getUserByEmail } from "@/api/users";
 
 type FormData = {
   email: string;
@@ -38,9 +40,8 @@ type QuestionData = {
 
 export default function PasswordRecoveryQuestionPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
   const [questions, setQuestions] = useState<QuestionData[]>([]);
-  const navigate = useNavigate();
+  const [currentStep, setCurrentStep] = useState(1); // Step 1: Email, Step 2: Security Question, Step 3: Success
 
   const {
     register,
@@ -54,9 +55,42 @@ export default function PasswordRecoveryQuestionPage() {
       securityQuestion: "",
       securityAnswer: "",
     },
+    mode: "onChange",
   });
 
   const email = watch("email");
+
+  const verifyEmail = async () => {
+    try {
+      const isValid = await getUserByEmail({
+        email: email,
+      });
+      if (isValid) {
+        setIsSubmitting(true);
+        // Simulate API call to verify email exists
+        setTimeout(() => {
+          setIsSubmitting(false);
+          setCurrentStep(2);
+        }, 1000);
+      }
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message || "Error desconocido al verificar.";
+      Swal.fire({
+        icon: "error",
+        title: "Error al iniciar sesión",
+        toast: true,
+        text: errorMessage,
+        position: "top-end",
+        timer: 3000,
+        showConfirmButton: false,
+        animation: true,
+        background: "#FEF2F2",
+        color: "#B91C1C",
+        iconColor: "#EF4444",
+      });
+    }
+  };
 
   const onSubmit = async (data: FormData) => {
     try {
@@ -69,7 +103,7 @@ export default function PasswordRecoveryQuestionPage() {
 
       await compareQuestion(newData);
       setTimeout(() => {
-        setIsSubmitted(true);
+        setCurrentStep(3);
         Swal.fire({
           icon: "success",
           title: "Verificación exitosa",
@@ -96,10 +130,6 @@ export default function PasswordRecoveryQuestionPage() {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleContinue = () => {
-    navigate("/reset-password", { state: { email } });
   };
 
   useEffect(() => {
@@ -138,10 +168,30 @@ export default function PasswordRecoveryQuestionPage() {
                 transition={{ duration: 0.6, delay: 0.2 }}
                 className="mb-6 inline-flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-4 py-1.5"
               >
-                <HelpCircle className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                  PREGUNTA DE SEGURIDAD
-                </span>
+                {currentStep === 1 && (
+                  <>
+                    <Mail className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
+                    <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                      VERIFICACIÓN DE CORREO
+                    </span>
+                  </>
+                )}
+                {currentStep === 2 && (
+                  <>
+                    <HelpCircle className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
+                    <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                      PREGUNTA DE SEGURIDAD
+                    </span>
+                  </>
+                )}
+                {currentStep === 3 && (
+                  <>
+                    <Send className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
+                    <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                      CORREO ENVIADO
+                    </span>
+                  </>
+                )}
               </motion.div>
 
               <motion.h1
@@ -160,21 +210,25 @@ export default function PasswordRecoveryQuestionPage() {
                 transition={{ duration: 0.6, delay: 0.4 }}
                 className="text-lg text-gray-600 dark:text-gray-400 mb-8"
               >
-                Responde tu pregunta de seguridad para verificar tu identidad y
-                recuperar el acceso a tu cuenta.
+                {currentStep === 1 &&
+                  "Ingresa tu correo electrónico para comenzar el proceso de recuperación de contraseña."}
+                {currentStep === 2 &&
+                  "Responde tu pregunta de seguridad para verificar tu identidad y recuperar el acceso a tu cuenta."}
+                {currentStep === 3 &&
+                  "Hemos enviado un correo electrónico con instrucciones para restablecer tu contraseña."}
               </motion.p>
             </div>
 
             <AnimatePresence mode="wait">
-              {!isSubmitted ? (
-                <motion.form
-                  key="recovery-form"
+              {/* Step 1: Email Verification */}
+              {currentStep === 1 && (
+                <motion.div
+                  key="email-form"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.3 }}
                   className="space-y-6"
-                  onSubmit={handleSubmit(onSubmit)}
                 >
                   <div className="space-y-2">
                     <Label
@@ -237,6 +291,67 @@ export default function PasswordRecoveryQuestionPage() {
                     )}
                   </div>
 
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-lg p-4 text-sm text-blue-800 dark:text-blue-300 flex items-start">
+                    <Shield className="w-5 h-5 mr-3 mt-0.5 flex-shrink-0 text-blue-600 dark:text-blue-400" />
+                    <div>
+                      <p className="font-medium mb-1">Información importante</p>
+                      <p>
+                        Ingresa el correo electrónico asociado a tu cuenta para
+                        continuar con el proceso de recuperación.
+                      </p>
+                    </div>
+                  </div>
+
+                  <motion.button
+                    type="button"
+                    onClick={verifyEmail}
+                    className="w-full p-3.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex justify-center items-center gap-2 relative overflow-hidden group"
+                    disabled={isSubmitting || !email || !!errors.email}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {/* Button background animation */}
+                    <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-500/0 via-blue-500/30 to-blue-500/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
+
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="animate-spin mr-2 h-5 w-5" />
+                        <span>Verificando correo...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Continuar</span>
+                        <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                      </>
+                    )}
+                  </motion.button>
+
+                  {/* Enlace de inicio de sesión */}
+                  <div className="mt-8 text-center">
+                    <p className="text-gray-600 dark:text-gray-400">
+                      ¿Recordaste tu contraseña?{" "}
+                      <Link
+                        to="/login"
+                        className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors"
+                      >
+                        Iniciar sesión
+                      </Link>
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Step 2: Security Question */}
+              {currentStep === 2 && (
+                <motion.form
+                  key="security-question-form"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-6"
+                  onSubmit={handleSubmit(onSubmit)}
+                >
                   <div className="space-y-2">
                     <Label
                       htmlFor="securityQuestion"
@@ -339,28 +454,41 @@ export default function PasswordRecoveryQuestionPage() {
                     </div>
                   </div>
 
-                  <motion.button
-                    type="submit"
-                    className="w-full p-3.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex justify-center items-center gap-2 relative overflow-hidden group"
-                    disabled={isSubmitting}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    {/* Button background animation */}
-                    <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-500/0 via-blue-500/30 to-blue-500/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <motion.button
+                      type="button"
+                      onClick={() => setCurrentStep(1)}
+                      className="sm:w-1/3 p-3.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200 flex justify-center items-center gap-2"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <ArrowLeft className="mr-2 h-5 w-5" />
+                      <span>Atrás</span>
+                    </motion.button>
 
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="animate-spin mr-2 h-5 w-5" />
-                        <span>Verificando respuesta...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>Verificar respuesta</span>
-                        <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                      </>
-                    )}
-                  </motion.button>
+                    <motion.button
+                      type="submit"
+                      className="sm:w-2/3 p-3.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex justify-center items-center gap-2 relative overflow-hidden group"
+                      disabled={isSubmitting}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      {/* Button background animation */}
+                      <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-500/0 via-blue-500/30 to-blue-500/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
+
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="animate-spin mr-2 h-5 w-5" />
+                          <span>Verificando respuesta...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Verificar respuesta</span>
+                          <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                        </>
+                      )}
+                    </motion.button>
+                  </div>
 
                   {/* Enlace de inicio de sesión */}
                   <div className="mt-8 text-center">
@@ -375,7 +503,10 @@ export default function PasswordRecoveryQuestionPage() {
                     </p>
                   </div>
                 </motion.form>
-              ) : (
+              )}
+
+              {/* Step 3: Success Message */}
+              {currentStep === 3 && (
                 <motion.div
                   key="success-message"
                   initial={{ opacity: 0, y: 20 }}
@@ -391,39 +522,45 @@ export default function PasswordRecoveryQuestionPage() {
                       </div>
                       <div>
                         <AlertTitle className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                          Verificación exitosa
+                          Correo enviado
                         </AlertTitle>
                         <AlertDescription className="text-gray-700 dark:text-gray-300">
                           <p>
-                            La respuesta a tu pregunta de seguridad es correcta.
+                            Hemos enviado un correo electrónico a{" "}
+                            <strong>{email}</strong> con instrucciones para
+                            restablecer tu contraseña.
                           </p>
                           <p className="mt-2">
-                            Ahora puedes continuar con el proceso para
-                            establecer una nueva contraseña.
+                            Por favor, revisa tu bandeja de entrada y sigue las
+                            instrucciones para completar el proceso.
                           </p>
                         </AlertDescription>
                       </div>
                     </div>
                   </Alert>
 
-                  <div className="flex flex-col items-center gap-4 mt-8">
-                    <motion.button
-                      onClick={handleContinue}
-                      className="px-6 py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2 relative overflow-hidden group"
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.97 }}
-                    >
-                      <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-500/0 via-blue-500/30 to-blue-500/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
-                      <span>Continuar al restablecimiento</span>
-                      <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                    </motion.button>
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-lg p-4 text-sm text-blue-800 dark:text-blue-300 flex items-start">
+                    <Shield className="w-5 h-5 mr-3 mt-0.5 flex-shrink-0 text-blue-600 dark:text-blue-400" />
+                    <div>
+                      <p className="font-medium mb-1">
+                        ¿No recibiste el correo?
+                      </p>
+                      <p>
+                        Revisa tu carpeta de spam o correo no deseado. Si aún no
+                        lo encuentras, puedes solicitar un nuevo correo en unos
+                        minutos.
+                      </p>
+                    </div>
+                  </div>
 
+                  <div className="flex flex-col items-center gap-4 mt-8">
                     <Link
                       to="/login"
-                      className="mt-4 inline-flex items-center text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300 font-medium transition-colors"
+                      className="px-6 py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2 relative overflow-hidden group"
                     >
-                      <ArrowLeft className="mr-2 h-5 w-5" />
-                      Volver a iniciar sesión
+                      <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-500/0 via-blue-500/30 to-blue-500/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
+                      <span>Volver a iniciar sesión</span>
+                      <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                     </Link>
                   </div>
                 </motion.div>
@@ -473,9 +610,15 @@ export default function PasswordRecoveryQuestionPage() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
               <div className="absolute bottom-4 left-4 text-white">
                 <span className="text-sm font-medium bg-blue-600 px-3 py-1 rounded-full">
-                  Pregunta de seguridad
+                  {currentStep === 1 && "Paso 1: Verificación de correo"}
+                  {currentStep === 2 && "Paso 2: Pregunta de seguridad"}
+                  {currentStep === 3 && "Paso 3: Correo enviado"}
                 </span>
-                <h3 className="text-xl font-bold mt-2">Verificación segura</h3>
+                <h3 className="text-xl font-bold mt-2">
+                  {currentStep === 1 && "Ingresa tu correo"}
+                  {currentStep === 2 && "Verifica tu identidad"}
+                  {currentStep === 3 && "Revisa tu bandeja de entrada"}
+                </h3>
               </div>
             </motion.div>
 

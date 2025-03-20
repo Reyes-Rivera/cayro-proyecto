@@ -218,7 +218,7 @@ const Faq = ({
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="min-h-screen bg-white dark:bg-gray-900 overflow-x-hidden">
       {/* Hero Section */}
       <div className="relative min-h-screen bg-white dark:bg-gray-900 flex items-center">
         {/* Background decoration */}
@@ -227,7 +227,7 @@ const Faq = ({
           <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-500/5 rounded-full"></div>
         </div>
 
-        <div className="container mx-auto px-6 py-16 relative z-10">
+        <div className="container mx-auto px-6 py-16 relative z-10 max-w-full">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             {/* Left column - Content */}
             <motion.div
@@ -411,9 +411,7 @@ const Faq = ({
       </div>
 
       {/* FAQ Content */}
-      <AnimatedSection
-        className="py-24 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 relative overflow-hidden"
-      >
+      <AnimatedSection className="py-24 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 relative overflow-hidden">
         {/* Background decoration */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
           <div className="absolute -top-24 -left-24 w-64 h-64 bg-blue-500/5 rounded-full"></div>
@@ -421,7 +419,7 @@ const Faq = ({
           <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-blue-500/5 rounded-full"></div>
         </div>
 
-        <div className="container mx-auto px-6 relative z-10">
+        <div className="container mx-auto px-6 relative z-10 max-w-full">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -440,7 +438,7 @@ const Faq = ({
 
           <div
             className={cn(
-              "bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden relative p-8 md:p-10",
+              "bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden relative p-8 md:p-10 max-w-full",
               className
             )}
           >
@@ -457,7 +455,7 @@ const Faq = ({
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: 0.4 }}
-                className="mb-8 space-y-4 relative z-10"
+                className="mb-8 space-y-4 relative z-10 max-w-full"
               >
                 {allowSearch && (
                   <div className="relative">
@@ -485,7 +483,7 @@ const Faq = ({
                 )}
 
                 {allowFiltering && categories.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 max-w-full">
                     <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                       <Filter className="w-4 h-4 text-blue-600" />
                       <span>Filtrar por:</span>
@@ -537,7 +535,7 @@ const Faq = ({
 
             {/* Loading state */}
             {isLoading && (
-              <div className="flex flex-col items-center justify-center py-16">
+              <div className="flex flex-col items-center justify-center py-16 max-w-full">
                 <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 rounded-full shadow-md mb-4">
                   <Loader2 className="w-12 h-12 animate-spin" />
                 </div>
@@ -549,7 +547,7 @@ const Faq = ({
 
             {/* Error state */}
             {error && (
-              <div className="text-center py-16 px-4">
+              <div className="text-center py-16 px-4 max-w-full">
                 <div className="inline-flex items-center justify-center p-4 bg-red-100 dark:bg-red-900/30 rounded-full mb-4">
                   <XCircle className="w-10 h-10 text-red-600 dark:text-red-400" />
                 </div>
@@ -573,7 +571,7 @@ const Faq = ({
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true }}
-                className="space-y-4 relative z-10"
+                className="space-y-4 relative z-10 max-w-full"
               >
                 <AnimatePresence>
                   {filteredItems.length > 0 ? (
@@ -586,7 +584,7 @@ const Faq = ({
                         exit="exit"
                         variants={itemVariants}
                         className={cn(
-                          "border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden bg-white dark:bg-gray-800 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1",
+                          "border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden bg-white dark:bg-gray-800 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 max-w-full",
                           itemClassName
                         )}
                       >
@@ -639,7 +637,7 @@ const Faq = ({
                               animate="visible"
                               exit="exit"
                               variants={contentVariants}
-                              className="overflow-hidden"
+                              className="overflow-hidden max-w-full"
                             >
                               <div className="px-6 pb-6 pt-0 prose prose-sm dark:prose-invert max-w-none">
                                 <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-1">
@@ -657,7 +655,7 @@ const Faq = ({
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      className="text-center py-16 px-4 bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700"
+                      className="text-center py-16 px-4 bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 max-w-full"
                     >
                       <div className="inline-flex items-center justify-center p-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-full mb-6">
                         <MessageSquare className="w-8 h-8" />
@@ -715,7 +713,7 @@ const Faq = ({
           </svg>
         </div>
 
-        <div className="container mx-auto px-6 text-center relative z-10">
+        <div className="container mx-auto px-6 text-center relative z-10 max-w-full">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}

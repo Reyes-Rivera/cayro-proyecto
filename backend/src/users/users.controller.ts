@@ -70,9 +70,9 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(+id);
+  @Post('verifyUserExist')
+  findOne(@Body() body: { email: string }) {
+    return this.usersService.findOne(body.email);
   }
 
   @Patch(':id')

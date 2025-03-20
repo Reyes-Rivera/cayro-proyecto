@@ -758,7 +758,7 @@ const CategoryPage = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 overflow-hidden backdrop-blur-sm z-50"
+            className="fixed inset-0 overflow-hidden backdrop-blur-sm z-30"
           >
             <div className="flex items-center justify-center min-h-screen px-4">
               {/* Overlay */}

@@ -102,7 +102,7 @@ export default function LegalBoundary() {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="min-h-screen bg-white dark:bg-gray-900  overflow-x-hidden">
       {/* Hero Section */}
       <div className="relative min-h-screen bg-white dark:bg-gray-900 flex items-center">
         {/* Background decoration */}
@@ -336,9 +336,7 @@ export default function LegalBoundary() {
       </div>
 
       {/* Document Content Section */}
-      <AnimatedSection
-        className="py-24 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 relative overflow-hidden"
-      >
+      <AnimatedSection className="py-24 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 relative overflow-hidden">
         {/* Background decoration */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
           <div className="absolute -top-24 -left-24 w-64 h-64 bg-blue-500/5 rounded-full"></div>

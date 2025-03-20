@@ -92,6 +92,7 @@ const ProfileView = () => {
           timerProgressBar: true,
         });
         await signOut();
+        window.scrollTo(0, 0);
         return;
       }
       if (res) {
@@ -108,15 +109,15 @@ const ProfileView = () => {
         });
         await verifyUser();
         setIsEditing(false);
+        window.scrollTo(0, 0);
       }
       setIsSubmitting(false);
-    } catch (error) {
-      console.log(error);
+    } catch (error: any) {
       setIsSubmitting(false);
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "No se pudo actualizar la información. Inténtelo de nuevo más tarde.",
+        text: error.response.data.message,
         confirmButtonColor: "#EF4444",
       });
     }
@@ -211,7 +212,7 @@ const ProfileView = () => {
                       <div className="flex items-center justify-center gap-2 mb-2">
                         <Award className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                         <p className="font-medium text-gray-800 dark:text-gray-200">
-                          Miembro desde 2023
+                          Miembro desde 2025
                         </p>
                       </div>
                       <div className="flex items-center justify-center gap-2">
@@ -529,7 +530,7 @@ const ProfileView = () => {
                     <div className="flex items-center justify-center gap-2 mb-2">
                       <Award className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                       <p className="font-medium text-gray-800 dark:text-gray-200">
-                        Miembro desde 2023
+                        Miembro desde 2025
                       </p>
                     </div>
                     <div className="flex items-center justify-center gap-2">

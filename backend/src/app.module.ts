@@ -20,6 +20,7 @@ import { LoggerModule } from './utils/logger.module';
 import { FaqCategoryModule } from './faqs/faq_category/faq_category.module';
 import { QuestionsModule } from './faqs/questions/questions.module';
 import { SecurityquestionModule } from './securityquestion/securityquestion.module';
+import { CartModule } from './cart/cart.module';
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -41,7 +42,8 @@ import { SecurityquestionModule } from './securityquestion/securityquestion.modu
     LoggerModule,
     FaqCategoryModule,
     QuestionsModule,
-    SecurityquestionModule
+    SecurityquestionModule,
+    CartModule
   ],
   controllers: [],
   providers: [AppService],
