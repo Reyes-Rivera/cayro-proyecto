@@ -343,9 +343,14 @@ export default function ProductDetail() {
                     $
                     {selectedVariant ? selectedVariant.price.toFixed(2) : "N/A"}
                   </span>
-                  {selectedVariant && selectedVariant.stock < 5 && (
+
+                  {selectedVariant && selectedVariant.stock < 5 ? (
                     <span className="ml-3 text-sm font-medium text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/20 px-3 py-1 rounded-full">
                       ¡Solo {selectedVariant.stock} en stock!
+                    </span>
+                  ) : (
+                    <span className="ml-3 text-sm font-medium text-green-600 dark:text-green-400 bg-green-100 dark:bg-red-900/20 px-3 py-1 rounded-full">
+                      ¡Solo {selectedVariant?.stock} en stock!
                     </span>
                   )}
                 </div>
@@ -498,7 +503,6 @@ export default function ProductDetail() {
                   </motion.button>
                 )}
 
-              
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
