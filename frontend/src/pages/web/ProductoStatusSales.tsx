@@ -1,5 +1,7 @@
 "use client";
 
+import type React from "react";
+
 import { useState, useEffect, useMemo } from "react";
 import {
   BarChart,
@@ -17,31 +19,6 @@ import {
   Line,
 } from "recharts";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import {
   BarChart3,
   PieChartIcon,
   LineChartIcon,
@@ -54,6 +31,10 @@ import {
   Palette,
   Ruler,
   ShoppingCart,
+  ArrowUpRight,
+  ArrowDownRight,
+  Minus,
+  Info,
 } from "lucide-react";
 
 // Tipos de datos
@@ -79,8 +60,8 @@ interface ProductVariant {
   imageUrl: string;
   color: Color;
   size: Size;
-  // Datos simulados de ventas
-  salesData?: {
+  // Datos de ventas
+  salesData: {
     lastWeek: number;
     lastMonth: number;
     total: number;
@@ -121,60 +102,541 @@ interface Product {
 // Datos de productos importados del JSON
 import productsData from "./products-data";
 
-// Modificar la función generateSalesData para reducir a solo 2 semanas de historial
-const generateSalesData = (variant: ProductVariant) => {
-  // Verificar que la variante tenga los datos necesarios
-  if (!variant || !variant.size || !variant.color) {
-    console.warn("Variante con datos incompletos:", variant);
-    // Retornar datos predeterminados para evitar errores
-    return {
-      lastWeek: 5,
-      lastMonth: 20,
-      total: 50,
-      history: [
-        { week: 1, sales: 40 }, // CI - Primera semana (penúltima)
-        { week: 2, sales: 100 }, // K - Segunda semana (última)
-      ],
-    };
+// Datos de ventas estáticos para cada variante
+const staticSalesData: Record<
+  number,
+  {
+    lastWeek: number;
+    lastMonth: number;
+    total: number;
+    history: { week: number; sales: number }[];
   }
+> = {
+  // POLO HOMBRE
+  1: {
+    lastWeek: 12,
+    lastMonth: 45,
+    total: 120,
+    history: [
+      { week: 1, sales: 10 },
+      { week: 2, sales: 22 },
+    ],
+  }, // Rojo vino - CH
+  2: {
+    lastWeek: 18,
+    lastMonth: 65,
+    total: 180,
+    history: [
+      { week: 1, sales: 15 },
+      { week: 2, sales: 33 },
+    ],
+  }, // Rojo vino - G
+  3: {
+    lastWeek: 15,
+    lastMonth: 55,
+    total: 150,
+    history: [
+      { week: 1, sales: 13 },
+      { week: 2, sales: 28 },
+    ],
+  }, // Rojo vino - MED
+  4: {
+    lastWeek: 8,
+    lastMonth: 30,
+    total: 85,
+    history: [
+      { week: 1, sales: 7 },
+      { week: 2, sales: 15 },
+    ],
+  }, // Gris - CH
+  5: {
+    lastWeek: 6,
+    lastMonth: 25,
+    total: 70,
+    history: [
+      { week: 1, sales: 5 },
+      { week: 2, sales: 11 },
+    ],
+  }, // Blanco - XG
+  6: {
+    lastWeek: 10,
+    lastMonth: 40,
+    total: 110,
+    history: [
+      { week: 1, sales: 9 },
+      { week: 2, sales: 19 },
+    ],
+  }, // Blanco - MED
+  7: {
+    lastWeek: 20,
+    lastMonth: 75,
+    total: 200,
+    history: [
+      { week: 1, sales: 18 },
+      { week: 2, sales: 38 },
+    ],
+  }, // Azul marino - CH
+  8: {
+    lastWeek: 16,
+    lastMonth: 60,
+    total: 165,
+    history: [
+      { week: 1, sales: 14 },
+      { week: 2, sales: 30 },
+    ],
+  }, // Azul marino - MED
+  9: {
+    lastWeek: 14,
+    lastMonth: 50,
+    total: 140,
+    history: [
+      { week: 1, sales: 12 },
+      { week: 2, sales: 26 },
+    ],
+  }, // Azul cielo - MED
 
-  // Factores que influyen en la popularidad
-  const popularSizes = ["MED", "G"]; // Tallas más populares
-  const popularColors = ["Negro", "Azul marino", "Blanco"]; // Colores más populares
+  // POLO ACANALADO MUJER
+  10: {
+    lastWeek: 15,
+    lastMonth: 55,
+    total: 145,
+    history: [
+      { week: 1, sales: 13 },
+      { week: 2, sales: 28 },
+    ],
+  }, // Negro - CH
+  11: {
+    lastWeek: 12,
+    lastMonth: 45,
+    total: 125,
+    history: [
+      { week: 1, sales: 10 },
+      { week: 2, sales: 22 },
+    ],
+  }, // Negro - MED
+  12: {
+    lastWeek: 18,
+    lastMonth: 65,
+    total: 175,
+    history: [
+      { week: 1, sales: 16 },
+      { week: 2, sales: 34 },
+    ],
+  }, // Blanco - G
+  13: {
+    lastWeek: 14,
+    lastMonth: 50,
+    total: 135,
+    history: [
+      { week: 1, sales: 12 },
+      { week: 2, sales: 26 },
+    ],
+  }, // Blanco - CH
+  14: {
+    lastWeek: 10,
+    lastMonth: 35,
+    total: 95,
+    history: [
+      { week: 1, sales: 8 },
+      { week: 2, sales: 18 },
+    ],
+  }, // Blanco - XCH
+  15: {
+    lastWeek: 16,
+    lastMonth: 60,
+    total: 155,
+    history: [
+      { week: 1, sales: 14 },
+      { week: 2, sales: 30 },
+    ],
+  }, // Azul cielo - G
 
-  // Base de ventas semanales (entre 5 y 15) - Reducida para mejor visualización
-  let baseSales = Math.floor(Math.random() * 5) + 5;
+  // PLAYERA HENLEY HOMBRE
+  16: {
+    lastWeek: 14,
+    lastMonth: 50,
+    total: 130,
+    history: [
+      { week: 1, sales: 12 },
+      { week: 2, sales: 26 },
+    ],
+  }, // Negro - G
+  17: {
+    lastWeek: 12,
+    lastMonth: 45,
+    total: 120,
+    history: [
+      { week: 1, sales: 10 },
+      { week: 2, sales: 22 },
+    ],
+  }, // Negro - CH
+  18: {
+    lastWeek: 10,
+    lastMonth: 35,
+    total: 95,
+    history: [
+      { week: 1, sales: 8 },
+      { week: 2, sales: 18 },
+    ],
+  }, // Negro - MED
+  19: {
+    lastWeek: 8,
+    lastMonth: 30,
+    total: 80,
+    history: [
+      { week: 1, sales: 7 },
+      { week: 2, sales: 15 },
+    ],
+  }, // Beige - CH
 
-  // Ajustar por popularidad de talla (hasta +5 ventas)
-  if (variant.size.name && popularSizes.includes(variant.size.name)) {
-    baseSales += Math.floor(Math.random() * 3) + 1;
-  }
+  // PLAYERA CUELLO V-HOMBRE
+  20: {
+    lastWeek: 16,
+    lastMonth: 60,
+    total: 155,
+    history: [
+      { week: 1, sales: 14 },
+      { week: 2, sales: 30 },
+    ],
+  }, // Rojo vino - CH
+  21: {
+    lastWeek: 14,
+    lastMonth: 50,
+    total: 135,
+    history: [
+      { week: 1, sales: 12 },
+      { week: 2, sales: 26 },
+    ],
+  }, // Rojo vino - MED
+  22: {
+    lastWeek: 6,
+    lastMonth: 20,
+    total: 55,
+    history: [
+      { week: 1, sales: 5 },
+      { week: 2, sales: 11 },
+    ],
+  }, // Blanco - XCH
+  23: {
+    lastWeek: 8,
+    lastMonth: 30,
+    total: 80,
+    history: [
+      { week: 1, sales: 7 },
+      { week: 2, sales: 15 },
+    ],
+  }, // Blanco - XG
+  24: {
+    lastWeek: 12,
+    lastMonth: 45,
+    total: 120,
+    history: [
+      { week: 1, sales: 10 },
+      { week: 2, sales: 22 },
+    ],
+  }, // Negro - MED
+  25: {
+    lastWeek: 10,
+    lastMonth: 35,
+    total: 95,
+    history: [
+      { week: 1, sales: 8 },
+      { week: 2, sales: 18 },
+    ],
+  }, // Negro - CH
+  26: {
+    lastWeek: 18,
+    lastMonth: 65,
+    total: 170,
+    history: [
+      { week: 1, sales: 16 },
+      { week: 2, sales: 34 },
+    ],
+  }, // Azul marino - MED
+  27: {
+    lastWeek: 20,
+    lastMonth: 75,
+    total: 190,
+    history: [
+      { week: 1, sales: 18 },
+      { week: 2, sales: 38 },
+    ],
+  }, // Azul marino - CH
+  28: {
+    lastWeek: 16,
+    lastMonth: 60,
+    total: 155,
+    history: [
+      { week: 1, sales: 14 },
+      { week: 2, sales: 30 },
+    ],
+  }, // Azul marino - G
+  29: {
+    lastWeek: 12,
+    lastMonth: 45,
+    total: 120,
+    history: [
+      { week: 1, sales: 10 },
+      { week: 2, sales: 22 },
+    ],
+  }, // Azul marino - XCH
+  30: {
+    lastWeek: 10,
+    lastMonth: 35,
+    total: 95,
+    history: [
+      { week: 1, sales: 8 },
+      { week: 2, sales: 18 },
+    ],
+  }, // Azul marino - XG
 
-  // Ajustar por popularidad de color (hasta +5 ventas)
-  if (variant.color.name && popularColors.includes(variant.color.name)) {
-    baseSales += Math.floor(Math.random() * 3) + 1;
-  }
-
-  // Generar solo 2 semanas de historial
-  const history = [
-    { week: 1, sales: Math.max(1, Math.round(baseSales * 0.8)) }, // CI - Primera semana (penúltima)
-    { week: 2, sales: Math.max(1, Math.round(baseSales * 1.2)) }, // K - Segunda semana (última)
-  ];
-
-  // Calcular totales
-  const lastWeek = history[history.length - 1].sales;
-  const lastMonth = history.reduce((sum, week) => sum + week.sales, 0);
-  const total = lastMonth;
-
-  return {
-    lastWeek,
-    lastMonth,
-    total,
-    history,
-  };
+  // Resto de variantes
+  31: {
+    lastWeek: 14,
+    lastMonth: 50,
+    total: 130,
+    history: [
+      { week: 1, sales: 12 },
+      { week: 2, sales: 26 },
+    ],
+  },
+  32: {
+    lastWeek: 10,
+    lastMonth: 35,
+    total: 95,
+    history: [
+      { week: 1, sales: 8 },
+      { week: 2, sales: 18 },
+    ],
+  },
+  33: {
+    lastWeek: 8,
+    lastMonth: 30,
+    total: 80,
+    history: [
+      { week: 1, sales: 7 },
+      { week: 2, sales: 15 },
+    ],
+  },
+  34: {
+    lastWeek: 12,
+    lastMonth: 45,
+    total: 120,
+    history: [
+      { week: 1, sales: 10 },
+      { week: 2, sales: 22 },
+    ],
+  },
+  35: {
+    lastWeek: 16,
+    lastMonth: 60,
+    total: 155,
+    history: [
+      { week: 1, sales: 14 },
+      { week: 2, sales: 30 },
+    ],
+  },
+  36: {
+    lastWeek: 14,
+    lastMonth: 50,
+    total: 135,
+    history: [
+      { week: 1, sales: 12 },
+      { week: 2, sales: 26 },
+    ],
+  },
+  37: {
+    lastWeek: 18,
+    lastMonth: 65,
+    total: 170,
+    history: [
+      { week: 1, sales: 16 },
+      { week: 2, sales: 34 },
+    ],
+  },
+  38: {
+    lastWeek: 12,
+    lastMonth: 45,
+    total: 120,
+    history: [
+      { week: 1, sales: 10 },
+      { week: 2, sales: 22 },
+    ],
+  },
+  39: {
+    lastWeek: 20,
+    lastMonth: 75,
+    total: 190,
+    history: [
+      { week: 1, sales: 18 },
+      { week: 2, sales: 38 },
+    ],
+  },
+  40: {
+    lastWeek: 15,
+    lastMonth: 55,
+    total: 145,
+    history: [
+      { week: 1, sales: 13 },
+      { week: 2, sales: 28 },
+    ],
+  },
+  41: {
+    lastWeek: 12,
+    lastMonth: 45,
+    total: 120,
+    history: [
+      { week: 1, sales: 10 },
+      { week: 2, sales: 22 },
+    ],
+  },
+  42: {
+    lastWeek: 10,
+    lastMonth: 35,
+    total: 95,
+    history: [
+      { week: 1, sales: 8 },
+      { week: 2, sales: 18 },
+    ],
+  },
+  43: {
+    lastWeek: 14,
+    lastMonth: 50,
+    total: 135,
+    history: [
+      { week: 1, sales: 12 },
+      { week: 2, sales: 26 },
+    ],
+  },
+  44: {
+    lastWeek: 16,
+    lastMonth: 60,
+    total: 155,
+    history: [
+      { week: 1, sales: 14 },
+      { week: 2, sales: 30 },
+    ],
+  },
+  45: {
+    lastWeek: 8,
+    lastMonth: 30,
+    total: 80,
+    history: [
+      { week: 1, sales: 7 },
+      { week: 2, sales: 15 },
+    ],
+  },
+  46: {
+    lastWeek: 12,
+    lastMonth: 45,
+    total: 120,
+    history: [
+      { week: 1, sales: 10 },
+      { week: 2, sales: 22 },
+    ],
+  },
+  47: {
+    lastWeek: 15,
+    lastMonth: 55,
+    total: 145,
+    history: [
+      { week: 1, sales: 13 },
+      { week: 2, sales: 28 },
+    ],
+  },
+  48: {
+    lastWeek: 14,
+    lastMonth: 50,
+    total: 135,
+    history: [
+      { week: 1, sales: 12 },
+      { week: 2, sales: 26 },
+    ],
+  },
+  49: {
+    lastWeek: 18,
+    lastMonth: 65,
+    total: 170,
+    history: [
+      { week: 1, sales: 16 },
+      { week: 2, sales: 34 },
+    ],
+  },
+  50: {
+    lastWeek: 16,
+    lastMonth: 60,
+    total: 155,
+    history: [
+      { week: 1, sales: 14 },
+      { week: 2, sales: 30 },
+    ],
+  },
+  51: {
+    lastWeek: 14,
+    lastMonth: 50,
+    total: 135,
+    history: [
+      { week: 1, sales: 12 },
+      { week: 2, sales: 26 },
+    ],
+  },
+  52: {
+    lastWeek: 20,
+    lastMonth: 75,
+    total: 190,
+    history: [
+      { week: 1, sales: 18 },
+      { week: 2, sales: 38 },
+    ],
+  },
+  53: {
+    lastWeek: 12,
+    lastMonth: 45,
+    total: 120,
+    history: [
+      { week: 1, sales: 10 },
+      { week: 2, sales: 22 },
+    ],
+  },
+  54: {
+    lastWeek: 16,
+    lastMonth: 60,
+    total: 155,
+    history: [
+      { week: 1, sales: 14 },
+      { week: 2, sales: 30 },
+    ],
+  },
+  55: {
+    lastWeek: 14,
+    lastMonth: 50,
+    total: 135,
+    history: [
+      { week: 1, sales: 12 },
+      { week: 2, sales: 26 },
+    ],
+  },
+  56: {
+    lastWeek: 18,
+    lastMonth: 65,
+    total: 170,
+    history: [
+      { week: 1, sales: 16 },
+      { week: 2, sales: 34 },
+    ],
+  },
+  57: {
+    lastWeek: 15,
+    lastMonth: 55,
+    total: 145,
+    history: [
+      { week: 1, sales: 13 },
+      { week: 2, sales: 28 },
+    ],
+  },
 };
 
-// Modificar la función enrichProductsWithSalesData para aumentar aún más el stock
+// Función para enriquecer los productos con datos de ventas estáticos
 const enrichProductsWithSalesData = (products: Product[]): Product[] => {
   return products.map((product) => ({
     ...product,
@@ -182,7 +644,15 @@ const enrichProductsWithSalesData = (products: Product[]): Product[] => {
       ...variant,
       // Aumentar el stock significativamente para ver el agotamiento en más semanas
       stock: variant.stock * 50, // Multiplicamos el stock por 50 para ver proyección a más largo plazo
-      salesData: generateSalesData(variant),
+      salesData: staticSalesData[variant.id] || {
+        lastWeek: 10,
+        lastMonth: 40,
+        total: 100,
+        history: [
+          { week: 1, sales: 8 },
+          { week: 2, sales: 10 },
+        ],
+      },
     })),
   }));
 };
@@ -342,28 +812,39 @@ export default function SalesAnalysisDashboard() {
     return Array.from(sizeSalesMap.values()).sort((a, b) => b.sales - a.sales);
   }, [selectedProduct]);
 
-  // Calcular tasa de crecimiento basada en el historial
+  // Calculate growth rate based on cumulative sales history
   const calculateGrowthRate = (history: { week: number; sales: number }[]) => {
-    if (history.length < 2) return 0.05; // Tasa predeterminada
+    if (history.length < 2) return 0.05; // Default rate
 
-    // Con solo 2 semanas, calculamos directamente la tasa de crecimiento
+    // With cumulative data, we need to calculate the growth rate differently
     const firstWeekSales = history[0].sales;
     const secondWeekSales = history[1].sales;
 
-    if (firstWeekSales <= 0) return 0.05; // Evitar división por cero
+    if (firstWeekSales <= 0) return 0.05; // Avoid division by zero
 
-    // Calcular tasa de crecimiento semanal
-    const weeklyRate = (secondWeekSales - firstWeekSales) / firstWeekSales;
+    // Calculate weekly growth rate from cumulative data
+    // Using the solution to dP/dt = kP which is P(t) = P₀e^(kt)
+    // So k = ln(P(t)/P₀)/t
+    const timeElapsed = history[1].week - history[0].week; // t
+    const growthRate = Math.log(secondWeekSales / firstWeekSales) / timeElapsed;
 
-    // Limitar la tasa entre -0.1 y 0.2
-    return Math.max(-0.1, Math.min(0.2, weeklyRate));
+    // Limit the rate between -0.1 and 0.2
+    return Math.max(-0.1, Math.min(0.2, growthRate));
   };
 
   // Obtener fecha para una semana específica
   const getDateForWeek = (week: number) => {
-    const today = new Date();
-    const targetDate = new Date(today);
-    targetDate.setDate(today.getDate() + (week - 1) * 7);
+    // Fechas específicas para las semanas 1 y 2
+    if (week === 1) {
+      return "15/03/2024"; // Semana base (15 de marzo)
+    } else if (week === 2) {
+      return "22/03/2024"; // Semana actual (22 de marzo)
+    }
+
+    // Para las demás semanas, calcular a partir del 22 de marzo
+    const baseDate = new Date(2024, 2, 22); // 22 de marzo de 2024
+    const targetDate = new Date(baseDate);
+    targetDate.setDate(baseDate.getDate() + (week - 2) * 7);
     return targetDate.toLocaleDateString("es-MX", {
       day: "2-digit",
       month: "2-digit",
@@ -371,38 +852,63 @@ export default function SalesAnalysisDashboard() {
     });
   };
 
-  // Datos para el gráfico de proyección de ventas
+  // Data for sales projection chart using cumulative data
   const salesProjectionData = useMemo(() => {
     if (!selectedVariant || !selectedVariant.salesData) return [];
 
     const history = selectedVariant.salesData.history;
-    const initialSales = history[history.length - 1].sales; // P₀ (ventas iniciales)
-    const growthRate = calculateGrowthRate(history); // k (constante de proporcionalidad)
+    const initialSales = history[history.length - 1].sales; // P₀ (initial cumulative sales)
+    const growthRate = calculateGrowthRate(history); // k (proportionality constant)
 
-    // Proyectar 24 semanas más usando el modelo exponencial P(t) = P₀e^(kt)
-    const projection = Array.from({ length: 24 }, (_, i) => {
-      const week = history.length + i + 1;
-      const timeElapsed = i + 1; // t (tiempo transcurrido en semanas)
-      const projectedSales = Math.round(
-        initialSales * Math.exp(growthRate * timeElapsed)
-      );
-      return { week, sales: projectedSales };
+    // Convert history to include both weekly and cumulative sales
+    const historyWithCumulative = history.map((entry, index) => {
+      // For history, the sales value is already cumulative
+      return {
+        week: entry.week,
+        cumulativeSales: entry.sales,
+        // Calculate weekly sales for display (difference from previous week)
+        sales:
+          index === 0 ? entry.sales : entry.sales - history[index - 1].sales,
+      };
     });
 
-    return [...history, ...projection];
+    // Project 24 more weeks using the exponential model P(t) = P₀e^(kt)
+    const projection = [];
+    let previousCumulativeSales = initialSales;
+
+    for (let i = 0; i < 24; i++) {
+      const week = history.length + i + 1;
+      const timeElapsed = i + 1; // t (time elapsed in weeks)
+      const projectedCumulativeSales = Math.round(
+        initialSales * Math.exp(growthRate * timeElapsed)
+      );
+
+      // Calculate weekly sales as the difference between current and previous cumulative sales
+      const weeklySales = projectedCumulativeSales - previousCumulativeSales;
+
+      projection.push({
+        week,
+        sales: weeklySales,
+        cumulativeSales: projectedCumulativeSales,
+      });
+
+      // Update for next iteration
+      previousCumulativeSales = projectedCumulativeSales;
+    }
+
+    return [...historyWithCumulative, ...projection];
   }, [selectedVariant]);
 
-  // Calcular semana de agotamiento
+  // Calculate stock out week based on cumulative sales
   const calculateStockOutWeek = useMemo(() => {
     if (!selectedVariant || !selectedVariant.salesData) return null;
 
     const projectionData = salesProjectionData;
     const remainingStock = selectedVariant.stock;
-    let cumulativeSales = 0;
 
     for (let i = 0; i < projectionData.length; i++) {
-      const weeklySales = projectionData[i].sales;
-      cumulativeSales += weeklySales;
+      // Use cumulative sales directly instead of calculating it
+      const cumulativeSales = projectionData[i].cumulativeSales;
 
       if (cumulativeSales >= remainingStock) {
         return {
@@ -435,8 +941,6 @@ export default function SalesAnalysisDashboard() {
       isHistorical: true,
     };
 
-   
-
     // Calcular datos para el año siguiente (proyección)
     const nextYearTotal = {
       year: currentYear + 1,
@@ -460,10 +964,34 @@ export default function SalesAnalysisDashboard() {
     if (!weeklyData || weeklyData.length === 0) return [];
 
     // Agrupar datos semanales en meses (4 semanas por mes)
-    const monthlyData: { month: number; sales: number; isHistorical: boolean }[] = [];
+    const monthlyData: {
+      month: number;
+      monthName: string;
+      sales: number;
+      isHistorical: boolean;
+    }[] = [];
     let currentMonth = 1;
     let monthSales = 0;
     let weeksInMonth = 0;
+
+    // Nombres de los meses
+    const monthNames = [
+      "Enero",
+      "Febrero",
+      "Marzo",
+      "Abril",
+      "Mayo",
+      "Junio",
+      "Julio",
+      "Agosto",
+      "Septiembre",
+      "Octubre",
+      "Noviembre",
+      "Diciembre",
+    ];
+
+    // Mes inicial (marzo)
+    let currentMonthIndex = 2; // 0-indexed, marzo es 2
 
     weeklyData.forEach((week, index) => {
       monthSales += week.sales;
@@ -473,11 +1001,13 @@ export default function SalesAnalysisDashboard() {
       if (weeksInMonth === 4 || index === weeklyData.length - 1) {
         monthlyData.push({
           month: currentMonth,
+          monthName: monthNames[currentMonthIndex],
           sales: monthSales,
           isHistorical: currentMonth === 1 && index < 2, // Solo el primer mes (parcial) es histórico
         });
 
         currentMonth++;
+        currentMonthIndex = (currentMonthIndex + 1) % 12;
         monthSales = 0;
         weeksInMonth = 0;
       }
@@ -492,22 +1022,24 @@ export default function SalesAnalysisDashboard() {
   }, [salesProjectionData]);
 
   // Manejar cambio de producto
-  const handleProductChange = (productId: string) => {
-    setSelectedProductId(Number(productId));
+  const handleProductChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedProductId(Number(e.target.value));
     setSelectedColorId(null);
     setSelectedSizeId(null);
     setSelectedVariantId(null);
   };
 
   // Manejar cambio de color
-  const handleColorChange = (colorId: string) => {
-    setSelectedColorId(Number(colorId));
+  const handleColorChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setSelectedColorId(value === "all" ? null : Number(value));
     setSelectedVariantId(null);
   };
 
   // Manejar cambio de talla
-  const handleSizeChange = (sizeId: string) => {
-    setSelectedSizeId(Number(sizeId));
+  const handleSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setSelectedSizeId(value === "all" ? null : Number(value));
     setSelectedVariantId(null);
   };
 
@@ -530,1058 +1062,1315 @@ export default function SalesAnalysisDashboard() {
     setSelectedSizeId(null);
   };
 
+  // Función para renderizar el indicador de crecimiento
+  const renderGrowthIndicator = (growthRate: number | null) => {
+    if (growthRate === null) return <span className="text-gray-500">-</span>;
+
+    if (growthRate > 0) {
+      return (
+        <div className="flex items-center gap-1 text-emerald-600 font-medium">
+          <ArrowUpRight size={16} />+{growthRate.toFixed(1)}%
+        </div>
+      );
+    } else if (growthRate < 0) {
+      return (
+        <div className="flex items-center gap-1 text-rose-600 font-medium">
+          <ArrowDownRight size={16} />
+          {growthRate.toFixed(1)}%
+        </div>
+      );
+    } else {
+      return (
+        <div className="flex items-center gap-1 text-gray-500">
+          <Minus size={16} />
+          0%
+        </div>
+      );
+    }
+  };
+
   return (
-    <div className="container mx-auto p-4 space-y-6">
+    <div className="max-w-7xl mx-auto p-4 mt-14">
       {/* Encabezado */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-xl shadow-xl p-6">
-        <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
-          <div className="bg-white/20 p-4 rounded-lg">
-            <BarChart3 className="w-8 h-8" />
-          </div>
-          <div className="flex-1">
-            <h1 className="text-2xl md:text-3xl font-bold">
-              Análisis de Ventas por Talla y Color
-            </h1>
-            <p className="text-gray-100 mt-1">
-              Analiza qué tallas y colores se venden más y realiza proyecciones
-              de inventario
-            </p>
-            <div className="flex flex-wrap gap-3 mt-3">
-              <Badge className="bg-white/20 hover:bg-white/30 text-white border-none">
-                Modelo Exponencial dP/dt=kP
-              </Badge>
-              <Badge className="bg-white/20 hover:bg-white/30 text-white border-none">
-                Proyección a 12 Semanas
-              </Badge>
-              <Badge className="bg-white/20 hover:bg-white/30 text-white border-none">
-                Análisis de Agotamiento
-              </Badge>
+      <header className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl p-6 shadow-lg mb-6">
+        <div className="flex flex-col gap-4">
+          <div className="flex items-start gap-4 md:items-center">
+            <div className="bg-white/20 p-4 rounded-lg">
+              <BarChart3 size={32} />
+            </div>
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold m-0">
+                Análisis de Ventas por Talla y Color
+              </h1>
+              <p className="mt-1 text-white/90">
+                Analiza qué tallas y colores se venden más y realiza
+                proyecciones de inventario
+              </p>
+              <div className="flex flex-wrap gap-3 mt-3">
+                <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
+                  Modelo Exponencial dP/dt=kP
+                </span>
+                <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
+                  Proyección a 12 Semanas
+                </span>
+                <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
+                  Análisis de Agotamiento
+                </span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
       {/* Selector de producto */}
-      <Card>
-        <CardHeader className="bg-slate-50">
+      <section className="bg-white rounded-lg shadow-md mb-6">
+        <div className="bg-slate-50 p-4 md:p-6 rounded-t-lg">
           <div className="flex items-center gap-2">
-            <ShoppingBag className="w-5 h-5 text-blue-600" />
-            <CardTitle>Seleccionar Producto</CardTitle>
+            <ShoppingBag size={20} className="text-blue-500" />
+            <h2 className="text-lg font-semibold m-0">Seleccionar Producto</h2>
           </div>
-          <CardDescription>
+          <p className="text-gray-500 text-sm mt-1 mb-0">
             Elige un producto para analizar sus ventas por talla y color
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <Select
+          </p>
+        </div>
+        <div className="p-6">
+          <select
             value={selectedProductId?.toString() || ""}
-            onValueChange={handleProductChange}
+            onChange={handleProductChange}
+            className="w-full max-w-md px-3.5 py-2.5 rounded-lg border border-gray-300 text-base"
           >
-            <SelectTrigger className="w-full md:w-[400px]">
-              <SelectValue placeholder="Selecciona un producto" />
-            </SelectTrigger>
-            <SelectContent>
-              {products.map((product) => (
-                <SelectItem key={product.id} value={product.id.toString()}>
-                  {product.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </CardContent>
-      </Card>
+            <option value="">Selecciona un producto</option>
+            {products.map((product) => (
+              <option key={product.id} value={product.id.toString()}>
+                {product.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </section>
 
       {selectedProduct && (
-        <Tabs
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="space-y-4"
-        >
-          <TabsList className="grid w-full md:w-auto md:inline-grid grid-cols-3 md:grid-cols-3">
-            <TabsTrigger value="overview" className="flex items-center gap-2">
-              <PieChartIcon className="w-4 h-4" />
-              <span className="hidden sm:inline">Resumen</span>
-            </TabsTrigger>
-            <TabsTrigger value="variants" className="flex items-center gap-2">
-              <Palette className="w-4 h-4" />
-              <span className="hidden sm:inline">Variantes</span>
-            </TabsTrigger>
-            <TabsTrigger value="projection" className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4" />
-              <span className="hidden sm:inline">Proyección</span>
-            </TabsTrigger>
-          </TabsList>
+        <div className="mb-6">
+          <div className="flex border-b border-gray-200 mb-4">
+            <button
+              onClick={() => setActiveTab("overview")}
+              className={`flex items-center gap-2 px-6 py-3 ${
+                activeTab === "overview"
+                  ? "bg-blue-500 text-white"
+                  : "bg-slate-100 text-gray-800"
+              } border-none rounded-t-lg cursor-pointer font-${
+                activeTab === "overview" ? "semibold" : "normal"
+              } mr-1`}
+            >
+              <PieChartIcon size={16} />
+              <span>Resumen</span>
+            </button>
+            <button
+              onClick={() => setActiveTab("variants")}
+              className={`flex items-center gap-2 px-6 py-3 ${
+                activeTab === "variants"
+                  ? "bg-blue-500 text-white"
+                  : "bg-slate-100 text-gray-800"
+              } border-none rounded-t-lg cursor-pointer font-${
+                activeTab === "variants" ? "semibold" : "normal"
+              } mr-1`}
+            >
+              <Palette size={16} />
+              <span>Variantes</span>
+            </button>
+            <button
+              onClick={() => setActiveTab("projection")}
+              className={`flex items-center gap-2 px-6 py-3 ${
+                activeTab === "projection"
+                  ? "bg-blue-500 text-white"
+                  : "bg-slate-100 text-gray-800"
+              } border-none rounded-t-lg cursor-pointer font-${
+                activeTab === "projection" ? "semibold" : "normal"
+              }`}
+            >
+              <TrendingUp size={16} />
+              <span>Proyección</span>
+            </button>
+          </div>
 
           {/* Pestaña de Resumen */}
-          <TabsContent value="overview" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Gráfico de ventas por color */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Palette className="w-5 h-5 text-blue-600" />
-                    <CardTitle>Ventas por Color</CardTitle>
+          {activeTab === "overview" && (
+            <div className="flex flex-col gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Gráfico de ventas por color */}
+                <section className="bg-white rounded-lg shadow-md">
+                  <div className="bg-slate-50 p-4 md:p-6 rounded-t-lg">
+                    <div className="flex items-center gap-2">
+                      <Palette size={20} className="text-blue-500" />
+                      <h2 className="text-lg font-semibold m-0">
+                        Ventas por Color
+                      </h2>
+                    </div>
+                    <p className="text-gray-500 text-sm mt-1 mb-0">
+                      Distribución de ventas según el color del producto
+                    </p>
                   </div>
-                  <CardDescription>
-                    Distribución de ventas según el color del producto
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[300px]">
+                  <div className="p-4">
+                    <div className="h-[300px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                          data={salesByColorData}
+                          margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis
+                            dataKey="colorName"
+                            angle={-45}
+                            textAnchor="end"
+                            height={70}
+                          />
+                          <YAxis />
+                          <Tooltip
+                            formatter={(value: any) => [
+                              `${value} unidades`,
+                              "Ventas",
+                            ]}
+                            labelFormatter={(label: any) => `Color: ${label}`}
+                            contentStyle={{
+                              backgroundColor: "#fff",
+                              borderRadius: "8px",
+                              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                              border: "none",
+                            }}
+                          />
+                          <Bar dataKey="sales" name="Ventas">
+                            {salesByColorData.map((entry, index) => (
+                              <Cell
+                                key={`cell-${index}`}
+                                fill={
+                                  entry.hexValue ||
+                                  CHART_COLORS[index % CHART_COLORS.length]
+                                }
+                              />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Gráfico de ventas por talla */}
+                <section className="bg-white rounded-lg shadow-md">
+                  <div className="bg-slate-50 p-4 md:p-6 rounded-t-lg">
+                    <div className="flex items-center gap-2">
+                      <Ruler size={20} className="text-blue-500" />
+                      <h2 className="text-lg font-semibold m-0">
+                        Ventas por Talla
+                      </h2>
+                    </div>
+                    <p className="text-gray-500 text-sm mt-1 mb-0">
+                      Distribución de ventas según la talla del producto
+                    </p>
+                  </div>
+                  <div className="p-4">
+                    <div className="h-[300px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                          data={salesBySizeData}
+                          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="sizeName" />
+                          <YAxis />
+                          <Tooltip
+                            formatter={(value: any) => [
+                              `${value} unidades`,
+                              "Ventas",
+                            ]}
+                            labelFormatter={(label: any) => `Talla: ${label}`}
+                            contentStyle={{
+                              backgroundColor: "#fff",
+                              borderRadius: "8px",
+                              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                              border: "none",
+                            }}
+                          />
+                          <Bar dataKey="sales" name="Ventas" fill="#3B82F6" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </section>
+              </div>
+
+              {/* Gráfico de distribución combinada */}
+              <section className="bg-white rounded-lg shadow-md border-t-4 border-indigo-600">
+                <div className="bg-indigo-50 p-4 md:p-6 rounded-t-lg">
+                  <div className="flex items-center gap-2">
+                    <PieChartIcon size={20} className="text-indigo-600" />
+                    <h2 className="text-lg font-semibold m-0">
+                      Distribución de Ventas
+                    </h2>
+                  </div>
+                  <p className="text-gray-500 text-sm mt-1 mb-0">
+                    Visualización de las combinaciones más vendidas de talla y
+                    color
+                  </p>
+                </div>
+                <div className="p-4">
+                  <div className="h-[400px] bg-gradient-to-br from-white to-indigo-50 rounded-lg p-4">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={salesByColorData}
-                        margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis
-                          dataKey="colorName"
-                          angle={-45}
-                          textAnchor="end"
-                          height={70}
-                        />
-                        <YAxis />
-                        <Tooltip
-                          formatter={(value: any) => [`${value} unidades`, "Ventas"]}
-                          labelFormatter={(label: any) => `Color: ${label}`}
-                        />
-                        <Bar dataKey="sales" name="Ventas">
-                          {salesByColorData.map((entry, index) => (
+                      <PieChart>
+                        <Pie
+                          data={selectedProduct.variants.map((v) => ({
+                            id: v.id,
+                            name: `${v.color.name} - ${v.size.name}`,
+                            value: v.salesData?.total || 0,
+                            color: v.color.hexValue,
+                          }))}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={true}
+                          outerRadius={150}
+                          fill="#8884d8"
+                          dataKey="value"
+                          nameKey="name"
+                          label={({
+                            name,
+                            percent,
+                          }: {
+                            name: string;
+                            percent: number;
+                          }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        >
+                          {selectedProduct.variants.map((entry, index) => (
                             <Cell
                               key={`cell-${index}`}
                               fill={
-                                entry.hexValue ||
+                                entry.color.hexValue ||
                                 CHART_COLORS[index % CHART_COLORS.length]
+                              }
+                              stroke="#333"
+                              strokeWidth={
+                                entry.color.hexValue === "#FFFFFF" ||
+                                entry.color.hexValue === "#FFF" ||
+                                entry.color.name.toLowerCase() === "blanco"
+                                  ? 1
+                                  : 0
                               }
                             />
                           ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Gráfico de ventas por talla */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Ruler className="w-5 h-5 text-blue-600" />
-                    <CardTitle>Ventas por Talla</CardTitle>
-                  </div>
-                  <CardDescription>
-                    Distribución de ventas según la talla del producto
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={salesBySizeData}
-                        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="sizeName" />
-                        <YAxis />
+                        </Pie>
                         <Tooltip
-                          formatter={(value: any) => [`${value} unidades`, "Ventas"]}
-                          labelFormatter={(label: any) => `Talla: ${label}`}
+                          formatter={(value: any) => [
+                            `${value} unidades`,
+                            "Ventas",
+                          ]}
+                          contentStyle={{
+                            backgroundColor: "#fff",
+                            borderRadius: "8px",
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                            border: "none",
+                          }}
                         />
-                        <Bar dataKey="sales" name="Ventas" fill="#3B82F6" />
-                      </BarChart>
+                      </PieChart>
                     </ResponsiveContainer>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Gráfico de distribución combinada */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <PieChartIcon className="w-5 h-5 text-blue-600" />
-                  <CardTitle>Distribución de Ventas</CardTitle>
                 </div>
-                <CardDescription>
-                  Visualización de las combinaciones más vendidas de talla y
-                  color
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[400px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={selectedProduct.variants.map((v) => ({
-                          id: v.id,
-                          name: `${v.color.name} - ${v.size.name}`,
-                          value: v.salesData?.total || 0,
-                          color: v.color.hexValue,
-                        }))}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={true}
-                        outerRadius={150}
-                        fill="#8884d8"
-                        dataKey="value"
-                        nameKey="name"
-                        label={({ name, percent }: { name: string; percent: number }) =>
-                          `${name} ${(percent * 100).toFixed(0)}%`
-                        }
-                      >
-                        {selectedProduct.variants.map((entry, index) => (
-                          <Cell
-                            key={`cell-${index}`}
-                            fill={
-                              entry.color.hexValue ||
-                              CHART_COLORS[index % CHART_COLORS.length]
-                            }
-                          />
+              </section>
+
+              {/* Tabla de mejores combinaciones */}
+              <section className="bg-white rounded-lg shadow-md">
+                <div className="bg-slate-50 p-4 md:p-6 rounded-t-lg">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp size={20} className="text-blue-500" />
+                    <h2 className="text-lg font-semibold m-0">
+                      Top Combinaciones
+                    </h2>
+                  </div>
+                  <p className="text-gray-500 text-sm mt-1 mb-0">
+                    Las combinaciones de talla y color más vendidas
+                  </p>
+                </div>
+                <div className="p-4 overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead className="bg-slate-100">
+                      <tr>
+                        <th className="p-3 text-left font-semibold border-b border-gray-200">
+                          Posición
+                        </th>
+                        <th className="p-3 text-left font-semibold border-b border-gray-200">
+                          Imagen
+                        </th>
+                        <th className="p-3 text-left font-semibold border-b border-gray-200">
+                          Color
+                        </th>
+                        <th className="p-3 text-left font-semibold border-b border-gray-200">
+                          Talla
+                        </th>
+                        <th className="p-3 text-left font-semibold border-b border-gray-200">
+                          Ventas Totales
+                        </th>
+                        <th className="p-3 text-left font-semibold border-b border-gray-200">
+                          Stock Actual
+                        </th>
+                        <th className="p-3 text-left font-semibold border-b border-gray-200">
+                          Acción
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedProduct.variants
+                        .sort(
+                          (a, b) =>
+                            (b.salesData?.total || 0) -
+                            (a.salesData?.total || 0)
+                        )
+                        .slice(0, 10)
+                        .map((variant, index) => (
+                          <tr
+                            key={variant.id}
+                            className={`${
+                              selectedVariantId === variant.id
+                                ? "bg-blue-50"
+                                : ""
+                            } transition-colors`}
+                          >
+                            <td className="p-3 border-b border-gray-200 font-medium">
+                              {index + 1}
+                            </td>
+                            <td className="p-3 border-b border-gray-200">
+                              <img
+                                src={variant.imageUrl || "/placeholder.svg"}
+                                alt={`${selectedProduct.name} - ${variant.color.name}`}
+                                className="w-12 h-12 object-contain border border-gray-200 rounded-md"
+                              />
+                            </td>
+                            <td className="p-3 border-b border-gray-200">
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className="w-4 h-4 rounded-full border border-gray-300"
+                                  style={{
+                                    backgroundColor: variant.color.hexValue,
+                                  }}
+                                />
+                                {variant.color.name}
+                              </div>
+                            </td>
+                            <td className="p-3 border-b border-gray-200">
+                              {variant.size.name}
+                            </td>
+                            <td className="p-3 border-b border-gray-200">
+                              {variant.salesData?.total || 0} unidades
+                            </td>
+                            <td className="p-3 border-b border-gray-200">
+                              <span
+                                className={`inline-block px-2 py-0.5 rounded-full text-sm ${
+                                  variant.stock < 5
+                                    ? "bg-red-100 text-red-700 border border-red-200"
+                                    : "bg-gray-100 text-gray-700 border border-gray-200"
+                                }`}
+                              >
+                                {variant.stock} unidades
+                              </span>
+                            </td>
+                            <td className="p-3 border-b border-gray-200">
+                              <button
+                                onClick={() => handleVariantSelect(variant.id)}
+                                className="px-3 py-1.5 rounded-md border border-gray-300 bg-white hover:bg-gray-50 text-sm cursor-pointer"
+                              >
+                                Seleccionar
+                              </button>
+                            </td>
+                          </tr>
                         ))}
-                      </Pie>
-                      <Tooltip
-                        formatter={(value: any) => [`${value} unidades`, "Ventas"]}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
+                    </tbody>
+                  </table>
                 </div>
-              </CardContent>
-            </Card>
+              </section>
+            </div>
+          )}
 
-            {/* Tabla de mejores combinaciones */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-blue-600" />
-                  <CardTitle>Top Combinaciones</CardTitle>
+          {/* Pestaña de Variantes */}
+          {activeTab === "variants" && (
+            <div className="flex flex-col gap-4">
+              <section className="bg-white rounded-lg shadow-md">
+                <div className="bg-slate-50 p-4 md:p-6 rounded-t-lg flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <Filter size={20} className="text-blue-500" />
+                    <h2 className="text-lg font-semibold m-0">
+                      Filtrar Variantes
+                    </h2>
+                  </div>
+                  <button
+                    onClick={clearFilters}
+                    className="px-3 py-1.5 rounded-md border border-gray-300 bg-white hover:bg-gray-50 text-sm cursor-pointer"
+                  >
+                    Limpiar Filtros
+                  </button>
                 </div>
-                <CardDescription>
-                  Las combinaciones de talla y color más vendidas
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {/* Modificar la tabla de mejores combinaciones para mostrar imágenes */}
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Posición</TableHead>
-                      <TableHead>Imagen</TableHead>
-                      <TableHead>Color</TableHead>
-                      <TableHead>Talla</TableHead>
-                      <TableHead>Ventas Totales</TableHead>
-                      <TableHead>Stock Actual</TableHead>
-                      <TableHead>Acción</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {selectedProduct.variants
-                      .sort(
-                        (a, b) =>
-                          (b.salesData?.total || 0) - (a.salesData?.total || 0)
-                      )
-                      .slice(0, 10)
-                      .map((variant, index) => (
-                        <TableRow
+                <div className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        Color
+                      </label>
+                      <select
+                        value={selectedColorId?.toString() || "all"}
+                        onChange={handleColorChange}
+                        className="w-full px-3.5 py-2.5 rounded-md border border-gray-300 text-base"
+                      >
+                        <option value="all">Todos los colores</option>
+                        {availableColors.map((color) => (
+                          <option key={color.id} value={color.id.toString()}>
+                            {color.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        Talla
+                      </label>
+                      <select
+                        value={selectedSizeId?.toString() || "all"}
+                        onChange={handleSizeChange}
+                        className="w-full px-3.5 py-2.5 rounded-md border border-gray-300 text-base"
+                      >
+                        <option value="all">Todas las tallas</option>
+                        {availableSizes.map((size) => (
+                          <option key={size.id} value={size.id.toString()}>
+                            {size.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section className="bg-white rounded-lg shadow-md">
+                <div className="bg-slate-50 p-4 md:p-6 rounded-t-lg">
+                  <div className="flex items-center gap-2">
+                    <ShoppingCart size={20} className="text-blue-500" />
+                    <h2 className="text-lg font-semibold m-0">
+                      Variantes del Producto
+                    </h2>
+                  </div>
+                  <p className="text-gray-500 text-sm mt-1 mb-0">
+                    {filteredVariants.length} variantes encontradas
+                  </p>
+                </div>
+                <div className="p-4 overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead className="bg-slate-100">
+                      <tr>
+                        <th className="p-3 text-left font-semibold border-b border-gray-200">
+                          Imagen
+                        </th>
+                        <th className="p-3 text-left font-semibold border-b border-gray-200">
+                          ID
+                        </th>
+                        <th className="p-3 text-left font-semibold border-b border-gray-200">
+                          Color
+                        </th>
+                        <th className="p-3 text-left font-semibold border-b border-gray-200">
+                          Talla
+                        </th>
+                        <th className="p-3 text-left font-semibold border-b border-gray-200">
+                          Precio
+                        </th>
+                        <th className="p-3 text-left font-semibold border-b border-gray-200">
+                          Stock
+                        </th>
+                        <th className="p-3 text-left font-semibold border-b border-gray-200">
+                          Ventas
+                        </th>
+                        <th className="p-3 text-left font-semibold border-b border-gray-200">
+                          Acción
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredVariants.map((variant) => (
+                        <tr
                           key={variant.id}
-                          className={
+                          className={`${
                             selectedVariantId === variant.id ? "bg-blue-50" : ""
-                          }
+                          } transition-colors`}
                         >
-                          <TableCell className="font-medium">
-                            {index + 1}
-                          </TableCell>
-                          <TableCell>
+                          <td className="p-3 border-b border-gray-200">
                             <img
                               src={variant.imageUrl || "/placeholder.svg"}
                               alt={`${selectedProduct.name} - ${variant.color.name}`}
-                              className="w-12 h-12 object-contain border rounded-md"
+                              className="w-12 h-12 object-contain border border-gray-200 rounded-md"
                             />
-                          </TableCell>
-                          <TableCell>
+                          </td>
+                          <td className="p-3 border-b border-gray-200 font-mono text-sm">
+                            {variant.id}
+                          </td>
+                          <td className="p-3 border-b border-gray-200">
                             <div className="flex items-center gap-2">
                               <div
-                                className="w-4 h-4 rounded-full"
+                                className="w-4 h-4 rounded-full border border-gray-300"
                                 style={{
                                   backgroundColor: variant.color.hexValue,
                                 }}
                               />
                               {variant.color.name}
                             </div>
-                          </TableCell>
-                          <TableCell>{variant.size.name}</TableCell>
-                          <TableCell>
-                            {variant.salesData?.total || 0} unidades
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant={
-                                variant.stock < 5 ? "destructive" : "outline"
-                              }
+                          </td>
+                          <td className="p-3 border-b border-gray-200">
+                            {variant.size.name}
+                          </td>
+                          <td className="p-3 border-b border-gray-200">
+                            ${variant.price}
+                          </td>
+                          <td className="p-3 border-b border-gray-200">
+                            <span
+                              className={`inline-block px-2 py-0.5 rounded-full text-sm ${
+                                variant.stock < 5
+                                  ? "bg-red-100 text-red-700 border border-red-200"
+                                  : "bg-gray-100 text-gray-700 border border-gray-200"
+                              }`}
                             >
                               {variant.stock} unidades
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleVariantSelect(variant.id)}
-                            >
-                              Seleccionar
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Pestaña de Variantes */}
-          <TabsContent value="variants" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Filter className="w-5 h-5 text-blue-600" />
-                    <CardTitle>Filtrar Variantes</CardTitle>
-                  </div>
-                  <Button variant="outline" size="sm" onClick={clearFilters}>
-                    Limpiar Filtros
-                  </Button>
-                </div>
-                <CardDescription>
-                  Filtra las variantes por color y talla
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Color</label>
-                    <Select
-                      value={selectedColorId?.toString() || ""}
-                      onValueChange={handleColorChange}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Todos los colores" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Todos los colores</SelectItem>
-                        {availableColors.map((color) => (
-                          <SelectItem
-                            key={color.id}
-                            value={color.id.toString()}
-                          >
-                            <div className="flex items-center gap-2">
-                              <div
-                                className="w-3 h-3 rounded-full"
-                                style={{ backgroundColor: color.hexValue }}
-                              />
-                              {color.name}
+                            </span>
+                          </td>
+                          <td className="p-3 border-b border-gray-200">
+                            <div className="font-medium">
+                              {variant.salesData?.total || 0} unidades
                             </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Talla</label>
-                    <Select
-                      value={selectedSizeId?.toString() || ""}
-                      onValueChange={handleSizeChange}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Todas las tallas" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Todas las tallas</SelectItem>
-                        {availableSizes.map((size) => (
-                          <SelectItem key={size.id} value={size.id.toString()}>
-                            {size.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                            <div className="text-xs text-gray-500">
+                              Último mes: {variant.salesData?.lastMonth || 0}
+                            </div>
+                          </td>
+                          <td className="p-3 border-b border-gray-200">
+                            <button
+                              onClick={() => handleVariantSelect(variant.id)}
+                              className={`px-3 py-1.5 rounded-md border border-gray-300 ${
+                                selectedVariantId === variant.id
+                                  ? "bg-blue-500 text-white"
+                                  : "bg-white text-gray-700"
+                              } text-sm cursor-pointer`}
+                            >
+                              {selectedVariantId === variant.id
+                                ? "Seleccionado"
+                                : "Seleccionar"}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <ShoppingCart className="w-5 h-5 text-blue-600" />
-                  <CardTitle>Variantes del Producto</CardTitle>
-                </div>
-                <CardDescription>
-                  {filteredVariants.length} variantes encontradas
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {/* Modificar la tabla de variantes para mostrar imágenes de productos */}
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Imagen</TableHead>
-                      <TableHead>ID</TableHead>
-                      <TableHead>Color</TableHead>
-                      <TableHead>Talla</TableHead>
-                      <TableHead>Precio</TableHead>
-                      <TableHead>Stock</TableHead>
-                      <TableHead>Ventas</TableHead>
-                      <TableHead>Acción</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredVariants.map((variant) => (
-                      <TableRow
-                        key={variant.id}
-                        className={
-                          selectedVariantId === variant.id ? "bg-blue-50" : ""
-                        }
-                      >
-                        <TableCell>
-                          <img
-                            src={variant.imageUrl || "/placeholder.svg"}
-                            alt={`${selectedProduct.name} - ${variant.color.name}`}
-                            className="w-12 h-12 object-contain border rounded-md"
-                          />
-                        </TableCell>
-                        <TableCell className="font-mono text-xs">
-                          {variant.id}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="w-4 h-4 rounded-full"
-                              style={{
-                                backgroundColor: variant.color.hexValue,
-                              }}
-                            />
-                            {variant.color.name}
-                          </div>
-                        </TableCell>
-                        <TableCell>{variant.size.name}</TableCell>
-                        <TableCell>${variant.price}</TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={
-                              variant.stock < 5 ? "destructive" : "outline"
-                            }
-                          >
-                            {variant.stock} unidades
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="font-medium">
-                            {variant.salesData?.total || 0} unidades
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            Último mes: {variant.salesData?.lastMonth || 0}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant={
-                              selectedVariantId === variant.id
-                                ? "default"
-                                : "outline"
-                            }
-                            size="sm"
-                            onClick={() => handleVariantSelect(variant.id)}
-                          >
-                            {selectedVariantId === variant.id
-                              ? "Seleccionado"
-                              : "Seleccionar"}
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </TabsContent>
+              </section>
+            </div>
+          )}
 
           {/* Pestaña de Proyección */}
-          <TabsContent value="projection" className="space-y-4">
-            {selectedVariant ? (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {/* Modificar la sección de la tarjeta de variante seleccionada para incluir la imagen del producto */}
-                  <Card>
-                    <CardHeader className="bg-blue-50">
-                      <CardTitle className="text-blue-700">
-                        Variante Seleccionada
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="pt-6">
-                      <div className="space-y-4">
-                        <div className="flex flex-col items-center gap-4">
-                          <img
-                            src={selectedVariant.imageUrl || "/placeholder.svg"}
-                            alt={`${selectedProduct.name} - ${selectedVariant.color.name}`}
-                            className="w-32 h-32 object-contain border rounded-md shadow-sm"
-                          />
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="w-6 h-6 rounded-full"
-                              style={{
-                                backgroundColor: selectedVariant.color.hexValue,
-                              }}
+          {activeTab === "projection" && (
+            <div className="flex flex-col gap-4">
+              {selectedVariant ? (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Variante seleccionada */}
+                    <section className="bg-white rounded-lg shadow-md overflow-hidden">
+                      <div className="bg-blue-50 p-4 md:p-6">
+                        <h2 className="text-lg font-semibold m-0 text-blue-800">
+                          Variante Seleccionada
+                        </h2>
+                      </div>
+                      <div className="p-6">
+                        <div className="flex flex-col gap-4">
+                          <div className="flex flex-col items-center gap-4">
+                            <img
+                              src={
+                                selectedVariant.imageUrl || "/placeholder.svg"
+                              }
+                              alt={`${selectedProduct.name} - ${selectedVariant.color.name}`}
+                              className="w-32 h-32 object-contain border border-gray-200 rounded-lg shadow-sm"
                             />
-                            <span className="font-medium">
-                              {selectedProduct.name}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="w-6 h-6 rounded-full border border-gray-300"
+                                style={{
+                                  backgroundColor:
+                                    selectedVariant.color.hexValue,
+                                }}
+                              />
+                              <span className="font-medium">
+                                {selectedProduct.name}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <div className="text-sm text-gray-500">Color</div>
+                              <div className="font-medium">
+                                {selectedVariant.color.name}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-sm text-gray-500">Talla</div>
+                              <div className="font-medium">
+                                {selectedVariant.size.name}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-sm text-gray-500">
+                                Precio
+                              </div>
+                              <div className="font-medium">
+                                ${selectedVariant.price}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-sm text-gray-500">Stock</div>
+                              <div className="font-medium">
+                                {selectedVariant.stock} unidades
+                              </div>
+                            </div>
                           </div>
                         </div>
+                      </div>
+                    </section>
+
+                    {/* Ventas actuales */}
+                    <section className="bg-white rounded-lg shadow-md overflow-hidden">
+                      <div className="bg-green-50 p-4 md:p-6">
+                        <h2 className="text-lg font-semibold m-0 text-green-800">
+                          Ventas Actuales
+                        </h2>
+                      </div>
+                      <div className="p-6">
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <div className="text-sm text-muted-foreground">
-                              Color
+                            <div className="text-sm text-gray-500">
+                              Última Semana
                             </div>
-                            <div className="font-medium">
-                              {selectedVariant.color.name}
-                            </div>
-                          </div>
-                          <div>
-                            <div className="text-sm text-muted-foreground">
-                              Talla
-                            </div>
-                            <div className="font-medium">
-                              {selectedVariant.size.name}
+                            <div className="text-2xl font-bold">
+                              {selectedVariant.salesData?.lastWeek || 0}
                             </div>
                           </div>
                           <div>
-                            <div className="text-sm text-muted-foreground">
-                              Precio
+                            <div className="text-sm text-gray-500">
+                              Último Mes
                             </div>
-                            <div className="font-medium">
-                              ${selectedVariant.price}
+                            <div className="text-2xl font-bold">
+                              {selectedVariant.salesData?.lastMonth || 0}
                             </div>
                           </div>
-                          <div>
-                            <div className="text-sm text-muted-foreground">
-                              Stock
+                          <div className="col-span-2">
+                            <div className="text-sm text-gray-500">
+                              Total Vendido
                             </div>
-                            <div className="font-medium">
-                              {selectedVariant.stock} unidades
+                            <div className="text-2xl font-bold">
+                              {selectedVariant.salesData?.total || 0} unidades
                             </div>
                           </div>
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
+                    </section>
 
-                  <Card>
-                    <CardHeader className="bg-green-50">
-                      <CardTitle className="text-green-700">
-                        Ventas Actuales
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="pt-6">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <div className="text-sm text-muted-foreground">
-                            Última Semana
-                          </div>
-                          <div className="text-2xl font-bold">
-                            {selectedVariant.salesData?.lastWeek || 0}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-sm text-muted-foreground">
-                            Último Mes
-                          </div>
-                          <div className="text-2xl font-bold">
-                            {selectedVariant.salesData?.lastMonth || 0}
-                          </div>
-                        </div>
-                        <div className="col-span-2">
-                          <div className="text-sm text-muted-foreground">
-                            Total Vendido
-                          </div>
-                          <div className="text-2xl font-bold">
-                            {selectedVariant.salesData?.total || 0} unidades
-                          </div>
-                        </div>
+                    {/* Modelo de proyección */}
+                    <section className="bg-white rounded-lg shadow-md overflow-hidden">
+                      <div className="bg-amber-50 p-4 md:p-6">
+                        <h2 className="text-lg font-semibold m-0 text-amber-800">
+                          Modelo de Proyección
+                        </h2>
                       </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader className="bg-amber-50">
-                      <CardTitle className="text-amber-700">
-                        Modelo de Proyección
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="pt-6">
-                      <div className="space-y-4">
-                        <div>
-                          <div className="text-sm text-muted-foreground">
-                            Modelo Matemático
-                          </div>
-                          <div className="text-lg font-medium">dP/dt = kP</div>
-                          <div className="text-sm text-muted-foreground mt-1">
-                            Donde P = cantidad de ventas, k = constante de
-                            proporcionalidad
-                          </div>
-                        </div>
-
-                        <div>
-                          <div className="text-sm text-muted-foreground">
-                            Condición Inicial (P₀)
-                          </div>
-                          <div className="text-xl font-bold">
-                            {
-                              selectedVariant.salesData?.history[
-                                selectedVariant.salesData.history.length - 1
-                              ].sales
-                            }{" "}
-                            unidades
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            Ventas en la última semana registrada
-                          </div>
-                        </div>
-
-                        <div>
-                          <div className="text-sm text-muted-foreground">
-                            Constante de Proporcionalidad (k)
-                          </div>
-                          <div className="text-xl font-bold">
-                            {(
-                              calculateGrowthRate(
-                                selectedVariant.salesData?.history || []
-                              ) * 100
-                            ).toFixed(1)}
-                            % semanal
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            Tasa de crecimiento exponencial
-                          </div>
-                        </div>
-
-                        {calculateStockOutWeek ? (
+                      <div className="p-6">
+                        <div className="flex flex-col gap-4">
                           <div>
-                            <div className="text-sm text-muted-foreground">
-                              Agotamiento Estimado
+                            <div className="text-sm text-gray-500">
+                              Modelo Matemático
+                            </div>
+                            <div className="text-lg font-medium">
+                              dP/dt = kP
+                            </div>
+                            <div className="text-sm text-gray-500 mt-1">
+                              Donde P = cantidad de ventas, k = constante de
+                              proporcionalidad
+                            </div>
+                          </div>
+
+                          <div>
+                            <div className="text-sm text-gray-500">
+                              Condición Inicial (P₀)
                             </div>
                             <div className="text-xl font-bold">
-                              Semana {calculateStockOutWeek.week}
+                              {
+                                selectedVariant.salesData?.history[
+                                  selectedVariant.salesData.history.length - 1
+                                ].sales
+                              }{" "}
+                              unidades
                             </div>
-                            <div className="text-sm text-muted-foreground">
-                              {calculateStockOutWeek.date}
+                            <div className="text-sm text-gray-500">
+                              Ventas en la última semana registrada
                             </div>
                           </div>
-                        ) : (
+
                           <div>
-                            <div className="text-sm text-muted-foreground">
-                              Agotamiento Estimado
+                            <div className="text-sm text-gray-500">
+                              Constante de Proporcionalidad (k)
                             </div>
-                            <div className="text-xl font-bold text-green-600">
-                              No se agotará en 24 semanas
+                            <div className="text-xl font-bold">
+                              {(
+                                calculateGrowthRate(
+                                  selectedVariant.salesData?.history || []
+                                ) * 100
+                              ).toFixed(1)}
+                              % semanal
                             </div>
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Añadir una nueva tarjeta que muestre claramente los datos históricos de ventas */}
-
-                {/* Modificar la tarjeta de historial de ventas para mostrar solo 2 semanas */}
-                <Card className="shadow-lg border-t-4 border-t-green-600">
-                  <CardHeader>
-                    <div className="flex items-center gap-2">
-                      <BarChart3 className="w-5 h-5 text-green-600" />
-                      <CardTitle>Historial de Ventas</CardTitle>
-                    </div>
-                    <CardDescription>
-                      Datos históricos de ventas semanales (CI y K)
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Parámetro</TableHead>
-                            <TableHead>Semana</TableHead>
-                            <TableHead>Fecha</TableHead>
-                            <TableHead>Ventas</TableHead>
-                            <TableHead>Crecimiento</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {selectedVariant.salesData?.history.map(
-                            (week, index) => {
-                              const prevWeek =
-                                index > 0
-                                  ? selectedVariant.salesData?.history[
-                                      index - 1
-                                    ].sales
-                                  : null;
-                              const growthRate = prevWeek
-                                ? ((week.sales - prevWeek) / prevWeek) * 100
-                                : null;
-
-                              return (
-                                <TableRow key={week.week}>
-                                  <TableCell className="font-medium">
-                                    {index === 0 ? "CI" : "K"}
-                                  </TableCell>
-                                  <TableCell>Semana {week.week}</TableCell>
-                                  <TableCell>
-                                    {getDateForWeek(week.week)}
-                                  </TableCell>
-                                  <TableCell className="font-bold">
-                                    {week.sales} unidades
-                                  </TableCell>
-                                  <TableCell>
-                                    {growthRate !== null ? (
-                                      <div className="flex items-center gap-1">
-                                        {growthRate > 0 ? (
-                                          <span className="text-green-600 flex items-center">
-                                            <TrendingUp className="w-4 h-4 mr-1" />
-                                            +{growthRate.toFixed(1)}%
-                                          </span>
-                                        ) : growthRate < 0 ? (
-                                          <span className="text-red-600 flex items-center">
-                                            <TrendingUp className="w-4 h-4 mr-1 rotate-180" />
-                                            {growthRate.toFixed(1)}%
-                                          </span>
-                                        ) : (
-                                          <span className="text-gray-500">
-                                            0%
-                                          </span>
-                                        )}
-                                      </div>
-                                    ) : (
-                                      <span className="text-gray-500">-</span>
-                                    )}
-                                  </TableCell>
-                                </TableRow>
-                              );
-                            }
-                          )}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Mejorar la visualización de datos históricos vs proyectados en el gráfico */}
-
-                {/* Modificar la visualización del gráfico de proyección */}
-                <Card className="shadow-lg border-t-4 border-t-blue-600">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <LineChartIcon className="w-5 h-5 text-blue-600" />
-                        <CardTitle>Proyección de Ventas</CardTitle>
-                      </div>
-                      <div>
-                        <Badge className="bg-blue-100 text-blue-800 mr-2">
-                          Histórico (CI y K)
-                        </Badge>
-                        <Badge className="bg-purple-100 text-purple-800">
-                          Proyección
-                        </Badge>
-                      </div>
-                    </div>
-                    <CardDescription>
-                      Historial y proyección de ventas para las próximas 24
-                      semanas
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-[400px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart
-                          data={salesProjectionData}
-                          margin={{ top: 20, right: 30, left: 20, bottom: 10 }}
-                        >
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis
-                            dataKey="week"
-                            label={{
-                              value: "Semana",
-                              position: "insideBottomRight",
-                              offset: -10,
-                            }}
-                          />
-                          <YAxis
-                            label={{
-                              value: "Unidades",
-                              angle: -90,
-                              position: "insideLeft",
-                            }}
-                          />
-                          <Tooltip
-                            formatter={(value: any) => [
-                              `${value} unidades`,
-                              "Ventas",
-                            ]}
-                            labelFormatter={(label: any) => `Semana ${label}`}
-                            contentStyle={{
-                              backgroundColor: "#f8fafc",
-                              borderRadius: "8px",
-                              border: "1px solid #e2e8f0",
-                            }}
-                          />
-                          <Legend verticalAlign="top" height={36} />
-
-                          {/* Área para datos históricos */}
-                          <defs>
-                            <linearGradient
-                              id="colorHistorical"
-                              x1="0"
-                              y1="0"
-                              x2="0"
-                              y2="1"
-                            >
-                              <stop
-                                offset="5%"
-                                stopColor="#3B82F6"
-                                stopOpacity={0.1}
-                              />
-                              <stop
-                                offset="95%"
-                                stopColor="#3B82F6"
-                                stopOpacity={0.0}
-                              />
-                            </linearGradient>
-                          </defs>
-
-                          {/* Área para datos proyectados */}
-                          <defs>
-                            <linearGradient
-                              id="colorProjection"
-                              x1="0"
-                              y1="0"
-                              x2="0"
-                              y2="1"
-                            >
-                              <stop
-                                offset="5%"
-                                stopColor="#8B5CF6"
-                                stopOpacity={0.1}
-                              />
-                              <stop
-                                offset="95%"
-                                stopColor="#8B5CF6"
-                                stopOpacity={0.0}
-                              />
-                            </linearGradient>
-                          </defs>
-
-                          {/* Datos históricos con área */}
-                          <Line
-                            type="monotone"
-                            dataKey={(entry: { week: number; sales: any; }) =>
-                              entry.week <= 2 ? entry.sales : null
-                            }
-                            name="Ventas Históricas (CI y K)"
-                            stroke="#3B82F6"
-                            strokeWidth={3}
-                            dot={{ r: 4, fill: "#3B82F6" }}
-                            activeDot={{ r: 8 }}
-                            fill="url(#colorHistorical)"
-                          />
-
-                          {/* Datos proyectados con área */}
-                          <Line
-                            type="monotone"
-                            dataKey={(entry: { week: number; sales: any; }) =>
-                              entry.week > 2 ? entry.sales : null
-                            }
-                            name="Ventas Proyectadas"
-                            stroke="#8B5CF6"
-                            strokeWidth={2}
-                            strokeDasharray="5 5"
-                            dot={{ r: 4, fill: "#8B5CF6" }}
-                            fill="url(#colorProjection)"
-                          />
-
-                          {/* Línea que divide historial de proyección */}
-                          <Line
-                            type="monotone"
-                            dataKey={(entry: { week: number; sales: any; }) =>
-                              entry.week === 2 ? entry.sales : null
-                            }
-                            name="Inicio Proyección"
-                            stroke="#EF4444"
-                            strokeDasharray="5 5"
-                            dot={{ r: 6, fill: "#EF4444" }}
-                          />
-
-                          {/* Línea de stock */}
-                          {calculateStockOutWeek && (
-                            <Line
-                              type="monotone"
-                              dataKey={(entry: { week: number; sales: any; }) =>
-                                entry.week === calculateStockOutWeek?.week
-                                  ? entry.sales
-                                  : null
-                              }
-                              name="Agotamiento Stock"
-                              stroke="#F59E0B"
-                              strokeDasharray="5 5"
-                              dot={{ r: 6, fill: "#F59E0B" }}
-                            />
-                          )}
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Reemplazar la tabla de proyección con una versión mejorada que muestre claramente datos reales y proyectados */}
-                {/* Buscar la sección de la Card con la tabla de proyección y reemplazarla con: */}
-
-                <Card className="shadow-lg border-t-4 border-t-purple-600">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-5 h-5 text-purple-600" />
-                        <CardTitle>Tabla de Proyección</CardTitle>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant={
-                            viewMode === "weekly" ? "default" : "outline"
-                          }
-                          size="sm"
-                          onClick={() => setViewMode("weekly")}
-                        >
-                          Semanal
-                        </Button>
-                        <Button
-                          variant={
-                            viewMode === "monthly" ? "default" : "outline"
-                          }
-                          size="sm"
-                          onClick={() => setViewMode("monthly")}
-                        >
-                          Mensual
-                        </Button>
-                        <Button
-                          variant={
-                            viewMode === "annual" ? "default" : "outline"
-                          }
-                          size="sm"
-                          onClick={() => setViewMode("annual")}
-                        >
-                          Anual
-                        </Button>
-                      </div>
-                    </div>
-                    <CardDescription>
-                      {viewMode === "weekly"
-                        ? "Detalle semanal de ventas históricas y proyectadas"
-                        : viewMode === "monthly"
-                        ? "Detalle mensual de ventas históricas y proyectadas"
-                        : "Resumen anual de ventas históricas y proyectadas"}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="overflow-x-auto">
-                      {viewMode === "weekly" ? (
-                        <>
-                          {/* Tabla de condiciones iniciales (CI y K) */}
-                          <div className="mb-6 bg-gray-100 p-4 rounded-lg">
-                            <h3 className="text-lg font-semibold mb-3">
-                              Condiciones Iniciales del Modelo
-                            </h3>
-                            <Table className="border">
-                              <TableHeader className="bg-gray-800 text-white">
-                                <TableRow>
-                                  <TableHead className="text-center font-bold">
-                                    Parámetro
-                                  </TableHead>
-                                  <TableHead className="text-center font-bold">
-                                    P = ventas
-                                  </TableHead>
-                                  <TableHead className="text-center font-bold">
-                                    t = Tiempo en semanas
-                                  </TableHead>
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                <TableRow className="bg-blue-50">
-                                  <TableCell className="text-center font-bold">
-                                    CI
-                                  </TableCell>
-                                  <TableCell className="text-center">
-                                    {selectedVariant?.salesData?.history[0]
-                                      ?.sales || 0}{" "}
-                                    ventas
-                                  </TableCell>
-                                  <TableCell className="text-center">
-                                    1 semana
-                                  </TableCell>
-                                </TableRow>
-                                <TableRow className="bg-blue-50">
-                                  <TableCell className="text-center font-bold">
-                                    K
-                                  </TableCell>
-                                  <TableCell className="text-center">
-                                    {selectedVariant?.salesData?.history[1]
-                                      ?.sales || 0}{" "}
-                                    ventas
-                                  </TableCell>
-                                  <TableCell className="text-center">
-                                    2 semanas
-                                  </TableCell>
-                                </TableRow>
-                              </TableBody>
-                            </Table>
-                            <div className="mt-3 text-center">
-                              <p className="font-semibold">
-                                Ecuación diferencial: dP/dt = kP
-                              </p>
-                              <p className="text-sm text-gray-600">
-                                Donde k ={" "}
-                                {(
-                                  calculateGrowthRate(
-                                    selectedVariant?.salesData?.history || []
-                                  ) * 100
-                                ).toFixed(1)}
-                                % semanal
-                              </p>
+                            <div className="text-sm text-gray-500">
+                              Tasa de crecimiento exponencial
                             </div>
                           </div>
 
-                          {/* Tabla de proyección semanal */}
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>Semana</TableHead>
-                                <TableHead>Fecha Estimada</TableHead>
-                                <TableHead>Ventas Proyectadas</TableHead>
-                                <TableHead>Crecimiento</TableHead>
-                                <TableHead>Ventas Acumuladas</TableHead>
-                                <TableHead>Stock Restante</TableHead>
-                                <TableHead>Estado</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {salesProjectionData.map((week, index) => {
-                                const isHistorical = index < 2; // Solo las primeras 2 semanas son históricas
+                          {calculateStockOutWeek ? (
+                            <div>
+                              <div className="text-sm text-gray-500">
+                                Agotamiento Estimado
+                              </div>
+                              <div className="text-xl font-bold">
+                                Semana {calculateStockOutWeek.week}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {calculateStockOutWeek.date}
+                              </div>
+                            </div>
+                          ) : (
+                            <div>
+                              <div className="text-sm text-gray-500">
+                                Agotamiento Estimado
+                              </div>
+                              <div className="text-xl font-bold text-green-600">
+                                No se agotará en 24 semanas
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+
+                  {/* Historial de ventas mejorado */}
+                  <section className="bg-white rounded-lg shadow-md border-t-4 border-green-500">
+                    <div className="bg-green-50 p-4 md:p-6 flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <BarChart3 size={20} className="text-green-600" />
+                        <h2 className="text-lg font-semibold m-0">
+                          Historial de Ventas
+                        </h2>
+                      </div>
+                      <div className="relative">
+                        <button
+                          className="bg-transparent border-none cursor-pointer flex items-center"
+                          title="Datos históricos de ventas para la semana base (15/03/2024) y la semana actual (22/03/2024)"
+                        >
+                          <Info size={16} />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <p className="text-gray-500 text-sm m-0 mb-4">
+                        Datos históricos de ventas semanales (Semana Base y
+                        Semana Actual)
+                      </p>
+                      <div className="overflow-x-auto">
+                        <table className="w-full border-collapse">
+                          <thead className="bg-green-50/50">
+                            <tr>
+                              <th className="p-3 text-left font-bold border-b border-gray-200">
+                                Parámetro
+                              </th>
+                              <th className="p-3 text-left font-bold border-b border-gray-200">
+                                Semana
+                              </th>
+                              <th className="p-3 text-left font-bold border-b border-gray-200">
+                                Fecha
+                              </th>
+                              <th className="p-3 text-left font-bold border-b border-gray-200">
+                                Ventas
+                              </th>
+                              <th className="p-3 text-left font-bold border-b border-gray-200">
+                                Crecimiento
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {selectedVariant.salesData?.history.map(
+                              (week, index) => {
                                 const prevWeek =
                                   index > 0
-                                    ? salesProjectionData[index - 1].sales
+                                    ? selectedVariant.salesData?.history[
+                                        index - 1
+                                      ].sales
                                     : null;
                                 const growthRate = prevWeek
                                   ? ((week.sales - prevWeek) / prevWeek) * 100
                                   : null;
-                                const cumulativeSales = salesProjectionData
+
+                                return (
+                                  <tr
+                                    key={week.week}
+                                    className={`${
+                                      index === 0
+                                        ? "bg-green-50/30"
+                                        : "bg-blue-50/30"
+                                    }`}
+                                  >
+                                    <td className="p-3 border-b border-gray-200 font-medium">
+                                      {index === 0
+                                        ? "Semana Base"
+                                        : "Semana Actual"}
+                                    </td>
+                                    <td className="p-3 border-b border-gray-200">
+                                      Semana {week.week}
+                                    </td>
+                                    <td className="p-3 border-b border-gray-200 font-medium">
+                                      {getDateForWeek(week.week)}
+                                    </td>
+                                    <td className="p-3 border-b border-gray-200 font-bold">
+                                      {week.sales} unidades
+                                    </td>
+                                    <td className="p-3 border-b border-gray-200">
+                                      {renderGrowthIndicator(growthRate)}
+                                    </td>
+                                  </tr>
+                                );
+                              }
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                    <div className="bg-slate-50 p-3 md:p-6 rounded-b-lg text-sm text-gray-500">
+                      <div className="flex items-center gap-2">
+                        <Calendar size={16} />
+                        <span>
+                          Proyecciones basadas en datos históricos del
+                          15/03/2024 al 22/03/2024
+                        </span>
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* Gráfico de proyección mejorado */}
+                  <section className="bg-white rounded-lg shadow-md border-t-4 border-blue-500">
+                    <div className="bg-blue-50 p-4 md:p-6 flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <LineChartIcon size={20} className="text-blue-500" />
+                        <h2 className="text-lg font-semibold m-0">
+                          Proyección de Ventas
+                        </h2>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <span className="inline-block px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                          Histórico (15/03 - 22/03)
+                        </span>
+                        <span className="inline-block px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800">
+                          Proyección
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <div className="h-[400px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart
+                            data={salesProjectionData}
+                            margin={{
+                              top: 20,
+                              right: 30,
+                              left: 20,
+                              bottom: 10,
+                            }}
+                          >
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis
+                              dataKey="week"
+                              label={{
+                                value: "Semana",
+                                position: "insideBottomRight",
+                                offset: -10,
+                              }}
+                              tickFormatter={(value) => {
+                                if (value === 1) return "15/03";
+                                if (value === 2) return "22/03";
+                                return value.toString();
+                              }}
+                            />
+                            <YAxis
+                              label={{
+                                value: "Unidades Acumuladas",
+                                angle: -90,
+                                position: "insideLeft",
+                              }}
+                            />
+                            <Tooltip
+                              formatter={(value: any, name: string) => {
+                                if (name.includes("Acumuladas")) {
+                                  return [`${value} unidades`, name];
+                                }
+                                return [
+                                  `${value} unidades`,
+                                  "Ventas Semanales",
+                                ];
+                              }}
+                              labelFormatter={(label: any) => {
+                                if (label === 1)
+                                  return "Semana Base (15/03/2024)";
+                                if (label === 2)
+                                  return "Semana Actual (22/03/2024)";
+                                return `Semana ${label} (${getDateForWeek(
+                                  label
+                                )})`;
+                              }}
+                              contentStyle={{
+                                backgroundColor: "#fff",
+                                borderRadius: "8px",
+                                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                                border: "none",
+                              }}
+                            />
+                            <Legend verticalAlign="top" height={36} />
+
+                            {/* Datos históricos acumulados */}
+                            <Line
+                              type="monotone"
+                              dataKey={(entry: {
+                                week: number;
+                                cumulativeSales: any;
+                              }) =>
+                                entry.week <= 2 ? entry.cumulativeSales : null
+                              }
+                              name="Ventas Acumuladas Históricas"
+                              stroke="#3B82F6"
+                              strokeWidth={3}
+                              dot={{ r: 4, fill: "#3B82F6" }}
+                              activeDot={{ r: 8 }}
+                            />
+
+                            {/* Datos proyectados acumulados */}
+                            <Line
+                              type="monotone"
+                              dataKey={(entry: {
+                                week: number;
+                                cumulativeSales: any;
+                              }) =>
+                                entry.week > 2 ? entry.cumulativeSales : null
+                              }
+                              name="Ventas Acumuladas Proyectadas"
+                              stroke="#8B5CF6"
+                              strokeWidth={2}
+                              strokeDasharray="5 5"
+                              dot={{ r: 4, fill: "#8B5CF6" }}
+                            />
+
+                            {/* Línea que divide historial de proyección */}
+                            <Line
+                              type="monotone"
+                              dataKey={(entry: {
+                                week: number;
+                                cumulativeSales: any;
+                              }) =>
+                                entry.week === 2 ? entry.cumulativeSales : null
+                              }
+                              name="Inicio Proyección (22/03)"
+                              stroke="#EF4444"
+                              strokeDasharray="5 5"
+                              dot={{ r: 6, fill: "#EF4444" }}
+                            />
+
+                            {/* Línea de stock */}
+                            {calculateStockOutWeek && (
+                              <Line
+                                type="monotone"
+                                dataKey={(entry: {
+                                  week: number;
+                                  cumulativeSales: any;
+                                }) =>
+                                  entry.week === calculateStockOutWeek?.week
+                                    ? entry.cumulativeSales
+                                    : null
+                                }
+                                name="Agotamiento Stock"
+                                stroke="#F59E0B"
+                                strokeDasharray="5 5"
+                                dot={{ r: 6, fill: "#F59E0B" }}
+                              />
+                            )}
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* Tabla de proyección mejorada */}
+                  <section className="bg-white rounded-lg shadow-md border-t-4 border-purple-500">
+                    <div className="bg-purple-50 p-4 md:p-6 flex justify-between items-center flex-wrap gap-3">
+                      <div className="flex items-center gap-2">
+                        <Calendar size={20} className="text-purple-500" />
+                        <h2 className="text-lg font-semibold m-0">
+                          Tabla de Proyección
+                        </h2>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setViewMode("weekly")}
+                          className={`px-3 py-1.5 rounded-md border border-gray-300 ${
+                            viewMode === "weekly"
+                              ? "bg-purple-500 text-white"
+                              : "bg-white text-gray-700"
+                          } text-sm cursor-pointer`}
+                        >
+                          Semanal
+                        </button>
+                        <button
+                          onClick={() => setViewMode("monthly")}
+                          className={`px-3 py-1.5 rounded-md border border-gray-300 ${
+                            viewMode === "monthly"
+                              ? "bg-purple-500 text-white"
+                              : "bg-white text-gray-700"
+                          } text-sm cursor-pointer`}
+                        >
+                          Mensual
+                        </button>
+                        <button
+                          onClick={() => setViewMode("annual")}
+                          className={`px-3 py-1.5 rounded-md border border-gray-300 ${
+                            viewMode === "annual"
+                              ? "bg-purple-500 text-white"
+                              : "bg-white text-gray-700"
+                          } text-sm cursor-pointer`}
+                        >
+                          Anual
+                        </button>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <p className="text-gray-500 text-sm m-0 mb-4">
+                        {viewMode === "weekly"
+                          ? "Detalle semanal de ventas históricas y proyectadas"
+                          : viewMode === "monthly"
+                          ? "Detalle mensual de ventas históricas y proyectadas"
+                          : "Resumen anual de ventas históricas y proyectadas"}
+                      </p>
+                      <div className="overflow-x-auto">
+                        {viewMode === "weekly" ? (
+                          <>
+                            {/* Tabla de condiciones iniciales (CI y K) */}
+                            <div className="mb-6 bg-gray-100 p-4 rounded-lg">
+                              <h3 className="text-lg font-semibold mt-0 mb-3">
+                                Condiciones Iniciales del Modelo
+                              </h3>
+                              <table className="w-full border-collapse border border-gray-300">
+                                <thead className="bg-gray-800 text-white">
+                                  <tr>
+                                    <th className="p-3 text-center font-bold border border-gray-700">
+                                      Parámetro
+                                    </th>
+                                    <th className="p-3 text-center font-bold border border-gray-700">
+                                      P = ventas acumuladas
+                                    </th>
+                                    <th className="p-3 text-center font-bold border border-gray-700">
+                                      t = Tiempo en semanas
+                                    </th>
+                                    <th className="p-3 text-center font-bold border border-gray-700">
+                                      Fecha
+                                    </th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  <tr className="bg-blue-50">
+                                    <td className="p-3 text-center font-bold border border-gray-300">
+                                      Semana Base
+                                    </td>
+                                    <td className="p-3 text-center border border-gray-300">
+                                      {selectedVariant?.salesData?.history[0]
+                                        ?.sales || 0}{" "}
+                                      ventas acumuladas
+                                    </td>
+                                    <td className="p-3 text-center border border-gray-300">
+                                      1 semana
+                                    </td>
+                                    <td className="p-3 text-center font-medium border border-gray-300">
+                                      15/03/2024
+                                    </td>
+                                  </tr>
+                                  <tr className="bg-blue-50">
+                                    <td className="p-3 text-center font-bold border border-gray-300">
+                                      Semana Actual
+                                    </td>
+                                    <td className="p-3 text-center border border-gray-300">
+                                      {selectedVariant?.salesData?.history[1]
+                                        ?.sales || 0}{" "}
+                                      ventas acumuladas
+                                    </td>
+                                    <td className="p-3 text-center border border-gray-300">
+                                      2 semanas
+                                    </td>
+                                    <td className="p-3 text-center font-medium border border-gray-300">
+                                      22/03/2024
+                                    </td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                              <div className="mt-3 text-center">
+                                <p className="font-semibold m-0 mb-1">
+                                  Ecuación diferencial: dP/dt = kP (modelo de
+                                  crecimiento exponencial)
+                                </p>
+                                <p className="text-sm text-gray-500 m-0">
+                                  Donde P = ventas acumuladas, t = tiempo, k =
+                                  tasa de crecimiento (
+                                  {(
+                                    calculateGrowthRate(
+                                      selectedVariant?.salesData?.history || []
+                                    ) * 100
+                                  ).toFixed(1)}
+                                  % semanal)
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Tabla de proyección semanal */}
+                            <table className="w-full border-collapse">
+                              <thead className="bg-slate-100">
+                                <tr>
+                                  <th className="p-3 text-left font-semibold border-b border-gray-200">
+                                    Semana
+                                  </th>
+                                  <th className="p-3 text-left font-semibold border-b border-gray-200">
+                                    Ventas Proyectadas
+                                  </th>
+                                  <th className="p-3 text-left font-semibold border-b border-gray-200">
+                                    Crecimiento
+                                  </th>
+                                  <th className="p-3 text-left font-semibold border-b border-gray-200">
+                                    Ventas Acumuladas
+                                  </th>
+                                  <th className="p-3 text-left font-semibold border-b border-gray-200">
+                                    Stock Restante
+                                  </th>
+                                  <th className="p-3 text-left font-semibold border-b border-gray-200">
+                                    Estado
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {salesProjectionData.map((week, index) => {
+                                  const isHistorical = index < 2; // Solo las primeras 2 semanas son históricas
+                                  const prevWeek =
+                                    index > 0
+                                      ? salesProjectionData[index - 1].sales
+                                      : null;
+                                  const growthRate = prevWeek
+                                    ? ((week.sales - prevWeek) / prevWeek) * 100
+                                    : null;
+                                  const cumulativeSales = salesProjectionData
+                                    .slice(0, index + 1)
+                                    .reduce((sum, w) => sum + w.sales, 0);
+                                  const remainingStock = Math.max(
+                                    0,
+                                    selectedVariant.stock - cumulativeSales
+                                  );
+                                  const isStockOut =
+                                    remainingStock === 0 && cumulativeSales > 0;
+
+                                  // Obtener la fecha formateada
+                                  const weekDate = getDateForWeek(week.week);
+
+                                  return (
+                                    <tr
+                                      key={week.week}
+                                      className={`${
+                                        isStockOut
+                                          ? "bg-amber-50"
+                                          : isHistorical
+                                          ? "bg-blue-50/30"
+                                          : "bg-purple-50/30"
+                                      }`}
+                                    >
+                                      <td className="p-3 border-b border-gray-200 font-medium">
+                                        {index === 0
+                                          ? "Semana Base (15/03/2024)"
+                                          : index === 1
+                                          ? "Semana Actual (22/03/2024)"
+                                          : `Semana ${weekDate}`}
+                                      </td>
+                                      <td className="p-3 border-b border-gray-200 font-bold">
+                                        {week.sales} unidades
+                                        {!isHistorical && (
+                                          <span className="ml-2 text-xs text-purple-500 font-normal">
+                                            (Proyección)
+                                          </span>
+                                        )}
+                                      </td>
+                                      <td className="p-3 border-b border-gray-200">
+                                        {renderGrowthIndicator(growthRate)}
+                                      </td>
+                                      <td className="p-3 border-b border-gray-200 font-bold">
+                                        {week.cumulativeSales} unidades
+                                      </td>
+                                      <td className="p-3 border-b border-gray-200">
+                                        <span
+                                          className={`inline-block px-2 py-0.5 rounded-full text-sm ${
+                                            remainingStock < 5
+                                              ? "bg-red-100 text-red-700 border border-red-200"
+                                              : remainingStock < 10
+                                              ? "bg-indigo-100 text-indigo-800 border border-indigo-200"
+                                              : "bg-gray-100 text-gray-700 border border-gray-200"
+                                          }`}
+                                        >
+                                          {remainingStock} unidades
+                                        </span>
+                                      </td>
+                                      <td className="p-3 border-b border-gray-200">
+                                        {isStockOut ? (
+                                          <span className="inline-block px-2 py-0.5 rounded-full text-sm bg-amber-100 text-amber-800 border border-amber-200">
+                                            Agotamiento
+                                          </span>
+                                        ) : isHistorical ? (
+                                          <span className="inline-block px-2 py-0.5 rounded-full text-sm bg-blue-100 text-blue-800 border border-blue-200">
+                                            Histórico
+                                          </span>
+                                        ) : (
+                                          <span className="inline-block px-2 py-0.5 rounded-full text-sm bg-purple-100 text-purple-800 border border-purple-200">
+                                            Proyección
+                                          </span>
+                                        )}
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </>
+                        ) : viewMode === "monthly" ? (
+                          <table className="w-full border-collapse">
+                            <thead className="bg-slate-100">
+                              <tr>
+                                <th className="p-3 text-left font-semibold border-b border-gray-200">
+                                  Mes
+                                </th>
+                                <th className="p-3 text-left font-semibold border-b border-gray-200">
+                                  Ventas Proyectadas
+                                </th>
+                                <th className="p-3 text-left font-semibold border-b border-gray-200">
+                                  Ventas Acumuladas
+                                </th>
+                                <th className="p-3 text-left font-semibold border-b border-gray-200">
+                                  Stock Restante
+                                </th>
+                                <th className="p-3 text-left font-semibold border-b border-gray-200">
+                                  Estado
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {monthlyProjectionData.map((month, index) => {
+                                const cumulativeSales = monthlyProjectionData
                                   .slice(0, index + 1)
-                                  .reduce((sum, w) => sum + w.sales, 0);
+                                  .reduce((sum, m) => sum + m.sales, 0);
                                 const remainingStock = Math.max(
                                   0,
                                   selectedVariant.stock - cumulativeSales
@@ -1590,291 +2379,175 @@ export default function SalesAnalysisDashboard() {
                                   remainingStock === 0 && cumulativeSales > 0;
 
                                 return (
-                                  <TableRow
-                                    key={week.week}
-                                    className={
+                                  <tr
+                                    key={month.month}
+                                    className={`${
                                       isStockOut
                                         ? "bg-amber-50"
-                                        : isHistorical
+                                        : month.isHistorical
                                         ? "bg-blue-50/30"
                                         : "bg-purple-50/30"
-                                    }
+                                    }`}
                                   >
-                                    <TableCell className="font-medium">
-                                      {index === 0
-                                        ? "CI"
-                                        : index === 1
-                                        ? "K"
-                                        : `P${index - 1}`}
-                                    </TableCell>
-                                    <TableCell>
-                                      {getDateForWeek(week.week)}
-                                    </TableCell>
-                                    <TableCell className="font-bold">
-                                      {week.sales} unidades
-                                      {!isHistorical && (
-                                        <span className="ml-2 text-xs text-purple-600 font-normal">
+                                    <td className="p-3 border-b border-gray-200 font-medium">
+                                      {month.monthName}{" "}
+                                      {new Date().getFullYear()}
+                                    </td>
+                                    <td className="p-3 border-b border-gray-200 font-bold">
+                                      {month.sales} unidades
+                                      {!month.isHistorical && (
+                                        <span className="ml-2 text-xs text-purple-500 font-normal">
                                           (Proyección)
                                         </span>
                                       )}
-                                    </TableCell>
-                                    <TableCell>
-                                      {growthRate !== null ? (
-                                        <div className="flex items-center gap-1">
-                                          {growthRate > 0 ? (
-                                            <span className="text-green-600 flex items-center">
-                                              <TrendingUp className="w-4 h-4 mr-1" />
-                                              +{growthRate.toFixed(1)}%
-                                            </span>
-                                          ) : growthRate < 0 ? (
-                                            <span className="text-red-600 flex items-center">
-                                              <TrendingUp className="w-4 h-4 mr-1 rotate-180" />
-                                              {growthRate.toFixed(1)}%
-                                            </span>
-                                          ) : (
-                                            <span className="text-gray-500">
-                                              0%
-                                            </span>
-                                          )}
-                                        </div>
-                                      ) : (
-                                        <span className="text-gray-500">-</span>
-                                      )}
-                                    </TableCell>
-                                    <TableCell>
+                                    </td>
+                                    <td className="p-3 border-b border-gray-200">
                                       {cumulativeSales} unidades
-                                    </TableCell>
-                                    <TableCell>
-                                      <Badge
-                                        variant={
+                                    </td>
+                                    <td className="p-3 border-b border-gray-200">
+                                      <span
+                                        className={`inline-block px-2 py-0.5 rounded-full text-sm ${
                                           remainingStock < 5
-                                            ? "destructive"
+                                            ? "bg-red-100 text-red-700 border border-red-200"
                                             : remainingStock < 10
-                                            ? "secondary"
-                                            : "outline"
-                                        }
+                                            ? "bg-indigo-100 text-indigo-800 border border-indigo-200"
+                                            : "bg-gray-100 text-gray-700 border border-gray-200"
+                                        }`}
                                       >
                                         {remainingStock} unidades
-                                      </Badge>
-                                    </TableCell>
-                                    <TableCell>
+                                      </span>
+                                    </td>
+                                    <td className="p-3 border-b border-gray-200">
                                       {isStockOut ? (
-                                        <Badge
-                                          variant="destructive"
-                                          className="bg-amber-500"
-                                        >
+                                        <span className="inline-block px-2 py-0.5 rounded-full text-sm bg-amber-100 text-amber-800 border border-amber-200">
                                           Agotamiento
-                                        </Badge>
-                                      ) : isHistorical ? (
-                                        <Badge
-                                          variant="secondary"
-                                          className="bg-blue-100 text-blue-800 hover:bg-blue-100"
-                                        >
+                                        </span>
+                                      ) : month.isHistorical ? (
+                                        <span className="inline-block px-2 py-0.5 rounded-full text-sm bg-blue-100 text-blue-800 border border-blue-200">
                                           Histórico
-                                        </Badge>
+                                        </span>
                                       ) : (
-                                        <Badge
-                                          variant="outline"
-                                          className="bg-purple-100 text-purple-800 hover:bg-purple-100"
-                                        >
+                                        <span className="inline-block px-2 py-0.5 rounded-full text-sm bg-purple-100 text-purple-800 border border-purple-200">
                                           Proyección
-                                        </Badge>
+                                        </span>
                                       )}
-                                    </TableCell>
-                                  </TableRow>
+                                    </td>
+                                  </tr>
                                 );
                               })}
-                            </TableBody>
-                          </Table>
-                        </>
-                      ) : viewMode === "monthly" ? (
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Mes</TableHead>
-                              <TableHead>Ventas Proyectadas</TableHead>
-                              <TableHead>Ventas Acumuladas</TableHead>
-                              <TableHead>Stock Restante</TableHead>
-                              <TableHead>Estado</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {monthlyProjectionData.map((month, index) => {
-                              const cumulativeSales = monthlyProjectionData
-                                .slice(0, index + 1)
-                                .reduce((sum, m) => sum + m.sales, 0);
-                              const remainingStock = Math.max(
-                                0,
-                                selectedVariant.stock - cumulativeSales
-                              );
-                              const isStockOut =
-                                remainingStock === 0 && cumulativeSales > 0;
-
-                              return (
-                                <TableRow
-                                  key={month.month}
-                                  className={
-                                    isStockOut
-                                      ? "bg-amber-50"
-                                      : month.isHistorical
+                            </tbody>
+                          </table>
+                        ) : (
+                          <table className="w-full border-collapse">
+                            <thead className="bg-slate-100">
+                              <tr>
+                                <th className="p-3 text-left font-semibold border-b border-gray-200">
+                                  Año
+                                </th>
+                                <th className="p-3 text-left font-semibold border-b border-gray-200">
+                                  Ventas Totales
+                                </th>
+                                <th className="p-3 text-left font-semibold border-b border-gray-200">
+                                  Tipo
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {annualProjectionData.map((yearData) => (
+                                <tr
+                                  key={yearData.year}
+                                  className={`${
+                                    yearData.isHistorical
                                       ? "bg-blue-50/30"
                                       : "bg-purple-50/30"
-                                  }
+                                  }`}
                                 >
-                                  <TableCell className="font-medium">
-                                    Mes {month.month}
-                                  </TableCell>
-                                  <TableCell className="font-bold">
-                                    {month.sales} unidades
-                                    {!month.isHistorical && (
-                                      <span className="ml-2 text-xs text-purple-600 font-normal">
-                                        (Proyección)
+                                  <td className="p-3 text-left font-medium border-b border-gray-200">
+                                    {yearData.year}
+                                  </td>
+                                  <td className="p-3 text-left font-bold border-b border-gray-200">
+                                    {yearData.sales} unidades
+                                    {!yearData.isHistorical && (
+                                      <span className="ml-2 text-xs text-purple-500 font-normal">
+                                        (Incluye proyección)
                                       </span>
                                     )}
-                                  </TableCell>
-                                  <TableCell>
-                                    {cumulativeSales} unidades
-                                  </TableCell>
-                                  <TableCell>
-                                    <Badge
-                                      variant={
-                                        remainingStock < 5
-                                          ? "destructive"
-                                          : remainingStock < 10
-                                          ? "secondary"
-                                          : "outline"
-                                      }
-                                    >
-                                      {remainingStock} unidades
-                                    </Badge>
-                                  </TableCell>
-                                  <TableCell>
-                                    {isStockOut ? (
-                                      <Badge
-                                        variant="destructive"
-                                        className="bg-amber-500"
-                                      >
-                                        Agotamiento
-                                      </Badge>
-                                    ) : month.isHistorical ? (
-                                      <Badge
-                                        variant="secondary"
-                                        className="bg-blue-100 text-blue-800 hover:bg-blue-100"
-                                      >
-                                        Histórico
-                                      </Badge>
+                                  </td>
+                                  <td className="p-3 text-left border-b border-gray-200">
+                                    {yearData.isHistorical ? (
+                                      <span className="inline-block px-2 py-0.5 rounded-full text-sm bg-blue-100 text-blue-800 border border-blue-200">
+                                        Datos Históricos
+                                      </span>
                                     ) : (
-                                      <Badge
-                                        variant="outline"
-                                        className="bg-purple-100 text-purple-800 hover:bg-purple-100"
-                                      >
+                                      <span className="inline-block px-2 py-0.5 rounded-full text-sm bg-purple-100 text-purple-800 border border-purple-200">
                                         Proyección
-                                      </Badge>
+                                      </span>
                                     )}
-                                  </TableCell>
-                                </TableRow>
-                              );
-                            })}
-                          </TableBody>
-                        </Table>
-                      ) : (
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Año</TableHead>
-                              <TableHead>Ventas Totales</TableHead>
-                              <TableHead>Tipo</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {annualProjectionData.map((yearData) => (
-                              <TableRow
-                                key={yearData.year}
-                                className={
-                                  yearData.isHistorical
-                                    ? "bg-blue-50/30"
-                                    : "bg-purple-50/30"
-                                }
-                              >
-                                <TableCell className="font-medium">
-                                  {yearData.year}
-                                </TableCell>
-                                <TableCell className="font-bold">
-                                  {yearData.sales} unidades
-                                  {!yearData.isHistorical && (
-                                    <span className="ml-2 text-xs text-purple-600 font-normal">
-                                      (Incluye proyección)
-                                    </span>
-                                  )}
-                                </TableCell>
-                                <TableCell>
-                                  {yearData.isHistorical ? (
-                                    <Badge
-                                      variant="secondary"
-                                      className="bg-blue-100 text-blue-800 hover:bg-blue-100"
-                                    >
-                                      Datos Históricos
-                                    </Badge>
-                                  ) : (
-                                    <Badge
-                                      variant="outline"
-                                      className="bg-purple-100 text-purple-800 hover:bg-purple-100"
-                                    >
-                                      Proyección
-                                    </Badge>
-                                  )}
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      )}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )}
+                      </div>
                     </div>
-                  </CardContent>
-                </Card>
-              </>
-            ) : (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center p-12">
-                  <TrendingUp className="w-16 h-16 text-muted-foreground mb-4" />
-                  <h3 className="text-xl font-medium mb-2">
-                    Selecciona una Variante
-                  </h3>
-                  <p className="text-muted-foreground text-center max-w-md mb-6">
-                    Para ver la proyección de ventas, primero selecciona una
-                    variante específica desde la pestaña de Variantes o desde el
-                    Resumen.
-                  </p>
-                  <Button onClick={() => setActiveTab("variants")}>
-                    Ir a Variantes
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-        </Tabs>
+                    <div className="bg-slate-50 p-3 md:p-6 rounded-b-lg text-sm text-gray-500">
+                      <div className="flex items-center gap-2">
+                        <Calendar size={16} />
+                        <span>
+                          Proyecciones basadas en datos históricos del
+                          15/03/2024 al 22/03/2024
+                        </span>
+                      </div>
+                    </div>
+                  </section>
+                </>
+              ) : (
+                <section className="bg-white rounded-lg shadow-md">
+                  <div className="p-12 flex flex-col items-center justify-center">
+                    <TrendingUp size={64} className="text-gray-400 mb-4" />
+                    <h3 className="text-xl font-medium mb-2">
+                      Selecciona una Variante
+                    </h3>
+                    <p className="text-gray-500 text-center max-w-md mb-6">
+                      Para ver la proyección de ventas, primero selecciona una
+                      variante específica desde la pestaña de Variantes o desde
+                      el Resumen.
+                    </p>
+                    <button
+                      onClick={() => setActiveTab("variants")}
+                      className="px-4 py-2 rounded-md bg-blue-500 text-white border-none cursor-pointer text-base"
+                    >
+                      Ir a Variantes
+                    </button>
+                  </div>
+                </section>
+              )}
+            </div>
+          )}
+        </div>
       )}
 
       {isLoading && (
-        <div className="flex items-center justify-center p-12">
+        <div className="flex justify-center items-center py-12">
           <div className="flex flex-col items-center">
-            <RefreshCw className="w-12 h-12 text-blue-600 animate-spin mb-4" />
+            <RefreshCw size={48} className="text-blue-500 animate-spin mb-4" />
             <h3 className="text-xl font-medium">Cargando datos...</h3>
           </div>
         </div>
       )}
 
       {!isLoading && !selectedProduct && (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center p-12">
-            <Search className="w-16 h-16 text-muted-foreground mb-4" />
+        <section className="bg-white rounded-lg shadow-md">
+          <div className="p-12 flex flex-col items-center justify-center">
+            <Search size={64} className="text-gray-400 mb-4" />
             <h3 className="text-xl font-medium mb-2">Selecciona un Producto</h3>
-            <p className="text-muted-foreground text-center max-w-md">
+            <p className="text-gray-500 text-center max-w-md">
               Para comenzar el análisis, selecciona un producto del menú
               desplegable.
             </p>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       )}
     </div>
   );
