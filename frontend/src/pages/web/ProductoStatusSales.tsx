@@ -37,6 +37,9 @@ import {
   Info,
 } from "lucide-react";
 
+// Importar math.js al inicio del archivo, justo después de los imports de React
+import * as math from "mathjs";
+
 // Tipos de datos
 interface Size {
   id: number;
@@ -65,7 +68,7 @@ interface ProductVariant {
     lastWeek: number;
     lastMonth: number;
     total: number;
-    history: { week: number; sales: number }[];
+    history: { month: number; sales: number }[];
   };
 }
 
@@ -109,7 +112,7 @@ const staticSalesData: Record<
     lastWeek: number;
     lastMonth: number;
     total: number;
-    history: { week: number; sales: number }[];
+    history: { month: number; sales: number }[];
   }
 > = {
   // POLO HOMBRE
@@ -118,8 +121,8 @@ const staticSalesData: Record<
     lastMonth: 45,
     total: 120,
     history: [
-      { week: 1, sales: 10 },
-      { week: 2, sales: 22 },
+      { month: 0, sales: 10 },
+      { month: 1, sales: 22 },
     ],
   }, // Rojo vino - CH
   2: {
@@ -127,8 +130,8 @@ const staticSalesData: Record<
     lastMonth: 65,
     total: 180,
     history: [
-      { week: 1, sales: 15 },
-      { week: 2, sales: 33 },
+      { month: 0, sales: 15 },
+      { month: 1, sales: 33 },
     ],
   }, // Rojo vino - G
   3: {
@@ -136,8 +139,8 @@ const staticSalesData: Record<
     lastMonth: 55,
     total: 150,
     history: [
-      { week: 1, sales: 13 },
-      { week: 2, sales: 28 },
+      { month: 0, sales: 13 },
+      { month: 1, sales: 28 },
     ],
   }, // Rojo vino - MED
   4: {
@@ -145,8 +148,8 @@ const staticSalesData: Record<
     lastMonth: 30,
     total: 85,
     history: [
-      { week: 1, sales: 7 },
-      { week: 2, sales: 15 },
+      { month: 0, sales: 7 },
+      { month: 1, sales: 15 },
     ],
   }, // Gris - CH
   5: {
@@ -154,8 +157,8 @@ const staticSalesData: Record<
     lastMonth: 25,
     total: 70,
     history: [
-      { week: 1, sales: 5 },
-      { week: 2, sales: 11 },
+      { month: 0, sales: 5 },
+      { month: 1, sales: 11 },
     ],
   }, // Blanco - XG
   6: {
@@ -163,8 +166,8 @@ const staticSalesData: Record<
     lastMonth: 40,
     total: 110,
     history: [
-      { week: 1, sales: 9 },
-      { week: 2, sales: 19 },
+      { month: 0, sales: 9 },
+      { month: 1, sales: 19 },
     ],
   }, // Blanco - MED
   7: {
@@ -172,8 +175,8 @@ const staticSalesData: Record<
     lastMonth: 75,
     total: 200,
     history: [
-      { week: 1, sales: 18 },
-      { week: 2, sales: 38 },
+      { month: 0, sales: 38 },
+      { month: 1, sales: 55 },
     ],
   }, // Azul marino - CH
   8: {
@@ -181,8 +184,8 @@ const staticSalesData: Record<
     lastMonth: 60,
     total: 165,
     history: [
-      { week: 1, sales: 14 },
-      { week: 2, sales: 30 },
+      { month: 0, sales: 14 },
+      { month: 1, sales: 30 },
     ],
   }, // Azul marino - MED
   9: {
@@ -190,8 +193,8 @@ const staticSalesData: Record<
     lastMonth: 50,
     total: 140,
     history: [
-      { week: 1, sales: 12 },
-      { week: 2, sales: 26 },
+      { month: 0, sales: 12 },
+      { month: 1, sales: 26 },
     ],
   }, // Azul cielo - MED
 
@@ -201,8 +204,8 @@ const staticSalesData: Record<
     lastMonth: 55,
     total: 145,
     history: [
-      { week: 1, sales: 13 },
-      { week: 2, sales: 28 },
+      { month: 0, sales: 13 },
+      { month: 1, sales: 28 },
     ],
   }, // Negro - CH
   11: {
@@ -210,8 +213,8 @@ const staticSalesData: Record<
     lastMonth: 45,
     total: 125,
     history: [
-      { week: 1, sales: 10 },
-      { week: 2, sales: 22 },
+      { month: 0, sales: 10 },
+      { month: 1, sales: 22 },
     ],
   }, // Negro - MED
   12: {
@@ -219,8 +222,8 @@ const staticSalesData: Record<
     lastMonth: 65,
     total: 175,
     history: [
-      { week: 1, sales: 16 },
-      { week: 2, sales: 34 },
+      { month: 0, sales: 16 },
+      { month: 1, sales: 34 },
     ],
   }, // Blanco - G
   13: {
@@ -228,8 +231,8 @@ const staticSalesData: Record<
     lastMonth: 50,
     total: 135,
     history: [
-      { week: 1, sales: 12 },
-      { week: 2, sales: 26 },
+      { month: 0, sales: 12 },
+      { month: 1, sales: 26 },
     ],
   }, // Blanco - CH
   14: {
@@ -237,8 +240,8 @@ const staticSalesData: Record<
     lastMonth: 35,
     total: 95,
     history: [
-      { week: 1, sales: 8 },
-      { week: 2, sales: 18 },
+      { month: 0, sales: 8 },
+      { month: 1, sales: 18 },
     ],
   }, // Blanco - XCH
   15: {
@@ -246,8 +249,8 @@ const staticSalesData: Record<
     lastMonth: 60,
     total: 155,
     history: [
-      { week: 1, sales: 14 },
-      { week: 2, sales: 30 },
+      { month: 0, sales: 14 },
+      { month: 1, sales: 30 },
     ],
   }, // Azul cielo - G
 
@@ -257,8 +260,8 @@ const staticSalesData: Record<
     lastMonth: 50,
     total: 130,
     history: [
-      { week: 1, sales: 12 },
-      { week: 2, sales: 26 },
+      { month: 0, sales: 12 },
+      { month: 1, sales: 26 },
     ],
   }, // Negro - G
   17: {
@@ -266,8 +269,8 @@ const staticSalesData: Record<
     lastMonth: 45,
     total: 120,
     history: [
-      { week: 1, sales: 10 },
-      { week: 2, sales: 22 },
+      { month: 0, sales: 10 },
+      { month: 1, sales: 22 },
     ],
   }, // Negro - CH
   18: {
@@ -275,8 +278,8 @@ const staticSalesData: Record<
     lastMonth: 35,
     total: 95,
     history: [
-      { week: 1, sales: 8 },
-      { week: 2, sales: 18 },
+      { month: 0, sales: 8 },
+      { month: 1, sales: 18 },
     ],
   }, // Negro - MED
   19: {
@@ -284,8 +287,8 @@ const staticSalesData: Record<
     lastMonth: 30,
     total: 80,
     history: [
-      { week: 1, sales: 7 },
-      { week: 2, sales: 15 },
+      { month: 0, sales: 7 },
+      { month: 1, sales: 15 },
     ],
   }, // Beige - CH
 
@@ -295,8 +298,8 @@ const staticSalesData: Record<
     lastMonth: 60,
     total: 155,
     history: [
-      { week: 1, sales: 14 },
-      { week: 2, sales: 30 },
+      { month: 0, sales: 14 },
+      { month: 1, sales: 30 },
     ],
   }, // Rojo vino - CH
   21: {
@@ -304,8 +307,8 @@ const staticSalesData: Record<
     lastMonth: 50,
     total: 135,
     history: [
-      { week: 1, sales: 12 },
-      { week: 2, sales: 26 },
+      { month: 0, sales: 12 },
+      { month: 1, sales: 26 },
     ],
   }, // Rojo vino - MED
   22: {
@@ -313,8 +316,8 @@ const staticSalesData: Record<
     lastMonth: 20,
     total: 55,
     history: [
-      { week: 1, sales: 5 },
-      { week: 2, sales: 11 },
+      { month: 0, sales: 5 },
+      { month: 1, sales: 11 },
     ],
   }, // Blanco - XCH
   23: {
@@ -322,8 +325,8 @@ const staticSalesData: Record<
     lastMonth: 30,
     total: 80,
     history: [
-      { week: 1, sales: 7 },
-      { week: 2, sales: 15 },
+      { month: 0, sales: 7 },
+      { month: 1, sales: 15 },
     ],
   }, // Blanco - XG
   24: {
@@ -331,8 +334,8 @@ const staticSalesData: Record<
     lastMonth: 45,
     total: 120,
     history: [
-      { week: 1, sales: 10 },
-      { week: 2, sales: 22 },
+      { month: 0, sales: 10 },
+      { month: 1, sales: 22 },
     ],
   }, // Negro - MED
   25: {
@@ -340,8 +343,8 @@ const staticSalesData: Record<
     lastMonth: 35,
     total: 95,
     history: [
-      { week: 1, sales: 8 },
-      { week: 2, sales: 18 },
+      { month: 0, sales: 8 },
+      { month: 1, sales: 18 },
     ],
   }, // Negro - CH
   26: {
@@ -349,8 +352,8 @@ const staticSalesData: Record<
     lastMonth: 65,
     total: 170,
     history: [
-      { week: 1, sales: 16 },
-      { week: 2, sales: 34 },
+      { month: 0, sales: 16 },
+      { month: 1, sales: 34 },
     ],
   }, // Azul marino - MED
   27: {
@@ -358,8 +361,8 @@ const staticSalesData: Record<
     lastMonth: 75,
     total: 190,
     history: [
-      { week: 1, sales: 18 },
-      { week: 2, sales: 38 },
+      { month: 0, sales: 18 },
+      { month: 1, sales: 38 },
     ],
   }, // Azul marino - CH
   28: {
@@ -367,8 +370,8 @@ const staticSalesData: Record<
     lastMonth: 60,
     total: 155,
     history: [
-      { week: 1, sales: 14 },
-      { week: 2, sales: 30 },
+      { month: 0, sales: 14 },
+      { month: 1, sales: 30 },
     ],
   }, // Azul marino - G
   29: {
@@ -376,8 +379,8 @@ const staticSalesData: Record<
     lastMonth: 45,
     total: 120,
     history: [
-      { week: 1, sales: 10 },
-      { week: 2, sales: 22 },
+      { month: 0, sales: 10 },
+      { month: 1, sales: 22 },
     ],
   }, // Azul marino - XCH
   30: {
@@ -385,8 +388,8 @@ const staticSalesData: Record<
     lastMonth: 35,
     total: 95,
     history: [
-      { week: 1, sales: 8 },
-      { week: 2, sales: 18 },
+      { month: 0, sales: 8 },
+      { month: 1, sales: 18 },
     ],
   }, // Azul marino - XG
 
@@ -396,8 +399,8 @@ const staticSalesData: Record<
     lastMonth: 50,
     total: 130,
     history: [
-      { week: 1, sales: 12 },
-      { week: 2, sales: 26 },
+      { month: 0, sales: 12 },
+      { month: 1, sales: 26 },
     ],
   },
   32: {
@@ -405,8 +408,8 @@ const staticSalesData: Record<
     lastMonth: 35,
     total: 95,
     history: [
-      { week: 1, sales: 8 },
-      { week: 2, sales: 18 },
+      { month: 0, sales: 8 },
+      { month: 1, sales: 18 },
     ],
   },
   33: {
@@ -414,8 +417,8 @@ const staticSalesData: Record<
     lastMonth: 30,
     total: 80,
     history: [
-      { week: 1, sales: 7 },
-      { week: 2, sales: 15 },
+      { month: 0, sales: 7 },
+      { month: 1, sales: 15 },
     ],
   },
   34: {
@@ -423,8 +426,8 @@ const staticSalesData: Record<
     lastMonth: 45,
     total: 120,
     history: [
-      { week: 1, sales: 10 },
-      { week: 2, sales: 22 },
+      { month: 0, sales: 10 },
+      { month: 1, sales: 22 },
     ],
   },
   35: {
@@ -432,8 +435,8 @@ const staticSalesData: Record<
     lastMonth: 60,
     total: 155,
     history: [
-      { week: 1, sales: 14 },
-      { week: 2, sales: 30 },
+      { month: 0, sales: 14 },
+      { month: 1, sales: 30 },
     ],
   },
   36: {
@@ -441,8 +444,8 @@ const staticSalesData: Record<
     lastMonth: 50,
     total: 135,
     history: [
-      { week: 1, sales: 12 },
-      { week: 2, sales: 26 },
+      { month: 0, sales: 12 },
+      { month: 1, sales: 26 },
     ],
   },
   37: {
@@ -450,8 +453,8 @@ const staticSalesData: Record<
     lastMonth: 65,
     total: 170,
     history: [
-      { week: 1, sales: 16 },
-      { week: 2, sales: 34 },
+      { month: 0, sales: 16 },
+      { month: 1, sales: 34 },
     ],
   },
   38: {
@@ -459,8 +462,8 @@ const staticSalesData: Record<
     lastMonth: 45,
     total: 120,
     history: [
-      { week: 1, sales: 10 },
-      { week: 2, sales: 22 },
+      { month: 0, sales: 10 },
+      { month: 1, sales: 22 },
     ],
   },
   39: {
@@ -468,8 +471,8 @@ const staticSalesData: Record<
     lastMonth: 75,
     total: 190,
     history: [
-      { week: 1, sales: 18 },
-      { week: 2, sales: 38 },
+      { month: 0, sales: 18 },
+      { month: 1, sales: 38 },
     ],
   },
   40: {
@@ -477,8 +480,8 @@ const staticSalesData: Record<
     lastMonth: 55,
     total: 145,
     history: [
-      { week: 1, sales: 13 },
-      { week: 2, sales: 28 },
+      { month: 0, sales: 13 },
+      { month: 1, sales: 28 },
     ],
   },
   41: {
@@ -486,8 +489,8 @@ const staticSalesData: Record<
     lastMonth: 45,
     total: 120,
     history: [
-      { week: 1, sales: 10 },
-      { week: 2, sales: 22 },
+      { month: 0, sales: 10 },
+      { month: 1, sales: 22 },
     ],
   },
   42: {
@@ -495,8 +498,8 @@ const staticSalesData: Record<
     lastMonth: 35,
     total: 95,
     history: [
-      { week: 1, sales: 8 },
-      { week: 2, sales: 18 },
+      { month: 0, sales: 8 },
+      { month: 1, sales: 18 },
     ],
   },
   43: {
@@ -504,8 +507,8 @@ const staticSalesData: Record<
     lastMonth: 50,
     total: 135,
     history: [
-      { week: 1, sales: 12 },
-      { week: 2, sales: 26 },
+      { month: 0, sales: 12 },
+      { month: 1, sales: 26 },
     ],
   },
   44: {
@@ -513,8 +516,8 @@ const staticSalesData: Record<
     lastMonth: 60,
     total: 155,
     history: [
-      { week: 1, sales: 14 },
-      { week: 2, sales: 30 },
+      { month: 0, sales: 14 },
+      { month: 1, sales: 30 },
     ],
   },
   45: {
@@ -522,8 +525,8 @@ const staticSalesData: Record<
     lastMonth: 30,
     total: 80,
     history: [
-      { week: 1, sales: 7 },
-      { week: 2, sales: 15 },
+      { month: 0, sales: 7 },
+      { month: 1, sales: 15 },
     ],
   },
   46: {
@@ -531,8 +534,8 @@ const staticSalesData: Record<
     lastMonth: 45,
     total: 120,
     history: [
-      { week: 1, sales: 10 },
-      { week: 2, sales: 22 },
+      { month: 0, sales: 10 },
+      { month: 1, sales: 22 },
     ],
   },
   47: {
@@ -540,8 +543,8 @@ const staticSalesData: Record<
     lastMonth: 55,
     total: 145,
     history: [
-      { week: 1, sales: 13 },
-      { week: 2, sales: 28 },
+      { month: 0, sales: 13 },
+      { month: 1, sales: 28 },
     ],
   },
   48: {
@@ -549,8 +552,8 @@ const staticSalesData: Record<
     lastMonth: 50,
     total: 135,
     history: [
-      { week: 1, sales: 12 },
-      { week: 2, sales: 26 },
+      { month: 0, sales: 12 },
+      { month: 1, sales: 26 },
     ],
   },
   49: {
@@ -558,8 +561,8 @@ const staticSalesData: Record<
     lastMonth: 65,
     total: 170,
     history: [
-      { week: 1, sales: 16 },
-      { week: 2, sales: 34 },
+      { month: 0, sales: 16 },
+      { month: 1, sales: 34 },
     ],
   },
   50: {
@@ -567,8 +570,8 @@ const staticSalesData: Record<
     lastMonth: 60,
     total: 155,
     history: [
-      { week: 1, sales: 14 },
-      { week: 2, sales: 30 },
+      { month: 0, sales: 14 },
+      { month: 1, sales: 30 },
     ],
   },
   51: {
@@ -576,8 +579,8 @@ const staticSalesData: Record<
     lastMonth: 50,
     total: 135,
     history: [
-      { week: 1, sales: 12 },
-      { week: 2, sales: 26 },
+      { month: 0, sales: 12 },
+      { month: 1, sales: 26 },
     ],
   },
   52: {
@@ -585,8 +588,8 @@ const staticSalesData: Record<
     lastMonth: 75,
     total: 190,
     history: [
-      { week: 1, sales: 18 },
-      { week: 2, sales: 38 },
+      { month: 0, sales: 18 },
+      { month: 1, sales: 38 },
     ],
   },
   53: {
@@ -594,8 +597,8 @@ const staticSalesData: Record<
     lastMonth: 45,
     total: 120,
     history: [
-      { week: 1, sales: 10 },
-      { week: 2, sales: 22 },
+      { month: 0, sales: 10 },
+      { month: 1, sales: 22 },
     ],
   },
   54: {
@@ -603,8 +606,8 @@ const staticSalesData: Record<
     lastMonth: 60,
     total: 155,
     history: [
-      { week: 1, sales: 14 },
-      { week: 2, sales: 30 },
+      { month: 0, sales: 14 },
+      { month: 1, sales: 30 },
     ],
   },
   55: {
@@ -612,8 +615,8 @@ const staticSalesData: Record<
     lastMonth: 50,
     total: 135,
     history: [
-      { week: 1, sales: 12 },
-      { week: 2, sales: 26 },
+      { month: 0, sales: 12 },
+      { month: 1, sales: 26 },
     ],
   },
   56: {
@@ -621,8 +624,8 @@ const staticSalesData: Record<
     lastMonth: 65,
     total: 170,
     history: [
-      { week: 1, sales: 16 },
-      { week: 2, sales: 34 },
+      { month: 0, sales: 16 },
+      { month: 1, sales: 34 },
     ],
   },
   57: {
@@ -630,8 +633,8 @@ const staticSalesData: Record<
     lastMonth: 55,
     total: 145,
     history: [
-      { week: 1, sales: 13 },
-      { week: 2, sales: 28 },
+      { month: 0, sales: 13 },
+      { month: 1, sales: 28 },
     ],
   },
 };
@@ -649,8 +652,8 @@ const enrichProductsWithSalesData = (products: Product[]): Product[] => {
         lastMonth: 40,
         total: 100,
         history: [
-          { week: 1, sales: 8 },
-          { week: 2, sales: 10 },
+          { month: 0, sales: 8 },
+          { month: 1, sales: 10 },
         ],
       },
     })),
@@ -671,6 +674,8 @@ const CHART_COLORS = [
   "#7C3AED",
 ];
 
+// Reemplazar la función calculateGrowthRate con esta versión que usa math.js
+
 export default function SalesAnalysisDashboard() {
   // Estado para los productos con datos de ventas
   const [products, setProducts] = useState<Product[]>([]);
@@ -688,9 +693,7 @@ export default function SalesAnalysisDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
 
   // Añadir un estado para alternar entre vista semanal y anual
-  const [viewMode, setViewMode] = useState<"weekly" | "monthly" | "annual">(
-    "weekly"
-  );
+  const [viewMode, setViewMode] = useState<"monthly" | "annual">("monthly");
 
   // Cargar y enriquecer datos al inicio
   useEffect(() => {
@@ -812,39 +815,48 @@ export default function SalesAnalysisDashboard() {
     return Array.from(sizeSalesMap.values()).sort((a, b) => b.sales - a.sales);
   }, [selectedProduct]);
 
-  // Calculate growth rate based on cumulative sales history
-  const calculateGrowthRate = (history: { week: number; sales: number }[]) => {
-    if (history.length < 2) return 0.05; // Default rate
+  // Add a function to get month names
+  const getMonthName = (monthIndex: number) => {
+    const monthNames = [
+      "Enero",
+      "Febrero",
+      "Marzo",
+      "Abril",
+      "Mayo",
+      "Junio",
+      "Julio",
+      "Agosto",
+      "Septiembre",
+      "Octubre",
+      "Noviembre",
+      "Diciembre",
+    ];
 
-    // With cumulative data, we need to calculate the growth rate differently
-    const firstWeekSales = history[0].sales;
-    const secondWeekSales = history[1].sales;
-
-    if (firstWeekSales <= 0) return 0.05; // Avoid division by zero
-
-    // Calculate weekly growth rate from cumulative data
-    // Using the solution to dP/dt = kP which is P(t) = P₀e^(kt)
-    // So k = ln(P(t)/P₀)/t
-    const timeElapsed = history[1].week - history[0].week; // t
-    const growthRate = Math.log(secondWeekSales / firstWeekSales) / timeElapsed;
-
-    // Limit the rate between -0.1 and 0.2
-    return Math.max(-0.1, Math.min(0.2, growthRate));
+    return monthNames[monthIndex % 12];
   };
 
-  // Obtener fecha para una semana específica
-  const getDateForWeek = (week: number) => {
-    // Fechas específicas para las semanas 1 y 2
-    if (week === 1) {
-      return "15/03/2024"; // Semana base (15 de marzo)
-    } else if (week === 2) {
-      return "22/03/2024"; // Semana actual (22 de marzo)
+  // Replace getDateForWeek with getDateForMonth
+  const getDateForMonth = (month: number) => {
+    // For month 0 (January) and month 1 (February), return specific dates
+    if (month === 0) {
+      return "31/01/2025"; // January (month 0)
+    } else if (month === 1) {
+      return "28/02/2025"; // February (month 1)
     }
 
-    // Para las demás semanas, calcular a partir del 22 de marzo
-    const baseDate = new Date(2024, 2, 22); // 22 de marzo de 2024
+    // For other months, calculate based on February
+    const baseDate = new Date(2024, 1, 29); // February 29, 2024
     const targetDate = new Date(baseDate);
-    targetDate.setDate(baseDate.getDate() + (week - 2) * 7);
+    targetDate.setMonth(baseDate.getMonth() + (month - 1));
+
+    // Get last day of the month
+    const lastDay = new Date(
+      targetDate.getFullYear(),
+      targetDate.getMonth() + 1,
+      0
+    ).getDate();
+    targetDate.setDate(lastDay);
+
     return targetDate.toLocaleDateString("es-MX", {
       day: "2-digit",
       month: "2-digit",
@@ -852,68 +864,90 @@ export default function SalesAnalysisDashboard() {
     });
   };
 
-  // Data for sales projection chart using cumulative data
+  // Reemplazar la función salesProjectionData con esta versión que usa math.js
+  const calculateGrowthRate = (history: { month: number; sales: number }[]) => {
+    if (history.length < 2) return 0.05; // Default rate
+    const firstMonth = history[0];
+    const secondMonth = history[1];
+
+    if (firstMonth.sales <= 0) return 0.05;
+
+    // Calculate the growth rate using the formula k = ln(P(t2)/P(t1)) / (t2 - t1)
+    const timeElapsed = secondMonth.month - firstMonth.month;
+    const growthRate =
+      Math.log(secondMonth.sales / firstMonth.sales) / timeElapsed;
+
+    // Redondear a 4 decimales usando toFixed()
+    const roundedGrowthRate = Number(growthRate.toFixed(4));
+    // Limit the rate between -0.1 and 0.2
+    return roundedGrowthRate;
+  };
   const salesProjectionData = useMemo(() => {
     if (!selectedVariant || !selectedVariant.salesData) return [];
 
     const history = selectedVariant.salesData.history;
-    const initialSales = history[history.length - 1].sales; // P₀ (initial cumulative sales)
-    const growthRate = calculateGrowthRate(history); // k (proportionality constant)
+    const initialSales = history[history.length - 1].sales;
+    const growthRate = calculateGrowthRate(history);
+    // Histórico con ventas mensuales y acumuladas
+    const historyWithCumulative = history.map((entry, index) => ({
+      month: entry.month,
+      monthName: getMonthName(entry.month),
+      cumulativeSales: entry.sales,
+      sales: index === 0 ? entry.sales : entry.sales - history[index - 1].sales,
+      isHistorical: true,
+    }));
 
-    // Convert history to include both weekly and cumulative sales
-    const historyWithCumulative = history.map((entry, index) => {
-      // For history, the sales value is already cumulative
-      return {
-        week: entry.week,
-        cumulativeSales: entry.sales,
-        // Calculate weekly sales for display (difference from previous week)
-        sales:
-          index === 0 ? entry.sales : entry.sales - history[index - 1].sales,
-      };
-    });
-
-    // Project 24 more weeks using the exponential model P(t) = P₀e^(kt)
     const projection = [];
     let previousCumulativeSales = initialSales;
 
-    for (let i = 0; i < 24; i++) {
-      const week = history.length + i + 1;
-      const timeElapsed = i + 1; // t (time elapsed in weeks)
-      const projectedCumulativeSales = Math.round(
-        initialSales * Math.exp(growthRate * timeElapsed)
+    for (let i = 0; i < 10; i++) {
+      const month = history.length + i;
+      const timeElapsed = i + 1;
+
+      // Aplicar la fórmula p = ce^(kt) usando math.js
+      const projectedCumulativeSales = math.round(
+        math.multiply(
+          initialSales,
+          math.exp(math.multiply(growthRate, timeElapsed))
+        )
       );
 
-      // Calculate weekly sales as the difference between current and previous cumulative sales
-      const weeklySales = projectedCumulativeSales - previousCumulativeSales;
+      const monthlySales = projectedCumulativeSales - previousCumulativeSales;
 
       projection.push({
-        week,
-        sales: weeklySales,
+        month,
+        monthName: getMonthName(month),
+        sales: monthlySales,
         cumulativeSales: projectedCumulativeSales,
+        isHistorical: false,
       });
 
-      // Update for next iteration
       previousCumulativeSales = projectedCumulativeSales;
     }
 
     return [...historyWithCumulative, ...projection];
   }, [selectedVariant]);
 
-  // Calculate stock out week based on cumulative sales
-  const calculateStockOutWeek = useMemo(() => {
+  // Update calculateStockOutWeek to calculateStockOutMonth
+  const calculateStockOutMonth = useMemo(() => {
     if (!selectedVariant || !selectedVariant.salesData) return null;
 
     const projectionData = salesProjectionData;
     const remainingStock = selectedVariant.stock;
+    let cumulativeSalesFromMarch = 0;
 
     for (let i = 0; i < projectionData.length; i++) {
-      // Use cumulative sales directly instead of calculating it
-      const cumulativeSales = projectionData[i].cumulativeSales;
+      // Only count sales from March (month index 2) onwards for stock reduction
+      if (projectionData[i].month >= 2) {
+        cumulativeSalesFromMarch += projectionData[i].sales;
+      }
 
-      if (cumulativeSales >= remainingStock) {
+      // Check if cumulative sales from March onwards exceed the stock
+      if (cumulativeSalesFromMarch >= remainingStock) {
         return {
-          week: projectionData[i].week,
-          date: getDateForWeek(projectionData[i].week),
+          month: projectionData[i].month,
+          monthName: projectionData[i].monthName,
+          date: getDateForMonth(projectionData[i].month),
         };
       }
     }
@@ -936,7 +970,7 @@ export default function SalesAnalysisDashboard() {
     const currentYearHistorical = {
       year: currentYear,
       sales: weeklyData
-        .filter((w) => w.week <= 12)
+        .filter((w) => w.month <= 11)
         .reduce((sum, w) => sum + w.sales, 0),
       isHistorical: true,
     };
@@ -947,7 +981,7 @@ export default function SalesAnalysisDashboard() {
       sales: weeklyData
         .filter((w) => {
           const date = new Date();
-          date.setDate(date.getDate() + (w.week - 1) * 7);
+          date.setDate(date.getDate() + (w.month - 1) * 30);
           return date.getFullYear() === currentYear + 1;
         })
         .reduce((sum, w) => sum + w.sales, 0),
@@ -958,68 +992,6 @@ export default function SalesAnalysisDashboard() {
 
     return annualData;
   }, [selectedVariant, salesProjectionData]);
-
-  // Modificar la función para calcular proyecciones mensuales
-  const calculateMonthlyProjections = (weeklyData: any[]) => {
-    if (!weeklyData || weeklyData.length === 0) return [];
-
-    // Agrupar datos semanales en meses (4 semanas por mes)
-    const monthlyData: {
-      month: number;
-      monthName: string;
-      sales: number;
-      isHistorical: boolean;
-    }[] = [];
-    let currentMonth = 1;
-    let monthSales = 0;
-    let weeksInMonth = 0;
-
-    // Nombres de los meses
-    const monthNames = [
-      "Enero",
-      "Febrero",
-      "Marzo",
-      "Abril",
-      "Mayo",
-      "Junio",
-      "Julio",
-      "Agosto",
-      "Septiembre",
-      "Octubre",
-      "Noviembre",
-      "Diciembre",
-    ];
-
-    // Mes inicial (marzo)
-    let currentMonthIndex = 2; // 0-indexed, marzo es 2
-
-    weeklyData.forEach((week, index) => {
-      monthSales += week.sales;
-      weeksInMonth++;
-
-      // Cada 4 semanas, crear un nuevo mes
-      if (weeksInMonth === 4 || index === weeklyData.length - 1) {
-        monthlyData.push({
-          month: currentMonth,
-          monthName: monthNames[currentMonthIndex],
-          sales: monthSales,
-          isHistorical: currentMonth === 1 && index < 2, // Solo el primer mes (parcial) es histórico
-        });
-
-        currentMonth++;
-        currentMonthIndex = (currentMonthIndex + 1) % 12;
-        monthSales = 0;
-        weeksInMonth = 0;
-      }
-    });
-
-    return monthlyData;
-  };
-
-  // Calcular proyecciones mensuales
-  const monthlyProjectionData = useMemo(() => {
-    return calculateMonthlyProjections(salesProjectionData);
-  }, [salesProjectionData]);
 
   // Manejar cambio de producto
   const handleProductChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -1104,14 +1076,14 @@ export default function SalesAnalysisDashboard() {
               </h1>
               <p className="mt-1 text-white/90">
                 Analiza qué tallas y colores se venden más y realiza
-                proyecciones de inventario
+                proyecciones de inventario por mes
               </p>
               <div className="flex flex-wrap gap-3 mt-3">
                 <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
                   Modelo Exponencial dP/dt=kP
                 </span>
                 <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
-                  Proyección a 12 Semanas
+                  Proyección a 10 Meses
                 </span>
                 <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
                   Análisis de Agotamiento
@@ -1783,17 +1755,20 @@ export default function SalesAnalysisDashboard() {
                               Modelo Matemático
                             </div>
                             <div className="text-lg font-medium">
-                              dP/dt = kP
+                              P = c × e<sup>kt</sup>{" "}
+                              <span className="text-xs text-gray-500">
+                                (calculado con math.js)
+                              </span>
                             </div>
                             <div className="text-sm text-gray-500 mt-1">
-                              Donde P = cantidad de ventas, k = constante de
-                              proporcionalidad
+                              Donde P = Ventas totales, c = ventas iniciales, k
+                              = tasa de crecimiento, t = tiempo
                             </div>
                           </div>
 
                           <div>
                             <div className="text-sm text-gray-500">
-                              Condición Inicial (P₀)
+                              Condición Inicial (c)
                             </div>
                             <div className="text-xl font-bold">
                               {
@@ -1804,7 +1779,7 @@ export default function SalesAnalysisDashboard() {
                               unidades
                             </div>
                             <div className="text-sm text-gray-500">
-                              Ventas en la última semana registrada
+                              Ventas en el último mes registrado (Febrero)
                             </div>
                           </div>
 
@@ -1818,23 +1793,23 @@ export default function SalesAnalysisDashboard() {
                                   selectedVariant.salesData?.history || []
                                 ) * 100
                               ).toFixed(1)}
-                              % semanal
+                              % mensual
                             </div>
                             <div className="text-sm text-gray-500">
                               Tasa de crecimiento exponencial
                             </div>
                           </div>
 
-                          {calculateStockOutWeek ? (
+                          {calculateStockOutMonth ? (
                             <div>
                               <div className="text-sm text-gray-500">
                                 Agotamiento Estimado
                               </div>
                               <div className="text-xl font-bold">
-                                Semana {calculateStockOutWeek.week}
+                                {calculateStockOutMonth.monthName}
                               </div>
                               <div className="text-sm text-gray-500">
-                                {calculateStockOutWeek.date}
+                                {calculateStockOutMonth.date}
                               </div>
                             </div>
                           ) : (
@@ -1843,7 +1818,7 @@ export default function SalesAnalysisDashboard() {
                                 Agotamiento Estimado
                               </div>
                               <div className="text-xl font-bold text-green-600">
-                                No se agotará en 24 semanas
+                                No se agotará en 10 meses
                               </div>
                             </div>
                           )}
@@ -1864,7 +1839,7 @@ export default function SalesAnalysisDashboard() {
                       <div className="relative">
                         <button
                           className="bg-transparent border-none cursor-pointer flex items-center"
-                          title="Datos históricos de ventas para la semana base (15/03/2024) y la semana actual (22/03/2024)"
+                          title="Datos históricos de ventas para Enero (mes base) y Febrero (mes actual)"
                         >
                           <Info size={16} />
                         </button>
@@ -1872,8 +1847,7 @@ export default function SalesAnalysisDashboard() {
                     </div>
                     <div className="p-4">
                       <p className="text-gray-500 text-sm m-0 mb-4">
-                        Datos históricos de ventas semanales (Semana Base y
-                        Semana Actual)
+                        Datos históricos de ventas mensuales (Enero y Febrero)
                       </p>
                       <div className="overflow-x-auto">
                         <table className="w-full border-collapse">
@@ -1883,7 +1857,7 @@ export default function SalesAnalysisDashboard() {
                                 Parámetro
                               </th>
                               <th className="p-3 text-left font-bold border-b border-gray-200">
-                                Semana
+                                Mes
                               </th>
                               <th className="p-3 text-left font-bold border-b border-gray-200">
                                 Fecha
@@ -1898,20 +1872,21 @@ export default function SalesAnalysisDashboard() {
                           </thead>
                           <tbody>
                             {selectedVariant.salesData?.history.map(
-                              (week, index) => {
-                                const prevWeek =
+                              (month, index) => {
+                                const prevMonth =
                                   index > 0
                                     ? selectedVariant.salesData?.history[
                                         index - 1
                                       ].sales
                                     : null;
-                                const growthRate = prevWeek
-                                  ? ((week.sales - prevWeek) / prevWeek) * 100
+                                const growthRate = prevMonth
+                                  ? ((month.sales - prevMonth) / prevMonth) *
+                                    100
                                   : null;
 
                                 return (
                                   <tr
-                                    key={week.week}
+                                    key={month.month}
                                     className={`${
                                       index === 0
                                         ? "bg-green-50/30"
@@ -1920,17 +1895,17 @@ export default function SalesAnalysisDashboard() {
                                   >
                                     <td className="p-3 border-b border-gray-200 font-medium">
                                       {index === 0
-                                        ? "Semana Base"
-                                        : "Semana Actual"}
+                                        ? "Mes base"
+                                        : "Ultimas ventas"}
                                     </td>
                                     <td className="p-3 border-b border-gray-200">
-                                      Semana {week.week}
+                                      {getMonthName(month.month)}
                                     </td>
                                     <td className="p-3 border-b border-gray-200 font-medium">
-                                      {getDateForWeek(week.week)}
+                                      {getDateForMonth(month.month)}
                                     </td>
                                     <td className="p-3 border-b border-gray-200 font-bold">
-                                      {week.sales} unidades
+                                      {month.sales} unidades
                                     </td>
                                     <td className="p-3 border-b border-gray-200">
                                       {renderGrowthIndicator(growthRate)}
@@ -1947,8 +1922,8 @@ export default function SalesAnalysisDashboard() {
                       <div className="flex items-center gap-2">
                         <Calendar size={16} />
                         <span>
-                          Proyecciones basadas en datos históricos del
-                          15/03/2024 al 22/03/2024
+                          Proyecciones basadas en datos históricos de Enero y
+                          Febrero 2024
                         </span>
                       </div>
                     </div>
@@ -1965,7 +1940,7 @@ export default function SalesAnalysisDashboard() {
                       </div>
                       <div className="flex flex-wrap gap-2">
                         <span className="inline-block px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
-                          Histórico (15/03 - 22/03)
+                          Histórico (Ene - Feb)
                         </span>
                         <span className="inline-block px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800">
                           Proyección
@@ -1986,16 +1961,11 @@ export default function SalesAnalysisDashboard() {
                           >
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis
-                              dataKey="week"
+                              dataKey="monthName"
                               label={{
-                                value: "Semana",
+                                value: "Mes",
                                 position: "insideBottomRight",
                                 offset: -10,
-                              }}
-                              tickFormatter={(value) => {
-                                if (value === 1) return "15/03";
-                                if (value === 2) return "22/03";
-                                return value.toString();
                               }}
                             />
                             <YAxis
@@ -2012,17 +1982,11 @@ export default function SalesAnalysisDashboard() {
                                 }
                                 return [
                                   `${value} unidades`,
-                                  "Ventas Semanales",
+                                  "Ventas Mensuales",
                                 ];
                               }}
                               labelFormatter={(label: any) => {
-                                if (label === 1)
-                                  return "Semana Base (15/03/2024)";
-                                if (label === 2)
-                                  return "Semana Actual (22/03/2024)";
-                                return `Semana ${label} (${getDateForWeek(
-                                  label
-                                )})`;
+                                return `${label}`;
                               }}
                               contentStyle={{
                                 backgroundColor: "#fff",
@@ -2037,12 +2001,15 @@ export default function SalesAnalysisDashboard() {
                             <Line
                               type="monotone"
                               dataKey={(entry: {
-                                week: number;
+                                month: number;
                                 cumulativeSales: any;
+                                isHistorical: boolean;
                               }) =>
-                                entry.week <= 2 ? entry.cumulativeSales : null
+                                entry.isHistorical
+                                  ? entry.cumulativeSales
+                                  : null
                               }
-                              name="Ventas Acumuladas Históricas"
+                              name="Ventas totales Históricas"
                               stroke="#3B82F6"
                               strokeWidth={3}
                               dot={{ r: 4, fill: "#3B82F6" }}
@@ -2053,12 +2020,15 @@ export default function SalesAnalysisDashboard() {
                             <Line
                               type="monotone"
                               dataKey={(entry: {
-                                week: number;
+                                month: number;
                                 cumulativeSales: any;
+                                isHistorical: boolean;
                               }) =>
-                                entry.week > 2 ? entry.cumulativeSales : null
+                                !entry.isHistorical
+                                  ? entry.cumulativeSales
+                                  : null
                               }
-                              name="Ventas Acumuladas Proyectadas"
+                              name="Ventas totales Proyectadas"
                               stroke="#8B5CF6"
                               strokeWidth={2}
                               strokeDasharray="5 5"
@@ -2069,26 +2039,31 @@ export default function SalesAnalysisDashboard() {
                             <Line
                               type="monotone"
                               dataKey={(entry: {
-                                week: number;
+                                month: number;
                                 cumulativeSales: any;
+                                monthName: string;
                               }) =>
-                                entry.week === 2 ? entry.cumulativeSales : null
+                                entry.monthName === "Febrero"
+                                  ? entry.cumulativeSales
+                                  : null
                               }
-                              name="Inicio Proyección (22/03)"
+                              name="Inicio Proyección (Febrero)"
                               stroke="#EF4444"
                               strokeDasharray="5 5"
                               dot={{ r: 6, fill: "#EF4444" }}
                             />
 
                             {/* Línea de stock */}
-                            {calculateStockOutWeek && (
+                            {calculateStockOutMonth && (
                               <Line
                                 type="monotone"
                                 dataKey={(entry: {
-                                  week: number;
+                                  month: number;
+                                  monthName: string;
                                   cumulativeSales: any;
                                 }) =>
-                                  entry.week === calculateStockOutWeek?.week
+                                  entry.monthName ===
+                                  calculateStockOutMonth?.monthName
                                     ? entry.cumulativeSales
                                     : null
                                 }
@@ -2115,16 +2090,6 @@ export default function SalesAnalysisDashboard() {
                       </div>
                       <div className="flex gap-2">
                         <button
-                          onClick={() => setViewMode("weekly")}
-                          className={`px-3 py-1.5 rounded-md border border-gray-300 ${
-                            viewMode === "weekly"
-                              ? "bg-purple-500 text-white"
-                              : "bg-white text-gray-700"
-                          } text-sm cursor-pointer`}
-                        >
-                          Semanal
-                        </button>
-                        <button
                           onClick={() => setViewMode("monthly")}
                           className={`px-3 py-1.5 rounded-md border border-gray-300 ${
                             viewMode === "monthly"
@@ -2148,14 +2113,12 @@ export default function SalesAnalysisDashboard() {
                     </div>
                     <div className="p-4">
                       <p className="text-gray-500 text-sm m-0 mb-4">
-                        {viewMode === "weekly"
-                          ? "Detalle semanal de ventas históricas y proyectadas"
-                          : viewMode === "monthly"
+                        {viewMode === "monthly"
                           ? "Detalle mensual de ventas históricas y proyectadas"
                           : "Resumen anual de ventas históricas y proyectadas"}
                       </p>
                       <div className="overflow-x-auto">
-                        {viewMode === "weekly" ? (
+                        {viewMode === "monthly" ? (
                           <>
                             {/* Tabla de condiciones iniciales (CI y K) */}
                             <div className="mb-6 bg-gray-100 p-4 rounded-lg">
@@ -2169,10 +2132,10 @@ export default function SalesAnalysisDashboard() {
                                       Parámetro
                                     </th>
                                     <th className="p-3 text-center font-bold border border-gray-700">
-                                      P = ventas acumuladas
+                                      P = ventas totales
                                     </th>
                                     <th className="p-3 text-center font-bold border border-gray-700">
-                                      t = Tiempo en semanas
+                                      t = Tiempo en meses
                                     </th>
                                     <th className="p-3 text-center font-bold border border-gray-700">
                                       Fecha
@@ -2182,62 +2145,63 @@ export default function SalesAnalysisDashboard() {
                                 <tbody>
                                   <tr className="bg-blue-50">
                                     <td className="p-3 text-center font-bold border border-gray-300">
-                                      Semana Base
+                                      Enero
                                     </td>
                                     <td className="p-3 text-center border border-gray-300">
                                       {selectedVariant?.salesData?.history[0]
                                         ?.sales || 0}{" "}
-                                      ventas acumuladas
+                                      Ventas totales
                                     </td>
                                     <td className="p-3 text-center border border-gray-300">
-                                      1 semana
+                                      0 meses
                                     </td>
                                     <td className="p-3 text-center font-medium border border-gray-300">
-                                      15/03/2024
+                                      31/01/2025
                                     </td>
                                   </tr>
                                   <tr className="bg-blue-50">
                                     <td className="p-3 text-center font-bold border border-gray-300">
-                                      Semana Actual
+                                      Febrero
                                     </td>
                                     <td className="p-3 text-center border border-gray-300">
                                       {selectedVariant?.salesData?.history[1]
                                         ?.sales || 0}{" "}
-                                      ventas acumuladas
+                                      Ventas totales
                                     </td>
                                     <td className="p-3 text-center border border-gray-300">
-                                      2 semanas
+                                      1 mes
                                     </td>
                                     <td className="p-3 text-center font-medium border border-gray-300">
-                                      22/03/2024
+                                      28/02/2025
                                     </td>
                                   </tr>
                                 </tbody>
                               </table>
                               <div className="mt-3 text-center">
                                 <p className="font-semibold m-0 mb-1">
-                                  Ecuación diferencial: dP/dt = kP (modelo de
-                                  crecimiento exponencial)
+                                  Ecuación de proyección: P = ce<sup>kt</sup>{" "}
+                                  (modelo de crecimiento exponencial)
                                 </p>
                                 <p className="text-sm text-gray-500 m-0">
-                                  Donde P = ventas acumuladas, t = tiempo, k =
-                                  tasa de crecimiento (
+                                  Donde P = Ventas totales, c = ventas
+                                  iniciales, t = tiempo, k = tasa de crecimiento
+                                  (
                                   {(
                                     calculateGrowthRate(
                                       selectedVariant?.salesData?.history || []
                                     ) * 100
                                   ).toFixed(1)}
-                                  % semanal)
+                                  % mensual)
                                 </p>
                               </div>
                             </div>
 
-                            {/* Tabla de proyección semanal */}
+                            {/* Tabla de proyección mensual */}
                             <table className="w-full border-collapse">
                               <thead className="bg-slate-100">
                                 <tr>
                                   <th className="p-3 text-left font-semibold border-b border-gray-200">
-                                    Semana
+                                    Mes
                                   </th>
                                   <th className="p-3 text-left font-semibold border-b border-gray-200">
                                     Ventas Proyectadas
@@ -2246,7 +2210,7 @@ export default function SalesAnalysisDashboard() {
                                     Crecimiento
                                   </th>
                                   <th className="p-3 text-left font-semibold border-b border-gray-200">
-                                    Ventas Acumuladas
+                                    Ventas totales
                                   </th>
                                   <th className="p-3 text-left font-semibold border-b border-gray-200">
                                     Stock Restante
@@ -2257,31 +2221,37 @@ export default function SalesAnalysisDashboard() {
                                 </tr>
                               </thead>
                               <tbody>
-                                {salesProjectionData.map((week, index) => {
-                                  const isHistorical = index < 2; // Solo las primeras 2 semanas son históricas
-                                  const prevWeek =
+                                {salesProjectionData.map((month, index) => {
+                                  const isHistorical = month.isHistorical;
+                                  const prevMonth =
                                     index > 0
                                       ? salesProjectionData[index - 1].sales
                                       : null;
-                                  const growthRate = prevWeek
-                                    ? ((week.sales - prevWeek) / prevWeek) * 100
+                                  const growthRate = prevMonth
+                                    ? ((month.sales - prevMonth) / prevMonth) *
+                                      100
                                     : null;
-                                  const cumulativeSales = salesProjectionData
-                                    .slice(0, index + 1)
-                                    .reduce((sum, w) => sum + w.sales, 0);
+                                  const cumulativeSales = month.cumulativeSales;
+                                  const salesFromMarch =
+                                    month.month >= 2
+                                      ? salesProjectionData
+                                          .filter(
+                                            (m) =>
+                                              m.month >= 2 &&
+                                              m.month <= month.month
+                                          )
+                                          .reduce((sum, m) => sum + m.sales, 0)
+                                      : 0;
                                   const remainingStock = Math.max(
                                     0,
-                                    selectedVariant.stock - cumulativeSales
+                                    selectedVariant.stock - salesFromMarch
                                   );
                                   const isStockOut =
                                     remainingStock === 0 && cumulativeSales > 0;
 
-                                  // Obtener la fecha formateada
-                                  const weekDate = getDateForWeek(week.week);
-
                                   return (
                                     <tr
-                                      key={week.week}
+                                      key={month.month}
                                       className={`${
                                         isStockOut
                                           ? "bg-amber-50"
@@ -2291,14 +2261,11 @@ export default function SalesAnalysisDashboard() {
                                       }`}
                                     >
                                       <td className="p-3 border-b border-gray-200 font-medium">
-                                        {index === 0
-                                          ? "Semana Base (15/03/2024)"
-                                          : index === 1
-                                          ? "Semana Actual (22/03/2024)"
-                                          : `Semana ${weekDate}`}
+                                        {month.monthName}{" "}
+                                        {new Date().getFullYear()}
                                       </td>
                                       <td className="p-3 border-b border-gray-200 font-bold">
-                                        {week.sales} unidades
+                                        {month.sales} unidades
                                         {!isHistorical && (
                                           <span className="ml-2 text-xs text-purple-500 font-normal">
                                             (Proyección)
@@ -2309,20 +2276,26 @@ export default function SalesAnalysisDashboard() {
                                         {renderGrowthIndicator(growthRate)}
                                       </td>
                                       <td className="p-3 border-b border-gray-200 font-bold">
-                                        {week.cumulativeSales} unidades
+                                        {month.cumulativeSales} unidades
                                       </td>
                                       <td className="p-3 border-b border-gray-200">
-                                        <span
-                                          className={`inline-block px-2 py-0.5 rounded-full text-sm ${
-                                            remainingStock < 5
-                                              ? "bg-red-100 text-red-700 border border-red-200"
-                                              : remainingStock < 10
-                                              ? "bg-indigo-100 text-indigo-800 border border-indigo-200"
-                                              : "bg-gray-100 text-gray-700 border border-gray-200"
-                                          }`}
-                                        >
-                                          {remainingStock} unidades
-                                        </span>
+                                        {month.month >= 2 ? (
+                                          <span
+                                            className={`inline-block px-2 py-0.5 rounded-full text-sm ${
+                                              remainingStock < 5
+                                                ? "bg-red-100 text-red-700 border border-red-200"
+                                                : remainingStock < 10
+                                                ? "bg-indigo-100 text-indigo-800 border border-indigo-200"
+                                                : "bg-gray-100 text-gray-700 border border-gray-200"
+                                            }`}
+                                          >
+                                            {remainingStock} unidades
+                                          </span>
+                                        ) : (
+                                          <span className="text-gray-400">
+                                            -
+                                          </span>
+                                        )}
                                       </td>
                                       <td className="p-3 border-b border-gray-200">
                                         {isStockOut ? (
@@ -2345,98 +2318,6 @@ export default function SalesAnalysisDashboard() {
                               </tbody>
                             </table>
                           </>
-                        ) : viewMode === "monthly" ? (
-                          <table className="w-full border-collapse">
-                            <thead className="bg-slate-100">
-                              <tr>
-                                <th className="p-3 text-left font-semibold border-b border-gray-200">
-                                  Mes
-                                </th>
-                                <th className="p-3 text-left font-semibold border-b border-gray-200">
-                                  Ventas Proyectadas
-                                </th>
-                                <th className="p-3 text-left font-semibold border-b border-gray-200">
-                                  Ventas Acumuladas
-                                </th>
-                                <th className="p-3 text-left font-semibold border-b border-gray-200">
-                                  Stock Restante
-                                </th>
-                                <th className="p-3 text-left font-semibold border-b border-gray-200">
-                                  Estado
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {monthlyProjectionData.map((month, index) => {
-                                const cumulativeSales = monthlyProjectionData
-                                  .slice(0, index + 1)
-                                  .reduce((sum, m) => sum + m.sales, 0);
-                                const remainingStock = Math.max(
-                                  0,
-                                  selectedVariant.stock - cumulativeSales
-                                );
-                                const isStockOut =
-                                  remainingStock === 0 && cumulativeSales > 0;
-
-                                return (
-                                  <tr
-                                    key={month.month}
-                                    className={`${
-                                      isStockOut
-                                        ? "bg-amber-50"
-                                        : month.isHistorical
-                                        ? "bg-blue-50/30"
-                                        : "bg-purple-50/30"
-                                    }`}
-                                  >
-                                    <td className="p-3 border-b border-gray-200 font-medium">
-                                      {month.monthName}{" "}
-                                      {new Date().getFullYear()}
-                                    </td>
-                                    <td className="p-3 border-b border-gray-200 font-bold">
-                                      {month.sales} unidades
-                                      {!month.isHistorical && (
-                                        <span className="ml-2 text-xs text-purple-500 font-normal">
-                                          (Proyección)
-                                        </span>
-                                      )}
-                                    </td>
-                                    <td className="p-3 border-b border-gray-200">
-                                      {cumulativeSales} unidades
-                                    </td>
-                                    <td className="p-3 border-b border-gray-200">
-                                      <span
-                                        className={`inline-block px-2 py-0.5 rounded-full text-sm ${
-                                          remainingStock < 5
-                                            ? "bg-red-100 text-red-700 border border-red-200"
-                                            : remainingStock < 10
-                                            ? "bg-indigo-100 text-indigo-800 border border-indigo-200"
-                                            : "bg-gray-100 text-gray-700 border border-gray-200"
-                                        }`}
-                                      >
-                                        {remainingStock} unidades
-                                      </span>
-                                    </td>
-                                    <td className="p-3 border-b border-gray-200">
-                                      {isStockOut ? (
-                                        <span className="inline-block px-2 py-0.5 rounded-full text-sm bg-amber-100 text-amber-800 border border-amber-200">
-                                          Agotamiento
-                                        </span>
-                                      ) : month.isHistorical ? (
-                                        <span className="inline-block px-2 py-0.5 rounded-full text-sm bg-blue-100 text-blue-800 border border-blue-200">
-                                          Histórico
-                                        </span>
-                                      ) : (
-                                        <span className="inline-block px-2 py-0.5 rounded-full text-sm bg-purple-100 text-purple-800 border border-purple-200">
-                                          Proyección
-                                        </span>
-                                      )}
-                                    </td>
-                                  </tr>
-                                );
-                              })}
-                            </tbody>
-                          </table>
                         ) : (
                           <table className="w-full border-collapse">
                             <thead className="bg-slate-100">
@@ -2495,8 +2376,8 @@ export default function SalesAnalysisDashboard() {
                       <div className="flex items-center gap-2">
                         <Calendar size={16} />
                         <span>
-                          Proyecciones basadas en datos históricos del
-                          15/03/2024 al 22/03/2024
+                          Proyecciones basadas en datos históricos de Enero y
+                          Febrero 2024
                         </span>
                       </div>
                     </div>
