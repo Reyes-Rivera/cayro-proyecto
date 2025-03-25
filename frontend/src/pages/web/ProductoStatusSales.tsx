@@ -1929,7 +1929,311 @@ export default function SalesAnalysisDashboard() {
                     </div>
                   </section>
 
-                  {/* Gráfico de proyección mejorado */}
+                  {/* MOVED: Tabla de proyección mejorada - Now appears before the graph */}
+                  <section className="bg-white rounded-lg shadow-md border-t-4 border-purple-500">
+                    <div className="bg-purple-50 p-4 md:p-6 flex justify-between items-center flex-wrap gap-3">
+                      <div className="flex items-center gap-2">
+                        <Calendar size={20} className="text-purple-500" />
+                        <h2 className="text-lg font-semibold m-0">
+                          Tabla de Proyección
+                        </h2>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setViewMode("monthly")}
+                          className={`px-3 py-1.5 rounded-md border border-gray-300 ${
+                            viewMode === "monthly"
+                              ? "bg-purple-500 text-white"
+                              : "bg-white text-gray-700"
+                          } text-sm cursor-pointer`}
+                        >
+                          Mensual
+                        </button>
+                        <button
+                          onClick={() => setViewMode("annual")}
+                          className={`px-3 py-1.5 rounded-md border border-gray-300 ${
+                            viewMode === "annual"
+                              ? "bg-purple-500 text-white"
+                              : "bg-white text-gray-700"
+                          } text-sm cursor-pointer`}
+                        >
+                          Anual
+                        </button>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <p className="text-gray-500 text-sm m-0 mb-4">
+                        {viewMode === "monthly"
+                          ? "Detalle mensual de ventas históricas y proyectadas"
+                          : "Resumen anual de ventas históricas y proyectadas"}
+                      </p>
+                      <div className="overflow-x-auto">
+                        {viewMode === "monthly" ? (
+                          <>
+                            {/* Tabla de condiciones iniciales (CI y K) */}
+                            <div className="mb-6 bg-gray-100 p-4 rounded-lg">
+                              <h3 className="text-lg font-semibold mt-0 mb-3">
+                                Condiciones Iniciales del Modelo
+                              </h3>
+                              <table className="w-full border-collapse border border-gray-300">
+                                <thead className="bg-gray-800 text-white">
+                                  <tr>
+                                    <th className="p-3 text-center font-bold border border-gray-700">
+                                      Parámetro
+                                    </th>
+                                    <th className="p-3 text-center font-bold border border-gray-700">
+                                      P = ventas totales
+                                    </th>
+                                    <th className="p-3 text-center font-bold border border-gray-700">
+                                      t = Tiempo en meses
+                                    </th>
+                                    <th className="p-3 text-center font-bold border border-gray-700">
+                                      Fecha
+                                    </th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  <tr className="bg-blue-50">
+                                    <td className="p-3 text-center font-bold border border-gray-300">
+                                      Enero
+                                    </td>
+                                    <td className="p-3 text-center border border-gray-300">
+                                      {selectedVariant?.salesData?.history[0]
+                                        ?.sales || 0}{" "}
+                                      Ventas totales
+                                    </td>
+                                    <td className="p-3 text-center border border-gray-300">
+                                      0 meses
+                                    </td>
+                                    <td className="p-3 text-center font-medium border border-gray-300">
+                                      31/01/2025
+                                    </td>
+                                  </tr>
+                                  <tr className="bg-blue-50">
+                                    <td className="p-3 text-center font-bold border border-gray-300">
+                                      Febrero
+                                    </td>
+                                    <td className="p-3 text-center border border-gray-300">
+                                      {selectedVariant?.salesData?.history[1]
+                                        ?.sales || 0}{" "}
+                                      Ventas totales
+                                    </td>
+                                    <td className="p-3 text-center border border-gray-300">
+                                      1 mes
+                                    </td>
+                                    <td className="p-3 text-center font-medium border border-gray-300">
+                                      28/02/2025
+                                    </td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                              <div className="mt-3 text-center">
+                                <p className="font-semibold m-0 mb-1">
+                                  Ecuación de proyección: P = ce<sup>kt</sup>{" "}
+                                  (modelo de crecimiento exponencial)
+                                </p>
+                                <p className="text-sm text-gray-500 m-0">
+                                  Donde P = Ventas totales, c = ventas
+                                  iniciales, t = tiempo, k = tasa de crecimiento
+                                  (
+                                  {(
+                                    calculateGrowthRate(
+                                      selectedVariant?.salesData?.history || []
+                                    ) * 100
+                                  ).toFixed(1)}
+                                  % mensual)
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Tabla de proyección mensual - Reordered columns */}
+                            <table className="w-full border-collapse">
+                              <thead className="bg-slate-100">
+                                <tr>
+                                  <th className="p-3 text-left font-semibold border-b border-gray-200">
+                                    Mes
+                                  </th>
+                                  <th className="p-3 text-left font-semibold border-b border-gray-200">
+                                    Ventas totales
+                                  </th>
+                                  <th className="p-3 text-left font-semibold border-b border-gray-200">
+                                    Stock Restante
+                                  </th>
+                                  <th className="p-3 text-left font-semibold border-b border-gray-200">
+                                    Ventas Proyectadas
+                                  </th>
+                                  <th className="p-3 text-left font-semibold border-b border-gray-200">
+                                    Crecimiento
+                                  </th>
+                                  <th className="p-3 text-left font-semibold border-b border-gray-200">
+                                    Estado
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {salesProjectionData.map((month, index) => {
+                                  const isHistorical = month.isHistorical;
+                                  const prevMonth =
+                                    index > 0
+                                      ? salesProjectionData[index - 1].sales
+                                      : null;
+                                  const growthRate = prevMonth
+                                    ? ((month.sales - prevMonth) / prevMonth) *
+                                      100
+                                    : null;
+                                  const cumulativeSales = month.cumulativeSales;
+                                  const salesFromMarch =
+                                    month.month >= 2
+                                      ? salesProjectionData
+                                          .filter(
+                                            (m) =>
+                                              m.month >= 2 &&
+                                              m.month <= month.month
+                                          )
+                                          .reduce((sum, m) => sum + m.sales, 0)
+                                      : 0;
+                                  const remainingStock = Math.max(
+                                    0,
+                                    selectedVariant.stock - salesFromMarch
+                                  );
+                                  const isStockOut =
+                                    remainingStock === 0 && cumulativeSales > 0;
+
+                                  return (
+                                    <tr
+                                      key={month.month}
+                                      className={`${
+                                        isStockOut
+                                          ? "bg-amber-50"
+                                          : isHistorical
+                                          ? "bg-blue-50/30"
+                                          : "bg-purple-50/30"
+                                      }`}
+                                    >
+                                      <td className="p-3 border-b border-gray-200 font-medium">
+                                        {month.monthName}{" "}
+                                        {new Date().getFullYear()}
+                                      </td>
+                                      <td className="p-3 border-b border-gray-200 font-bold">
+                                        {month.cumulativeSales} unidades
+                                      </td>
+                                      <td className="p-3 border-b border-gray-200">
+                                        {month.month >= 2 ? (
+                                          <span
+                                            className={`inline-block px-2 py-0.5 rounded-full text-sm ${
+                                              remainingStock < 5
+                                                ? "bg-red-100 text-red-700 border border-red-200"
+                                                : remainingStock < 10
+                                                ? "bg-indigo-100 text-indigo-800 border border-indigo-200"
+                                                : "bg-gray-100 text-gray-700 border border-gray-200"
+                                            }`}
+                                          >
+                                            {remainingStock} unidades
+                                          </span>
+                                        ) : (
+                                          <span className="text-gray-400">
+                                            -
+                                          </span>
+                                        )}
+                                      </td>
+                                      <td className="p-3 border-b border-gray-200 font-bold">
+                                        {month.sales} unidades
+                                        {!isHistorical && (
+                                          <span className="ml-2 text-xs text-purple-500 font-normal">
+                                            (Proyección)
+                                          </span>
+                                        )}
+                                      </td>
+                                      <td className="p-3 border-b border-gray-200">
+                                        {renderGrowthIndicator(growthRate)}
+                                      </td>
+                                      <td className="p-3 border-b border-gray-200">
+                                        {isStockOut ? (
+                                          <span className="inline-block px-2 py-0.5 rounded-full text-sm bg-amber-100 text-amber-800 border border-amber-200">
+                                            Agotamiento
+                                          </span>
+                                        ) : isHistorical ? (
+                                          <span className="inline-block px-2 py-0.5 rounded-full text-sm bg-blue-100 text-blue-800 border border-blue-200">
+                                            Histórico
+                                          </span>
+                                        ) : (
+                                          <span className="inline-block px-2 py-0.5 rounded-full text-sm bg-purple-100 text-purple-800 border border-purple-200">
+                                            Proyección
+                                          </span>
+                                        )}
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </>
+                        ) : (
+                          <table className="w-full border-collapse">
+                            <thead className="bg-slate-100">
+                              <tr>
+                                <th className="p-3 text-left font-semibold border-b border-gray-200">
+                                  Año
+                                </th>
+                                <th className="p-3 text-left font-semibold border-b border-gray-200">
+                                  Ventas Totales
+                                </th>
+                                <th className="p-3 text-left font-semibold border-b border-gray-200">
+                                  Tipo
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {annualProjectionData.map((yearData) => (
+                                <tr
+                                  key={yearData.year}
+                                  className={`${
+                                    yearData.isHistorical
+                                      ? "bg-blue-50/30"
+                                      : "bg-purple-50/30"
+                                  }`}
+                                >
+                                  <td className="p-3 text-left font-medium border-b border-gray-200">
+                                    {yearData.year}
+                                  </td>
+                                  <td className="p-3 text-left font-bold border-b border-gray-200">
+                                    {yearData.sales} unidades
+                                    {!yearData.isHistorical && (
+                                      <span className="ml-2 text-xs text-purple-500 font-normal">
+                                        (Incluye proyección)
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td className="p-3 text-left border-b border-gray-200">
+                                    {yearData.isHistorical ? (
+                                      <span className="inline-block px-2 py-0.5 rounded-full text-sm bg-blue-100 text-blue-800 border border-blue-200">
+                                        Datos Históricos
+                                      </span>
+                                    ) : (
+                                      <span className="inline-block px-2 py-0.5 rounded-full text-sm bg-purple-100 text-purple-800 border border-purple-200">
+                                        Proyección
+                                      </span>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )}
+                      </div>
+                    </div>
+                    <div className="bg-slate-50 p-3 md:p-6 rounded-b-lg text-sm text-gray-500">
+                      <div className="flex items-center gap-2">
+                        <Calendar size={16} />
+                        <span>
+                          Proyecciones basadas en datos históricos de Enero y
+                          Febrero 2024
+                        </span>
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* Gráfico de proyección mejorado - Now appears after the table */}
                   <section className="bg-white rounded-lg shadow-md border-t-4 border-blue-500">
                     <div className="bg-blue-50 p-4 md:p-6 flex justify-between items-center">
                       <div className="flex items-center gap-2">
@@ -2075,310 +2379,6 @@ export default function SalesAnalysisDashboard() {
                             )}
                           </LineChart>
                         </ResponsiveContainer>
-                      </div>
-                    </div>
-                  </section>
-
-                  {/* Tabla de proyección mejorada */}
-                  <section className="bg-white rounded-lg shadow-md border-t-4 border-purple-500">
-                    <div className="bg-purple-50 p-4 md:p-6 flex justify-between items-center flex-wrap gap-3">
-                      <div className="flex items-center gap-2">
-                        <Calendar size={20} className="text-purple-500" />
-                        <h2 className="text-lg font-semibold m-0">
-                          Tabla de Proyección
-                        </h2>
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => setViewMode("monthly")}
-                          className={`px-3 py-1.5 rounded-md border border-gray-300 ${
-                            viewMode === "monthly"
-                              ? "bg-purple-500 text-white"
-                              : "bg-white text-gray-700"
-                          } text-sm cursor-pointer`}
-                        >
-                          Mensual
-                        </button>
-                        <button
-                          onClick={() => setViewMode("annual")}
-                          className={`px-3 py-1.5 rounded-md border border-gray-300 ${
-                            viewMode === "annual"
-                              ? "bg-purple-500 text-white"
-                              : "bg-white text-gray-700"
-                          } text-sm cursor-pointer`}
-                        >
-                          Anual
-                        </button>
-                      </div>
-                    </div>
-                    <div className="p-4">
-                      <p className="text-gray-500 text-sm m-0 mb-4">
-                        {viewMode === "monthly"
-                          ? "Detalle mensual de ventas históricas y proyectadas"
-                          : "Resumen anual de ventas históricas y proyectadas"}
-                      </p>
-                      <div className="overflow-x-auto">
-                        {viewMode === "monthly" ? (
-                          <>
-                            {/* Tabla de condiciones iniciales (CI y K) */}
-                            <div className="mb-6 bg-gray-100 p-4 rounded-lg">
-                              <h3 className="text-lg font-semibold mt-0 mb-3">
-                                Condiciones Iniciales del Modelo
-                              </h3>
-                              <table className="w-full border-collapse border border-gray-300">
-                                <thead className="bg-gray-800 text-white">
-                                  <tr>
-                                    <th className="p-3 text-center font-bold border border-gray-700">
-                                      Parámetro
-                                    </th>
-                                    <th className="p-3 text-center font-bold border border-gray-700">
-                                      P = ventas totales
-                                    </th>
-                                    <th className="p-3 text-center font-bold border border-gray-700">
-                                      t = Tiempo en meses
-                                    </th>
-                                    <th className="p-3 text-center font-bold border border-gray-700">
-                                      Fecha
-                                    </th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  <tr className="bg-blue-50">
-                                    <td className="p-3 text-center font-bold border border-gray-300">
-                                      Enero
-                                    </td>
-                                    <td className="p-3 text-center border border-gray-300">
-                                      {selectedVariant?.salesData?.history[0]
-                                        ?.sales || 0}{" "}
-                                      Ventas totales
-                                    </td>
-                                    <td className="p-3 text-center border border-gray-300">
-                                      0 meses
-                                    </td>
-                                    <td className="p-3 text-center font-medium border border-gray-300">
-                                      31/01/2025
-                                    </td>
-                                  </tr>
-                                  <tr className="bg-blue-50">
-                                    <td className="p-3 text-center font-bold border border-gray-300">
-                                      Febrero
-                                    </td>
-                                    <td className="p-3 text-center border border-gray-300">
-                                      {selectedVariant?.salesData?.history[1]
-                                        ?.sales || 0}{" "}
-                                      Ventas totales
-                                    </td>
-                                    <td className="p-3 text-center border border-gray-300">
-                                      1 mes
-                                    </td>
-                                    <td className="p-3 text-center font-medium border border-gray-300">
-                                      28/02/2025
-                                    </td>
-                                  </tr>
-                                </tbody>
-                              </table>
-                              <div className="mt-3 text-center">
-                                <p className="font-semibold m-0 mb-1">
-                                  Ecuación de proyección: P = ce<sup>kt</sup>{" "}
-                                  (modelo de crecimiento exponencial)
-                                </p>
-                                <p className="text-sm text-gray-500 m-0">
-                                  Donde P = Ventas totales, c = ventas
-                                  iniciales, t = tiempo, k = tasa de crecimiento
-                                  (
-                                  {(
-                                    calculateGrowthRate(
-                                      selectedVariant?.salesData?.history || []
-                                    ) * 100
-                                  ).toFixed(1)}
-                                  % mensual)
-                                </p>
-                              </div>
-                            </div>
-
-                            {/* Tabla de proyección mensual */}
-                            <table className="w-full border-collapse">
-                              <thead className="bg-slate-100">
-                                <tr>
-                                  <th className="p-3 text-left font-semibold border-b border-gray-200">
-                                    Mes
-                                  </th>
-                                  <th className="p-3 text-left font-semibold border-b border-gray-200">
-                                    Ventas Proyectadas
-                                  </th>
-                                  <th className="p-3 text-left font-semibold border-b border-gray-200">
-                                    Crecimiento
-                                  </th>
-                                  <th className="p-3 text-left font-semibold border-b border-gray-200">
-                                    Ventas totales
-                                  </th>
-                                  <th className="p-3 text-left font-semibold border-b border-gray-200">
-                                    Stock Restante
-                                  </th>
-                                  <th className="p-3 text-left font-semibold border-b border-gray-200">
-                                    Estado
-                                  </th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {salesProjectionData.map((month, index) => {
-                                  const isHistorical = month.isHistorical;
-                                  const prevMonth =
-                                    index > 0
-                                      ? salesProjectionData[index - 1].sales
-                                      : null;
-                                  const growthRate = prevMonth
-                                    ? ((month.sales - prevMonth) / prevMonth) *
-                                      100
-                                    : null;
-                                  const cumulativeSales = month.cumulativeSales;
-                                  const salesFromMarch =
-                                    month.month >= 2
-                                      ? salesProjectionData
-                                          .filter(
-                                            (m) =>
-                                              m.month >= 2 &&
-                                              m.month <= month.month
-                                          )
-                                          .reduce((sum, m) => sum + m.sales, 0)
-                                      : 0;
-                                  const remainingStock = Math.max(
-                                    0,
-                                    selectedVariant.stock - salesFromMarch
-                                  );
-                                  const isStockOut =
-                                    remainingStock === 0 && cumulativeSales > 0;
-
-                                  return (
-                                    <tr
-                                      key={month.month}
-                                      className={`${
-                                        isStockOut
-                                          ? "bg-amber-50"
-                                          : isHistorical
-                                          ? "bg-blue-50/30"
-                                          : "bg-purple-50/30"
-                                      }`}
-                                    >
-                                      <td className="p-3 border-b border-gray-200 font-medium">
-                                        {month.monthName}{" "}
-                                        {new Date().getFullYear()}
-                                      </td>
-                                      <td className="p-3 border-b border-gray-200 font-bold">
-                                        {month.sales} unidades
-                                        {!isHistorical && (
-                                          <span className="ml-2 text-xs text-purple-500 font-normal">
-                                            (Proyección)
-                                          </span>
-                                        )}
-                                      </td>
-                                      <td className="p-3 border-b border-gray-200">
-                                        {renderGrowthIndicator(growthRate)}
-                                      </td>
-                                      <td className="p-3 border-b border-gray-200 font-bold">
-                                        {month.cumulativeSales} unidades
-                                      </td>
-                                      <td className="p-3 border-b border-gray-200">
-                                        {month.month >= 2 ? (
-                                          <span
-                                            className={`inline-block px-2 py-0.5 rounded-full text-sm ${
-                                              remainingStock < 5
-                                                ? "bg-red-100 text-red-700 border border-red-200"
-                                                : remainingStock < 10
-                                                ? "bg-indigo-100 text-indigo-800 border border-indigo-200"
-                                                : "bg-gray-100 text-gray-700 border border-gray-200"
-                                            }`}
-                                          >
-                                            {remainingStock} unidades
-                                          </span>
-                                        ) : (
-                                          <span className="text-gray-400">
-                                            -
-                                          </span>
-                                        )}
-                                      </td>
-                                      <td className="p-3 border-b border-gray-200">
-                                        {isStockOut ? (
-                                          <span className="inline-block px-2 py-0.5 rounded-full text-sm bg-amber-100 text-amber-800 border border-amber-200">
-                                            Agotamiento
-                                          </span>
-                                        ) : isHistorical ? (
-                                          <span className="inline-block px-2 py-0.5 rounded-full text-sm bg-blue-100 text-blue-800 border border-blue-200">
-                                            Histórico
-                                          </span>
-                                        ) : (
-                                          <span className="inline-block px-2 py-0.5 rounded-full text-sm bg-purple-100 text-purple-800 border border-purple-200">
-                                            Proyección
-                                          </span>
-                                        )}
-                                      </td>
-                                    </tr>
-                                  );
-                                })}
-                              </tbody>
-                            </table>
-                          </>
-                        ) : (
-                          <table className="w-full border-collapse">
-                            <thead className="bg-slate-100">
-                              <tr>
-                                <th className="p-3 text-left font-semibold border-b border-gray-200">
-                                  Año
-                                </th>
-                                <th className="p-3 text-left font-semibold border-b border-gray-200">
-                                  Ventas Totales
-                                </th>
-                                <th className="p-3 text-left font-semibold border-b border-gray-200">
-                                  Tipo
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {annualProjectionData.map((yearData) => (
-                                <tr
-                                  key={yearData.year}
-                                  className={`${
-                                    yearData.isHistorical
-                                      ? "bg-blue-50/30"
-                                      : "bg-purple-50/30"
-                                  }`}
-                                >
-                                  <td className="p-3 text-left font-medium border-b border-gray-200">
-                                    {yearData.year}
-                                  </td>
-                                  <td className="p-3 text-left font-bold border-b border-gray-200">
-                                    {yearData.sales} unidades
-                                    {!yearData.isHistorical && (
-                                      <span className="ml-2 text-xs text-purple-500 font-normal">
-                                        (Incluye proyección)
-                                      </span>
-                                    )}
-                                  </td>
-                                  <td className="p-3 text-left border-b border-gray-200">
-                                    {yearData.isHistorical ? (
-                                      <span className="inline-block px-2 py-0.5 rounded-full text-sm bg-blue-100 text-blue-800 border border-blue-200">
-                                        Datos Históricos
-                                      </span>
-                                    ) : (
-                                      <span className="inline-block px-2 py-0.5 rounded-full text-sm bg-purple-100 text-purple-800 border border-purple-200">
-                                        Proyección
-                                      </span>
-                                    )}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        )}
-                      </div>
-                    </div>
-                    <div className="bg-slate-50 p-3 md:p-6 rounded-b-lg text-sm text-gray-500">
-                      <div className="flex items-center gap-2">
-                        <Calendar size={16} />
-                        <span>
-                          Proyecciones basadas en datos históricos de Enero y
-                          Febrero 2024
-                        </span>
                       </div>
                     </div>
                   </section>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ShoppingCart, Check } from "lucide-react";
 import { motion } from "framer-motion";
 import { useCart } from "@/context/CartConrexr";
+import Swal from "sweetalert2";
 
 interface AddToCartButtonProps {
   product: any;
@@ -22,47 +23,90 @@ export default function AddToCartButton({
   fullWidth = false,
   showIcon = true,
 }: AddToCartButtonProps) {
-  const { addItem } = useCart();
+  const { addItem, loading } = useCart();
   const [isAdded, setIsAdded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (variant.stock <= 0) return;
 
     setIsLoading(true);
 
-    // Simulate a small delay for better UX
-    setTimeout(() => {
-      addItem(product, variant, quantity);
-      setIsLoading(false);
+    try {
+      // Call the addItem function from the cart context
+      await addItem(product, variant, quantity);
+
+      // Show success notification
+      Swal.fire({
+        title: "¡Producto añadido!",
+        text: `${product.name} ha sido añadido a tu carrito`,
+        icon: "success",
+        timer: 2000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        position: "top-end",
+        toast: true,
+        iconColor: "#3B82F6",
+        customClass: {
+          popup: "colored-toast",
+          title: "swal-title",
+          htmlContainer: "swal-text",
+        },
+      });
+
       setIsAdded(true);
 
       // Reset the added state after 2 seconds
       setTimeout(() => {
         setIsAdded(false);
       }, 2000);
-    }, 300);
+    } catch (error) {
+      // Show error notification
+      Swal.fire({
+        title: "Error",
+        text: "No se pudo añadir el producto al carrito. Inténtalo de nuevo.",
+        icon: "error",
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        position: "top-end",
+        toast: true,
+        iconColor: "#EF4444",
+        customClass: {
+          popup: "colored-toast",
+          title: "swal-title",
+          htmlContainer: "swal-text",
+        },
+      });
+
+      console.error("Error adding item to cart:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  // Use either the local loading state or the global loading state from the cart context
+  const buttonLoading = isLoading || loading;
 
   return (
     <motion.button
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       onClick={handleAddToCart}
-      disabled={variant.stock <= 0 || isAdded || isLoading}
+      disabled={variant.stock <= 0 || isAdded || buttonLoading}
       className={`flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg font-medium transition-all duration-200 ${
         variant.stock <= 0
           ? "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
           : isAdded
           ? "bg-green-600 text-white"
-          : isLoading
+          : buttonLoading
           ? "bg-blue-500 text-white"
           : "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 shadow-md"
       } ${fullWidth ? "w-full" : ""} ${className}`}
     >
       {variant.stock <= 0 ? (
         "Sin stock"
-      ) : isLoading ? (
+      ) : buttonLoading ? (
         <>
           <svg
             className="animate-spin -ml-1 mr-2 h-5 w-5 text-white"

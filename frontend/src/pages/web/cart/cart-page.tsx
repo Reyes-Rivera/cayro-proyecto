@@ -18,10 +18,10 @@ import { useCart } from "@/context/CartConrexr";
 import CartItem from "@/pages/web/cart/components/cart-item";
 import CartSummary from "@/pages/web/cart/components/cart-summary";
 import EmptyCart from "@/pages/web/cart/components/empty-cart";
+import Swal from "sweetalert2";
 
 export default function CartPage() {
   const { items, clearCart, itemCount } = useCart();
-  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [estimatedDelivery, setEstimatedDelivery] = useState("");
 
   // Calculate estimated delivery date (3-5 business days from now)
@@ -58,6 +58,30 @@ export default function CartPage() {
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
+  };
+
+  const handleClearCart = async () => {
+    // Ask for confirmation
+    const result = await Swal.fire({
+      title: "¿Vaciar carrito?",
+      text: "¿Estás seguro de que deseas eliminar todos los productos de tu carrito?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí, vaciar carrito",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#EF4444",
+      cancelButtonColor: "#6B7280",
+      reverseButtons: true,
+      focusCancel: true,
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await clearCart();
+      } catch (error) {
+        console.error("Error clearing cart:", error);
+      }
+    }
   };
 
   if (items.length === 0) {
@@ -118,38 +142,15 @@ export default function CartPage() {
             </motion.div>
 
             <div className="flex gap-4">
-              {showClearConfirm ? (
-                <div className="flex items-center gap-2 bg-white dark:bg-gray-800 p-2 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-                  <span className="text-sm text-gray-700 dark:text-gray-300">
-                    ¿Vaciar carrito?
-                  </span>
-                  <button
-                    onClick={() => {
-                      clearCart();
-                      setShowClearConfirm(false);
-                    }}
-                    className="px-3 py-1 bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 rounded-md text-sm font-medium hover:bg-red-200 dark:hover:bg-red-900/50"
-                  >
-                    Sí
-                  </button>
-                  <button
-                    onClick={() => setShowClearConfirm(false)}
-                    className="px-3 py-1 bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 rounded-md text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600"
-                  >
-                    No
-                  </button>
-                </div>
-              ) : (
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setShowClearConfirm(true)}
-                  className="px-4 py-2 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center gap-2"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Vaciar carrito
-                </motion.button>
-              )}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleClearCart}
+                className="px-4 py-2 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                Vaciar carrito
+              </motion.button>
 
               <motion.div
                 whileHover={{ scale: 1.05 }}
@@ -301,43 +302,7 @@ export default function CartPage() {
           <div className="lg:col-span-1">
             <CartSummary />
 
-            {/* Recommended Products */}
-            <div className="mt-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-              <h3 className="font-medium text-gray-900 dark:text-white mb-4">
-                Recomendados para ti
-              </h3>
-              <div className="space-y-4">
-                {[1, 2].map((item) => (
-                  <div key={item} className="flex items-center gap-3">
-                    <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-md overflow-hidden flex-shrink-0">
-                      <img
-                        src={`/placeholder.svg?height=64&width=64&text=Producto+${item}`}
-                        alt={`Producto recomendado ${item}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                        Producto recomendado {item}
-                      </h4>
-                      <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">
-                        $29.99
-                      </p>
-                    </div>
-                    <button className="p-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-md hover:bg-blue-200 dark:hover:bg-blue-900/50">
-                      <ShoppingCart className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-                <Link
-                  to="/productos"
-                  className="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center justify-center mt-2"
-                >
-                  Ver más recomendaciones
-                  <ChevronRight className="w-4 h-4 ml-1" />
-                </Link>
-              </div>
-            </div>
+          
 
             {/* Help Section */}
             <div className="mt-6 bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 border border-gray-200 dark:border-gray-700">

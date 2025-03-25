@@ -5,32 +5,113 @@ import { Trash2, Minus, Plus, Heart, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/context/CartConrexr";
 import { Link } from "react-router-dom";
+import Swal from "sweetalert2";
 
 interface CartItemProps {
   item: any;
 }
 
 export default function CartItem({ item }: CartItemProps) {
-  const { updateQuantity, removeItem } = useCart();
+  const { updateQuantity, removeItem, loading } = useCart();
   const [isRemoving, setIsRemoving] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showStockWarning, setShowStockWarning] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  const handleRemove = () => {
-    setIsRemoving(true);
-    // Small delay to allow animation to complete
-    setTimeout(() => {
-      removeItem(item.id);
-    }, 300);
+  const handleRemove = async () => {
+    // Ask for confirmation
+    const result = await Swal.fire({
+      title: "¿Eliminar producto?",
+      text: `¿Estás seguro de eliminar ${item.product.name} de tu carrito?`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#EF4444",
+      cancelButtonColor: "#6B7280",
+      reverseButtons: true,
+      focusCancel: true,
+      position: "center",
+    });
+
+    if (result.isConfirmed) {
+      setIsRemoving(true);
+
+      try {
+        await removeItem(item.id);
+
+        // Show success notification
+        Swal.fire({
+          title: "Producto eliminado",
+          text: "El producto ha sido eliminado de tu carrito",
+          icon: "success",
+          timer: 2000,
+          timerProgressBar: true,
+          showConfirmButton: false,
+          position: "top-end",
+          toast: true,
+        });
+      } catch (error) {
+        console.error("Error removing item:", error);
+
+        // Show error notification
+        Swal.fire({
+          title: "Error",
+          text: "No se pudo eliminar el producto. Inténtalo de nuevo.",
+          icon: "error",
+          timer: 3000,
+          timerProgressBar: true,
+          showConfirmButton: false,
+          position: "top-end",
+          toast: true,
+        });
+
+        setIsRemoving(false);
+      }
+    }
   };
 
-  const handleQuantityChange = (newQuantity: number) => {
+  const handleQuantityChange = async (newQuantity: number) => {
     if (newQuantity >= 1) {
       if (newQuantity <= item.variant.stock) {
-        updateQuantity(item.id, newQuantity);
-        setShowStockWarning(false);
+        setIsUpdating(true);
+
+        try {
+          await updateQuantity(item.id, newQuantity);
+          setShowStockWarning(false);
+        } catch (error) {
+          console.error("Error updating quantity:", error);
+
+          // Show error notification
+          Swal.fire({
+            title: "Error",
+            text: "No se pudo actualizar la cantidad. Inténtalo de nuevo.",
+            icon: "error",
+            timer: 3000,
+            timerProgressBar: true,
+            showConfirmButton: false,
+            position: "top-end",
+            toast: true,
+          });
+        } finally {
+          setIsUpdating(false);
+        }
       } else {
         setShowStockWarning(true);
+
+        // Show stock warning notification
+        Swal.fire({
+          title: "Stock limitado",
+          text: `Solo hay ${item.variant.stock} unidades disponibles`,
+          icon: "warning",
+          timer: 3000,
+          timerProgressBar: true,
+          showConfirmButton: false,
+          position: "top-end",
+          toast: true,
+          iconColor: "#F59E0B",
+        });
+
         setTimeout(() => setShowStockWarning(false), 3000);
       }
     }
@@ -38,10 +119,26 @@ export default function CartItem({ item }: CartItemProps) {
 
   const handleSaveForLater = () => {
     setIsSaving(true);
+
+    // Simulate saving for later
     setTimeout(() => {
+      Swal.fire({
+        title: "Guardado",
+        text: "Producto guardado para más tarde",
+        icon: "success",
+        timer: 2000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        position: "top-end",
+        toast: true,
+      });
+
       setIsSaving(false);
     }, 1000);
   };
+
+  // Determine if any loading state is active
+  const isLoading = loading || isUpdating;
 
   return (
     <motion.div
@@ -66,6 +163,44 @@ export default function CartItem({ item }: CartItemProps) {
           >
             <AlertCircle className="w-3 h-3 mr-1" />
             Solo hay {item.variant.stock} unidades disponibles
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Loading Overlay */}
+      <AnimatePresence>
+        {isLoading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-white/50 dark:bg-gray-800/50 flex items-center justify-center z-10"
+          >
+            <div className="flex items-center space-x-2">
+              <svg
+                className="animate-spin h-5 w-5 text-blue-600 dark:text-blue-400"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              <span className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+                Actualizando...
+              </span>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -130,7 +265,7 @@ export default function CartItem({ item }: CartItemProps) {
           <div className="flex items-center">
             <button
               onClick={() => handleQuantityChange(item.quantity - 1)}
-              disabled={item.quantity <= 1}
+              disabled={item.quantity <= 1 || isLoading}
               className="p-1 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 disabled:opacity-50 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
               aria-label="Decrease quantity"
             >
@@ -148,12 +283,13 @@ export default function CartItem({ item }: CartItemProps) {
                   handleQuantityChange(val);
                 }
               }}
-              className="mx-1 w-12 text-center py-1 border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
+              disabled={isLoading}
+              className="mx-1 w-12 text-center py-1 border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm disabled:opacity-70"
             />
 
             <button
               onClick={() => handleQuantityChange(item.quantity + 1)}
-              disabled={item.quantity >= item.variant.stock}
+              disabled={item.quantity >= item.variant.stock || isLoading}
               className="p-1 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 disabled:opacity-50 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
               aria-label="Increase quantity"
             >
@@ -172,7 +308,8 @@ export default function CartItem({ item }: CartItemProps) {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleSaveForLater}
-              className="p-1.5 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors flex items-center text-xs font-medium"
+              disabled={isLoading}
+              className="p-1.5 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors flex items-center text-xs font-medium disabled:opacity-50"
               aria-label="Save for later"
             >
               <Heart
@@ -187,7 +324,8 @@ export default function CartItem({ item }: CartItemProps) {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleRemove}
-              className="p-1.5 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors flex items-center text-xs font-medium"
+              disabled={isLoading}
+              className="p-1.5 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors flex items-center text-xs font-medium disabled:opacity-50"
               aria-label="Remove item"
             >
               <Trash2 className="w-4 h-4 mr-1" />

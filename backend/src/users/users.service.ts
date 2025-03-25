@@ -553,7 +553,6 @@ export class UsersService {
         passwordExpiresAt,
         passwordSetAt,
         securityAnswer,
-        securityQuestionId,
         ...rest
       } = user;
       return { ...rest };

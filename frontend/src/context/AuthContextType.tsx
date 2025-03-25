@@ -75,11 +75,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const res = await loginApi({ email, password });
       if (res) {
-        setEmailToVerify(email);
-        setIsVerificationPending(true);
-        localStorage.setItem("emailToVerify", email);
-        localStorage.setItem("isVerificationPending", "true");
-        return res.data; // Retorna los datos del usuario si el inicio de sesión es exitoso
+        // localStorage.setItem("token", res.data.token);
+        setAuth(true);
+        setUser(res.data.user);
+        setLoading(true);
+        setTimeout(() => setLoading(false), 2000);
+        return res?.data.user;
       }
     } catch (error: any) {
       if (

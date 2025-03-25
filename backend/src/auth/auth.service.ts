@@ -338,30 +338,41 @@ export class AuthService {
           where: { email: loginDto.email },
           data: { loginAttempts: 0 },
         });
-
-        if (userFound.active === true) {
-          await this.sendCode(loginDto.email);
-        }
       } else {
         // Empleado
         await this.prismaService.employee.update({
           where: { email: loginDto.email },
           data: { loginAttempts: 0 },
         });
-
-        await this.sendCode(loginDto.email);
       }
-
-      // Excluir información sensible
+      let expiresIn: any;
+      switch (userFound.role) {
+        case Role.ADMIN:
+          expiresIn = '8h';
+          break;
+        case Role.USER:
+          expiresIn = '1d';
+          break;
+        case Role.EMPLOYEE:
+          expiresIn = '4h';
+          break;
+        default:
+          expiresIn = '1h';
+      }
       const {
         password,
-        passwordsHistory,
         passwordExpiresAt,
         passwordSetAt,
+        passwordsHistory,
         ...rest
       } = userFound;
-
-      return { ...rest };
+      const payload = {
+        sub: userFound.id,
+        role: userFound.role,
+        email: userFound.email,
+      };
+      const token = this.jwtSvc.sign(payload, { expiresIn });
+      return { user: { ...rest }, token };
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;

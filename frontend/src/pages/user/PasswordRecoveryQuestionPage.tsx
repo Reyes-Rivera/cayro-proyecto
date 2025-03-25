@@ -41,14 +41,14 @@ type QuestionData = {
 export default function PasswordRecoveryQuestionPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [questions, setQuestions] = useState<QuestionData[]>([]);
-  const [currentStep, setCurrentStep] = useState(1); // Step 1: Email, Step 2: Security Question, Step 3: Success
-
+  const [currentStep, setCurrentStep] = useState(1); 
   const {
     register,
     handleSubmit,
     formState: { errors },
     watch,
     clearErrors,
+    setValue
   } = useForm<FormData>({
     defaultValues: {
       email: "",
@@ -67,7 +67,7 @@ export default function PasswordRecoveryQuestionPage() {
       });
       if (isValid) {
         setIsSubmitting(true);
-        // Simulate API call to verify email exists
+        setValue("securityQuestion", isValid?.data?.securityQuestionId);
         setTimeout(() => {
           setIsSubmitting(false);
           setCurrentStep(2);

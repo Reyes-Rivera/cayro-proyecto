@@ -1,30 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Swal from "sweetalert2";
-import "sweetalert2/dist/sweetalert2.min.css";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  User,
-  Mail,
-  Phone,
-  Calendar,
-  Edit,
-  Save,
-  X,
-  UserCircle,
-  AlertCircle,
-  Award,
-  Zap,
-  Loader2,
-  Shield,
-  ArrowRight,
-} from "lucide-react";
-import img from "../assets/rb_859.png";
-import { useAuth } from "@/context/AuthContextType";
-import { type SubmitHandler, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { updateUser } from "@/api/users";
-import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContextType";
 
 interface ProfileFormData {
   name: string;
@@ -35,8 +14,9 @@ interface ProfileFormData {
   gender: string;
 }
 
-const ProfileView = () => {
-  const [isEditing, setIsEditing] = useState(false);
+export default function UserProfile() {
+  const [isEditable, setIsEditable] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const {
     user,
     verifyUser,
@@ -44,7 +24,7 @@ const ProfileView = () => {
     setEmailToVerify,
     setIsVerificationPending,
   } = useAuth();
-  const navigate = useNavigate();
+
   const {
     register,
     handleSubmit,
@@ -63,601 +43,805 @@ const ProfileView = () => {
     },
   });
 
-  const handleCancel = () => {
-    setIsEditing(false);
-    reset();
+  const toggleEditable = () => {
+    if (isEditable) {
+      // If we're turning off editing, reset the form
+      reset();
+    }
+    setIsEditable(!isEditable);
   };
 
-  const onSubmit: SubmitHandler<ProfileFormData> = async (data) => {
+  const onSubmit = async (data: ProfileFormData) => {
+    if (!isEditable) return;
+
     try {
       setIsSubmitting(true);
       const res = await updateUser(Number(user?.id), data);
-      localStorage.setItem("emailToVerify", data.email);
-      setEmailToVerify(data.email);
-      setIsVerificationPending(true);
+
       if (
         res.data.message ===
         "Correo actualizado. Se ha enviado un código de verificación."
       ) {
-        navigate("/codigo-verificacion");
-        Swal.fire({
-          icon: "success",
-          title: "Perfil actualizado",
-          text: "Confirma que eres tú. Revisa tu correo electrónico.",
-          confirmButtonColor: "#3B82F6",
-          toast: true,
-          position: "top-end",
-          showConfirmButton: false,
-          timer: 3000,
-          timerProgressBar: true,
-        });
+        localStorage.setItem("emailToVerify", data.email);
+        setEmailToVerify(data.email);
+        setIsVerificationPending(true);
+
+        alert(
+          "Perfil actualizado. Confirma que eres tú. Revisa tu correo electrónico."
+        );
         await signOut();
         window.scrollTo(0, 0);
         return;
       }
+
       if (res) {
-        Swal.fire({
-          icon: "success",
-          title: "Perfil actualizado",
-          text: "Su información personal ha sido actualizada correctamente.",
-          confirmButtonColor: "#3B82F6",
-          toast: true,
-          position: "top-end",
-          showConfirmButton: false,
-          timer: 3000,
-          timerProgressBar: true,
-        });
+        alert("Su información personal ha sido actualizada correctamente.");
         await verifyUser();
-        setIsEditing(false);
+        setIsEditable(false);
         window.scrollTo(0, 0);
       }
-      setIsSubmitting(false);
     } catch (error: any) {
+      alert(error.response?.data?.message || "Error al actualizar el perfil");
+    } finally {
       setIsSubmitting(false);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: error.response.data.message,
-        confirmButtonColor: "#EF4444",
-      });
     }
   };
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   return (
-    <div>
-      {/* Profile header */}
-      <div className="mb-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-3 rounded-xl shadow-md">
-              <User className="w-6 h-6" />
-            </div>
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+    <div className="w-full max-w-6xl mx-auto">
+      <div className="relative bg-white dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-2xl border border-blue-100 dark:border-blue-900/40 overflow-hidden">
+        {/* Decorative elements */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-400/10 to-purple-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-blue-400/10 to-indigo-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+
+        <div className="relative">
+          <div className="flex items-center justify-between p-6 border-b border-blue-100 dark:border-gray-700/50">
+            <div className="flex items-center gap-4">
+              <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-3 rounded-xl shadow-lg">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
                 Información Personal
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-1">
-                Administra tu información personal y mantén tus datos
-                actualizados
-              </p>
+              </h2>
             </div>
+            <button
+              onClick={toggleEditable}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all ${
+                isEditable
+                  ? "bg-white text-gray-700 border border-gray-200 hover:bg-gray-100"
+                  : "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+              }`}
+            >
+              {isEditable ? (
+                <>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                  Cancelar
+                </>
+              ) : (
+                <>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                    />
+                  </svg>
+                  Editar Perfil
+                </>
+              )}
+            </button>
           </div>
 
-          {!isEditing ? (
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => setIsEditing(true)}
-              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-md"
-            >
-              <Edit className="w-4 h-4" />
-              <span>Editar perfil</span>
-            </motion.button>
-          ) : (
-            <div className="flex items-center gap-3">
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={handleCancel}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-              >
-                <X className="w-4 h-4" />
-                <span>Cancelar</span>
-              </motion.button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Profile content */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-700">
-        <AnimatePresence mode="wait">
-          {isEditing ? (
-            <motion.div
-              key="edit-form"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="p-6 md:p-8"
-            >
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                <div className="flex flex-col md:flex-row gap-10">
-                  {/* Avatar section */}
-                  <div className="flex flex-col items-center gap-5 md:w-1/3">
-                    <div className="relative group">
-                      <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-500 rounded-full blur-md opacity-50 group-hover:opacity-70 transition-opacity duration-300"></div>
-                      <div className="relative w-40 h-40 rounded-full overflow-hidden border-4 border-white dark:border-gray-700 shadow-xl">
-                        <img
-                          src={img || "/placeholder.svg?height=160&width=160"}
-                          alt="Avatar del usuario"
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="text-center">
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                        {user?.name} {user?.surname}
-                      </h3>
-                      <p className="text-gray-500 dark:text-gray-400 mt-1">
-                        {user?.email}
-                      </p>
-                    </div>
-
-                    {/* Activity info */}
-                    <div className="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-xl w-full text-center border border-blue-100 dark:border-blue-800/30 shadow-sm">
-                      <div className="flex items-center justify-center gap-2 mb-2">
-                        <Award className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                        <p className="font-medium text-gray-800 dark:text-gray-200">
-                          Miembro desde 2025
-                        </p>
-                      </div>
-                      <div className="flex items-center justify-center gap-2">
-                        <Zap className="w-5 h-5 text-blue-500 dark:text-blue-400" />
-                        <p className="text-gray-700 dark:text-gray-300">
-                          Última actividad: Hoy
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Form fields */}
-                  <div className="flex-1">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <label
-                          htmlFor="name"
-                          className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center"
-                        >
-                          <User className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                          Nombre
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="text"
-                            id="name"
-                            className={`block w-full rounded-xl border ${
-                              errors.name
-                                ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                                : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
-                            } bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3.5 shadow-sm transition-colors focus:outline-none`}
-                            {...register("name", {
-                              required: "El nombre es obligatorio",
-                            })}
-                          />
-                          {errors.name && (
-                            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                              <AlertCircle className="h-5 w-5 text-red-500" />
-                            </div>
-                          )}
-                        </div>
-                        {errors.name && (
-                          <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
-                            <AlertCircle className="h-4 w-4" />
-                            {errors.name.message}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <label
-                          htmlFor="surname"
-                          className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center"
-                        >
-                          <User className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                          Apellido
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="text"
-                            id="surname"
-                            className={`block w-full rounded-xl border ${
-                              errors.surname
-                                ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                                : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
-                            } bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3.5 shadow-sm transition-colors focus:outline-none`}
-                            {...register("surname", {
-                              required: "Los apellidos son obligatorios",
-                            })}
-                          />
-                          {errors.surname && (
-                            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                              <AlertCircle className="h-5 w-5 text-red-500" />
-                            </div>
-                          )}
-                        </div>
-                        {errors.surname && (
-                          <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
-                            <AlertCircle className="h-4 w-4" />
-                            {errors.surname.message}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <label
-                          htmlFor="email"
-                          className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center"
-                        >
-                          <Mail className="w-4 h-4 mr-2 text-blue-500 dark:text-blue-400" />
-                          Correo electrónico
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="email"
-                            id="email"
-                            className={`block w-full rounded-xl border ${
-                              errors.email
-                                ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                                : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
-                            } bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3.5 shadow-sm transition-colors focus:outline-none`}
-                            required
-                            {...register("email", {
-                              required: "El correo es obligatorio",
-                              pattern: {
-                                value:
-                                  /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                                message: "Correo electrónico no válido",
-                              },
-                            })}
-                          />
-                          {errors.email && (
-                            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                              <AlertCircle className="h-5 w-5 text-red-500" />
-                            </div>
-                          )}
-                        </div>
-                        {errors.email && (
-                          <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
-                            <AlertCircle className="h-4 w-4" />
-                            {errors.email.message}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <label
-                          htmlFor="phone"
-                          className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center"
-                        >
-                          <Phone className="w-4 h-4 mr-2 text-blue-500 dark:text-blue-400" />
-                          Teléfono
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="tel"
-                            id="phone"
-                            className={`block w-full rounded-xl border ${
-                              errors.phone
-                                ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                                : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
-                            } bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3.5 shadow-sm transition-colors focus:outline-none`}
-                            {...register("phone", {
-                              required: "El teléfono es obligatorio",
-                              pattern: {
-                                value: /^[0-9]{10}$/,
-                                message:
-                                  "El teléfono debe tener 10 dígitos numéricos",
-                              },
-                            })}
-                          />
-                          {errors.phone && (
-                            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                              <AlertCircle className="h-5 w-5 text-red-500" />
-                            </div>
-                          )}
-                        </div>
-                        {errors.phone && (
-                          <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
-                            <AlertCircle className="h-4 w-4" />
-                            {errors.phone.message}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <label
-                          htmlFor="birthdate"
-                          className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center"
-                        >
-                          <Calendar className="w-4 h-4 mr-2 text-blue-500 dark:text-blue-400" />
-                          Fecha de nacimiento
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="date"
-                            id="birthdate"
-                            {...register("birthdate", {
-                              required: "La fecha de nacimiento es obligatoria",
-                            })}
-                            className={`block w-full rounded-xl border ${
-                              errors.birthdate
-                                ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                                : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
-                            } bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3.5 shadow-sm transition-colors focus:outline-none`}
-                          />
-                          {errors.birthdate && (
-                            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                              <AlertCircle className="h-5 w-5 text-red-500" />
-                            </div>
-                          )}
-                        </div>
-                        {errors.birthdate && (
-                          <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
-                            <AlertCircle className="h-4 w-4" />
-                            {errors.birthdate.message}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <label
-                          htmlFor="gender"
-                          className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center"
-                        >
-                          <UserCircle className="w-4 h-4 mr-2 text-blue-500 dark:text-blue-400" />
-                          Género
-                        </label>
-                        <div className="relative">
-                          <select
-                            id="gender"
-                            className={`block w-full rounded-xl border ${
-                              errors.gender
-                                ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                                : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
-                            } bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3.5 shadow-sm transition-colors focus:outline-none`}
-                            {...register("gender", {
-                              required: "El género es obligatorio",
-                            })}
-                          >
-                            <option value="">Seleccionar</option>
-                            <option value="MALE">Masculino</option>
-                            <option value="FEMALE">Femenino</option>
-                            <option value="UNISEX">Otro</option>
-                          </select>
-                          {errors.gender && (
-                            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                              <AlertCircle className="h-5 w-5 text-red-500" />
-                            </div>
-                          )}
-                        </div>
-                        {errors.gender && (
-                          <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
-                            <AlertCircle className="h-4 w-4" />
-                            {errors.gender.message}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-lg p-4 text-sm text-blue-800 dark:text-blue-300 flex items-start mt-6">
-                      <Shield className="w-5 h-5 mr-3 mt-0.5 flex-shrink-0 text-blue-600 dark:text-blue-400" />
-                      <div>
-                        <p className="font-medium mb-1">
-                          Información importante
-                        </p>
-                        <p>
-                          Si cambias tu correo electrónico, necesitarás
-                          verificarlo nuevamente a través de un código que
-                          enviaremos a tu nueva dirección.
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end pt-6 border-t border-gray-200 dark:border-gray-700 mt-6">
-                      <motion.button
-                        whileHover={{ scale: 1.03 }}
-                        whileTap={{ scale: 0.97 }}
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-xl shadow-md hover:from-blue-700 hover:to-blue-800 transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed relative overflow-hidden group"
-                      >
-                        <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-500/0 via-blue-500/30 to-blue-500/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
-                        {isSubmitting ? (
-                          <>
-                            <Loader2 className="animate-spin h-5 w-5" />
-                            <span>Guardando...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Save className="h-5 w-5" />
-                            <span>Guardar Cambios</span>
-                          </>
-                        )}
-                      </motion.button>
-                    </div>
-                  </div>
-                </div>
-              </form>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="profile-view"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="p-6 md:p-8"
-            >
-              <div className="flex flex-col md:flex-row gap-10">
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <div className="p-6">
+              <div className="flex flex-col md:flex-row gap-8">
                 {/* Avatar section */}
-                <div className="flex flex-col items-center gap-5 md:w-1/3">
-                  <div className="relative group">
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-500 rounded-full blur-md opacity-50 group-hover:opacity-70 transition-opacity duration-300"></div>
-                    <div className="relative w-40 h-40 rounded-full overflow-hidden border-4 border-white dark:border-gray-700 shadow-xl">
-                      <img
-                        src={img || "/placeholder.svg?height=160&width=160"}
-                        alt="Avatar del usuario"
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
+                <div className="md:w-1/3 flex flex-col items-center">
+                  <div className="relative mb-6 group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-purple-500 to-indigo-500 rounded-full blur-lg opacity-70 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></div>
+                    <div className="relative w-36 h-36 rounded-full overflow-hidden border-4 border-white dark:border-gray-800 shadow-xl">
+                      <div className="w-full h-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-5xl">
+                        {user?.name?.charAt(0) || "U"}
+                      </div>
                     </div>
+                    <button
+                      type="button"
+                      disabled={!isEditable}
+                      className={`absolute bottom-0 right-0 p-3 rounded-full shadow-lg ${
+                        isEditable
+                          ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white cursor-pointer hover:scale-110 transition-transform"
+                          : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      }`}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-5 h-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                      </svg>
+                    </button>
                   </div>
 
                   <div className="text-center">
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                       {user?.name} {user?.surname}
                     </h3>
-                    <p className="text-gray-500 dark:text-gray-400 mt-1">
+                    <div className="flex items-center justify-center gap-2 mt-2">
+                      <span className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-sm font-medium px-3 py-1 rounded-full shadow-md">
+                        Premium
+                      </span>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-4 h-4 text-amber-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                        />
+                      </svg>
+                    </div>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">
                       {user?.email}
                     </p>
                   </div>
 
-                  {/* Activity info */}
-                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 p-4 rounded-xl w-full text-center border border-blue-100 dark:border-blue-800/30 shadow-sm">
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                      <Award className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                      <p className="font-medium text-gray-800 dark:text-gray-200">
-                        Miembro desde 2025
+                  <div className="mt-6 w-full bg-white/80 dark:bg-gray-800/50 backdrop-blur-sm p-5 rounded-xl border border-blue-100 dark:border-blue-900/30 shadow-lg">
+                    <div className="flex items-center gap-3 mb-3">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-5 h-5 text-blue-600 dark:text-blue-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M20.618 5.984A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016zM12 9v2m0 4h.01"
+                        />
+                      </svg>
+                      <p className="font-semibold text-gray-800 dark:text-gray-200">
+                        Información importante
                       </p>
                     </div>
-                    <div className="flex items-center justify-center gap-2">
-                      <Zap className="w-5 h-5 text-blue-500 dark:text-blue-400" />
-                      <p className="text-gray-700 dark:text-gray-300">
-                        Última actividad: Hoy
-                      </p>
-                    </div>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm">
+                      Si cambias tu correo electrónico, necesitarás verificarlo
+                      nuevamente a través de un código que enviaremos a tu nueva
+                      dirección.
+                    </p>
                   </div>
                 </div>
 
-                {/* Profile info */}
-                <div className="flex-1">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Campos de información personal */}
-                    {[
-                      {
-                        icon: <User className="w-5 h-5" />,
-                        label: "Nombre",
-                        value: user?.name,
-                        color: "text-blue-600 dark:text-blue-400",
-                      },
-                      {
-                        icon: <User className="w-5 h-5" />,
-                        label: "Apellido",
-                        value: user?.surname,
-                        color: "text-blue-600 dark:text-blue-400",
-                      },
-                      {
-                        icon: <Mail className="w-5 h-5" />,
-                        label: "Correo electrónico",
-                        value: user?.email,
-                        color: "text-blue-500 dark:text-blue-400",
-                      },
-                      {
-                        icon: <Phone className="w-5 h-5" />,
-                        label: "Teléfono",
-                        value: user?.phone,
-                        color: "text-blue-500 dark:text-blue-400",
-                      },
-                      {
-                        icon: <Calendar className="w-5 h-5" />,
-                        label: "Fecha de nacimiento",
-                        value: user?.birthdate
-                          ? new Date(user.birthdate).toISOString().split("T")[0]
-                          : "",
-                        color: "text-blue-500 dark:text-blue-400",
-                      },
-                      {
-                        icon: <UserCircle className="w-5 h-5" />,
-                        label: "Género",
-                        value:
-                          user?.gender === "MALE"
-                            ? "Masculino"
-                            : user?.gender === "FEMALE"
-                            ? "Femenino"
-                            : user?.gender === "UNISEX"
-                            ? "Otro"
-                            : "Prefiero no decir",
-                        color: "text-blue-500 dark:text-blue-400",
-                      },
-                    ].map((field, index) => (
-                      <motion.div
-                        key={index}
-                        className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-700 p-5 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300 hover:shadow-md group"
-                        whileHover={{
-                          y: -3,
-                          boxShadow:
-                            "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-                        }}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{
-                          duration: 0.3,
-                          delay: 0.1 + index * 0.05,
-                        }}
+                {/* Form fields */}
+                <div className="md:w-2/3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    {/* Campo: Nombre */}
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="name"
+                        className="text-sm font-medium flex items-center text-gray-700 dark:text-gray-300"
                       >
-                        <div className="flex items-start gap-4">
-                          <div className={`${field.color}`}>{field.icon}</div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                              {field.label}
-                            </p>
-                            <p className="text-gray-900 dark:text-white font-semibold mt-1 text-lg">
-                              {field.value || "No especificado"}
-                            </p>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-
-                  <div className="mt-8 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-lg p-5">
-                    <div className="flex items-start gap-4">
-                      <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full">
-                        <Shield className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                          Mantén tu información actualizada
-                        </h3>
-                        <p className="text-gray-600 dark:text-gray-400">
-                          Asegúrate de que tu información de contacto esté
-                          siempre actualizada para recibir notificaciones
-                          importantes sobre tus pedidos y cuenta.
-                        </p>
-                        <motion.button
-                          whileHover={{ scale: 1.03 }}
-                          whileTap={{ scale: 0.97 }}
-                          onClick={() => setIsEditing(true)}
-                          className="mt-4 flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 rounded-lg border border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={2}
                         >
-                          <Edit className="w-4 h-4" />
-                          <span>Actualizar información</span>
-                          <ArrowRight className="w-4 h-4 ml-1" />
-                        </motion.button>
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                          />
+                        </svg>
+                        Nombre
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          id="name"
+                          disabled={!isEditable}
+                          className={`w-full rounded-xl border ${
+                            errors.name
+                              ? "border-red-500 focus:ring-red-200"
+                              : "border-blue-100 dark:border-gray-700 focus:border-blue-500"
+                          } ${
+                            !isEditable
+                              ? "bg-gray-50 text-gray-700"
+                              : "bg-white/80 dark:bg-gray-800/50"
+                          } backdrop-blur-sm p-3 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 text-gray-900 dark:text-white shadow-sm`}
+                          {...register("name", {
+                            required: "El nombre es obligatorio",
+                          })}
+                        />
+                        {errors.name && (
+                          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-5 w-5 text-red-500"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={2}
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                          </div>
+                        )}
                       </div>
+                      {errors.name && (
+                        <p className="text-sm text-red-500 flex items-center gap-1">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                          {errors.name.message}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Campo: Apellido */}
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="surname"
+                        className="text-sm font-medium flex items-center text-gray-700 dark:text-gray-300"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                          />
+                        </svg>
+                        Apellido
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          id="surname"
+                          disabled={!isEditable}
+                          className={`w-full rounded-xl border ${
+                            errors.surname
+                              ? "border-red-500 focus:ring-red-200"
+                              : "border-blue-100 dark:border-gray-700 focus:border-blue-500"
+                          } ${
+                            !isEditable
+                              ? "bg-gray-50 text-gray-700"
+                              : "bg-white/80 dark:bg-gray-800/50"
+                          } backdrop-blur-sm p-3 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 text-gray-900 dark:text-white shadow-sm`}
+                          {...register("surname", {
+                            required: "Los apellidos son obligatorios",
+                          })}
+                        />
+                        {errors.surname && (
+                          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-5 w-5 text-red-500"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={2}
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                      {errors.surname && (
+                        <p className="text-sm text-red-500 flex items-center gap-1">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                          {errors.surname.message}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Campo: Email */}
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="email"
+                        className="text-sm font-medium flex items-center text-gray-700 dark:text-gray-300"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                          />
+                        </svg>
+                        Correo electrónico
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="email"
+                          id="email"
+                          disabled={!isEditable}
+                          className={`w-full rounded-xl border ${
+                            errors.email
+                              ? "border-red-500 focus:ring-red-200"
+                              : "border-blue-100 dark:border-gray-700 focus:border-blue-500"
+                          } ${
+                            !isEditable
+                              ? "bg-gray-50 text-gray-700"
+                              : "bg-white/80 dark:bg-gray-800/50"
+                          } backdrop-blur-sm p-3 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 text-gray-900 dark:text-white shadow-sm`}
+                          required
+                          {...register("email", {
+                            required: "El correo es obligatorio",
+                            pattern: {
+                              value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                              message: "Correo electrónico no válido",
+                            },
+                          })}
+                        />
+                        {errors.email && (
+                          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-5 w-5 text-red-500"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={2}
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                      {errors.email && (
+                        <p className="text-sm text-red-500 flex items-center gap-1">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                          {errors.email.message}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Campo: Teléfono */}
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="phone"
+                        className="text-sm font-medium flex items-center text-gray-700 dark:text-gray-300"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                          />
+                        </svg>
+                        Teléfono
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="tel"
+                          id="phone"
+                          disabled={!isEditable}
+                          className={`w-full rounded-xl border ${
+                            errors.phone
+                              ? "border-red-500 focus:ring-red-200"
+                              : "border-blue-100 dark:border-gray-700 focus:border-blue-500"
+                          } ${
+                            !isEditable
+                              ? "bg-gray-50 text-gray-700"
+                              : "bg-white/80 dark:bg-gray-800/50"
+                          } backdrop-blur-sm p-3 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 text-gray-900 dark:text-white shadow-sm`}
+                          {...register("phone", {
+                            required: "El teléfono es obligatorio",
+                            pattern: {
+                              value: /^[0-9]{10}$/,
+                              message:
+                                "El teléfono debe tener 10 dígitos numéricos",
+                            },
+                          })}
+                        />
+                        {errors.phone && (
+                          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-5 w-5 text-red-500"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={2}
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                      {errors.phone && (
+                        <p className="text-sm text-red-500 flex items-center gap-1">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                          {errors.phone.message}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Campo: Fecha de nacimiento */}
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="birthdate"
+                        className="text-sm font-medium flex items-center text-gray-700 dark:text-gray-300"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
+                        </svg>
+                        Fecha de nacimiento
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="date"
+                          id="birthdate"
+                          disabled={!isEditable}
+                          {...register("birthdate", {
+                            required: "La fecha de nacimiento es obligatoria",
+                          })}
+                          className={`w-full rounded-xl border ${
+                            errors.birthdate
+                              ? "border-red-500 focus:ring-red-200"
+                              : "border-blue-100 dark:border-gray-700 focus:border-blue-500"
+                          } ${
+                            !isEditable
+                              ? "bg-gray-50 text-gray-700"
+                              : "bg-white/80 dark:bg-gray-800/50"
+                          } backdrop-blur-sm p-3 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 text-gray-900 dark:text-white shadow-sm`}
+                        />
+                        {errors.birthdate && (
+                          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-5 w-5 text-red-500"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={2}
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                      {errors.birthdate && (
+                        <p className="text-sm text-red-500 flex items-center gap-1">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                          {errors.birthdate.message}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Campo: Género */}
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="gender"
+                        className="text-sm font-medium flex items-center text-gray-700 dark:text-gray-300"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                          />
+                        </svg>
+                        Género
+                      </label>
+                      <div className="relative">
+                        <select
+                          id="gender"
+                          disabled={!isEditable}
+                          className={`w-full rounded-xl border ${
+                            errors.gender
+                              ? "border-red-500 focus:ring-red-200"
+                              : "border-blue-100 dark:border-gray-700 focus:border-blue-500"
+                          } ${
+                            !isEditable
+                              ? "bg-gray-50 text-gray-700"
+                              : "bg-white/80 dark:bg-gray-800/50"
+                          } backdrop-blur-sm p-3 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 text-gray-900 dark:text-white shadow-sm`}
+                          {...register("gender", {
+                            required: "El género es obligatorio",
+                          })}
+                        >
+                          <option value="">Seleccionar</option>
+                          <option value="MALE">Masculino</option>
+                          <option value="FEMALE">Femenino</option>
+                          <option value="UNISEX">Otro</option>
+                        </select>
+                        {errors.gender && (
+                          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-5 w-5 text-red-500"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={2}
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                      {errors.gender && (
+                        <p className="text-sm text-red-500 flex items-center gap-1">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                          {errors.gender.message}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
+
+            {isEditable && (
+              <div className="flex justify-end gap-3 p-6 border-t border-blue-100 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/30 backdrop-blur-sm">
+                <button
+                  type="button"
+                  onClick={toggleEditable}
+                  className="px-5 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors shadow-sm"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-4 h-4 mr-2 inline"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex items-center justify-center gap-2 px-6 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-medium rounded-xl shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <svg
+                        className="animate-spin h-5 w-5"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      <span>Guardando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
+                        />
+                      </svg>
+                      <span>Guardar Cambios</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </form>
+        </div>
       </div>
     </div>
   );
-};
-
-export default ProfileView;
+}

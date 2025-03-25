@@ -31,7 +31,18 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const result = await this.authService.login(loginDto);
+    res.setHeader(
+      'Set-Cookie',
+      cookie.serialize('token', result.token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        maxAge: 60 * 60 * 24 * 7,
+        path: '/',
+      }),
+    );
     return result;
+   
   }
   
   @Post('verify-code')

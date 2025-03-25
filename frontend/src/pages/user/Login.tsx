@@ -43,7 +43,13 @@ type FormData = {
 };
 
 export default function LoginPage() {
-  const { login, error, errorTimer } = useAuth();
+  const {
+    login,
+    error,
+    errorTimer,
+    setEmailToVerify,
+    setIsVerificationPending,
+  } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
@@ -103,14 +109,37 @@ export default function LoginPage() {
 
     try {
       const res = await login(data.email, data.password);
-      if (res) {
-        if (res?.role === "USER" && res.active === false) {
-          setIsLoading(true);
-          await resendCodeApi({ email: res.email });
-          navigate("/codigo-verificacion");
-        } else {
-          navigate("/codigo-verificacion-auth");
-        }
+      Swal.fire({
+        icon: "success",
+        title: "¡Verificación Exitosa!",
+        toast: true,
+        text: "Credenciales validas. Serás redirigido en breve.",
+        position: "top-end",
+        timer: 3000,
+        showConfirmButton: false,
+        animation: true,
+        background: "#F0FDF4",
+        color: "#166534",
+        iconColor: "#22C55E", // Ícono verde
+      });
+      if (res?.role === "USER" && res.active === false) {
+        setIsLoading(true);
+        localStorage.setItem("emailToVerify", res.email);
+        localStorage.setItem("isVerificationPending", "true");
+        await resendCodeApi({ email: res.email });
+        setEmailToVerify(res.email);
+        setIsVerificationPending(true);
+        navigate("/codigo-verificacion");
+        return;
+      }
+      console.log(res);
+      setIsLoading(false);
+      if (res?.role === "ADMIN") {
+        navigate("/perfil-admin");
+      } else if (res?.role === "USER") {
+        navigate("/perfil-usuario");
+      } else if (res?.role === "EMPLOYEE") {
+        navigate("/perfil-empleado");
       }
     } catch (error: any) {
       const errorMessage =
