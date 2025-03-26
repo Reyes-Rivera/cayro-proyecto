@@ -232,15 +232,15 @@ export class AuthService {
     try {
       const configInfo = await this.prismaService.configuration.findMany();
 
-      const user = await this.prismaService.user.findUnique({
-        where: { email: loginDto.email },
+      const user = await this.prismaService.user.findFirst({
+        where: { OR: [{ email: loginDto.identifier }, { phone: loginDto.identifier }] },
       });
 
       let userFound: UserOrEmployee | null = user;
 
       if (!userFound) {
-        const employee = await this.prismaService.employee.findUnique({
-          where: { email: loginDto.email },
+        const employee = await this.prismaService.employee.findFirst({
+          where: { OR: [{ email: loginDto.identifier }, { phone: loginDto.identifier }] },
         });
         userFound = employee;
 
@@ -279,7 +279,7 @@ export class AuthService {
         if ('active' in userFound) {
           // Es un usuario
           await this.prismaService.user.update({
-            where: { email: loginDto.email },
+            where: { email: userFound.email },
             data: {
               loginAttempts: (userFound.loginAttempts || 0) + 1,
             },
@@ -287,7 +287,7 @@ export class AuthService {
         } else {
           // Es un empleado
           await this.prismaService.employee.update({
-            where: { email: loginDto.email },
+            where: { email: userFound.email },
             data: {
               loginAttempts: (userFound.loginAttempts || 0) + 1,
             },
@@ -318,7 +318,7 @@ export class AuthService {
 
           await this.prismaService.userActivity.create({
             data: {
-              email: loginDto.email,
+              email: userFound.email,
               action: 'Cuenta bloqueada por 5 minutos.',
               date: new Date(),
             },
@@ -335,13 +335,13 @@ export class AuthService {
       if ('active' in userFound) {
         // Usuario
         await this.prismaService.user.update({
-          where: { email: loginDto.email },
+          where: { email: userFound.email },
           data: { loginAttempts: 0 },
         });
       } else {
         // Empleado
         await this.prismaService.employee.update({
-          where: { email: loginDto.email },
+          where: { email: userFound.email },
           data: { loginAttempts: 0 },
         });
       }

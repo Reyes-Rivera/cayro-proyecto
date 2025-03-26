@@ -54,7 +54,7 @@ export default function ProductsPage() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState<boolean>(false);
   const [hoveredProduct, setHoveredProduct] = useState<number | null>(null);
 
-  const productsPerPage = 8;
+  const productsPerPage = 12;
 
   // Fetch data from API
   useEffect(() => {

@@ -60,11 +60,21 @@ export class EmployeesService {
   }
   async create(createEmployeeDto: CreateEmployeeDto) {
     try {
-      const employeeFound = await this.prismaService.employee.findUnique({
-        where: { email: createEmployeeDto.email },
+      const employeeFound = await this.prismaService.employee.findFirst({
+        where: {
+          OR: [
+            { email: createEmployeeDto.email },
+            { phone: createEmployeeDto.phone },
+          ],
+        },
       });
-      const userFound = await this.prismaService.user.findUnique({
-        where: { email: createEmployeeDto.email },
+      const userFound = await this.prismaService.user.findFirst({
+        where: {
+          OR: [
+            { email: createEmployeeDto.email },
+            { phone: createEmployeeDto.phone },
+          ],
+        },
       });
       if (userFound) {
         throw new ConflictException(

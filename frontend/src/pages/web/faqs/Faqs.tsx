@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getCategoriesFaqs, getFaqs } from "@/api/faqs";
+import Breadcrumbs from "@/components/web-components/Breadcrumbs";
 
 // Tipos basados en los modelos de la base de datos
 export interface FaqItem {
@@ -301,6 +302,7 @@ const Faq = ({
                   Contactar soporte
                 </motion.a>
               </motion.div>
+              <Breadcrumbs />
             </motion.div>
 
             {/* Right column - FAQ Preview */}

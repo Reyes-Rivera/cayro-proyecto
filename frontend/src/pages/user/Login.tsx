@@ -37,11 +37,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+// Modificar el tipo FormData para eliminar loginType
 type FormData = {
-  email: string;
+  identifier: string;
   password: string;
 };
 
+// Actualizar el componente LoginPage para detectar automáticamente el tipo de identificador
 export default function LoginPage() {
   const {
     login,
@@ -56,6 +58,8 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const [lockoutTime, setLockoutTime] = useState(0);
   const [showRecoveryDialog, setShowRecoveryDialog] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
+  const [animateContent, setAnimateContent] = useState(false);
 
   // React Hook Form setup
   const {
@@ -65,10 +69,23 @@ export default function LoginPage() {
     clearErrors,
   } = useForm<FormData>({
     defaultValues: {
-      email: "",
+      identifier: "",
       password: "",
     },
   });
+
+  // Simulate page loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPageLoading(false);
+      // Activate animations after loading screen disappears
+      setTimeout(() => {
+        setAnimateContent(true);
+      }, 100);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (error === "Error desconocido al iniciar sesión.") {
@@ -86,6 +103,8 @@ export default function LoginPage() {
   const handleCaptchaChange = (token: string | null) => {
     setCaptchaToken(token);
   };
+
+ 
 
   const onSubmit = async (data: FormData) => {
     if (!captchaToken) {
@@ -108,7 +127,8 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const res = await login(data.email, data.password);
+      const res = await login(data.identifier, data.password);
+      console.log(res);
       Swal.fire({
         icon: "success",
         title: "¡Verificación Exitosa!",
@@ -194,12 +214,23 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
+      {/* Loading Screen */}
+      {pageLoading && (
+        <div className="fixed inset-0 bg-white dark:bg-gray-900 z-50 flex flex-col items-center justify-center">
+          <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4"></div>
+          <p className="text-gray-700 dark:text-gray-300 text-lg font-medium">
+            Cargando...
+          </p>
+        </div>
+      )}
       {/* Contenedor principal con dos columnas */}
       <div className="flex flex-col md:flex-row min-h-screen">
         {/* Columna izquierda - Contenido */}
         <motion.div
           initial={{ opacity: 0, x: -30 }}
-          animate={{ opacity: 1, x: 0 }}
+          animate={
+            animateContent ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }
+          }
           transition={{ duration: 0.8 }}
           className="w-full md:w-1/2 flex flex-col justify-center items-center p-8 md:p-16 lg:p-24"
         >
@@ -239,54 +270,76 @@ export default function LoginPage() {
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              {/* Campo de correo electrónico */}
+              {/* Campo unificado para correo o teléfono */}
               <div className="space-y-2">
                 <Label
-                  htmlFor="email"
+                  htmlFor="identifier"
                   className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center"
                 >
-                  <Mail className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                  Correo electrónico
+                  <User className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
+                  Correo electrónico o teléfono
                 </Label>
                 <div className="relative">
                   <input
-                    id="email"
-                    type="email"
-                    autoComplete="email"
-                    placeholder="correo@ejemplo.com"
+                    id="identifier"
+                    type="text"
+                    autoComplete="username"
+                    placeholder="correo@ejemplo.com o +52 123 456 7890"
                     className={`block w-full rounded-lg border ${
-                      errors.email
+                      errors.identifier
                         ? "border-red-500 focus:ring-red-500 focus:border-red-500"
                         : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
                     } bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3.5 shadow-sm transition-colors focus:outline-none`}
-                    {...register("email", {
-                      required: "El correo electrónico es obligatorio",
-                      pattern: {
-                        value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                        message: "Dirección de correo electrónico inválida",
+                    {...register("identifier", {
+                      required:
+                        "El correo electrónico o teléfono es obligatorio",
+                      validate: (value) => {
+                        // Validar si es un email o un teléfono
+                        const emailRegex =
+                          /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+                        const phoneRegex = /^\+?[0-9]{10,15}$/;
+
+                        if (
+                          emailRegex.test(value) ||
+                          phoneRegex.test(value.replace(/\s/g, ""))
+                        ) {
+                          return true;
+                        }
+                        return "Ingrese un correo electrónico o número de teléfono válido";
                       },
                       onChange: (e) => {
-                        const value = e.target.value.replace(/[<>='" ]/g, "");
+                        let value = e.target.value;
+                        // Permitir caracteres válidos para email y teléfono
+                        // Para email: letras, números, @, ., _, -, +, %
+                        // Para teléfono: números, +, espacios
+                        value = value.replace(/[<>='"]/g, "");
                         e.target.value = value;
+
+                        // Validar en tiempo real
+                        const emailRegex =
+                          /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+                        const phoneRegex = /^\+?[0-9]{10,15}$/;
+
                         if (
-                          /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(value)
+                          emailRegex.test(value) ||
+                          phoneRegex.test(value.replace(/\s/g, ""))
                         ) {
-                          clearErrors("email");
+                          clearErrors("identifier");
                         }
                       },
                     })}
                   />
 
-                  {errors.email && (
+                  {errors.identifier && (
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                       <AlertCircle className="h-5 w-5 text-red-500" />
                     </div>
                   )}
                 </div>
-                {errors.email && (
+                {errors.identifier && (
                   <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1 mt-1">
                     <AlertCircle className="h-4 w-4" />
-                    {errors.email.message}
+                    {errors.identifier.message}
                   </p>
                 )}
               </div>
@@ -449,7 +502,9 @@ export default function LoginPage() {
         {/* Columna derecha - Imágenes */}
         <motion.div
           initial={{ opacity: 0, x: 30 }}
-          animate={{ opacity: 1, x: 0 }}
+          animate={
+            animateContent ? { opacity: 1, x: 0 } : { opacity: 0, x: 30 }
+          }
           transition={{ duration: 0.8, delay: 0.3 }}
           className="w-full md:w-1/2 bg-blue-50 dark:bg-blue-900/10 relative overflow-hidden"
         >

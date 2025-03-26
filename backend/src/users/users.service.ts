@@ -567,8 +567,10 @@ export class UsersService {
   }
   async create(createUserDto: CreateUserDto) {
     try {
-      const userFound = await this.prismaService.user.findUnique({
-        where: { email: createUserDto.email },
+      const userFound = await this.prismaService.user.findFirst({
+        where: {
+          OR: [{ email: createUserDto.email }, { phone: createUserDto.phone }],
+        },
       });
       if (userFound) {
         throw new ConflictException('El correo ya esta en uso.');

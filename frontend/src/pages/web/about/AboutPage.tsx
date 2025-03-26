@@ -24,6 +24,7 @@ import type { CompanyProfile } from "@/types/CompanyInfo";
 import mission from "./assets/mission.jpg";
 import vision from "./assets/vision.jpg";
 import about from "./assets/about.jpg";
+import Breadcrumbs from "@/components/web-components/Breadcrumbs";
 
 // Types
 interface AnimatedSectionProps {
@@ -215,7 +216,9 @@ export default function AboutPage() {
                 >
                   <NavLink to="/contacto">Contactar</NavLink>
                 </motion.button>
+
               </motion.div>
+                <Breadcrumbs/>
             </motion.div>
 
             {/* Right column - Images */}

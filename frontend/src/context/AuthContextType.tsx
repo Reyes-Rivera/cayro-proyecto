@@ -17,7 +17,7 @@ import { User } from "@/types/User";
 
 interface AuthContextType {
   user: User | null; // Usuario autenticado o null si no hay usuario
-  login: (email: string, password: string) => Promise<User | null>;
+  login: (identifier: string, password: string) => Promise<User | null>;
   verifyUser: () => Promise<User | null>;
   signOut: () => Promise<unknown>;
   isAuthenticated: boolean;
@@ -71,9 +71,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   );
 
-  const login = async (email: string, password: string) => {
+  const login = async (identifier: string, password: string) => {
     try {
-      const res = await loginApi({ email, password });
+      const res = await loginApi({ identifier, password });
       if (res) {
         // localStorage.setItem("token", res.data.token);
         setAuth(true);
