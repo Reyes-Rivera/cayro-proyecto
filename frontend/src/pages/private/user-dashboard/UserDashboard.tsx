@@ -21,12 +21,12 @@ import {
 import { useAuth } from "@/context/AuthContextType";
 import type { JSX } from "react/jsx-runtime";
 
-import ProfileView from "./profile/components/ProfileView";
-import SecurityView from "./profile/components/SecurityView";
-import AddressView from "./profile/components/AddressView";
-import OrderHistoryView from "./profile/components/OrderHistoryView";
-import PaymentMethodsView from "./profile/components/PaymentMethodsView";
-import NotificationsView from "./profile/components/NotificationsView";
+import ProfileView from "./components/ProfileView";
+import SecurityView from "./components/SecurityView";
+import AddressView from "./components/AddressView";
+import OrderHistoryView from "./components/OrderHistoryView";
+import PaymentMethodsView from "./components/PaymentMethodsView";
+import NotificationsView from "./components/NotificationsView";
 
 type TabKey =
   | "profile"

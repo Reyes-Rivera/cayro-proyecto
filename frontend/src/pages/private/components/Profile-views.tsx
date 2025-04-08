@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ProfileSection } from "../employee/profile/ProfileSection";
+import { ProfileSection } from "../dashboard-employee/profile/ProfileSection";
 import { AddressSection } from "./AddressSection";
 import { PasswordSection } from "./PasswordSection";
 import { MapPin, User, Shield } from "lucide-react";

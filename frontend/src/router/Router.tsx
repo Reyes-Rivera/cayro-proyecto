@@ -1,12 +1,12 @@
 import { Routes, Route } from "react-router-dom";
 import NavBarUser from "../components/web-components/NavBarUser";
-import SignUpPage from "@/pages/user/SignUp";
-import LoginPage from "@/pages/user/Login";
-import PasswordRecoveryPage from "@/pages/user/PasswordRecoveryPage";
-import VerificationPage from "@/pages/user/VerificationPage";
+import SignUpPage from "@/pages/web/auth/SignUp";
+import LoginPage from "@/pages/web/auth/Login";
+import PasswordRecoveryPage from "@/pages/web/auth/PasswordRecoveryPage";
+import VerificationPage from "@/pages/web/auth/VerificationPage";
 import ProtectedRouterVerification from "@/utils/ProtectedRouteCode";
-import UserDashboard from "@/pages/user/dashboard/UserDashboard";
-import PasswordResetPage from "@/pages/user/PasswordResetPage";
+import UserDashboard from "@/pages/private/user-dashboard/UserDashboard";
+import PasswordResetPage from "@/pages/web/auth/PasswordResetPage";
 import ProtectedRouterUser from "@/utils/ProtectedRRouterUser";
 import ProtectedRouterAdmin from "@/utils/ProtectedRouterAdmin";
 import HomePage from "@/pages/web/Home/HomePage";
@@ -15,22 +15,21 @@ import { getCompanyInfoApi } from "@/api/company";
 import Policies from "@/pages/web/RegulatoryDocuments/Policies";
 import Terms from "@/pages/web/RegulatoryDocuments/Terms";
 import LegalBoundary from "@/pages/web/RegulatoryDocuments/LegalBoundary";
-import ProductDetails from "@/pages/web/ProductDetails";
 import ProductsSection from "@/pages/web/products/ProductsSection";
 import PageNotFound from "@/pages/web/error/PageNotFound";
 import Error500 from "@/pages/web/error/Error500";
 import { Footer } from "@/components/web-components/Footer";
-import AdminDashboard from "@/pages/employees/dashboard-admin/DashboardLayout";
 import AboutPage from "@/pages/web/about/AboutPage";
 import ScrollToTop from "./ScrollToTop";
 import Error400 from "@/pages/web/error/Error400";
 import ContactPage from "@/pages/web/contact/ContactPage";
-import EmployeeDashboard from "@/pages/employees/employee/DashboardLayout";
+import EmployeeDashboard from "@/pages/private/dashboard-employee/DashboardLayout";
 import ProtectedRouterEmployee from "@/utils/ProtectedRouterEmpleado";
 import Faq from "@/pages/web/faqs/Faqs";
 import CartPage from "@/pages/web/cart/cart-page";
-import PasswordRecoveryQuestionPage from "@/pages/user/PasswordRecoveryQuestionPage";
-import SalesAnalysisDashboard from "@/pages/web/ProductoStatusSales";
+import PasswordRecoveryQuestionPage from "@/pages/web/auth/PasswordRecoveryQuestionPage";
+import AdminDashboard from "@/pages/private/dashboard-admin/DashboardLayout";
+import ProductDetails from "@/pages/web/products/components/ProductDetails";
 const AppRoutes = () => {
   useEffect(() => {
     const getInfoPage = async () => {
@@ -49,7 +48,6 @@ const AppRoutes = () => {
 
         <Routes>
           <Route path="/carrito" element={<CartPage />} />
-          <Route path="/ventas" element={<SalesAnalysisDashboard />} />
           <Route path="/carrito" element={<CartPage />} />
           <Route path="/preguntas-frecuentes" element={<Faq />} />
           <Route path="/" element={<HomePage />} />

@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import Breadcrumbs from "@/components/web-components/Breadcrumbs";
 import { getProductById } from "@/api/products";
-import AddToCartButton from "../web/cart/components/add-to-cart-button";
+import AddToCartButton from "../../cart/components/add-to-cart-button";
 
 // Interfaces based on the database schema
 interface Product {

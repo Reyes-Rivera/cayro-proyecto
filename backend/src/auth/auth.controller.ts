@@ -41,6 +41,7 @@ export class AuthController {
         path: '/',
       }),
     );
+    
     return result;
    
   }

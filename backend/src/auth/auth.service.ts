@@ -12,158 +12,224 @@ import { LoginDto } from './dto/login-auth.dto';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { Role } from './roles/role.enum';
-import { UsersService } from 'src/users/users.service';
 import * as crypto from 'crypto';
 import * as nodemailer from 'nodemailer';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { JsonValue } from '@prisma/client/runtime/library';
 import { AppLogger } from 'src/utils/logger.service';
-type UserOrEmployee =
-  | {
-      id: number;
-      name: string;
-      surname: string;
-      email: string;
-      phone: string;
-      birthdate: Date;
-      password: string;
-      passwordSetAt: Date;
-      passwordExpiresAt: Date | null;
-      passwordsHistory: JsonValue | null;
-      role: string;
-      lockUntil: Date | null;
-      loginAttempts: number;
-    }
-  | {
-      id: number;
-      name: string;
-      surname: string;
-      email: string;
-      phone: string;
-      birthdate: Date;
-      password: string;
-      passwordSetAt: Date;
-      passwordExpiresAt: Date;
-      passwordsHistory: JsonValue;
-      role: string;
-      lockUntil: Date | null;
-      loginAttempts: number;
-    };
+
+type UserOrEmployee = {
+  id: number;
+  name: string;
+  surname: string;
+  email: string;
+  phone: string;
+  birthdate: Date;
+  password: string;
+  passwordSetAt: Date;
+  passwordExpiresAt: Date | null;
+  passwordsHistory: JsonValue | null;
+  role: string;
+  lockUntil: Date | null;
+  loginAttempts: number;
+};
 
 @Injectable()
 export class AuthService {
   private codes = new Map<string, { code: string; expires: number }>();
+  
   constructor(
     private jwtSvc: JwtService,
     private prismaService: PrismaService,
     private readonly logger: AppLogger,
-  ) {}
-  //its okey
-  async sendEmail(correo, subject, html) {
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: 'cayrouniformes38@gmail.com',
-        pass: 'qewd ahzb vplo arua',
-      },
+  ) {
+    this.logger.log({ 
+      message: 'Servicio de autenticación inicializado',
+      context: 'AuthService' 
     });
+  }
 
-    const mailOptions = {
-      from: 'cayrouniformes38@gmail.com',
-      to: correo,
-      subject: subject,
-      html: html,
-    };
+  async sendEmail(correo: string, subject: string, html: string): Promise<void> {
     try {
+      this.logger.log({
+        message: 'Preparando envío de correo electrónico',
+        email: correo
+      });
+
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: 'cayrouniformes38@gmail.com',
+          pass: 'qewd ahzb vplo arua',
+        },
+      });
+
+      const mailOptions = {
+        from: 'cayrouniformes38@gmail.com',
+        to: correo,
+        subject: subject,
+        html: html,
+      };
+      
       await transporter.sendMail(mailOptions);
+      this.logger.log({ 
+        message: 'Correo electrónico enviado con éxito',
+        email: correo,
+        subject: subject 
+      });
     } catch (error) {
-      this.logger.error(`Error al enviar el correo: \nStack: ${error.stack}`);
-      throw new InternalServerErrorException(
-        'Error al enviar el correo de recuperación,',
-      );
+      this.logger.error({
+        message: 'Error al enviar el correo electrónico',
+        error: error.message,
+        stack: error.stack,
+        email: correo,
+      });
+      throw new InternalServerErrorException('Error al enviar el correo electrónico');
     }
   }
-  //its okey
-  async verifyCode(userEmail: string, code: string) {
+
+  async verifyCode(userEmail: string, code: string): Promise<{ user: any; token: string }> {
     try {
+      this.logger.log({
+        message: 'Iniciando verificación de código',
+        email: userEmail
+      });
+      
       const record = this.codes.get(userEmail);
-      let userFound: UserOrEmployee | null =
-        await this.prismaService.user.findUnique({
-          where: {
-            email: userEmail,
-            active: true,
-          },
+      if (!record) {
+        this.logger.warn({
+          message: 'No se encontró código de verificación para el usuario',
+          email: userEmail
         });
+        throw new ConflictException('Código no encontrado o expirado');
+      }
+
+      let userFound: UserOrEmployee | null = await this.prismaService.user.findUnique({
+        where: { email: userEmail, active: true },
+      });
 
       if (!userFound) {
         userFound = await this.prismaService.employee.findUnique({
           where: { email: userEmail },
         });
         if (!userFound) {
-          throw new NotFoundException('Usuario no registrado.');
+          this.logger.warn({
+            message: 'Usuario no encontrado en la base de datos',
+            email: userEmail
+          });
+          throw new NotFoundException('Usuario no registrado');
         }
       }
 
-      if (!record || record.expires < Date.now()) {
-        throw new ConflictException('El codigo ha expirado o es invalido.');
+      if (record.expires < Date.now()) {
+        this.logger.warn({ 
+          message: 'Código de verificación expirado',
+          email: userEmail,
+          expiration: new Date(record.expires) 
+        });
+        throw new ConflictException('El código ha expirado');
       }
 
       if (record.code !== code) {
-        throw new ConflictException('Codigo invalido.');
+        this.logger.warn({
+          message: 'Código de verificación incorrecto',
+          email: userEmail
+        });
+        throw new ConflictException('Código incorrecto');
       }
 
       this.codes.delete(userEmail);
-      let expiresIn: any;
+      this.logger.log({
+        message: 'Código verificado correctamente',
+        email: userEmail
+      });
+
+      let expiresIn: string;
       switch (userFound.role) {
-        case Role.ADMIN:
-          expiresIn = '8h';
-          break;
-        case Role.USER:
-          expiresIn = '1d';
-          break;
-        case Role.EMPLOYEE:
-          expiresIn = '4h';
-          break;
-        default:
-          expiresIn = '1h';
+        case Role.ADMIN: expiresIn = '8h'; break;
+        case Role.USER: expiresIn = '1d'; break;
+        case Role.EMPLOYEE: expiresIn = '4h'; break;
+        default: expiresIn = '1h';
       }
-      const {
-        password,
-        passwordExpiresAt,
-        passwordSetAt,
-        passwordsHistory,
-        ...rest
-      } = userFound;
+      
       const payload = {
         sub: userFound.id,
         role: userFound.role,
         email: userFound.email,
       };
+      
       const token = this.jwtSvc.sign(payload, { expiresIn });
-      return { user: { ...rest, role: userFound.role }, token };
+      this.logger.log({ 
+        message: 'Token JWT generado exitosamente',
+        userId: userFound.id,
+        role: userFound.role 
+      });
+
+      return { 
+        user: { 
+          id: userFound.id,
+          name: userFound.name,
+          surname: userFound.surname,
+          email: userFound.email,
+          phone: userFound.phone,
+          birthdate: userFound.birthdate,
+          role: userFound.role,
+        }, 
+        token 
+      };
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;
       }
-      this.logger.error(
-        `Error al verificar el codigo: \nStack: ${error.stack}`,
-      );
-      throw new InternalServerErrorException('Error interno en el servidor.');
+      this.logger.error({
+        message: 'Error durante la verificación del código',
+        error: error.message,
+        stack: error.stack,
+        email: userEmail,
+      });
+      throw new InternalServerErrorException('Error interno del servidor');
     }
   }
-  //its okey
-  async sendCode(email: string) {
+
+  async sendCode(email: string): Promise<{ message: string }> {
     try {
-      const configInfo = await this.prismaService.configuration.findMany();
-      const timeToken = configInfo[0].timeTokenEmail;
-      const dataConfig = configInfo[0].emailVerificationInfo[0];
+      this.logger.log({
+        message: 'Solicitud de envío de código de verificación',
+        email
+      });
+
+      const configInfo = await this.prismaService.configuration.findFirst();
+      if (!configInfo) {
+        this.logger.error({
+          message: 'Configuración del sistema no encontrada'
+        });
+        throw new InternalServerErrorException('Configuración del sistema no disponible');
+      }
+
+      const timeToken = configInfo.timeTokenEmail;
+      const dataConfig = configInfo.emailVerificationInfo?.[0];
       const expirationTime = Date.now() + timeToken * 60000;
       const verificationCode = crypto.randomInt(100000, 999999).toString();
+      
       this.codes.set(email, {
         code: verificationCode,
         expires: expirationTime,
       });
-      const companyInfo = await this.prismaService.companyProfile.findMany();
+      
+      this.logger.log({ 
+        message: 'Código de verificación generado',
+        email,
+        expiration: new Date(expirationTime) 
+      });
+
+      const companyInfo = await this.prismaService.companyProfile.findFirst();
+      if (!companyInfo) {
+        this.logger.error({
+          message: 'Información de la compañía no encontrada'
+        });
+        throw new InternalServerErrorException('Información de la compañía no disponible');
+      }
+
       const currentYear = new Date().getFullYear();
       const html = `
         <!DOCTYPE html>
@@ -171,246 +237,282 @@ export class AuthService {
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Verificación de Cuenta Cayro</title>
+            <title>Verificación de Cuenta</title>
         </head>
-        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
-            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
-                <tr>
-                    <td align="center" >
-                        <img src=${companyInfo[0].logoUrl} alt="Cayro Uniformes" style="display: block; width: 150px; max-width: 100%; height: auto;">
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding: 0px 30px;">
-                        <h1 style="color: #333333; font-size: 24px; margin-bottom: 20px; text-align: center;">${dataConfig.title} </h1>
-                        <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                            ${dataConfig.greeting} 
-                        </p>
-                        <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                            ${dataConfig.maininstruction} 
-                        </p>
-                        <div style="background-color: #f0f0f0; border-radius: 4px; padding: 20px; text-align: center; margin-bottom: 20px;">
-                            <span style="font-size: 32px; font-weight: bold; color: #0099FF; letter-spacing: 5px;">${verificationCode}</span>
-                        </div>
-                        <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                            ${dataConfig.secondaryinstruction} 
-                        </p>
-                        <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                            ${dataConfig.expirationtime} 
-                        </p>
-                        <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                            ${dataConfig.finalMessage} 
-                        </p>
-                        <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                            ${dataConfig.signature} 
-                        </p>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="background-color: #27272A; padding: 20px 30px;">
-                        <p style="color: #ffffff; font-size: 14px; line-height: 1.5; margin: 0; text-align: center;">
-                            © ${currentYear} Cayro Uniformes. Todos los derechos reservados.
-                        </p>
-                        <p style="color: #ffffff; font-size: 14px; line-height: 1.5; margin: 10px 0 0; text-align: center;">
-                            <a href="#" style="color: #ffffff; text-decoration: none;">Política de Privacidad</a> | 
-                            <a href="#" style="color: #ffffff; text-decoration: none;">Términos de Servicio</a>
-                        </p>
-                    </td>
-                </tr>
-            </table>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <img src="${companyInfo.logoUrl}" alt="Logo" style="max-width: 150px;">
+                </div>
+                <div style="background-color: #f9f9f9; padding: 20px; border-radius: 5px;">
+                    <h1 style="color: #333;">${dataConfig?.title || 'Verificación de cuenta'}</h1>
+                    <p>${dataConfig?.greeting || 'Estimado usuario,'}</p>
+                    <p>${dataConfig?.maininstruction || 'Utilice el siguiente código para verificar su cuenta:'}</p>
+                    <div style="background-color: #e9e9e9; padding: 10px; text-align: center; margin: 20px 0; font-size: 24px; font-weight: bold;">
+                        ${verificationCode}
+                    </div>
+                    <p>${dataConfig?.secondaryinstruction || 'Este código es válido por un tiempo limitado.'}</p>
+                    <p>${dataConfig?.expirationtime || `Expira en ${timeToken} minutos.`}</p>
+                    <p>${dataConfig?.finalMessage || 'Si no solicitó este código, por favor ignore este mensaje.'}</p>
+                    <p style="margin-top: 30px;">${dataConfig?.signature || 'Atentamente, el equipo de soporte'}</p>
+                </div>
+                <div style="margin-top: 20px; padding: 10px; background-color: #333; color: #fff; text-align: center;">
+                    <p>© ${currentYear} ${companyInfo.title || 'Cayro Uniformes'}. Todos los derechos reservados.</p>
+                </div>
+            </div>
         </body>
         </html>
       `;
-      await this.sendEmail(email, 'Codigo de verificación', html);
-      return { message: 'Codigo de verificación enviado.' };
+      
+      await this.sendEmail(email, 'Código de verificación', html);
+      this.logger.log({
+        message: 'Correo con código de verificación enviado',
+        email
+      });
+
+      return { message: 'Código de verificación enviado correctamente' };
     } catch (error) {
-      this.logger.error(`Error al enviar el codigo: \nStack: ${error.stack}`);
-      throw new InternalServerErrorException('Error interno en el servidor.');
+      this.logger.error({
+        message: 'Error al enviar el código de verificación',
+        error: error.message,
+        stack: error.stack,
+        email,
+      });
+      throw new InternalServerErrorException('Error al procesar la solicitud');
     }
   }
-  async login(loginDto: LoginDto) {
+
+  async login(loginDto: LoginDto): Promise<{ user: any; token: string }> {
     try {
-      const configInfo = await this.prismaService.configuration.findMany();
+      this.logger.log({ 
+        message: 'Proceso de inicio de sesión iniciado',
+        identifier: loginDto.identifier,
+        type: loginDto.identifier.includes('@') ? 'email' : 'teléfono'
+      });
+
+      const configInfo = await this.prismaService.configuration.findFirst();
+      if (!configInfo) {
+        this.logger.error({
+          message: 'Configuración del sistema no encontrada'
+        });
+        throw new InternalServerErrorException('Configuración del sistema no disponible');
+      }
 
       const user = await this.prismaService.user.findFirst({
-        where: { OR: [{ email: loginDto.identifier }, { phone: loginDto.identifier }] },
+        where: { 
+          OR: [
+            { email: loginDto.identifier },
+            { phone: loginDto.identifier }
+          ] 
+        },
       });
 
       let userFound: UserOrEmployee | null = user;
 
       if (!userFound) {
+        this.logger.log({
+          message: 'Buscando usuario en empleados',
+          identifier: loginDto.identifier
+        });
         const employee = await this.prismaService.employee.findFirst({
-          where: { OR: [{ email: loginDto.identifier }, { phone: loginDto.identifier }] },
+          where: { 
+            OR: [
+              { email: loginDto.identifier },
+              { phone: loginDto.identifier }
+            ] 
+          },
         });
         userFound = employee;
 
         if (!userFound) {
-          throw new NotFoundException('Credenciales invalidas.');
+          this.logger.warn({ 
+            message: 'Credenciales inválidas - Usuario no encontrado',
+            identifier: loginDto.identifier 
+          });
+          throw new NotFoundException('Credenciales inválidas');
         }
       }
 
       if (userFound.lockUntil && userFound.lockUntil > new Date()) {
         const now = new Date();
         const timeDifference = userFound.lockUntil.getTime() - now.getTime();
-
         const minutesRemaining = Math.floor(timeDifference / (1000 * 60));
-        const secondsRemaining = Math.floor(
-          (timeDifference % (1000 * 60)) / 1000,
-        );
+        const secondsRemaining = Math.floor((timeDifference % (1000 * 60)) / 1000);
+        const formattedMessage = minutesRemaining > 0
+          ? `${minutesRemaining} minutos y ${secondsRemaining} segundos`
+          : `${secondsRemaining} segundos`;
 
-        const formattedMessage =
-          minutesRemaining > 0
-            ? `${minutesRemaining} minutos y ${secondsRemaining} segundos`
-            : `${secondsRemaining} segundos`;
-
+        this.logger.warn({
+          message: 'Cuenta temporalmente bloqueada',
+          email: userFound.email,
+          lockUntil: userFound.lockUntil,
+          remainingAttempts: configInfo.attemptsLogin - (userFound.loginAttempts || 0)
+        });
         throw new ForbiddenException(
           `Cuenta bloqueada temporalmente. Inténtalo de nuevo en ${formattedMessage}`,
         );
       }
 
-      // Validar contraseña
       const isPasswordValid = await bcrypt.compare(
         loginDto.password,
         userFound.password,
       );
 
       if (!isPasswordValid) {
-        // Incrementar intentos fallidos
+        const updateData = {
+          loginAttempts: (userFound.loginAttempts || 0) + 1,
+        };
+
         if ('active' in userFound) {
-          // Es un usuario
           await this.prismaService.user.update({
             where: { email: userFound.email },
-            data: {
-              loginAttempts: (userFound.loginAttempts || 0) + 1,
-            },
+            data: updateData,
           });
         } else {
-          // Es un empleado
           await this.prismaService.employee.update({
             where: { email: userFound.email },
-            data: {
-              loginAttempts: (userFound.loginAttempts || 0) + 1,
-            },
+            data: updateData,
           });
         }
 
-        // Bloquear cuenta después de intentos fallidos
-        if (userFound.loginAttempts === configInfo[0].attemptsLogin) {
+        if ((userFound.loginAttempts || 0) + 1 >= configInfo.attemptsLogin) {
           const lockUntil = new Date(Date.now() + 5 * 60 * 1000);
-          const updateData = {
-            lockUntil,
-            loginAttempts: 0,
-          };
+          const lockData = { ...updateData, lockUntil };
 
           if ('active' in userFound) {
-            // Bloquear usuario
             await this.prismaService.user.update({
               where: { email: userFound.email },
-              data: updateData,
+              data: lockData,
             });
           } else {
-            // Bloquear empleado
             await this.prismaService.employee.update({
               where: { email: userFound.email },
-              data: updateData,
+              data: lockData,
             });
           }
 
           await this.prismaService.userActivity.create({
             data: {
               email: userFound.email,
-              action: 'Cuenta bloqueada por 5 minutos.',
+              action: 'Cuenta bloqueada por 5 minutos debido a intentos fallidos',
               date: new Date(),
             },
           });
+          
+          this.logger.warn({
+            message: 'Cuenta bloqueada por intentos fallidos',
+            email: userFound.email,
+            attempts: (userFound.loginAttempts || 0) + 1,
+          });
         }
 
-        throw new HttpException(
-          'Credenciales invalidas.',
-          HttpStatus.UNAUTHORIZED,
-        );
+        this.logger.warn({ 
+          message: 'Intento de inicio de sesión fallido',
+          email: userFound.email,
+          reason: 'contraseña incorrecta'
+        });
+        throw new HttpException('Credenciales inválidas', HttpStatus.UNAUTHORIZED);
       }
 
-      // Resetear intentos de inicio de sesión
+      // Resetear intentos si el login es exitoso
+      const resetData = { loginAttempts: 0, lockUntil: null };
       if ('active' in userFound) {
-        // Usuario
         await this.prismaService.user.update({
           where: { email: userFound.email },
-          data: { loginAttempts: 0 },
+          data: resetData,
         });
       } else {
-        // Empleado
         await this.prismaService.employee.update({
           where: { email: userFound.email },
-          data: { loginAttempts: 0 },
+          data: resetData,
         });
       }
-      let expiresIn: any;
+      
+      let expiresIn: string;
       switch (userFound.role) {
-        case Role.ADMIN:
-          expiresIn = '8h';
-          break;
-        case Role.USER:
-          expiresIn = '1d';
-          break;
-        case Role.EMPLOYEE:
-          expiresIn = '4h';
-          break;
-        default:
-          expiresIn = '1h';
+        case Role.ADMIN: expiresIn = '8h'; break;
+        case Role.USER: expiresIn = '1d'; break;
+        case Role.EMPLOYEE: expiresIn = '4h'; break;
+        default: expiresIn = '1h';
       }
-      const {
-        password,
-        passwordExpiresAt,
-        passwordSetAt,
-        passwordsHistory,
-        ...rest
-      } = userFound;
+      
       const payload = {
         sub: userFound.id,
         role: userFound.role,
         email: userFound.email,
       };
+      
       const token = this.jwtSvc.sign(payload, { expiresIn });
-      return { user: { ...rest }, token };
+      
+      this.logger.log({
+        message: 'Inicio de sesión exitoso',
+        userId: userFound.id,
+        email: userFound.email,
+        role: userFound.role,
+      });
+      await this.prismaService.userActivity.create({
+        data: {
+          email: userFound.email,
+          action: 'Inicio de sesión exitoso',
+          date: new Date(),
+        },
+      });
+      return { 
+        user: { 
+          id: userFound.id,
+          name: userFound.name,
+          surname: userFound.surname,
+          email: userFound.email,
+          phone: userFound.phone,
+          birthdate: userFound.birthdate,
+          role: userFound.role,
+        }, 
+        token 
+      };
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;
       }
-      this.logger.error(`Error al iniciar sesion: \nStack: ${error.stack}`);
-      throw new InternalServerErrorException('Error interno en el servidor.');
+      this.logger.error({
+        message: 'Error durante el proceso de inicio de sesión',
+        error: error.message,
+        stack: error.stack,
+        identifier: loginDto.identifier,
+      });
+      throw new InternalServerErrorException('Error interno del servidor');
     }
   }
 
-  async verifyToken(@Request() request) {
+  async verifyToken(@Request() request): Promise<any> {
     try {
+     
+      
       const user = await this.prismaService.user.findUnique({
         where: { id: request.sub, email: request.email },
       });
-      const admin =
-        !user &&
-        (await this.prismaService.employee.findUnique({
-          where: { id: request.sub, email: request.email },
-        }));
+      
+      const admin = !user ? await this.prismaService.employee.findUnique({
+        where: { id: request.sub, email: request.email },
+      }) : null;
 
-      if (user || admin) {
-        const entity = user || admin;
-        const {
-          password,
-          passwordsHistory,
-          passwordExpiresAt,
-          passwordSetAt,
-          loginAttempts,
-          ...rest
-        } = entity;
-        return { ...rest };
-      }
-      throw new NotFoundException('El usuario no se encuentra registrado');
+     
+
+      const entity = user || admin;
+     
+      return { 
+        id: entity.id,
+        name: entity.name,
+        surname: entity.surname,
+        email: entity.email,
+        phone: entity.phone,
+        birthdate: entity.birthdate,
+        role: entity.role,
+      };
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;
       }
-      this.logger.error(`Error al verificar el token: \nStack: ${error.stack}`);
+      
       throw new HttpException(
         'Error interno del servidor',
         HttpStatus.INTERNAL_SERVER_ERROR,

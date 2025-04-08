@@ -65,10 +65,7 @@ export class UsersController {
     return res;
   }
 
-  @Get()
-  findAll() {
-    return this.usersService.findAll();
-  }
+
 
   @Post('verifyUserExist')
   findOne(@Body() body: { email: string }) {

@@ -202,7 +202,11 @@ export default function Home(): JSX.Element {
   const [activeCategory, setActiveCategory] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [animateHero, setAnimateHero] = useState<boolean>(false);
-
+  // useEffect(() => {
+  //   throw new Error('Prueba de Error desde React');
+  // }, []);
+  
+  
   // Simulamos la carga de la página
   useEffect(() => {
     const timer = setTimeout(() => {

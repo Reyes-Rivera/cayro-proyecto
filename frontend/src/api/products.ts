@@ -1,4 +1,4 @@
-import { CreateProductDto } from "@/pages/employees/employee/profucts/data/sampleData";
+import { CreateProductDto } from "@/pages/private/dashboard-employee/profucts/data/sampleData";
 import axios from "./axios";
 // Categories
 export const addCategory = (data: { name: string }) =>

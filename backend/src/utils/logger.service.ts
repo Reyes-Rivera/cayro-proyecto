@@ -10,63 +10,81 @@ export class AppLogger implements LoggerService {
 
   constructor() {
     const isVercel = !!process.env.VERCEL;
-
     const transports: winston.transport[] = [];
 
     if (isVercel) {
-      // 👉 En Vercel, solo usar consola (no se puede escribir en disco)
       transports.push(
         new winston.transports.Console({
           format: winston.format.combine(
-            winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-            winston.format.printf(({ timestamp, level, message }) => {
-              return `[${timestamp}] ${level.toUpperCase()}: ${message}`;
-            }),
+            winston.format.timestamp({ format: 'YYYY-MM-DDTHH:mm:ss.SSSZ' }),
+            winston.format.errors({ stack: true }),
+            winston.format.json(),
           ),
         }),
       );
     } else {
-      // 👉 En local, escribir logs en archivo
       const logDirectory = path.join(__dirname, '../../logs');
 
-      // Crear carpeta logs si no existe
       if (!fs.existsSync(logDirectory)) {
         fs.mkdirSync(logDirectory, { recursive: true });
       }
 
       transports.push(
         new winston.transports.DailyRotateFile({
-          filename: `${logDirectory}/error-%DATE%.log`,
-          datePattern: 'YYYY-WW',
+          dirname: logDirectory,
+          filename: 'app-%DATE%.log',
+          datePattern: 'YYYY-MM-DD',
           zippedArchive: false,
           maxSize: '20m',
-          maxFiles: '4w',
-          level: 'error',
+          maxFiles: '90d',
+          level: 'info',
           format: winston.format.combine(
-            winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-            winston.format.printf(({ timestamp, level, message }) => {
-              return `[${timestamp}] ${level.toUpperCase()}: ${message}`;
-            }),
+            winston.format.timestamp({ format: 'YYYY-MM-DDTHH:mm:ss.SSSZ' }),
+            winston.format.errors({ stack: true }),
+            winston.format.json(),
+          ),
+        }),
+      );
+
+      transports.push(
+        new winston.transports.Console({
+          format: winston.format.combine(
+            winston.format.timestamp({ format: 'YYYY-MM-DDTHH:mm:ss.SSSZ' }),
+            winston.format.errors({ stack: true }),
+            winston.format.json(),
           ),
         }),
       );
     }
 
     this.logger = winston.createLogger({
-      level: 'error',
+      level: 'info',
       transports,
     });
+
   }
 
-  log(message: string) {
-    this.logger.info(message);
+  log(message: string | Record<string, any>) {
+    if (typeof message === 'string') {
+      this.logger.info({ message });
+    } else {
+      this.logger.info(message);
+    }
   }
 
-  error(message: string, trace?: string) {
-    this.logger.error(`${message} ${trace ? `\nTrace: ${trace}` : ''}`);
+  warn(message: string | Record<string, any>) {
+    if (typeof message === 'string') {
+      this.logger.warn({ message });
+    } else {
+      this.logger.warn(message);
+    }
   }
 
-  warn(message: string) {
-    this.logger.warn(message);
+  error(message: string | Record<string, any>, trace?: string) {
+    if (typeof message === 'string') {
+      this.logger.error({ message, trace });
+    } else {
+      this.logger.error(message);
+    }
   }
 }
