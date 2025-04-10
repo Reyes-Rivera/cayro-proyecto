@@ -14,7 +14,7 @@ import {
   KeyRound,
   Sparkles,
 } from "lucide-react";
-import backgroundImage from "../web/Home/assets/hero.jpg";
+import backgroundImage from "@/pages/web/Home/assets/hero.jpg";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import Swal from "sweetalert2";

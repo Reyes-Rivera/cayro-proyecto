@@ -23,7 +23,7 @@ import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
 import { recoverPassword } from "@/api/auth";
 import { motion, AnimatePresence } from "framer-motion";
-import backgroundImage from "../web/Home/assets/hero.jpg";
+import backgroundImage from "@/pages/web/Home/assets/hero.jpg";
 
 export default function PasswordRecoveryPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);

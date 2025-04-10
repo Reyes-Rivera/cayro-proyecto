@@ -1,7 +1,6 @@
 "use client";
 
 import type React from "react";
-
 import { useEffect, useRef, useState, memo, lazy, Suspense } from "react";
 import { motion, useInView, useAnimation } from "framer-motion";
 import {
@@ -190,10 +189,11 @@ export default function ContactPage() {
       <div className="min-h-screen bg-white dark:bg-gray-900 overflow-x-hidden">
         {/* Hero Section - Two column layout with content left, images right */}
         <div className="relative min-h-screen bg-white dark:bg-gray-900 flex items-center">
-          {/* Background decoration - Simplified */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
-            <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/5 rounded-full"></div>
-            <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-500/5 rounded-full"></div>
+          {/* Background decoration - Enhanced with about page style */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-bl from-blue-50/80 to-transparent dark:from-blue-950/20 dark:to-transparent"></div>
+            <div className="absolute -top-20 -right-20 w-96 h-96 bg-blue-100 dark:bg-blue-900/20 rounded-full opacity-70 blur-3xl"></div>
+            <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-80 h-80 bg-blue-100 dark:bg-blue-900/20 rounded-full opacity-60 blur-3xl"></div>
           </div>
 
           <div className="container mx-auto px-6 py-16 relative z-10 max-w-full">
@@ -241,7 +241,12 @@ export default function ContactPage() {
                     className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white leading-tight"
                   >
                     Nos encantaría{" "}
-                    <span className="text-blue-600">hablar contigo</span>
+                    <span className="relative inline-block">
+                      <span className="relative z-10 text-blue-600">
+                        hablar contigo
+                      </span>
+                      <span className="absolute bottom-2 left-0 w-full h-3 bg-blue-600/20 -z-10 rounded"></span>
+                    </span>
                   </motion.h1>
                 </motion.div>
 
@@ -249,7 +254,7 @@ export default function ContactPage() {
                   initial={{ opacity: 0 }}
                   animate={animateHero ? { opacity: 1 } : { opacity: 0 }}
                   transition={{ duration: 0.6, delay: 0.5 }}
-                  className="text-gray-600 dark:text-gray-400 text-lg leading-relaxed max-w-lg"
+                  className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed max-w-lg"
                 >
                   Estamos listos para convertir tus ideas en prendas
                   excepcionales que representen tu visión. Cuéntanos sobre tu
@@ -297,7 +302,9 @@ export default function ContactPage() {
                   transition={{ duration: 0.6, delay: 0.7 }}
                   className="flex flex-col sm:flex-row gap-4 mt-8"
                 >
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-full transition-all flex items-center justify-center shadow-lg shadow-blue-600/20"
                     onClick={scrollToContent}
                   >
@@ -305,9 +312,11 @@ export default function ContactPage() {
                       Contáctanos ahora
                       <ArrowRight className="ml-2 w-4 h-4" />
                     </span>
-                  </button>
+                  </motion.button>
 
-                  <a
+                  <motion.a
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     href={`tel:${
                       info?.contactInfo[0]?.phone || "+521234567890"
                     }`}
@@ -315,7 +324,7 @@ export default function ContactPage() {
                   >
                     <Phone className="mr-2 h-5 w-5" />
                     Llamar ahora
-                  </a>
+                  </motion.a>
                 </motion.div>
                 <Breadcrumbs />
               </motion.div>
@@ -387,7 +396,7 @@ export default function ContactPage() {
                   </div>
                 </motion.div>
 
-                {/* Decorative elements - Simplified */}
+                {/* Decorative elements - Enhanced with about page style */}
                 <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-100 dark:bg-blue-900/20 rounded-full filter blur-3xl opacity-50 z-0"></div>
                 <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-blue-100 dark:bg-blue-900/20 rounded-full filter blur-3xl opacity-50 z-0"></div>
 
@@ -413,7 +422,7 @@ export default function ContactPage() {
             </div>
           </div>
 
-          {/* Scroll indicator - Simplified animation */}
+          {/* Scroll indicator - Enhanced with about page style */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={animateHero ? { opacity: 1 } : { opacity: 0 }}
@@ -421,14 +430,28 @@ export default function ContactPage() {
             className="absolute bottom-6 left-1/2 transform -translate-x-1/2 cursor-pointer z-20"
             onClick={scrollToContent}
           >
-            <div className="flex flex-col items-center gap-2">
+            <motion.div
+              animate={{ y: [0, 10, 0] }}
+              transition={{
+                duration: 2,
+                repeat: Number.POSITIVE_INFINITY,
+                repeatType: "loop",
+              }}
+              className="flex flex-col items-center gap-2"
+            >
               <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">
                 Descubre más
               </p>
-              <div className="w-8 h-8 rounded-full flex items-center justify-center border border-gray-300 dark:border-gray-700">
+              <motion.div
+                animate={{
+                  y: [0, 5, 0],
+                }}
+                transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
+                className="w-8 h-8 rounded-full flex items-center justify-center border border-gray-300 dark:border-gray-700"
+              >
                 <ChevronDown className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           </motion.div>
         </div>
 
@@ -436,8 +459,8 @@ export default function ContactPage() {
         <AnimatedSection
           className="py-24 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 relative overflow-hidden"
         >
-          {/* Background decoration - Simplified */}
-          <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-30">
+          {/* Background decoration - Enhanced with about page style */}
+          <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
             <div className="absolute -top-24 -left-24 w-64 h-64 bg-blue-500/5 rounded-full"></div>
             <div className="absolute top-1/4 right-0 w-96 h-96 bg-blue-500/5 rounded-full"></div>
             <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-blue-500/5 rounded-full"></div>
@@ -455,7 +478,8 @@ export default function ContactPage() {
                 CONTACTO
               </span>
               <h2 className="text-3xl md:text-5xl font-bold text-gray-900 dark:text-white">
-                Estamos aquí para ayudarte
+                Estamos aquí para{" "}
+                <span className="text-blue-600">ayudarte</span>
               </h2>
               <div className="w-24 h-1 bg-blue-600 mx-auto mt-6"></div>
             </motion.div>
@@ -467,14 +491,15 @@ export default function ContactPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: 0.1 }}
+                whileHover={{ y: -10 }}
                 className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all group relative overflow-hidden"
               >
                 {/* Background decoration */}
-                <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-500/5 rounded-full"></div>
+                <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-500/5 rounded-full transition-all duration-300 group-hover:scale-150"></div>
 
                 {/* Icono con fondo dinámico */}
-                <div className="mb-6 relative z-10">
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center text-white shadow-lg">
+                <div className="mb-6 transform group-hover:scale-110 transition-transform relative z-10">
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:shadow-blue-500/20">
                     <Phone className="w-8 h-8" />
                   </div>
                 </div>
@@ -501,14 +526,15 @@ export default function ContactPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: 0.2 }}
+                whileHover={{ y: -10 }}
                 className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all group relative overflow-hidden"
               >
                 {/* Background decoration */}
-                <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-500/5 rounded-full"></div>
+                <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-500/5 rounded-full transition-all duration-300 group-hover:scale-150"></div>
 
                 {/* Icono con fondo dinámico */}
-                <div className="mb-6 relative z-10">
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center text-white shadow-lg">
+                <div className="mb-6 transform group-hover:scale-110 transition-transform relative z-10">
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:shadow-blue-500/20">
                     <Mail className="w-8 h-8" />
                   </div>
                 </div>
@@ -535,14 +561,15 @@ export default function ContactPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: 0.3 }}
+                whileHover={{ y: -10 }}
                 className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all group relative overflow-hidden"
               >
                 {/* Background decoration */}
-                <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-500/5 rounded-full"></div>
+                <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-500/5 rounded-full transition-all duration-300 group-hover:scale-150"></div>
 
                 {/* Icono con fondo dinámico */}
-                <div className="mb-6 relative z-10">
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center text-white shadow-lg">
+                <div className="mb-6 transform group-hover:scale-110 transition-transform relative z-10">
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:shadow-blue-500/20">
                     <MapPin className="w-8 h-8" />
                   </div>
                 </div>
@@ -595,10 +622,10 @@ export default function ContactPage() {
           <MapSection info={info} />
         </Suspense>
 
-        {/* CTA Section - Simplified */}
+        {/* CTA Section - Enhanced with about page style */}
         <section className="py-20 bg-gradient-to-r from-blue-600 to-blue-800 text-white relative overflow-hidden">
-          {/* Background decoration - Simplified */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
+          {/* Background decoration */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <svg
               className="absolute bottom-0 left-0 w-full h-64 text-white/5"
               viewBox="0 0 1200 120"
@@ -650,25 +677,76 @@ export default function ContactPage() {
                 transition={{ duration: 0.6, delay: 0.4 }}
                 className="flex flex-col sm:flex-row justify-center gap-4"
               >
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={scrollToContent}
-                  className="px-8 py-4 bg-white text-blue-700 font-bold rounded-full hover:bg-blue-50 transition-all shadow-lg flex items-center justify-center"
+                  className="group px-8 py-4 bg-white text-blue-700 font-bold rounded-full hover:bg-blue-50 transition-all transform hover:scale-105 shadow-lg flex items-center justify-center relative overflow-hidden"
                 >
-                  <span className="flex items-center">
+                  <span className="relative z-10 flex items-center">
                     Contactar ahora
-                    <ArrowRight className="ml-2 w-5 h-5" />
+                    <motion.span
+                      initial={{ x: 0 }}
+                      whileHover={{ x: 5 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <ArrowRight className="ml-2 w-5 h-5" />
+                    </motion.span>
                   </span>
-                </button>
-                <a
+                  <span className="absolute inset-0 bg-blue-50 transform scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300"></span>
+                </motion.button>
+                <motion.a
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   href={`tel:${info?.contactInfo[0]?.phone || "+521234567890"}`}
-                  className="px-8 py-4 bg-transparent text-white font-bold rounded-full hover:bg-white/10 transition-all border-2 border-white flex items-center justify-center"
+                  className="group px-8 py-4 bg-transparent text-white font-bold rounded-full hover:bg-white/10 transition-all border-2 border-white flex items-center justify-center relative overflow-hidden"
                 >
-                  <span className="flex items-center">
+                  <span className="relative z-10 flex items-center">
                     <Phone className="mr-2 w-5 h-5" />
                     Llamar ahora
                   </span>
-                </a>
+                  <span className="absolute inset-0 bg-white/10 transform scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300"></span>
+                </motion.a>
               </motion.div>
+
+              {/* Floating badges - Added from about page style */}
+              <div className="mt-12 flex flex-wrap justify-center gap-4">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: 0.6 }}
+                  animate={{ y: [0, -10, 0] }}
+                  className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 flex items-center gap-2"
+                >
+                  <CheckCircle className="w-5 h-5 text-yellow-300" />
+                  <span className="text-sm font-medium">Respuesta Rápida</span>
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: 0.7 }}
+                  animate={{ y: [0, -10, 0] }}
+                  className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 flex items-center gap-2"
+                >
+                  <Sparkles className="w-5 h-5 text-blue-300" />
+                  <span className="text-sm font-medium">
+                    Diseños Personalizados
+                  </span>
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: 0.8 }}
+                  animate={{ y: [0, -10, 0] }}
+                  className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 flex items-center gap-2"
+                >
+                  <Clock className="w-5 h-5 text-green-300" />
+                  <span className="text-sm font-medium">Entrega Puntual</span>
+                </motion.div>
+              </div>
             </motion.div>
           </div>
         </section>

@@ -30,13 +30,13 @@ async function bootstrap() {
   );
   app.useGlobalFilters(new AllExceptionsFilter(app.get(AppLogger)));
 
-  app.use(
-    rateLimit({
-      windowMs: 15 * 60 * 1000,
-      max: 100, 
-      message: 'Demasiadas solicitudes, intenta nuevamente más tarde.',
-    }),
-  );
+  // app.use(
+  //   rateLimit({
+  //     windowMs: 15 * 60 * 1000,
+  //     max: 100, 
+  //     message: 'Demasiadas solicitudes, intenta nuevamente más tarde.',
+  //   }),
+  // );
   app.useGlobalPipes(new ValidationPipe());
   const port = process.env.PORT || 5000;
   app.use(cookieParser());

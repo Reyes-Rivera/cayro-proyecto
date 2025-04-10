@@ -1,11 +1,10 @@
 "use client";
 
 import type React from "react";
-
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ShoppingCart, Heart, Eye } from "lucide-react";
+import { ShoppingBag, Heart, Eye, Check } from "lucide-react";
 import type { Product } from "../utils/products";
 import { useCart } from "@/context/CartConrexr";
 import Swal from "sweetalert2";
@@ -75,14 +74,13 @@ export default function ProductCard({
         showConfirmButton: false,
         position: "top-end",
         toast: true,
-        iconColor: "#3B82F6",
+        iconColor: "#2563EB",
         customClass: {
           popup: "colored-toast",
           title: "swal-title",
           htmlContainer: "swal-text",
         },
       });
-
     } catch (error) {
       // Show error notification
       Swal.fire({
@@ -108,46 +106,36 @@ export default function ProductCard({
     }
   };
 
-  // Animation variants
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5 },
-    },
-  };
-
   // Determine if any loading state is active
   const isLoading = loading || isAdding;
 
   return (
-    <>
-      <motion.div
-        variants={itemVariants}
-        className="group bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
-        onMouseEnter={onHover}
-        onMouseLeave={onLeave}
-      >
-        <Link to={`/producto/${product.id}`} className="block">
-          <div className="relative overflow-hidden aspect-[3/4]">
+    <motion.div
+      className="group"
+      onMouseEnter={onHover}
+      onMouseLeave={onLeave}
+      whileHover={{ y: -8 }}
+      transition={{ duration: 0.3 }}
+    >
+      <Link to={`/producto/${product.id}`} className="block">
+        <div className="relative overflow-hidden mb-5 rounded-2xl shadow-lg group-hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-800">
+          {/* Main product image with hover effect */}
+          <div className="aspect-[3/4] overflow-hidden bg-gradient-to-br from-blue-50 to-white dark:from-gray-800 dark:to-gray-900">
             <img
               src={
-                // eslint-disable-next-line no-constant-binary-expression
-                lowestPriceVariant.imageUrl ||
-                "/placeholder.svg?height=400&width=300" ||
-                "/placeholder.svg" ||
-                "/placeholder.svg"
+                lowestPriceVariant.imageUrl
               }
               alt={product.name}
               width={300}
               height={400}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          </div>
 
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-              <div className="flex gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+          {/* Overlay with actions */}
+          <div className="absolute inset-0 bg-gradient-to-t from-blue-900/70 via-blue-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <div className="absolute bottom-0 left-0 right-0 p-5">
+              <div className="flex justify-center gap-4 transform translate-y-10 group-hover:translate-y-0 transition-transform duration-300">
                 <motion.button
                   whileHover={{
                     scale: 1.1,
@@ -155,10 +143,8 @@ export default function ProductCard({
                     color: "#ffffff",
                   }}
                   whileTap={{ scale: 0.95 }}
-                  className={`p-2.5 backdrop-blur-sm rounded-full shadow-lg transition-all duration-200 ${
-                    isLoading
-                      ? "bg-blue-500 text-white"
-                      : "bg-white/90 text-gray-700"
+                  className={`p-3.5 bg-white text-gray-900 rounded-full shadow-lg transition-all duration-200 ${
+                    isLoading ? "bg-blue-600 text-white" : ""
                   }`}
                   onClick={handleAddToCart}
                   disabled={lowestPriceVariant.stock <= 0 || isLoading}
@@ -185,7 +171,7 @@ export default function ProductCard({
                       ></path>
                     </svg>
                   ) : (
-                    <ShoppingCart className="h-5 w-5" />
+                    <ShoppingBag className="h-5 w-5" />
                   )}
                 </motion.button>
                 <motion.button
@@ -195,7 +181,7 @@ export default function ProductCard({
                     color: "#ffffff",
                   }}
                   whileTap={{ scale: 0.95 }}
-                  className="p-2.5 bg-white/90 backdrop-blur-sm text-gray-700 rounded-full shadow-lg transition-all duration-200 delay-75"
+                  className="p-3.5 bg-white text-gray-900 rounded-full shadow-lg transition-all duration-200"
                 >
                   <Heart className="h-5 w-5" />
                 </motion.button>
@@ -206,67 +192,70 @@ export default function ProductCard({
                     color: "#ffffff",
                   }}
                   whileTap={{ scale: 0.95 }}
-                  className="p-2.5 bg-white/90 backdrop-blur-sm text-gray-700 rounded-full shadow-lg transition-all duration-200 delay-150"
+                  className="p-3.5 bg-white text-gray-900 rounded-full shadow-lg transition-all duration-200"
                 >
                   <Eye className="h-5 w-5" />
                 </motion.button>
               </div>
             </div>
-
-            {/* Category badge */}
-            <div className="absolute top-2 right-2 bg-blue-600/80 backdrop-blur-sm text-white text-xs font-medium px-2.5 py-1 rounded-md">
-              {product.category.name}
-            </div>
-
-            {/* Low stock warning */}
-            {lowestPriceVariant.stock <= 3 && lowestPriceVariant.stock > 0 && (
-              <div className="absolute bottom-2 left-2 bg-red-500/80 backdrop-blur-sm text-white text-xs font-medium px-2.5 py-1 rounded-md">
-                ¡Últimas {lowestPriceVariant.stock} unidades!
-              </div>
-            )}
-
-            {/* Out of stock overlay */}
-            {lowestPriceVariant.stock <= 0 && (
-              <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center">
-                <div className="bg-red-500 text-white text-sm font-medium px-3 py-1.5 rounded-md transform -rotate-12 shadow-lg">
-                  Agotado
-                </div>
-              </div>
-            )}
           </div>
 
-          <div className="p-4">
-            <div className="flex items-start justify-between">
-              <h3 className="font-medium text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 line-clamp-2">
-                {product.name}
-              </h3>
-              <span className="text-sm font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
-                ${lowestPriceVariant.price.toFixed(2)}
-              </span>
+          {/* Category badge */}
+          <div className="absolute top-4 left-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white text-xs font-medium px-3 py-1.5 rounded-full shadow-md backdrop-blur-sm">
+            {product.category.name}
+          </div>
+
+          {/* Low stock warning */}
+          {lowestPriceVariant.stock <= 3 && lowestPriceVariant.stock > 0 && (
+            <div className="absolute top-4 right-4 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-medium px-3 py-1.5 rounded-full shadow-md">
+              ¡Últimas {lowestPriceVariant.stock} unidades!
+            </div>
+          )}
+
+          {/* Out of stock overlay */}
+          {lowestPriceVariant.stock <= 0 && (
+            <div className="absolute inset-0 bg-black/70 flex items-center justify-center backdrop-blur-sm">
+              <div className="bg-red-500 text-white text-sm font-medium px-6 py-2 transform -rotate-6 shadow-lg">
+                Agotado
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div>
+          <div className="flex items-start justify-between mb-3">
+            <h3 className="font-medium text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+              {product.name}
+            </h3>
+            <span className="font-semibold text-blue-600 dark:text-blue-400">
+              ${lowestPriceVariant.price.toFixed(2)}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center">
+              <Check className="w-4 h-4 text-green-500 mr-1.5" />
+              {product.brand.name}
             </div>
 
-            <div className="mt-3 flex items-center justify-between">
-              <div className="text-xs text-gray-500 dark:text-gray-400">
-                {product.brand.name}
-              </div>
-
-              <div className="flex gap-1">
+            {uniqueColors.length > 0 && (
+              <div className="flex gap-1.5">
                 {uniqueColors.map((color) => (
                   <div
                     key={color.id}
-                    className={`w-4 h-4 rounded-full border border-gray-200 dark:border-gray-600 transition-transform duration-200 ${
+                    className={`w-5 h-5 rounded-full border border-gray-200 dark:border-gray-700 transition-transform duration-200 ${
                       isHovered ? "scale-125" : ""
-                    }`}
+                    } shadow-sm`}
                     style={{ backgroundColor: color.hexValue }}
                     aria-label={`Color: ${color.name}`}
                     title={color.name}
                   ></div>
                 ))}
               </div>
-            </div>
+            )}
           </div>
-        </Link>
-      </motion.div>
-    </>
+        </div>
+      </Link>
+    </motion.div>
   );
 }

@@ -27,7 +27,6 @@ import GenderPage from "./profucts/gender/GenderPage";
 import BrandPage from "./profucts/brand/BrandPage";
 import ColorPage from "./profucts/colors/ColorPage";
 import userImage from "@/assets/rb_859.png";
-import ProductoStatusSales from "@/pages/web/ProductoStatusSales";
 import Panel from "./panel/Panel";
 
 type TabKey =
@@ -41,8 +40,7 @@ type TabKey =
   | "brands"
   | "colors"
   | "sales"
-  | "orders"
-  | "salesPrediction";
+  | "orders";
 
 const EmployeeDashboard = () => {
   const [activeTab, setActiveTab] = useState<TabKey>("panel");
@@ -142,12 +140,7 @@ const EmployeeDashboard = () => {
         </div>
       </div>
     ),
-    salesPrediction: <ProductoStatusSales />,
   };
-
-
-
-
 
   // Animation variants
   const sidebarVariants = {

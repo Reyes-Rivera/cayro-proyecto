@@ -23,7 +23,7 @@ import { Link } from "react-router-dom";
 import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
 import { motion, AnimatePresence } from "framer-motion";
-import backgroundImage from "../web/Home/assets/hero.jpg";
+import backgroundImage from "@/pages/web/Home/assets/hero.jpg";
 import { compareQuestion, getQuestions } from "@/api/auth";
 import { getUserByEmail } from "@/api/users";
 

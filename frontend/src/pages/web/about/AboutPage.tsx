@@ -38,7 +38,7 @@ const AnimatedSection: React.FC<AnimatedSectionProps> = ({
   className,
 }) => {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true });
+  const isInView = useInView(ref, { once: true, amount: 0.1 });
   const mainControls = useAnimation();
 
   useEffect(() => {
@@ -51,12 +51,12 @@ const AnimatedSection: React.FC<AnimatedSectionProps> = ({
     <motion.section
       ref={ref}
       variants={{
-        hidden: { opacity: 0, y: 75 },
+        hidden: { opacity: 0, y: 50 },
         visible: { opacity: 1, y: 0 },
       }}
       initial="hidden"
       animate={mainControls}
-      transition={{ duration: 0.5, delay: 0.25, ease: "easeOut" }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
       className={className}
     >
       {children}
@@ -109,7 +109,14 @@ export default function AboutPage() {
   return (
     <div className="bg-white dark:bg-gray-900 overflow-x-hidden">
       {/* Hero Section - Two column layout with content left, images right */}
-      <div className="relative min-h-screen bg-white dark:bg-gray-900 flex items-center">
+      <div className="relative min-h-[90vh] bg-white dark:bg-gray-900 flex items-center">
+        {/* Background elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-bl from-blue-50/80 to-transparent dark:from-blue-950/20 dark:to-transparent"></div>
+          <div className="absolute -top-20 -right-20 w-96 h-96 bg-blue-100 dark:bg-blue-900/20 rounded-full opacity-70 blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-80 h-80 bg-blue-100 dark:bg-blue-900/20 rounded-full opacity-60 blur-3xl"></div>
+        </div>
+
         <div className="container mx-auto px-6 py-16 relative z-10 max-w-full">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             {/* Left column - Content */}
@@ -142,7 +149,13 @@ export default function AboutPage() {
                   transition={{ duration: 0.6, delay: 0.2 }}
                   className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white leading-tight"
                 >
-                  Conoce nuestra <span className="text-blue-600">historia</span>{" "}
+                  Conoce nuestra{" "}
+                  <span className="relative inline-block">
+                    <span className="relative z-10 text-blue-600">
+                      historia
+                    </span>
+                    <span className="absolute bottom-2 left-0 w-full h-3 bg-blue-600/20 -z-10 rounded"></span>
+                  </span>{" "}
                   y valores
                 </motion.h1>
               </motion.div>
@@ -151,7 +164,7 @@ export default function AboutPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.5 }}
-                className="text-gray-600 dark:text-gray-400 text-lg leading-relaxed max-w-lg"
+                className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed max-w-lg"
               >
                 Somos una empresa especializada en la fabricación y venta de
                 ropa de alta calidad. Nos destacamos por ofrecer prendas con
@@ -216,9 +229,8 @@ export default function AboutPage() {
                 >
                   <NavLink to="/contacto">Contactar</NavLink>
                 </motion.button>
-
               </motion.div>
-                <Breadcrumbs/>
+              <Breadcrumbs />
             </motion.div>
 
             {/* Right column - Images */}
@@ -293,10 +305,6 @@ export default function AboutPage() {
                 </motion.div>
               </motion.div>
 
-              {/* Decorative elements */}
-              <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-100 dark:bg-blue-900/20 rounded-full filter blur-3xl opacity-70 z-0"></div>
-              <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-blue-100 dark:bg-blue-900/20 rounded-full filter blur-3xl opacity-70 z-0"></div>
-
               {/* Floating badge */}
               <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
@@ -349,7 +357,9 @@ export default function AboutPage() {
       </div>
 
       {/* About Section */}
-      <AnimatedSection className="py-24 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 relative overflow-hidden">
+      <AnimatedSection
+        className="py-24 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 relative overflow-hidden"
+      >
         {/* Background decoration */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
           <div className="absolute -top-24 -left-24 w-64 h-64 bg-blue-500/5 rounded-full"></div>

@@ -24,7 +24,7 @@ import Swal from "sweetalert2";
 import "sweetalert2/src/sweetalert2.scss";
 import { motion, AnimatePresence } from "framer-motion";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import backgroundImage from "../web/Home/assets/hero.jpg";
+import backgroundImage from "@/pages/web/Home/assets/hero.jpg";
 
 export default function VerificationPage() {
   const [verificationCode, setVerificationCode] = useState([

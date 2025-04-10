@@ -1,245 +1,224 @@
 "use client";
-import { motion } from "framer-motion";
-import { ShoppingBag, ChevronDown, ArrowRight } from "lucide-react";
-import { NavLink } from "react-router-dom";
-import Playeras from "../../Home/assets/playeras.jpg.jpg";
-import Camisas from "../../Home/assets/camisas.jpg";
-import backgroundImage from "../../Home/assets/hero.jpg";
-export default function ProductHero() {
- 
 
-  // Smooth scroll function
-  const scrollToProducts = () => {
-    const productsSection = document.getElementById("products-grid");
-    if (productsSection) {
-      productsSection.scrollIntoView({ behavior: "smooth" });
+import { useState, useEffect, type FormEvent } from "react";
+import { motion } from "framer-motion";
+import { Search, Sparkles, ArrowRight } from "lucide-react";
+import type { Category } from "../utils/products";
+import { getCategories } from "@/api/products";
+
+interface ProductHeroProps {
+  setActiveCategoryId: (id: number | null) => void;
+  setSearchTerm: (term: string) => void;
+  scrollToProducts: () => void;
+}
+
+export default function ProductHeroCreative({
+  setActiveCategoryId,
+  setSearchTerm,
+  scrollToProducts,
+}: ProductHeroProps) {
+  const [animateHero, setAnimateHero] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<number | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [inputValue, setInputValue] = useState("");
+
+  useEffect(() => {
+    setAnimateHero(true);
+    const fetchData = async () => {
+      try {
+        const categoriesResponse = await getCategories();
+        if (categoriesResponse.data) {
+          setCategories(categoriesResponse.data);
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const handleSearch = (e?: FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
+
+    setSearchTerm(inputValue);
+    if (inputValue.trim()) {
+      scrollToProducts();
     }
   };
 
   return (
-    <div className="relative min-h-screen bg-white dark:bg-gray-900 flex items-center  overflow-x-hidden">
-      {/* Background decoration */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/5 rounded-full"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-500/5 rounded-full"></div>
-      </div>
+    <div className="relative min-h-[90vh] overflow-hidden bg-white dark:bg-gray-900">
+      {/* Creative background elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        {/* Blue blob */}
+        <div className="absolute -top-20 -right-20 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-blue-50/50 dark:from-blue-900/10 to-transparent"></div>
 
-      <div className="container mx-auto px-6 py-16 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-          {/* Left column - Content */}
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
-            className="space-y-8"
+        {/* Diagonal line */}
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
+          <svg
+            className="absolute top-0 right-0 h-full"
+            width="400"
+            height="100%"
+            viewBox="0 0 400 800"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
           >
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5 }}
-                className="mb-6 inline-flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-4 py-1.5"
-              >
-                <ShoppingBag className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                  CATÁLOGO DE PRODUCTOS
-                </span>
-              </motion.div>
+            <path
+              d="M400 0L0 800"
+              stroke="rgba(59, 130, 246, 0.1)"
+              strokeWidth="2"
+            />
+          </svg>
+        </div>
 
-              <motion.h1
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white leading-tight"
-              >
-                Descubre nuestra{" "}
-                <span className="text-blue-600">colección exclusiva</span>
-              </motion.h1>
-            </motion.div>
-
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.5 }}
-              className="text-gray-600 dark:text-gray-400 text-lg leading-relaxed max-w-lg"
-            >
-              Explora nuestra selección de prendas diseñadas con los mejores
-              materiales y acabados de alta calidad para todos los estilos.
-            </motion.p>
-
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.6 }}
-              className="flex flex-wrap gap-6 mt-8"
-            >
-              <div className="flex items-center gap-2">
-                <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                  <ShoppingBag className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                </div>
-                <span className="text-gray-700 dark:text-gray-300 text-sm">
-                  Envío rápido
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                  <ShoppingBag className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                </div>
-                <span className="text-gray-700 dark:text-gray-300 text-sm">
-                  Calidad premium
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                  <ShoppingBag className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                </div>
-                <span className="text-gray-700 dark:text-gray-300 text-sm">
-                  Devolución fácil
-                </span>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.7 }}
-              className="flex flex-col sm:flex-row gap-4 mt-8"
-            >
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-full transition-all flex items-center justify-center shadow-lg shadow-blue-600/20"
-                onClick={scrollToProducts}
-              >
-                <span className="flex items-center">
-                  Ver productos
-                  <ArrowRight className="ml-2 w-4 h-4" />
-                </span>
-              </motion.button>
-
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="border border-gray-300 dark:border-gray-700 hover:border-blue-600 dark:hover:border-blue-500 text-gray-900 dark:text-white font-medium py-3 px-6 rounded-full transition-all"
-              >
-                <NavLink to="/contacto">Contactar</NavLink>
-              </motion.button>
-            </motion.div>
-          </motion.div>
-
-          {/* Right column - Images */}
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            className="relative"
-          >
-            {/* Main featured image */}
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="relative z-20 rounded-2xl overflow-hidden shadow-2xl"
-            >
-              <img
-                src={backgroundImage}
-                alt="Producto destacado"
-                className="w-full h-auto object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-              <div className="absolute bottom-4 left-4 text-white">
-                <span className="text-sm font-medium bg-blue-600 px-3 py-1 rounded-full">
-                  PRODUCTOS
-                </span>
-              </div>
-            </motion.div>
-
-            {/* Grid of smaller images */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.6 }}
-              className="grid grid-cols-2 gap-4 mt-4"
-            >
-              <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.5 }}
-                className="relative overflow-hidden rounded-xl group shadow-lg"
-                whileHover={{ y: -5, scale: 1.02 }}
-              >
-                <img
-                  src={Playeras}
-                  alt="Categoría 1"
-                  className="w-full h-32 object-cover transition-transform duration-500 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-                <div className="absolute bottom-2 left-3 text-white font-medium text-sm">
-                  Playeras
-                </div>
-              </motion.div>
-
-              <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.6 }}
-                className="relative overflow-hidden rounded-xl group shadow-lg"
-                whileHover={{ y: -5, scale: 1.02 }}
-              >
-                <img
-                  src={Camisas}
-                  alt="Categoría 2"
-                  className="w-full h-32 object-cover transition-transform duration-500 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-                <div className="absolute bottom-2 left-3 text-white font-medium text-sm">
-                  Camisas
-                </div>
-              </motion.div>
-            </motion.div>
-
-            {/* Decorative elements */}
-            <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-100 dark:bg-blue-900/20 rounded-full filter blur-3xl opacity-70 z-0"></div>
-            <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-blue-100 dark:bg-blue-900/20 rounded-full filter blur-3xl opacity-70 z-0"></div>
-          </motion.div>
+        {/* Dots pattern */}
+        <div className="absolute top-0 left-0 w-full h-full">
+          <div className="absolute top-20 left-20 w-2 h-2 bg-blue-500/30 rounded-full"></div>
+          <div className="absolute top-40 left-40 w-3 h-3 bg-blue-500/20 rounded-full"></div>
+          <div className="absolute top-60 left-60 w-2 h-2 bg-blue-500/30 rounded-full"></div>
+          <div className="absolute top-80 left-80 w-4 h-4 bg-blue-500/10 rounded-full"></div>
+          <div className="absolute top-20 right-40 w-3 h-3 bg-blue-500/20 rounded-full"></div>
+          <div className="absolute top-60 right-60 w-2 h-2 bg-blue-500/30 rounded-full"></div>
         </div>
       </div>
 
-      {/* Scroll indicator */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.5, duration: 1 }}
-        className="absolute bottom-6 left-1/2 transform -translate-x-1/2 cursor-pointer z-20"
-        onClick={scrollToProducts}
-      >
-        <motion.div
-          animate={{ y: [0, 10, 0] }}
-          transition={{
-            duration: 2,
-            repeat: Number.POSITIVE_INFINITY,
-            repeatType: "loop",
-          }}
-          className="flex flex-col items-center gap-2"
-        >
-          <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">
-            Descubre más
-          </p>
-          <motion.div
-            animate={{
-              y: [0, 5, 0],
-            }}
-            transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
-            className="w-8 h-8 rounded-full flex items-center justify-center border border-gray-300 dark:border-gray-700"
-          >
-            <ChevronDown className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-          </motion.div>
-        </motion.div>
-      </motion.div>
+      <div className="container mx-auto px-4 py-24 md:py-36 relative z-10 flex items-center min-h-[90vh]">
+        <div className="max-w-6xl mx-auto w-full">
+          {/* Asymmetric layout */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+            {/* Left column - Text content (wider) */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={
+                animateHero ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }
+              }
+              transition={{ duration: 0.6 }}
+              className="md:col-span-7"
+            >
+              <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-medium mb-6">
+                <Sparkles className="w-4 h-4 mr-2" />
+                DESCUBRE NUESTRA COLECCIÓN
+              </div>
+
+              <h1 className="text-4xl md:text-7xl font-bold text-gray-900 dark:text-white mb-8 leading-tight">
+                Inspiración <br />
+                <span className="relative inline-block">
+                  <span className="relative z-10 text-blue-600 dark:text-blue-500">
+                    & Estilo
+                  </span>
+                  <svg
+                    className="absolute -bottom-2 left-0 w-full"
+                    height="15"
+                    viewBox="0 0 140 15"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M3 12.5C33 1.5 107 1.5 137 12.5"
+                      stroke="#3B82F6"
+                      strokeWidth="5"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </span>
+              </h1>
+
+              <p className="text-gray-600 dark:text-gray-400 mb-10 text-xl max-w-xl">
+                Productos únicos que combinan diseño innovador con funcionalidad
+                excepcional para transformar tu espacio
+              </p>
+
+              {/* Categories in horizontal scroll */}
+              <div className="mb-8 overflow-x-auto pb-4 -mx-4 px-4">
+                <div className="flex space-x-3">
+                  <button
+                    key="all"
+                    onClick={() => {
+                      setActiveCategory(null);
+                      setActiveCategoryId(null);
+                      scrollToProducts();
+                    }}
+                    className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
+                      activeCategory === null
+                        ? "bg-blue-600 text-white shadow-md"
+                        : "bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700"
+                    }`}
+                  >
+                    Todos
+                  </button>
+                  {categories.map((category) => (
+                    <button
+                      key={category.id}
+                      onClick={() => {
+                        setActiveCategory(category.id);
+                        setActiveCategoryId(category.id);
+                        scrollToProducts();
+                      }}
+                      className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
+                        activeCategory === category.id
+                          ? "bg-blue-600 text-white shadow-md"
+                          : "bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700"
+                      }`}
+                    >
+                      {category.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Right column - Search (narrower) */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={
+                animateHero ? { opacity: 1, x: 0 } : { opacity: 0, x: 20 }
+              }
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="md:col-span-5"
+            >
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl border border-gray-100 dark:border-gray-700 transform md:rotate-2 hover:rotate-0 transition-transform duration-300">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+                  ¿Qué estás buscando?
+                </h2>
+
+                <form onSubmit={handleSearch} className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <Search className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    className="block w-full pl-12 pr-20 py-4 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    placeholder="Buscar productos..."
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                  />
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                    <button
+                      type="submit"
+                      className="inline-flex items-center px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors shadow-md"
+                    >
+                      Buscar
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </button>
+                  </div>
+                </form>
+
+                <div className="mt-8 text-center">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                    Más de 1,000 productos disponibles
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom accent */}
+      <div className="absolute bottom-0 left-0 w-full h-2 bg-gradient-to-r from-transparent via-blue-500 to-transparent"></div>
     </div>
   );
 }

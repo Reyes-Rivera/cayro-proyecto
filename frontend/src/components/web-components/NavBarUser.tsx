@@ -83,12 +83,14 @@ const NavBarUser = () => {
       document.body.style.position = "fixed";
       document.body.style.top = `-${scrollY}px`;
       document.body.style.width = "100%";
+      document.body.style.overflow = "hidden"; // Add this to prevent scrolling
 
       return () => {
         // Re-enable scrolling when menu is closed
         document.body.style.position = "";
         document.body.style.top = "";
         document.body.style.width = "";
+        document.body.style.overflow = ""; // Reset overflow
 
         // Restore scroll position
         window.scrollTo(0, scrollY);
@@ -376,7 +378,7 @@ const NavBarUser = () => {
             </div>
           </div>
 
-          {/* Menú móvil desplegable */}
+          {/* Menú móvil desplegable - Fixed positioning to prevent content overlap */}
           <AnimatePresence>
             {isMenuOpen && (
               <motion.div
@@ -386,8 +388,9 @@ const NavBarUser = () => {
                 exit={{ opacity: 0, x: 300 }}
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
                 className={`sm:hidden fixed inset-y-0 right-0 w-3/4 max-w-xs bg-white dark:bg-gray-800 shadow-2xl z-50 ${
-                  menuNeedsScroll ? "overflow-y-auto" : "overflow-y-hidden"
+                  menuNeedsScroll ? "overflow-y-auto" : ""
                 }`}
+                style={{ top: "0", height: "100vh" }} // Ensure full height and proper positioning
               >
                 <div className="flex flex-col p-6 h-full">
                   <div className="flex justify-end mb-6">
@@ -530,7 +533,7 @@ const NavBarUser = () => {
             )}
           </AnimatePresence>
 
-          {/* Overlay para cerrar el menú móvil */}
+          {/* Overlay for mobile menu - Fixed positioning to prevent content overlap */}
           <AnimatePresence>
             {isMenuOpen && (
               <motion.div
@@ -540,6 +543,7 @@ const NavBarUser = () => {
                 transition={{ duration: 0.2 }}
                 className="sm:hidden fixed inset-0 bg-black/50 z-40"
                 onClick={closeMenu}
+                style={{ top: "0", height: "100vh" }} // Ensure full height
               />
             )}
           </AnimatePresence>

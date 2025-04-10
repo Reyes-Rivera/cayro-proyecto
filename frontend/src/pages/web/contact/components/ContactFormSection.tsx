@@ -47,8 +47,8 @@ const ContactFormSection = ({
 }: ContactFormSectionProps) => {
   return (
     <section className="py-24 bg-white dark:bg-gray-900 relative overflow-hidden">
-      {/* Background decoration - Simplified */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
+      {/* Background decoration - Enhanced with about page style */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <svg
           className="absolute top-0 left-0 w-full h-full text-blue-500/5"
           xmlns="http://www.w3.org/2000/svg"
@@ -101,8 +101,14 @@ const ContactFormSection = ({
           ></motion.div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden relative">
-          {/* Background decoration - Simplified */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden relative"
+        >
+          {/* Background decoration - Enhanced with about page style */}
           <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-30">
             <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/5 rounded-full"></div>
             <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-blue-500/5 rounded-full"></div>
@@ -117,7 +123,7 @@ const ContactFormSection = ({
               transition={{ duration: 0.6 }}
               className="lg:col-span-2 p-10 bg-gradient-to-br from-blue-600 to-blue-800 text-white relative overflow-hidden"
             >
-              {/* Background decoration - Simplified */}
+              {/* Background decoration - Enhanced with about page style */}
               <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
                 <svg
                   className="absolute top-0 right-0 w-full h-full text-white/5"
@@ -376,9 +382,11 @@ const ContactFormSection = ({
 
                   {/* Botón Enviar */}
                   <div className="md:col-span-2 mt-4">
-                    <button
+                    <motion.button
                       type="submit"
                       disabled={isLoading}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                       className="w-full py-3.5 px-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg shadow-lg flex items-center justify-center transition-all duration-300 disabled:opacity-70"
                     >
                       {isLoading ? (
@@ -392,13 +400,13 @@ const ContactFormSection = ({
                           <span>Enviar mensaje</span>
                         </>
                       )}
-                    </button>
+                    </motion.button>
                   </div>
                 </form>
               )}
             </motion.div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

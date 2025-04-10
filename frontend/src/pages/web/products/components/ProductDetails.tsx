@@ -16,10 +16,11 @@ import {
   Ruler,
   Palette,
   Shirt,
-  Loader2,
   AlertTriangle,
   Users,
   ShoppingCart,
+  Heart,
+  Star,
 } from "lucide-react";
 import Breadcrumbs from "@/components/web-components/Breadcrumbs";
 import { getProductById } from "@/api/products";
@@ -220,10 +221,11 @@ export default function ProductDetail() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-14 flex items-center justify-center">
         <div className="flex flex-col items-center">
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 rounded-full shadow-lg mb-4">
-            <Loader2 className="w-12 h-12 animate-spin" />
+          <div className="relative">
+            <div className="w-16 h-16 rounded-full border-4 border-gray-200 dark:border-gray-700"></div>
+            <div className="w-16 h-16 rounded-full border-4 border-t-blue-600 dark:border-t-blue-400 absolute top-0 left-0 animate-spin"></div>
           </div>
-          <p className="text-gray-600 dark:text-gray-300 text-lg font-medium">
+          <p className="text-gray-600 dark:text-gray-300 text-lg font-medium mt-4">
             Cargando producto...
           </p>
         </div>
@@ -287,25 +289,51 @@ export default function ProductDetail() {
 
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6 md:p-10">
-            {/* Product Images - Improved design */}
+            {/* Product Images - Improved design with image gallery */}
             <motion.div
               initial="hidden"
               animate="visible"
               variants={fadeIn}
-              className="flex justify-center items-center"
+              className="space-y-4"
             >
-              <div className="aspect-square w-full max-w-md rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all duration-300 bg-white dark:bg-gray-800">
+              <div className="aspect-square w-full rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all duration-300 bg-white dark:bg-gray-800">
                 <img
                   src={
                     mainImage ||
                     selectedVariant?.imageUrl ||
                     "/placeholder.svg?height=400&width=400" ||
-                    "/placeholder.svg" ||
                     "/placeholder.svg"
                   }
                   alt={product.name}
                   className="w-full h-full object-contain p-4"
                 />
+              </div>
+
+              {/* Thumbnails gallery */}
+              <div className="overflow-x-auto pb-2">
+                <div className="flex space-x-3">
+                  {product.variants
+                    .filter((v) => v.colorId === selectedColorId)
+                    .map((variant) => (
+                      <motion.button
+                        key={variant.id}
+                        onClick={() => setMainImage(variant.imageUrl)}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className={`flex-shrink-0 w-20 h-20 rounded-lg border-2 overflow-hidden ${
+                          mainImage === variant.imageUrl
+                            ? "border-blue-500 shadow-md"
+                            : "border-gray-200 dark:border-gray-700"
+                        }`}
+                      >
+                        <img
+                          src={variant.imageUrl || "/placeholder.svg"}
+                          alt={`${product.name} - ${variant.color.name}`}
+                          className="w-full h-full object-contain p-1"
+                        />
+                      </motion.button>
+                    ))}
+                </div>
               </div>
             </motion.div>
 
@@ -328,18 +356,37 @@ export default function ProductDetail() {
                     {product.category.name}
                   </span>
                 </div>
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-3 leading-tight">
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3 leading-tight">
                   {product.name}
                 </h1>
 
+                {/* Rating stars */}
+                <div className="flex items-center mb-4">
+                  <div className="flex items-center">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        className={`w-5 h-5 ${
+                          star <= 4
+                            ? "fill-yellow-400 text-yellow-400"
+                            : "fill-gray-200 text-gray-200 dark:fill-gray-700 dark:text-gray-700"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                    (24 reseñas)
+                  </span>
+                </div>
+
                 {/* Description below product name */}
-                <div className="mb-4 text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
+                <div className="mb-6 text-gray-600 dark:text-gray-300 text-base leading-relaxed">
                   {product.description}
                 </div>
 
                 {/* Price */}
-                <div className="flex items-center">
-                  <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
+                <div className="flex items-center mb-6">
+                  <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
                     $
                     {selectedVariant ? selectedVariant.price.toFixed(2) : "N/A"}
                   </span>
@@ -349,15 +396,15 @@ export default function ProductDetail() {
                       ¡Solo {selectedVariant.stock} en stock!
                     </span>
                   ) : (
-                    <span className="ml-3 text-sm font-medium text-green-600 dark:text-green-400 bg-green-100 dark:bg-red-900/20 px-3 py-1 rounded-full">
-                      ¡Solo {selectedVariant?.stock} en stock!
+                    <span className="ml-3 text-sm font-medium text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/20 px-3 py-1 rounded-full">
+                      En stock
                     </span>
                   )}
                 </div>
               </div>
 
               {/* Color Selection */}
-              <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+              <div className="bg-gray-50 dark:bg-gray-800/50 p-5 rounded-xl border border-gray-100 dark:border-gray-700">
                 <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3 flex items-center">
                   <Palette className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
                   Color:{" "}
@@ -374,34 +421,43 @@ export default function ProductDetail() {
                       onClick={() => handleColorSelect(color.id)}
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.95 }}
-                      className={`w-10 h-10 rounded-full transition-all duration-200 ${
+                      className={`w-12 h-12 rounded-full transition-all duration-200 flex items-center justify-center ${
                         selectedColorId === color.id
                           ? "ring-2 ring-offset-2 ring-blue-500 shadow-md"
                           : "hover:shadow-md"
                       }`}
-                      style={{
-                        backgroundColor:
-                          color.hexValue || colorMap[color.name] || "#6B7280",
-                      }}
                       aria-label={`Color: ${color.name}`}
                       title={color.name}
-                    />
+                    >
+                      <span
+                        className="w-10 h-10 rounded-full block"
+                        style={{
+                          backgroundColor:
+                            color.hexValue || colorMap[color.name] || "#6B7280",
+                        }}
+                      />
+                      {selectedColorId === color.id && (
+                        <div className="absolute w-4 h-4 bg-white rounded-full border-2 border-blue-500 flex items-center justify-center">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        </div>
+                      )}
+                    </motion.button>
                   ))}
                 </div>
               </div>
 
               {/* Size Selection */}
-              <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
-                <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3 flex items-center">
-                  <Ruler className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                  Talla:{" "}
-                  <span className="ml-2 font-normal text-gray-600 dark:text-gray-400">
-                    {selectedSizeId
-                      ? availableSizes.find((s) => s.id === selectedSizeId)
-                          ?.name
-                      : "Selecciona una talla"}
-                  </span>
-                </h3>
+              <div className="bg-gray-50 dark:bg-gray-800/50 p-5 rounded-xl border border-gray-100 dark:border-gray-700">
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-sm font-medium text-gray-900 dark:text-white flex items-center">
+                    <Ruler className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
+                    Talla
+                  </h3>
+                  <button className="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center">
+                    Guía de tallas
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  </button>
+                </div>
                 <div className="grid grid-cols-5 gap-2">
                   {availableSizes.map((size) => (
                     <motion.button
@@ -409,10 +465,10 @@ export default function ProductDetail() {
                       onClick={() => setSelectedSizeId(size.id)}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className={`py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                      className={`py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
                         selectedSizeId === size.id
                           ? "bg-blue-600 text-white shadow-md"
-                          : "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600"
+                          : "bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600"
                       }`}
                     >
                       {size.name}
@@ -422,7 +478,7 @@ export default function ProductDetail() {
               </div>
 
               {/* Quantity */}
-              <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+              <div className="bg-gray-50 dark:bg-gray-800/50 p-5 rounded-xl border border-gray-100 dark:border-gray-700">
                 <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3 flex items-center">
                   <ShoppingCart className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
                   Cantidad
@@ -433,10 +489,10 @@ export default function ProductDetail() {
                     whileTap={{ scale: 0.9 }}
                     onClick={decreaseQuantity}
                     disabled={quantity <= 1}
-                    className={`p-2 rounded-l-lg ${
+                    className={`p-3 rounded-l-lg ${
                       quantity <= 1
                         ? "bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500"
-                        : "bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500"
+                        : "bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"
                     }`}
                   >
                     <Minus className="w-4 h-4" />
@@ -456,7 +512,7 @@ export default function ProductDetail() {
                         setQuantity(val);
                       }
                     }}
-                    className="w-16 text-center py-2 border-y border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-lg font-medium"
+                    className="w-16 text-center py-3 border-y border-x border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-lg font-medium"
                   />
                   <motion.button
                     whileHover={{ scale: 1.1 }}
@@ -465,10 +521,10 @@ export default function ProductDetail() {
                     disabled={
                       !selectedVariant || quantity >= selectedVariant.stock
                     }
-                    className={`p-2 rounded-r-lg ${
+                    className={`p-3 rounded-r-lg ${
                       !selectedVariant || quantity >= selectedVariant.stock
                         ? "bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500"
-                        : "bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500"
+                        : "bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"
                     }`}
                   >
                     <Plus className="w-4 h-4" />
@@ -477,7 +533,7 @@ export default function ProductDetail() {
               </div>
 
               {/* Add to Cart Button */}
-              <div className="flex flex-col sm:flex-row gap-4 pt-4">
+              <div className="flex flex-col sm:flex-row gap-4 pt-6">
                 {product && selectedVariant ? (
                   <motion.div
                     whileHover={{ scale: 1.02 }}
@@ -496,7 +552,7 @@ export default function ProductDetail() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     disabled={true}
-                    className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-medium bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                    className="flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-medium bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
                   >
                     <ShoppingCart className="w-5 h-5" />
                     Selecciona opciones
@@ -506,7 +562,15 @@ export default function ProductDetail() {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="flex items-center justify-center p-3 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+                  className="flex items-center justify-center p-4 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+                >
+                  <Heart className="w-5 h-5" />
+                </motion.button>
+
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex items-center justify-center p-4 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
                 >
                   <Share2 className="w-5 h-5" />
                 </motion.button>
@@ -514,56 +578,61 @@ export default function ProductDetail() {
             </motion.div>
           </div>
           {/* Product Features */}
-          <div className="border-t flex justify-between items-center border-gray-200 dark:border-gray-700 p-10">
-            <div className="flex items-start">
-              <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-full mr-3">
-                <Truck className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          <div className="border-t border-gray-200 dark:border-gray-700 py-8 px-6 md:px-10">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+              Características del producto
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="flex items-start bg-gray-50 dark:bg-gray-800/50 p-5 rounded-xl border border-gray-100 dark:border-gray-700">
+                <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full mr-4">
+                  <Truck className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <h4 className="font-medium text-gray-900 dark:text-white">
+                    Envío gratuito
+                  </h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    En pedidos superiores a $50
+                  </p>
+                </div>
               </div>
-              <div>
-                <h4 className="font-medium text-gray-900 dark:text-white">
-                  Envío gratuito
-                </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  En pedidos superiores a $50
-                </p>
+              <div className="flex items-start bg-gray-50 dark:bg-gray-800/50 p-5 rounded-xl border border-gray-100 dark:border-gray-700">
+                <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full mr-4">
+                  <RefreshCw className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <h4 className="font-medium text-gray-900 dark:text-white">
+                    Devoluciones sencillas
+                  </h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    30 días para devoluciones
+                  </p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-start">
-              <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-full mr-3">
-                <RefreshCw className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div>
-                <h4 className="font-medium text-gray-900 dark:text-white">
-                  Devoluciones sencillas
-                </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  30 días para devoluciones
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start">
-              <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-full mr-3">
-                <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div>
-                <h4 className="font-medium text-gray-900 dark:text-white">
-                  Garantía de calidad
-                </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Productos de alta calidad garantizados
-                </p>
+              <div className="flex items-start bg-gray-50 dark:bg-gray-800/50 p-5 rounded-xl border border-gray-100 dark:border-gray-700">
+                <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full mr-4">
+                  <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <h4 className="font-medium text-gray-900 dark:text-white">
+                    Garantía de calidad
+                  </h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    Productos de alta calidad garantizados
+                  </p>
+                </div>
               </div>
             </div>
           </div>
           {/* Product Details Tabs - Only details tab now */}
           <div className="border-t border-gray-200 dark:border-gray-700">
-            <div className="px-6 md:px-10 py-3 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <div className="px-6 md:px-10 py-6 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
                 Detalles del producto
               </h3>
             </div>
 
-            <div className="p-6 md:p-8">
+            <div className="p-6 md:p-10">
               <AnimatePresence mode="wait">
                 <motion.div
                   key="details"
@@ -572,9 +641,9 @@ export default function ProductDetail() {
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                      <div className="flex items-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-6">
+                      <div className="flex items-center p-5 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700">
                         <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full mr-4">
                           <Tag className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                         </div>
@@ -582,12 +651,12 @@ export default function ProductDetail() {
                           <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">
                             Marca
                           </h4>
-                          <p className="text-gray-900 dark:text-white font-medium">
+                          <p className="text-gray-900 dark:text-white font-medium mt-1">
                             {product.brand.name}
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+                      <div className="flex items-center p-5 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700">
                         <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full mr-4">
                           <Shirt className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                         </div>
@@ -595,12 +664,12 @@ export default function ProductDetail() {
                           <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">
                             Categoría
                           </h4>
-                          <p className="text-gray-900 dark:text-white font-medium">
+                          <p className="text-gray-900 dark:text-white font-medium mt-1">
                             {product.category.name}
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+                      <div className="flex items-center p-5 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700">
                         <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full mr-4">
                           <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                         </div>
@@ -608,39 +677,45 @@ export default function ProductDetail() {
                           <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">
                             Género
                           </h4>
-                          <p className="text-gray-900 dark:text-white font-medium">
+                          <p className="text-gray-900 dark:text-white font-medium mt-1">
                             {product.gender.name}
                           </p>
                         </div>
                       </div>
                     </div>
-                    <div className="space-y-4">
-                      <div className="flex items-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+                    <div className="space-y-6">
+                      <div className="flex items-start p-5 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700">
                         <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full mr-4">
                           <Palette className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                         </div>
-                        <div>
+                        <div className="flex-1">
                           <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">
                             Colores disponibles
                           </h4>
-                          <div className="flex gap-2 mt-2">
+                          <div className="flex flex-wrap gap-2 mt-2">
                             {uniqueColors.map((color) => (
                               <div
                                 key={color.id}
-                                className="w-6 h-6 rounded-full border border-gray-200 dark:border-gray-600"
-                                style={{
-                                  backgroundColor:
-                                    color.hexValue ||
-                                    colorMap[color.name] ||
-                                    "#6B7280",
-                                }}
-                                title={color.name}
-                              />
+                                className="flex items-center gap-1 bg-white dark:bg-gray-700 px-2 py-1 rounded-md border border-gray-200 dark:border-gray-600"
+                              >
+                                <div
+                                  className="w-4 h-4 rounded-full border border-gray-200 dark:border-gray-600"
+                                  style={{
+                                    backgroundColor:
+                                      color.hexValue ||
+                                      colorMap[color.name] ||
+                                      "#6B7280",
+                                  }}
+                                />
+                                <span className="text-xs text-gray-700 dark:text-gray-300">
+                                  {color.name}
+                                </span>
+                              </div>
                             ))}
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+                      <div className="flex items-center p-5 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700">
                         <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full mr-4">
                           <Ruler className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                         </div>
@@ -648,16 +723,23 @@ export default function ProductDetail() {
                           <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">
                             Tallas disponibles
                           </h4>
-                          <p className="text-gray-900 dark:text-white font-medium">
+                          <div className="flex flex-wrap gap-2 mt-2">
                             {[
                               ...new Set(
                                 product.variants.map((v) => v.size.name)
                               ),
-                            ].join(", ")}
-                          </p>
+                            ].map((size) => (
+                              <span
+                                key={size}
+                                className="bg-white dark:bg-gray-700 px-2 py-1 rounded-md text-xs text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600"
+                              >
+                                {size}
+                              </span>
+                            ))}
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+                      <div className="flex items-center p-5 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700">
                         <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full mr-4">
                           <RefreshCw className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                         </div>
@@ -665,8 +747,15 @@ export default function ProductDetail() {
                           <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">
                             Última actualización
                           </h4>
-                          <p className="text-gray-900 dark:text-white font-medium">
-                            {new Date(product.updatedAt).toLocaleDateString()}
+                          <p className="text-gray-900 dark:text-white font-medium mt-1">
+                            {new Date(product.updatedAt).toLocaleDateString(
+                              "es-ES",
+                              {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              }
+                            )}
                           </p>
                         </div>
                       </div>
