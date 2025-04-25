@@ -38,15 +38,15 @@ export default function AddToCartButton({
 
       // Show success notification
       Swal.fire({
-        title: "¡Producto añadido!",
-        text: `${product.name} ha sido añadido a tu carrito`,
+        title: "¡Añadido al carrito!",
+        text: `${product.name} ha sido añadido`,
         icon: "success",
         timer: 2000,
         timerProgressBar: true,
         showConfirmButton: false,
-        position: "top-end",
+        position: "bottom-end",
         toast: true,
-        iconColor: "#3B82F6",
+        iconColor: "#10B981",
         customClass: {
           popup: "colored-toast",
           title: "swal-title",
@@ -64,19 +64,14 @@ export default function AddToCartButton({
       // Show error notification
       Swal.fire({
         title: "Error",
-        text: "No se pudo añadir el producto al carrito. Inténtalo de nuevo.",
+        text: "No se pudo añadir el producto al carrito",
         icon: "error",
         timer: 3000,
         timerProgressBar: true,
         showConfirmButton: false,
-        position: "top-end",
+        position: "bottom-end",
         toast: true,
         iconColor: "#EF4444",
-        customClass: {
-          popup: "colored-toast",
-          title: "swal-title",
-          htmlContainer: "swal-text",
-        },
       });
 
       console.error("Error adding item to cart:", error);
@@ -94,14 +89,14 @@ export default function AddToCartButton({
       whileTap={{ scale: 0.98 }}
       onClick={handleAddToCart}
       disabled={variant.stock <= 0 || isAdded || buttonLoading}
-      className={`flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg font-medium transition-all duration-200 ${
+      className={`flex items-center justify-center gap-2 py-3 px-4 rounded-full font-medium transition-all duration-200 ${
         variant.stock <= 0
-          ? "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+          ? "bg-gray-200 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed"
           : isAdded
-          ? "bg-green-600 text-white"
+          ? "bg-green-500 text-white"
           : buttonLoading
-          ? "bg-blue-500 text-white"
-          : "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 shadow-md"
+          ? "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
+          : "bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600"
       } ${fullWidth ? "w-full" : ""} ${className}`}
     >
       {variant.stock <= 0 ? (

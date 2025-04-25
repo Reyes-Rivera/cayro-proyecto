@@ -48,7 +48,7 @@ export default function CartItem({ item }: CartItemProps) {
           timer: 2000,
           timerProgressBar: true,
           showConfirmButton: false,
-          position: "top-end",
+          position: "bottom-end",
           toast: true,
         });
       } catch (error) {
@@ -62,7 +62,7 @@ export default function CartItem({ item }: CartItemProps) {
           timer: 3000,
           timerProgressBar: true,
           showConfirmButton: false,
-          position: "top-end",
+          position: "bottom-end",
           toast: true,
         });
 
@@ -90,7 +90,7 @@ export default function CartItem({ item }: CartItemProps) {
             timer: 3000,
             timerProgressBar: true,
             showConfirmButton: false,
-            position: "top-end",
+            position: "bottom-end",
             toast: true,
           });
         } finally {
@@ -107,7 +107,7 @@ export default function CartItem({ item }: CartItemProps) {
           timer: 3000,
           timerProgressBar: true,
           showConfirmButton: false,
-          position: "top-end",
+          position: "bottom-end",
           toast: true,
           iconColor: "#F59E0B",
         });
@@ -129,7 +129,7 @@ export default function CartItem({ item }: CartItemProps) {
         timer: 2000,
         timerProgressBar: true,
         showConfirmButton: false,
-        position: "top-end",
+        position: "bottom-end",
         toast: true,
       });
 
@@ -150,7 +150,7 @@ export default function CartItem({ item }: CartItemProps) {
         height: isRemoving ? 0 : "auto",
       }}
       transition={{ duration: 0.3 }}
-      className="flex flex-col sm:flex-row gap-4 p-4 border-b border-gray-200 dark:border-gray-700 relative"
+      className="p-4 relative"
     >
       {/* Stock Warning */}
       <AnimatePresence>
@@ -159,7 +159,7 @@ export default function CartItem({ item }: CartItemProps) {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="absolute top-0 right-0 left-0 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-400 text-xs p-2 flex items-center"
+            className="absolute top-0 right-0 left-0 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 text-xs p-2 flex items-center"
           >
             <AlertCircle className="w-3 h-3 mr-1" />
             Solo hay {item.variant.stock} unidades disponibles
@@ -174,11 +174,11 @@ export default function CartItem({ item }: CartItemProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-white/50 dark:bg-gray-800/50 flex items-center justify-center z-10"
+            className="absolute inset-0 bg-white/70 dark:bg-gray-900/70 flex items-center justify-center z-10"
           >
             <div className="flex items-center space-x-2">
               <svg
-                className="animate-spin h-5 w-5 text-blue-600 dark:text-blue-400"
+                className="animate-spin h-5 w-5 text-blue-600 dark:text-blue-500"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -197,7 +197,7 @@ export default function CartItem({ item }: CartItemProps) {
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 ></path>
               </svg>
-              <span className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+              <span className="text-sm text-blue-600 dark:text-blue-500 font-medium">
                 Actualizando...
               </span>
             </div>
@@ -205,139 +205,130 @@ export default function CartItem({ item }: CartItemProps) {
         )}
       </AnimatePresence>
 
-      <Link
-        to={`/producto/${item.product.id}`}
-        className="w-full sm:w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden flex-shrink-0 hover:opacity-90 transition-opacity"
-      >
-        <img
-          src={item.variant.imageUrl || "/placeholder.svg?height=96&width=96"}
-          alt={item.product.name}
-          className="w-full h-full object-cover"
-        />
-      </Link>
+      {/* Consistent horizontal layout for all screen sizes */}
+      <div className="flex gap-4">
+        {/* Product image - same size on all devices */}
+        <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden flex-shrink-0">
+          <Link
+            to={`/producto/${item.product.id}`}
+            className="block w-full h-full"
+          >
+            <img
+              src={
+                item.variant.imageUrl || "/placeholder.svg?height=200&width=200"
+              }
+              alt={item.product.name}
+              className="w-full h-full object-cover"
+            />
+          </Link>
+        </div>
 
-      <div className="flex-1">
-        <div className="flex flex-col sm:flex-row sm:justify-between">
-          <div>
-            <Link
-              to={`/producto/${item.product.id}`}
-              className="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-            >
-              {item.product.name}
-            </Link>
-            <div className="mt-1 text-sm text-gray-500 dark:text-gray-400 flex flex-wrap gap-2">
-              <span className="inline-flex items-center">
-                <span
-                  className="w-3 h-3 rounded-full mr-1"
-                  style={{
-                    backgroundColor: item.variant.color.hexValue || "#6B7280",
-                  }}
-                ></span>
-                {item.variant.color.name}
-              </span>
-              <span className="inline-flex items-center">
-                <span className="text-gray-400 mx-1">•</span>
-                Talla: {item.variant.size.name}
-              </span>
-              {item.product.brand && (
+        {/* Product details */}
+        <div className="flex-1">
+          <div className="flex flex-col sm:flex-row sm:justify-between">
+            <div>
+              <Link
+                to={`/producto/${item.product.id}`}
+                className="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-500 transition-colors line-clamp-1"
+              >
+                {item.product.name}
+              </Link>
+              <div className="mt-1 text-sm text-gray-500 dark:text-gray-400 flex flex-wrap gap-2">
+                <span className="inline-flex items-center">
+                  <span
+                    className="w-3 h-3 rounded-full mr-1"
+                    style={{
+                      backgroundColor: item.variant.color.hexValue || "#6B7280",
+                    }}
+                  ></span>
+                  {item.variant.color.name}
+                </span>
                 <span className="inline-flex items-center">
                   <span className="text-gray-400 mx-1">•</span>
-                  {item.product.brand.name}
+                  Talla: {item.variant.size.name}
                 </span>
+                {item.product.brand && (
+                  <span className="inline-flex items-center">
+                    <span className="text-gray-400 mx-1">•</span>
+                    {item.product.brand.name}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-2 sm:mt-0 text-right">
+              <p className="font-medium text-gray-900 dark:text-white">
+                ${item.variant.price.toFixed(2)}
+              </p>
+              {item.quantity > 1 && (
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  ${item.variant.price.toFixed(2)} x {item.quantity}
+                </p>
               )}
             </div>
           </div>
 
-          <div className="mt-2 sm:mt-0 text-right">
-            <p className="font-medium text-gray-900 dark:text-white">
-              ${item.variant.price.toFixed(2)}
-            </p>
-            {item.quantity > 1 && (
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                ${item.variant.price.toFixed(2)} x {item.quantity} = $
-                {(item.variant.price * item.quantity).toFixed(2)}
-              </p>
-            )}
-          </div>
-        </div>
+          <div className="flex flex-wrap justify-between items-center mt-4 gap-2">
+            <div className="flex items-center">
+              <button
+                onClick={() => handleQuantityChange(item.quantity - 1)}
+                disabled={item.quantity <= 1 || isLoading}
+                className="p-1.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 disabled:opacity-50 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                aria-label="Decrease quantity"
+              >
+                <Minus className="w-3 h-3" />
+              </button>
 
-        <div className="flex flex-wrap justify-between items-center mt-4 gap-2">
-          <div className="flex items-center">
-            <button
-              onClick={() => handleQuantityChange(item.quantity - 1)}
-              disabled={item.quantity <= 1 || isLoading}
-              className="p-1 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 disabled:opacity-50 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-              aria-label="Decrease quantity"
-            >
-              <Minus className="w-4 h-4" />
-            </button>
-
-            <input
-              type="number"
-              min="1"
-              max={item.variant.stock}
-              value={item.quantity}
-              onChange={(e) => {
-                const val = Number.parseInt(e.target.value);
-                if (!isNaN(val)) {
-                  handleQuantityChange(val);
-                }
-              }}
-              disabled={isLoading}
-              className="mx-1 w-12 text-center py-1 border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm disabled:opacity-70"
-            />
-
-            <button
-              onClick={() => handleQuantityChange(item.quantity + 1)}
-              disabled={item.quantity >= item.variant.stock || isLoading}
-              className="p-1 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 disabled:opacity-50 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-              aria-label="Increase quantity"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
-
-            {item.quantity >= item.variant.stock && (
-              <span className="ml-2 text-xs text-amber-600 dark:text-amber-400">
-                Máx. disponible
+              <span className="mx-3 text-sm font-medium text-gray-900 dark:text-white">
+                {item.quantity}
               </span>
-            )}
+
+              <button
+                onClick={() => handleQuantityChange(item.quantity + 1)}
+                disabled={item.quantity >= item.variant.stock || isLoading}
+                className="p-1.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 disabled:opacity-50 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                aria-label="Increase quantity"
+              >
+                <Plus className="w-3 h-3" />
+              </button>
+
+              {item.quantity >= item.variant.stock && (
+                <span className="ml-2 text-xs text-amber-600 dark:text-amber-400">
+                  Máx.
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-3">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleSaveForLater}
+                disabled={isLoading}
+                className="text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-500 transition-colors flex items-center text-xs disabled:opacity-50"
+                aria-label="Save for later"
+              >
+                <Heart
+                  className={`w-4 h-4 mr-1 ${
+                    isSaving ? "fill-blue-500 text-blue-500" : ""
+                  }`}
+                />
+                {isSaving ? "Guardado" : "Guardar"}
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleRemove}
+                disabled={isLoading}
+                className="text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors flex items-center text-xs disabled:opacity-50"
+                aria-label="Remove item"
+              >
+                <Trash2 className="w-4 h-4 mr-1" />
+                Eliminar
+              </motion.button>
+            </div>
           </div>
-
-          <div className="flex items-center gap-2">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleSaveForLater}
-              disabled={isLoading}
-              className="p-1.5 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors flex items-center text-xs font-medium disabled:opacity-50"
-              aria-label="Save for later"
-            >
-              <Heart
-                className={`w-4 h-4 mr-1 ${
-                  isSaving ? "fill-red-500 text-red-500" : ""
-                }`}
-              />
-              {isSaving ? "Guardado" : "Guardar"}
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleRemove}
-              disabled={isLoading}
-              className="p-1.5 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors flex items-center text-xs font-medium disabled:opacity-50"
-              aria-label="Remove item"
-            >
-              <Trash2 className="w-4 h-4 mr-1" />
-              Eliminar
-            </motion.button>
-          </div>
-        </div>
-
-        {/* Delivery Estimate */}
-        <div className="mt-3 text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/30 p-2 rounded-md">
-          <span className="font-medium">Entrega estimada:</span> 3-5 días
-          hábiles
         </div>
       </div>
     </motion.div>

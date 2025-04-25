@@ -1,5 +1,7 @@
 "use client";
 
+import type React from "react";
+
 import {
   Menu,
   Sun,
@@ -9,6 +11,9 @@ import {
   ShoppingCart,
   ChevronDown,
   ShoppingBag,
+  Home,
+  Phone,
+  Search,
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { NavLink, Link } from "react-router-dom";
@@ -33,10 +38,17 @@ const NavBarUser = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [logo, setLogo] = useState<string>("");
   const [scrolled, setScrolled] = useState(false);
+  const [visible, setVisible] = useState(true);
+  const lastScrollY = useRef(0);
   const [menuNeedsScroll, setMenuNeedsScroll] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { itemCount } = useCart();
   const [categories, setCategories] = useState<Category[]>([]);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchButtonRef = useRef<HTMLButtonElement>(null);
+  const navRef = useRef<HTMLDivElement>(null);
 
   // Effect to fetch categories from API
   useEffect(() => {
@@ -112,12 +124,32 @@ const NavBarUser = () => {
     }
 
     const handleScroll = () => {
-      setScrolled(window.scrollY > 10);
+      const currentScrollY = window.scrollY;
+
+      // Determine if we've scrolled enough to change the navbar appearance
+      setScrolled(currentScrollY > 5);
+
+      // Show/hide based on scroll direction
+      if (currentScrollY > lastScrollY.current && currentScrollY > 80) {
+        // Scrolling down & past threshold - hide navbar
+        setVisible(false);
+      } else {
+        // Scrolling up or at top - show navbar
+        setVisible(true);
+      }
+
+      lastScrollY.current = currentScrollY;
     };
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    if (isSearchOpen && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [isSearchOpen]);
 
   const toggleTheme = () => {
     document.documentElement.classList.toggle("dark");
@@ -170,6 +202,20 @@ const NavBarUser = () => {
     return <ShoppingBag className="w-4 h-4" />;
   };
 
+  const handleSearchSubmit = (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
+    if (searchQuery.trim()) {
+      // Navigate to search results page
+      window.location.href = `/productos?buscar=${encodeURIComponent(
+        searchQuery.trim()
+      )}`;
+      setIsSearchOpen(false);
+      setSearchQuery("");
+    }
+  };
+
   return (
     <>
       {/* Spacer div to prevent content from being hidden under the navbar */}
@@ -178,133 +224,249 @@ const NavBarUser = () => {
       <div
         className={`fixed w-full top-0 z-50 transition-all duration-300 ${
           scrolled
-            ? "bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm shadow-lg"
-            : "bg-white dark:bg-gray-900"
-        }`}
+            ? "bg-white dark:bg-gray-900 backdrop-blur-md shadow-lg"
+            : "bg-transparent dark:bg-transparent"
+        } ${visible ? "translate-y-0" : "-translate-y-full"}`}
       >
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 via-transparent to-blue-50/50 dark:from-blue-900/10 dark:via-transparent dark:to-blue-900/10 pointer-events-none"></div>
+
+        <nav
+          ref={navRef}
+          className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative"
+        >
           <div className="flex justify-between items-center h-20">
             {/* Logo */}
             <div className="flex items-center">
               <NavLink
                 to="/"
-                className="flex-shrink-0 transition-transform duration-300 hover:scale-105"
+                className="flex-shrink-0 transition-transform duration-300 hover:scale-105 relative group"
                 onClick={() => {
                   localStorage.removeItem("breadcrumbs");
                 }}
               >
+                <div className="absolute -inset-2 bg-blue-100/50 dark:bg-blue-900/20 rounded-full scale-0 group-hover:scale-100 transition-transform duration-300"></div>
                 <img
                   src={logo || "/placeholder.svg?height=80&width=120"}
                   alt="Logo"
-                  className="h-36 dark:drop-shadow-[0_0_10px_rgba(255,255,255,1.0)] w-auto object-contain dark:brightness-110 dark:contrast-125"
+                  className={`h-40 w-auto object-contain transition-all duration-300 relative ${
+                    scrolled
+                      ? "brightness-100"
+                      : "brightness-110 drop-shadow-md"
+                  }`}
                 />
               </NavLink>
             </div>
 
             {/* Menú de navegación en escritorio */}
-            <div className="hidden sm:flex sm:items-center sm:space-x-8">
-              <NavLink
-                to="/"
-                onClick={() => {
-                  localStorage.removeItem("breadcrumbs");
-                }}
-                className={({ isActive }) =>
-                  `text-base font-medium transition-colors duration-200 relative group ${
-                    isActive
-                      ? "text-blue-600 dark:text-blue-400"
-                      : "text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400"
-                  }`
-                }
-              >
-                Inicio
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 dark:bg-blue-400 transition-all duration-200 group-hover:w-full"></span>
-              </NavLink>
-
-              {/* Menú desplegable de Productos con categorías dinámicas */}
-              <div className="relative group">
-                <button className="text-base font-medium text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200 flex items-center gap-1 group">
-                  Productos
-                  <ChevronDown className="w-4 h-4 transition-transform duration-300 group-hover:rotate-180" />
-                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 dark:bg-blue-400 transition-all duration-200 group-hover:w-full"></span>
-                </button>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="absolute left-0 mt-2 w-64 origin-top-left z-50 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-300"
-                >
-                  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 p-2 overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-white dark:from-blue-900/20 dark:to-gray-800 opacity-50"></div>
-
-                    <div className="relative">
-                      <Link
-                        to="/productos"
-                        className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                      >
-                        <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                          <ShoppingCart className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                        </div>
-                        <div>
-                          <span className="font-medium">
-                            Todos los productos
-                          </span>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            Ver catálogo completo
-                          </p>
-                        </div>
-                      </Link>
-
-                      {categories.map((category, index) => (
-                        <Link
-                          key={category.id}
-                          to={`/productos?categoria=${encodeURIComponent(
-                            category.name
-                          )}`}
-                          className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors mt-1"
+            <div className="hidden sm:flex sm:items-center sm:space-x-1 lg:space-x-2">
+              {/* Búsqueda o Navegación */}
+              <AnimatePresence mode="wait">
+                {isSearchOpen ? (
+                  <motion.div
+                    key="search"
+                    initial={{ opacity: 0, width: 0 }}
+                    animate={{ opacity: 1, width: "auto" }}
+                    exit={{ opacity: 0, width: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="flex items-center"
+                  >
+                    <div className="flex items-center bg-white dark:bg-gray-800 rounded-full shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
+                      <input
+                        ref={searchInputRef}
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Buscar productos..."
+                        className="w-64 pl-4 pr-2 py-2 bg-transparent border-0 focus:outline-none text-gray-900 dark:text-white"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            handleSearchSubmit();
+                          } else if (e.key === "Escape") {
+                            setIsSearchOpen(false);
+                            setSearchQuery("");
+                          }
+                        }}
+                      />
+                      <div className="flex items-center pr-1">
+                        <button
+                          type="button"
+                          onClick={handleSearchSubmit}
+                          className="p-1.5 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          aria-label="Buscar"
                         >
-                          <div
-                            className={`w-8 h-8 rounded-full ${
-                              getCategoryColor(index).bg
-                            } flex items-center justify-center`}
-                          >
-                            <span className={getCategoryColor(index).text}>
-                              {getCategoryIcon()}
-                            </span>
-                          </div>
-                          <div>
-                            <span className="font-medium">{category.name}</span>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                              {category.description}
-                            </p>
-                          </div>
-                        </Link>
-                      ))}
+                          <Search className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsSearchOpen(false);
+                            setSearchQuery("");
+                          }}
+                          className="p-1.5 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 mr-1"
+                          aria-label="Cancelar búsqueda"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
-              </div>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="navigation"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="flex items-center space-x-1 lg:space-x-2"
+                  >
+                    <NavLink
+                      to="/"
+                      onClick={() => {
+                        localStorage.removeItem("breadcrumbs");
+                      }}
+                      className={({ isActive }) =>
+                        `text-sm font-medium transition-all duration-200 relative group px-3 py-2 rounded-full ${
+                          isActive
+                            ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
+                            : scrolled
+                            ? "text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100/70 dark:hover:bg-gray-800/70"
+                            : "text-gray-800 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white/30 dark:hover:bg-gray-800/30"
+                        } flex items-center gap-1.5`
+                      }
+                    >
+                      <Home className="w-4 h-4" />
+                      <span>Inicio</span>
+                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-blue-600 dark:bg-blue-400 transition-all duration-200 group-hover:w-1/2"></span>
+                    </NavLink>
 
-              <NavLink
-                to="/contacto"
-                className={({ isActive }) =>
-                  `text-base font-medium transition-colors duration-200 relative group ${
-                    isActive
-                      ? "text-blue-600 dark:text-blue-400"
-                      : "text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400"
-                  }`
-                }
-              >
-                Contacto
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 dark:bg-blue-400 transition-all duration-200 group-hover:w-full"></span>
-              </NavLink>
+                    {/* Menú desplegable de Productos con categorías dinámicas */}
+                    <div className="relative group">
+                      <button
+                        className={`text-sm font-medium transition-all duration-200 flex items-center gap-1.5 group px-3 py-2 rounded-full ${
+                          scrolled
+                            ? "text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100/70 dark:hover:bg-gray-800/70"
+                            : "text-gray-800 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white/30 dark:hover:bg-gray-800/30"
+                        }`}
+                      >
+                        <ShoppingBag className="w-4 h-4" />
+                        <span>Productos</span>
+                        <ChevronDown className="w-3.5 h-3.5 transition-transform duration-300 group-hover:rotate-180" />
+                        <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-blue-600 dark:bg-blue-400 transition-all duration-200 group-hover:w-1/2"></span>
+                      </button>
+
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute left-0 mt-2 w-64 origin-top-left z-50 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-300"
+                      >
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 p-2 overflow-hidden">
+                          <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-white dark:from-blue-900/20 dark:to-gray-800 opacity-50"></div>
+
+                          <div className="relative">
+                            <Link
+                              to="/productos"
+                              className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                            >
+                              <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                                <ShoppingCart className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                              </div>
+                              <div>
+                                <span className="font-medium">
+                                  Todos los productos
+                                </span>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                  Ver catálogo completo
+                                </p>
+                              </div>
+                            </Link>
+
+                            {categories.map((category, index) => (
+                              <Link
+                                key={category.id}
+                                to={`/productos?categoria=${encodeURIComponent(
+                                  category.name
+                                )}`}
+                                className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors mt-1"
+                              >
+                                <div
+                                  className={`w-8 h-8 rounded-full ${
+                                    getCategoryColor(index).bg
+                                  } flex items-center justify-center`}
+                                >
+                                  <span
+                                    className={getCategoryColor(index).text}
+                                  >
+                                    {getCategoryIcon()}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="font-medium">
+                                    {category.name}
+                                  </span>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    {category.description}
+                                  </p>
+                                </div>
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      </motion.div>
+                    </div>
+
+                    <NavLink
+                      to="/contacto"
+                      className={({ isActive }) =>
+                        `text-sm font-medium transition-all duration-200 relative group px-3 py-2 rounded-full ${
+                          isActive
+                            ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
+                            : scrolled
+                            ? "text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100/70 dark:hover:bg-gray-800/70"
+                            : "text-gray-800 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white/30 dark:hover:bg-gray-800/30"
+                        } flex items-center gap-1.5`
+                      }
+                    >
+                      <Phone className="w-4 h-4" />
+                      <span>Contacto</span>
+                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-blue-600 dark:bg-blue-400 transition-all duration-200 group-hover:w-1/2"></span>
+                    </NavLink>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Iconos en escritorio */}
-            <div className="hidden sm:flex items-center gap-6">
+            <div className="hidden sm:flex items-center gap-1 lg:gap-2">
+              {/* Botón de búsqueda */}
+              <button
+                ref={searchButtonRef}
+                onClick={() => setIsSearchOpen(true)}
+                className={`p-2 rounded-full transition-colors duration-200 ${
+                  scrolled
+                    ? "bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
+                    : "bg-white/20 dark:bg-gray-800/40 hover:bg-white/30 dark:hover:bg-gray-800/60 backdrop-blur-sm"
+                }`}
+                aria-label="Buscar productos"
+              >
+                <Search
+                  className={`h-4 w-4 transition-colors duration-200 text-gray-700 dark:text-gray-300`}
+                />
+              </button>
+
               <Link to="/carrito" className="relative group">
-                <ShoppingCart className="h-6 w-6 text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200" />
-                <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                <div
+                  className={`p-2 rounded-full transition-colors duration-200 ${
+                    scrolled
+                      ? "bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
+                      : "bg-white/20 dark:bg-gray-800/40 hover:bg-white/30 dark:hover:bg-gray-800/60 backdrop-blur-sm"
+                  }`}
+                >
+                  <ShoppingCart
+                    className={`h-4 w-4 transition-colors duration-200 text-gray-700 dark:text-gray-300`}
+                  />
+                </div>
+                <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center group-hover:scale-110 transition-transform px-1">
                   {itemCount}
                 </span>
                 <span className="sr-only">Carrito de compras</span>
@@ -312,15 +474,19 @@ const NavBarUser = () => {
 
               <button
                 onClick={toggleTheme}
-                className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
+                className={`p-2 rounded-full transition-colors duration-200 ${
+                  scrolled
+                    ? "bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
+                    : "bg-white/20 dark:bg-gray-800/40 hover:bg-white/30 dark:hover:bg-gray-800/60 backdrop-blur-sm"
+                }`}
                 aria-label={
                   darkMode ? "Cambiar a modo claro" : "Cambiar a modo oscuro"
                 }
               >
                 {darkMode ? (
-                  <Sun className="h-5 w-5 text-amber-500" />
+                  <Sun className="h-4 w-4 text-amber-500" />
                 ) : (
-                  <Moon className="h-5 w-5 text-blue-600" />
+                  <Moon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 )}
               </button>
 
@@ -333,52 +499,140 @@ const NavBarUser = () => {
                       ? "/perfil-empleado"
                       : "/perfil-usuario"
                   }
-                  className="flex items-center gap-2 text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200 group"
+                  className={`flex items-center gap-2 transition-colors duration-200 group ml-1 px-2 py-1.5 rounded-full ${
+                    scrolled
+                      ? "hover:bg-gray-100 dark:hover:bg-gray-800"
+                      : "hover:bg-white/20 dark:hover:bg-gray-800/40"
+                  }`}
                 >
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold shadow-md group-hover:shadow-blue-500/20 group-hover:scale-105 transition-all duration-200">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold shadow-md group-hover:shadow-blue-500/20 group-hover:scale-105 transition-all duration-200">
                     {getInitial(user?.name || "")}
                   </div>
-                  <span className="font-medium">
+                  <span className="font-medium text-sm text-gray-800 dark:text-gray-200">
                     {user?.name?.split(" ")[0]}
                   </span>
                 </Link>
               ) : (
                 <Link
                   to="/login"
-                  className="flex items-center gap-2 text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
+                  className={`flex items-center gap-2 transition-colors duration-200 ml-1 px-3 py-2 rounded-full ${
+                    scrolled
+                      ? "bg-blue-600 hover:bg-blue-700 text-white"
+                      : "bg-blue-600/90 hover:bg-blue-700/90 text-white backdrop-blur-sm"
+                  }`}
                 >
-                  <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200">
-                    <User className="h-5 w-5" />
-                  </div>
-                  <span className="font-medium">Ingresar</span>
+                  <User className="h-4 w-4" />
+                  <span className="font-medium text-sm">Ingresar</span>
                 </Link>
               )}
             </div>
 
             {/* Menú móvil */}
-            <div className="flex items-center sm:hidden">
-              <Link to="/carrito" className="relative mr-4">
-                <ShoppingCart className="h-6 w-6 text-gray-800 dark:text-gray-200" />
-                <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+            <div className="flex items-center sm:hidden gap-2">
+              {/* Búsqueda o Navegación móvil */}
+              <AnimatePresence mode="wait">
+                {isSearchOpen ? (
+                  <motion.div
+                    key="search-mobile"
+                    initial={{ opacity: 0, width: 0 }}
+                    animate={{ opacity: 1, width: "auto" }}
+                    exit={{ opacity: 0, width: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="flex items-center"
+                  >
+                    <div className="flex items-center bg-white dark:bg-gray-800 rounded-full shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
+                      <input
+                        ref={searchInputRef}
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Buscar..."
+                        className="w-36 pl-3 pr-1 py-1.5 bg-transparent border-0 focus:outline-none text-gray-900 dark:text-white text-sm"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            handleSearchSubmit();
+                          } else if (e.key === "Escape") {
+                            setIsSearchOpen(false);
+                            setSearchQuery("");
+                          }
+                        }}
+                      />
+                      <div className="flex items-center pr-1">
+                        <button
+                          type="button"
+                          onClick={handleSearchSubmit}
+                          className="p-1 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          aria-label="Buscar"
+                        >
+                          <Search className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsSearchOpen(false);
+                            setSearchQuery("");
+                          }}
+                          className="p-1 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 mr-1"
+                          aria-label="Cancelar búsqueda"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.button
+                    key="search-button-mobile"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    onClick={() => setIsSearchOpen(true)}
+                    className={`p-2 rounded-full transition-colors ${
+                      scrolled
+                        ? "text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        : "text-gray-800 dark:text-white hover:bg-white/20 dark:hover:bg-gray-800/40"
+                    }`}
+                    aria-label="Buscar productos"
+                  >
+                    <Search className="w-5 h-5" />
+                  </motion.button>
+                )}
+              </AnimatePresence>
+
+              <Link to="/carrito" className="relative">
+                <div
+                  className={`p-2 rounded-full transition-colors ${
+                    scrolled
+                      ? "text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                      : "text-gray-800 dark:text-white hover:bg-white/20 dark:hover:bg-gray-800/40"
+                  }`}
+                >
+                  <ShoppingCart className="w-5 h-5" />
+                </div>
+                <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
                   {itemCount}
                 </span>
               </Link>
 
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="p-2 rounded-md text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                className={`p-2 rounded-full transition-colors ${
+                  scrolled
+                    ? "text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    : "text-gray-800 dark:text-white hover:bg-white/20 dark:hover:bg-gray-800/40"
+                }`}
                 aria-label="Abrir menú"
               >
                 {isMenuOpen ? (
-                  <X className="w-6 h-6" />
+                  <X className="w-5 h-5" />
                 ) : (
-                  <Menu className="w-6 h-6" />
+                  <Menu className="w-5 h-5" />
                 )}
               </button>
             </div>
           </div>
 
-          {/* Menú móvil desplegable - Fixed positioning to prevent content overlap */}
           <AnimatePresence>
             {isMenuOpen && (
               <motion.div
@@ -390,7 +644,7 @@ const NavBarUser = () => {
                 className={`sm:hidden fixed inset-y-0 right-0 w-3/4 max-w-xs bg-white dark:bg-gray-800 shadow-2xl z-50 ${
                   menuNeedsScroll ? "overflow-y-auto" : ""
                 }`}
-                style={{ top: "0", height: "100vh" }} // Ensure full height and proper positioning
+                style={{ top: "0", height: "100vh" }}
               >
                 <div className="flex flex-col p-6 h-full">
                   <div className="flex justify-end mb-6">
@@ -404,7 +658,7 @@ const NavBarUser = () => {
                   </div>
 
                   {auth ? (
-                    <div className="flex items-center gap-3 mb-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                    <div className="flex items-center gap-3 mb-6 p-4 bg-gradient-to-r from-blue-50 to-blue-100/50 dark:from-blue-900/20 dark:to-blue-800/10 rounded-xl">
                       <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-xl font-bold shadow-md">
                         {getInitial(user?.name || "")}
                       </div>
@@ -425,7 +679,7 @@ const NavBarUser = () => {
                     <Link
                       to="/login"
                       onClick={closeMenu}
-                      className="flex items-center justify-center gap-2 mb-6 p-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors"
+                      className="flex items-center justify-center gap-2 mb-6 p-3 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl font-medium hover:from-blue-700 hover:to-blue-600 transition-colors shadow-md"
                     >
                       <User className="h-5 w-5" />
                       Iniciar sesión
@@ -440,22 +694,26 @@ const NavBarUser = () => {
                         closeMenu();
                       }}
                       className={({ isActive }) =>
-                        `block px-4 py-3 rounded-lg text-base font-medium ${
+                        `flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium ${
                           isActive
                             ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
                             : "text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                         }`
                       }
                     >
+                      <Home className="w-5 h-5" />
                       Inicio
                     </NavLink>
 
                     <div className="px-4 py-3 text-base font-medium text-gray-800 dark:text-gray-200">
                       <div className="flex justify-between items-center">
-                        <span>Productos</span>
+                        <div className="flex items-center gap-3">
+                          <ShoppingBag className="w-5 h-5" />
+                          <span>Productos</span>
+                        </div>
                         <ChevronDown className="w-4 h-4" />
                       </div>
-                      <div className="mt-2 ml-4 space-y-1">
+                      <div className="mt-2 ml-8 space-y-1">
                         <Link
                           to="/productos"
                           onClick={closeMenu}
@@ -484,13 +742,14 @@ const NavBarUser = () => {
                       to="/contacto"
                       onClick={closeMenu}
                       className={({ isActive }) =>
-                        `block px-4 py-3 rounded-lg text-base font-medium ${
+                        `flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium ${
                           isActive
                             ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
                             : "text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                         }`
                       }
                     >
+                      <Phone className="w-5 h-5" />
                       Contacto
                     </NavLink>
 
@@ -498,19 +757,20 @@ const NavBarUser = () => {
                       to="/carrito"
                       onClick={closeMenu}
                       className={({ isActive }) =>
-                        `block px-4 py-3 rounded-lg text-base font-medium ${
+                        `flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium ${
                           isActive
                             ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
                             : "text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                         }`
                       }
                     >
+                      <ShoppingCart className="w-5 h-5" />
                       Carrito ({itemCount})
                     </NavLink>
                   </div>
 
                   <div className="mt-auto">
-                    <div className="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                    <div className="flex justify-between items-center p-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-700/50 rounded-xl">
                       <span className="text-gray-800 dark:text-gray-200 font-medium">
                         Modo oscuro
                       </span>
