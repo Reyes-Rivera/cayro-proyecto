@@ -153,7 +153,6 @@ export default function PasswordResetPage() {
             popup: "animate__animated animate__fadeOutUp",
           },
         });
-        navigate("/recuperar-password");
       } finally {
         setIsLoading(false);
       }

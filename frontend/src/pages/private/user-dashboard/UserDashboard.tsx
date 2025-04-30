@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -10,12 +9,10 @@ import {
   CreditCard,
   Bell,
   Calendar,
-  X,
   Menu,
   Sparkles,
   Award,
   Shield,
-  UserCircle,
   Clock,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContextType";
@@ -125,8 +122,10 @@ const UserDashboard = () => {
   ];
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 py-14 px-4 md:px-8 lg:px-12 overflow-x-hidden mt-14">
-      <div className="container  ">
+    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 py-20 px-4 md:px-8 lg:px-12 overflow-x-hidden">
+      
+
+      <div className="container">
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Desktop Sidebar */}
           <motion.div
@@ -137,9 +136,6 @@ const UserDashboard = () => {
           >
             <div className="">
               <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-700">
-                {/* Logo and brand */}
-               
-
                 {/* User profile summary */}
                 <div className="p-6 border-b border-gray-100 dark:border-gray-700">
                   <div className="flex items-center gap-4">
@@ -155,12 +151,7 @@ const UserDashboard = () => {
                       <h3 className="font-semibold text-gray-900 dark:text-white">
                         {user?.name} {user?.surname}
                       </h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="bg-gradient-to-r from-blue-600 to-blue-700 text-white text-xs font-medium px-2.5 py-0.5 rounded-full shadow-sm">
-                          Premium
-                        </span>
-                        <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                      </div>
+                    
                     </div>
                   </div>
                 </div>
@@ -225,17 +216,10 @@ const UserDashboard = () => {
                     <div className="flex items-center gap-3 mb-2">
                       <Award className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                       <p className="font-medium text-gray-800 dark:text-gray-200">
-                        Miembro desde 2025
+                        Cliente
                       </p>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-full bg-blue-100 dark:bg-blue-900/30 h-2 rounded-full overflow-hidden">
-                        <div className="bg-gradient-to-r from-blue-600 to-blue-700 h-full w-3/4 rounded-full"></div>
-                      </div>
-                      <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                        75%
-                      </span>
-                    </div>
+                  
                   </div>
                 </div>
 
@@ -254,31 +238,6 @@ const UserDashboard = () => {
               </div>
             </div>
           </motion.div>
-
-          {/* Mobile header */}
-          <div className="fixed top-0 left-0 right-0 h-16 bg-white dark:bg-gray-800 shadow-md z-40 lg:hidden flex items-center justify-between px-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-2 rounded-lg shadow-md">
-                <UserCircle className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <h1 className="text-base font-bold text-gray-900 dark:text-white">
-                  Mi Dashboard
-                </h1>
-                <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
-                  <span>
-                    {navItems.find((item) => item.key === activeTab)?.label}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <button
-              onClick={() => setIsMenuOpen(true)}
-              className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
-            >
-              <Menu className="w-6 h-6" />
-            </button>
-          </div>
 
           {/* Mobile menu */}
           <AnimatePresence>
@@ -302,29 +261,7 @@ const UserDashboard = () => {
                   transition={{ type: "spring", damping: 25, stiffness: 300 }}
                   className="fixed top-0 left-0 h-full bg-white dark:bg-gray-800 shadow-2xl w-72 z-50 lg:hidden overflow-y-auto rounded-r-2xl"
                 >
-                  {/* Header */}
-                  <div className="p-4 border-b border-gray-100 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-3">
-                        <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-2 rounded-lg shadow-md">
-                          <UserCircle className="h-5 w-5 text-white" />
-                        </div>
-                        <h1 className="text-lg font-bold text-gray-900 dark:text-white">
-                          Mi Dashboard
-                        </h1>
-                      </div>
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => setIsMenuOpen(false)}
-                        className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
-                      >
-                        <X className="w-5 h-5" />
-                      </motion.button>
-                    </div>
-                  </div>
-
-                  {/* User profile */}
+                 
                   <div className="p-4 border-b border-gray-100 dark:border-gray-700">
                     <div className="flex items-center gap-3">
                       <div className="relative group">
@@ -341,7 +278,7 @@ const UserDashboard = () => {
                         </h3>
                         <div className="flex items-center gap-1 mt-0.5">
                           <span className="bg-gradient-to-r from-blue-600 to-blue-700 text-white text-xs px-1.5 py-0.5 rounded-full shadow-sm">
-                            Premium
+                            Cliente
                           </span>
                           <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                         </div>
@@ -409,17 +346,7 @@ const UserDashboard = () => {
                     </nav>
                   </div>
 
-                  {/* Activity info */}
-                  <div className="p-4 border-t border-gray-100 dark:border-gray-700">
-                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 p-4 rounded-xl border border-blue-100 dark:border-blue-800/30 shadow-sm">
-                      <div className="flex items-center gap-3 mb-2">
-                        <Award className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                        <p className="font-medium text-gray-800 dark:text-gray-200">
-                          Miembro desde 2025
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                
 
                   {/* Logout in mobile */}
                   <div className="p-4 border-t border-gray-100 dark:border-gray-700 mt-auto">
@@ -491,15 +418,18 @@ const UserDashboard = () => {
 
       {/* Mobile menu button */}
       <div className="fixed bottom-6 right-6 lg:hidden z-30">
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => setIsMenuOpen(true)}
-          className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-3 rounded-full shadow-lg flex items-center justify-center"
-          aria-label="Abrir menú"
-        >
-          <Menu className="w-6 h-6" />
-        </motion.button>
+        <div className="flex flex-col items-end">
+          
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setIsMenuOpen(true)}
+            className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-3 rounded-full shadow-lg flex items-center justify-center"
+            aria-label="Abrir menú"
+          >
+            <Menu className="w-6 h-6" />
+          </motion.button>
+        </div>
       </div>
     </main>
   );
