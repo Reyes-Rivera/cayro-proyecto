@@ -21,10 +21,12 @@ import { FaqCategoryModule } from './faqs/faq_category/faq_category.module';
 import { QuestionsModule } from './faqs/questions/questions.module';
 import { SecurityquestionModule } from './securityquestion/securityquestion.module';
 import { CartModule } from './cart/cart.module';
-import { AppLogger } from './utils/logger.service';
+import { StripeModule } from './stripe/stripe.module';
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     UsersModule,
     AuthModule,
     EmployeesModule,
@@ -45,6 +47,7 @@ import { AppLogger } from './utils/logger.service';
     QuestionsModule,
     SecurityquestionModule,
     CartModule,
+    StripeModule,
   ],
   controllers: [],
   providers: [AppService],

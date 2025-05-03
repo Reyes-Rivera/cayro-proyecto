@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-     "vercel-build": "prisma generate && nest build",
+    "vercel-build": "prisma generate && nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "build": "prisma generate && nest build",
     "start": "nest start",
@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
-    "@nestjs/config": "^3.2.3",
+    "@nestjs/config": "^3.3.0",
     "@nestjs/core": "^10.0.0",
     "@nestjs/jwt": "^10.2.0",
     "@nestjs/mapped-types": "*",
@@ -50,6 +50,7 @@
     "postmark": "^4.0.5",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
+    "stripe": "^18.1.0",
     "vercel": "^37.9.0",
     "winston": "^3.17.0",
     "winston-daily-rotate-file": "^5.0.0"
@@ -99,7 +100,6 @@
     "testEnvironment": "node"
   },
   "resolutions": {
-  "cross-spawn": "^7.0.5"
+    "cross-spawn": "^7.0.5"
   }
-
 }

@@ -6,9 +6,12 @@ export interface UserLogin {
 export interface Direction{
     street: string;
     city: string;
+    sate:string;
     country: string;
-    neighborhood: string;
-    references: string;
+    postalCode: string;
+    colony: string;
+    id:number;
+    isDefault?: boolean;
 }
 
 export interface User {

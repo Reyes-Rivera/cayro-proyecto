@@ -239,7 +239,7 @@ const NavBarUser = () => {
             <div className="flex items-center">
               <NavLink
                 to="/"
-                className="flex-shrink-0 transition-transform duration-300 hover:scale-105 relative group"
+                className="flex-shrink-0 transition-transform duration-300  relative group"
                 onClick={() => {
                   localStorage.removeItem("breadcrumbs");
                 }}

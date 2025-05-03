@@ -30,6 +30,7 @@ import CartPage from "@/pages/web/cart/cart-page";
 import PasswordRecoveryQuestionPage from "@/pages/web/auth/PasswordRecoveryQuestionPage";
 import AdminDashboard from "@/pages/private/dashboard-admin/DashboardLayout";
 import ProductDetails from "@/pages/web/products/components/ProductDetails";
+import CheckoutPage from "@/pages/CheckOut/checkout-page";
 const AppRoutes = () => {
   useEffect(() => {
     const getInfoPage = async () => {
@@ -49,6 +50,7 @@ const AppRoutes = () => {
         <Routes>
           <Route path="/carrito" element={<CartPage />} />
           <Route path="/carrito" element={<CartPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/preguntas-frecuentes" element={<Faq />} />
           <Route path="/" element={<HomePage />} />
           <Route path="/aviso-privacidad" element={<Policies />} />
