@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { updateUser } from "@/api/users";
 import { useAuth } from "@/context/AuthContextType";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   User,
   Mail,
@@ -15,10 +17,12 @@ import {
   Shield,
   Edit3,
   Save,
+  ChevronRight,
+  AtSign,
 } from "lucide-react";
-
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 
 interface ProfileFormData {
   name: string;
@@ -29,10 +33,11 @@ interface ProfileFormData {
   gender: string;
 }
 
-export default function UserProfile() {
+export default function ProfileView() {
   const [isEditable, setIsEditable] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
+  const [animateContent, setAnimateContent] = useState(false);
 
   const {
     user,
@@ -43,13 +48,17 @@ export default function UserProfile() {
   } = useAuth();
 
   // Simulate page loading
-  useState(() => {
+  useEffect(() => {
     const timer = setTimeout(() => {
       setPageLoading(false);
+      // Activate animations after loading screen disappears
+      setTimeout(() => {
+        setAnimateContent(true);
+      }, 100);
     }, 1000);
 
     return () => clearTimeout(timer);
-  });
+  }, []);
 
   const {
     register,
@@ -114,94 +123,120 @@ export default function UserProfile() {
     }
   };
 
+
+
   return (
-    <div className="min-h-screen bg-white relative">
+    <div className="relative">
       {/* Loading Screen */}
       {pageLoading && (
-        <div className="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
+        <div className="flex flex-col items-center justify-center py-20">
           <div className="relative">
-            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4"></div>
+            <div className="w-16 h-16 border-4 border-blue-100 border-t-blue-500 rounded-full animate-spin mb-4"></div>
+            <User className="w-6 h-6 text-blue-500 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
           </div>
+          <p className="text-blue-500 mt-4 font-medium">Cargando perfil...</p>
         </div>
       )}
 
-      <div className="container mx-auto  relative z-10">
-        <div className="max-w-4xl mx-auto">
-          {/* Form Card with Enhanced Styling */}
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden relative ">
-            {/* Form Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl"></div>
-              <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl"></div>
-
-              <div className="relative flex flex-col items-center text-center mb-2">
-                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-4">
-                  <User className="w-8 h-8 text-white" />
-                </div>
-                <h2 className="text-2xl md:text-3xl font-bold">
-                  Información Personal
-                </h2>
-                <p className="text-blue-100 mt-2 max-w-lg">
-                  Mantén actualizada tu información para una mejor experiencia y
-                  gestión de tus pedidos
-                </p>
-                <div className="h-1 w-24 bg-white/30 mt-4 rounded-full"></div>
+      {!pageLoading && (
+        <div className="p-6 md:p-8">
+          {/* Profile Header */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={
+              animateContent ? { opacity: 1, y: 0 } : { opacity: 0, y: -20 }
+            }
+            transition={{ duration: 0.6 }}
+            className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6"
+          >
+            <div>
+              <div className="mb-2 inline-flex items-center justify-center rounded-full bg-blue-100 px-4 py-1.5">
+                <User className="w-4 h-4 mr-2 text-blue-600" />
+                <span className="text-sm font-medium text-blue-600">
+                  DATOS PERSONALES
+                </span>
               </div>
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
+                Información{" "}
+                <span className="relative inline-block">
+                  <span className="relative z-10 text-blue-600">Personal</span>
+                  <span className="absolute bottom-1 left-0 w-full h-3 bg-blue-600/20 -z-10 rounded"></span>
+                </span>
+              </h1>
+              <p className="text-gray-600 mt-2">
+                Gestiona tus datos personales y preferencias
+              </p>
             </div>
 
-            {/* Form Section with Enhanced Styling */}
-            <form onSubmit={handleSubmit(onSubmit)} className="relative">
-              <div className="p-6 md:p-8">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center">
-                    <div className="bg-blue-100 p-2.5 rounded-lg">
-                      <Shield className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <h3 className="text-xl font-semibold text-gray-900 ml-3">
-                      Datos de Usuario
-                    </h3>
-                  </div>
+            
+          </motion.div>
 
-                  <button
-                    type="button"
-                    onClick={toggleEditable}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center transition-all ${
-                      isEditable
-                        ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                        : "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md hover:shadow-lg"
-                    }`}
-                  >
-                    {isEditable ? (
-                      <>
-                        <X className="w-4 h-4 mr-2" />
-                        Cancelar
-                      </>
-                    ) : (
-                      <>
-                        <Edit3 className="w-4 h-4 mr-2" />
-                        Editar Perfil
-                      </>
-                    )}
-                  </button>
-                </div>
+          {/* Main Form */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={
+              animateContent ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }
+            }
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="bg-white rounded-2xl shadow-xl border border-blue-100 overflow-hidden"
+          >
+            <div className="p-6 md:p-8">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+                  <User className="w-5 h-5 mr-2 text-blue-600" />
+                  Datos Personales
+                </h2>
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  type="button"
+                  onClick={toggleEditable}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center transition-all ${
+                    isEditable
+                      ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      : "bg-blue-600 hover:bg-blue-700 text-white"
+                  }`}
+                >
+                  {isEditable ? (
+                    <>
+                      <X className="w-4 h-4 mr-2" />
+                      Cancelar
+                    </>
+                  ) : (
+                    <>
+                      <Edit3 className="w-4 h-4 mr-2" />
+                      Editar Perfil
+                    </>
+                  )}
+                </motion.button>
+              </div>
 
-                <Alert className="mb-6 bg-blue-50 border border-blue-100 text-blue-800 py-3 rounded-xl">
-                  <Shield className="h-5 w-5 text-blue-600" />
-                  <AlertDescription className="text-sm">
-                    Si cambias tu correo electrónico, necesitarás verificarlo
-                    nuevamente a través de un código que enviaremos a tu nueva
-                    dirección.
-                  </AlertDescription>
-                </Alert>
+              {isEditable && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Alert className="mb-6 bg-blue-50 border border-blue-100 text-gray-700 py-3 rounded-lg">
+                    <Shield className="h-5 w-5 text-blue-500" />
+                    <AlertDescription className="text-sm">
+                      Si cambias tu correo electrónico, necesitarás verificarlo
+                      nuevamente a través de un código que enviaremos a tu nueva
+                      dirección.
+                    </AlertDescription>
+                  </Alert>
+                </motion.div>
+              )}
 
+              <form onSubmit={handleSubmit(onSubmit)} className="relative">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                   {/* Name field */}
                   <div className="space-y-2">
                     <label
                       htmlFor="name"
-                      className="flex items-center text-gray-700 text-sm font-medium"
+                      className="flex items-center text-gray-600 text-sm font-medium"
                     >
-                      <User className="w-4 h-4 mr-2 text-blue-600" />
+                      <User className="w-4 h-4 mr-2 text-blue-500" />
                       Nombre
                     </label>
                     <div className="relative group">
@@ -210,12 +245,12 @@ export default function UserProfile() {
                         disabled={!isEditable}
                         className={`block w-full rounded-lg border ${
                           errors.name
-                            ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                            : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                            ? "border-red-300 focus:ring-red-300 focus:border-red-300"
+                            : "border-blue-200 focus:ring-blue-300 focus:border-blue-300"
                         } bg-white text-gray-900 p-3.5 shadow-sm transition-all focus:outline-none ${
                           !isEditable
-                            ? "bg-gray-50/50"
-                            : "group-hover:border-blue-400"
+                            ? "bg-gray-50"
+                            : "group-hover:border-blue-300"
                         }`}
                         {...register("name", {
                           required: "El nombre es obligatorio",
@@ -223,12 +258,12 @@ export default function UserProfile() {
                       />
                       {errors.name && (
                         <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                          <AlertCircle className="h-5 w-5 text-red-500" />
+                          <AlertCircle className="h-5 w-5 text-red-400" />
                         </div>
                       )}
                     </div>
                     {errors.name && (
-                      <p className="text-sm text-red-600 flex items-center gap-1 mt-1">
+                      <p className="text-sm text-red-500 flex items-center gap-1 mt-1">
                         <AlertCircle className="h-3 w-3" />
                         {errors.name.message}
                       </p>
@@ -239,9 +274,9 @@ export default function UserProfile() {
                   <div className="space-y-2">
                     <label
                       htmlFor="surname"
-                      className="flex items-center text-gray-700 text-sm font-medium"
+                      className="flex items-center text-gray-600 text-sm font-medium"
                     >
-                      <User className="w-4 h-4 mr-2 text-blue-600" />
+                      <User className="w-4 h-4 mr-2 text-blue-500" />
                       Apellido
                     </label>
                     <div className="relative group">
@@ -250,12 +285,12 @@ export default function UserProfile() {
                         disabled={!isEditable}
                         className={`block w-full rounded-lg border ${
                           errors.surname
-                            ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                            : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                            ? "border-red-300 focus:ring-red-300 focus:border-red-300"
+                            : "border-blue-200 focus:ring-blue-300 focus:border-blue-300"
                         } bg-white text-gray-900 p-3.5 shadow-sm transition-all focus:outline-none ${
                           !isEditable
-                            ? "bg-gray-50/50"
-                            : "group-hover:border-blue-400"
+                            ? "bg-gray-50"
+                            : "group-hover:border-blue-300"
                         }`}
                         {...register("surname", {
                           required: "Los apellidos son obligatorios",
@@ -263,12 +298,12 @@ export default function UserProfile() {
                       />
                       {errors.surname && (
                         <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                          <AlertCircle className="h-5 w-5 text-red-500" />
+                          <AlertCircle className="h-5 w-5 text-red-400" />
                         </div>
                       )}
                     </div>
                     {errors.surname && (
-                      <p className="text-sm text-red-600 flex items-center gap-1 mt-1">
+                      <p className="text-sm text-red-500 flex items-center gap-1 mt-1">
                         <AlertCircle className="h-3 w-3" />
                         {errors.surname.message}
                       </p>
@@ -279,9 +314,9 @@ export default function UserProfile() {
                   <div className="space-y-2">
                     <label
                       htmlFor="email"
-                      className="flex items-center text-gray-700 text-sm font-medium"
+                      className="flex items-center text-gray-600 text-sm font-medium"
                     >
-                      <Mail className="w-4 h-4 mr-2 text-blue-600" />
+                      <Mail className="w-4 h-4 mr-2 text-blue-500" />
                       Correo electrónico
                     </label>
                     <div className="relative group">
@@ -291,12 +326,12 @@ export default function UserProfile() {
                         disabled={!isEditable}
                         className={`block w-full rounded-lg border ${
                           errors.email
-                            ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                            : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                            ? "border-red-300 focus:ring-red-300 focus:border-red-300"
+                            : "border-blue-200 focus:ring-blue-300 focus:border-blue-300"
                         } bg-white text-gray-900 p-3.5 shadow-sm transition-all focus:outline-none ${
                           !isEditable
-                            ? "bg-gray-50/50"
-                            : "group-hover:border-blue-400"
+                            ? "bg-gray-50"
+                            : "group-hover:border-blue-300"
                         }`}
                         {...register("email", {
                           required: "El correo es obligatorio",
@@ -319,16 +354,16 @@ export default function UserProfile() {
                       />
                       {errors.email ? (
                         <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                          <AlertCircle className="h-5 w-5 text-red-500" />
+                          <AlertCircle className="h-5 w-5 text-red-400" />
                         </div>
                       ) : (
                         <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                          <Mail className="h-5 w-5 text-gray-400" />
+                          <AtSign className="h-5 w-5 text-gray-400" />
                         </div>
                       )}
                     </div>
                     {errors.email && (
-                      <p className="text-sm text-red-600 flex items-center gap-1 mt-1">
+                      <p className="text-sm text-red-500 flex items-center gap-1 mt-1">
                         <AlertCircle className="h-3 w-3" />
                         {errors.email.message}
                       </p>
@@ -339,9 +374,9 @@ export default function UserProfile() {
                   <div className="space-y-2">
                     <label
                       htmlFor="phone"
-                      className="flex items-center text-gray-700 text-sm font-medium"
+                      className="flex items-center text-gray-600 text-sm font-medium"
                     >
-                      <Phone className="w-4 h-4 mr-2 text-blue-600" />
+                      <Phone className="w-4 h-4 mr-2 text-blue-500" />
                       Teléfono
                     </label>
                     <div className="relative group">
@@ -351,12 +386,12 @@ export default function UserProfile() {
                         disabled={!isEditable}
                         className={`block w-full rounded-lg border ${
                           errors.phone
-                            ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                            : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                            ? "border-red-300 focus:ring-red-300 focus:border-red-300"
+                            : "border-blue-200 focus:ring-blue-300 focus:border-blue-300"
                         } bg-white text-gray-900 p-3.5 shadow-sm transition-all focus:outline-none ${
                           !isEditable
-                            ? "bg-gray-50/50"
-                            : "group-hover:border-blue-400"
+                            ? "bg-gray-50"
+                            : "group-hover:border-blue-300"
                         }`}
                         {...register("phone", {
                           required: "El teléfono es obligatorio",
@@ -378,7 +413,7 @@ export default function UserProfile() {
                       />
                       {errors.phone ? (
                         <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                          <AlertCircle className="h-5 w-5 text-red-500" />
+                          <AlertCircle className="h-5 w-5 text-red-400" />
                         </div>
                       ) : (
                         <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -387,7 +422,7 @@ export default function UserProfile() {
                       )}
                     </div>
                     {errors.phone && (
-                      <p className="text-sm text-red-600 flex items-center gap-1 mt-1">
+                      <p className="text-sm text-red-500 flex items-center gap-1 mt-1">
                         <AlertCircle className="h-3 w-3" />
                         {errors.phone.message}
                       </p>
@@ -398,9 +433,9 @@ export default function UserProfile() {
                   <div className="space-y-2">
                     <label
                       htmlFor="birthdate"
-                      className="flex items-center text-gray-700 text-sm font-medium"
+                      className="flex items-center text-gray-600 text-sm font-medium"
                     >
-                      <Calendar className="w-4 h-4 mr-2 text-blue-600" />
+                      <Calendar className="w-4 h-4 mr-2 text-blue-500" />
                       Fecha de nacimiento
                     </label>
                     <div className="relative group">
@@ -410,12 +445,12 @@ export default function UserProfile() {
                         disabled={!isEditable}
                         className={`block w-full rounded-lg border ${
                           errors.birthdate
-                            ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                            : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                            ? "border-red-300 focus:ring-red-300 focus:border-red-300"
+                            : "border-blue-200 focus:ring-blue-300 focus:border-blue-300"
                         } bg-white text-gray-900 p-3.5 shadow-sm transition-all focus:outline-none ${
                           !isEditable
-                            ? "bg-gray-50/50"
-                            : "group-hover:border-blue-400"
+                            ? "bg-gray-50"
+                            : "group-hover:border-blue-300"
                         }`}
                         {...register("birthdate", {
                           required: "La fecha de nacimiento es obligatoria",
@@ -423,12 +458,12 @@ export default function UserProfile() {
                       />
                       {errors.birthdate && (
                         <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                          <AlertCircle className="h-5 w-5 text-red-500" />
+                          <AlertCircle className="h-5 w-5 text-red-400" />
                         </div>
                       )}
                     </div>
                     {errors.birthdate && (
-                      <p className="text-sm text-red-600 flex items-center gap-1 mt-1">
+                      <p className="text-sm text-red-500 flex items-center gap-1 mt-1">
                         <AlertCircle className="h-3 w-3" />
                         {errors.birthdate.message}
                       </p>
@@ -439,9 +474,9 @@ export default function UserProfile() {
                   <div className="space-y-2">
                     <label
                       htmlFor="gender"
-                      className="flex items-center text-gray-700 text-sm font-medium"
+                      className="flex items-center text-gray-600 text-sm font-medium"
                     >
-                      <User className="w-4 h-4 mr-2 text-blue-600" />
+                      <User className="w-4 h-4 mr-2 text-blue-500" />
                       Género
                     </label>
                     <div className="relative group">
@@ -450,12 +485,12 @@ export default function UserProfile() {
                         disabled={!isEditable}
                         className={`block w-full rounded-lg border ${
                           errors.gender
-                            ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                            : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                            ? "border-red-300 focus:ring-red-300 focus:border-red-300"
+                            : "border-blue-200 focus:ring-blue-300 focus:border-blue-300"
                         } bg-white text-gray-900 p-3.5 shadow-sm transition-all focus:outline-none ${
                           !isEditable
-                            ? "bg-gray-50/50"
-                            : "group-hover:border-blue-400"
+                            ? "bg-gray-50"
+                            : "group-hover:border-blue-300"
                         }`}
                         {...register("gender", {
                           required: "El género es obligatorio",
@@ -470,56 +505,67 @@ export default function UserProfile() {
                       </select>
                       {errors.gender && (
                         <div className="absolute inset-y-0 right-0 flex items-center pr-10 pointer-events-none">
-                          <AlertCircle className="h-5 w-5 text-red-500" />
+                          <AlertCircle className="h-5 w-5 text-red-400" />
                         </div>
                       )}
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                        <ChevronRight className="h-5 w-5 text-gray-400 rotate-90" />
+                      </div>
                     </div>
                     {errors.gender && (
-                      <p className="text-sm text-red-600 flex items-center gap-1 mt-1">
+                      <p className="text-sm text-red-500 flex items-center gap-1 mt-1">
                         <AlertCircle className="h-3 w-3" />
                         {errors.gender.message}
                       </p>
                     )}
                   </div>
                 </div>
-              </div>
 
-              {isEditable && (
-                <>
-                  <Separator className="my-2" />
-                  <div className="flex justify-end gap-3 p-6 bg-gray-50">
-                    <button
-                      type="button"
-                      onClick={toggleEditable}
-                      className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors text-sm font-medium flex items-center"
+                <AnimatePresence>
+                  {isEditable && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      transition={{ duration: 0.3 }}
                     >
-                      <X className="w-4 h-4 mr-2" />
-                      Cancelar
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg shadow-md hover:shadow-lg transition-all text-sm font-medium flex items-center"
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          <span>Guardando...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Save className="w-4 h-4 mr-2" />
-                          <span>Guardar Cambios</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </>
-              )}
-            </form>
-          </div>
+                      <Separator className="my-6" />
+                      <div className="flex justify-end gap-3">
+                        <Button
+                          type="button"
+                          onClick={toggleEditable}
+                          variant="outline"
+                          className="gap-2"
+                        >
+                          <X className="w-4 h-4" />
+                          Cancelar
+                        </Button>
+                        <Button
+                          type="submit"
+                          disabled={isSubmitting}
+                          className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
+                        >
+                          {isSubmitting ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              <span>Guardando...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Save className="w-4 h-4" />
+                              <span>Guardar Cambios</span>
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </form>
+            </div>
+          </motion.div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -222,10 +222,8 @@ const NavBarUser = () => {
       <div className="h-20"></div>
 
       <div
-        className={`fixed w-full top-0 z-50 transition-all duration-300 ${
-          scrolled
-            ? "bg-white dark:bg-gray-900 backdrop-blur-md shadow-lg"
-            : "bg-transparent dark:bg-transparent"
+        className={`fixed w-full top-0 z-50 transition-all duration-300 bg-white dark:bg-gray-900 shadow-sm ${
+          scrolled ? "shadow-lg" : ""
         } ${visible ? "translate-y-0" : "-translate-y-full"}`}
       >
         <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 via-transparent to-blue-50/50 dark:from-blue-900/10 dark:via-transparent dark:to-blue-900/10 pointer-events-none"></div>
@@ -236,23 +234,19 @@ const NavBarUser = () => {
         >
           <div className="flex justify-between items-center h-20">
             {/* Logo */}
-            <div className="flex items-center">
+            <div className="flex items-center h-16 overflow-hidden">
               <NavLink
                 to="/"
-                className="flex-shrink-0 transition-transform duration-300  relative group"
+                className="flex-shrink-0 transition-transform duration-300 relative group h-full flex items-center"
                 onClick={() => {
                   localStorage.removeItem("breadcrumbs");
                 }}
               >
-                <div className="absolute -inset-2 bg-blue-100/50 dark:bg-blue-900/20 rounded-full scale-0 group-hover:scale-100 transition-transform duration-300"></div>
+                <div className="absolute inset-0 bg-blue-100/50 dark:bg-blue-900/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <img
                   src={logo || "/placeholder.svg?height=80&width=120"}
                   alt="Logo"
-                  className={`h-40 w-auto object-contain transition-all duration-300 relative ${
-                    scrolled
-                      ? "brightness-100"
-                      : "brightness-110 drop-shadow-md"
-                  }`}
+                  className="h-32 w-auto object-contain transition-all duration-300 relative"
                 />
               </NavLink>
             </div>
@@ -328,9 +322,7 @@ const NavBarUser = () => {
                         `text-sm font-medium transition-all duration-200 relative group px-3 py-2 rounded-full ${
                           isActive
                             ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
-                            : scrolled
-                            ? "text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100/70 dark:hover:bg-gray-800/70"
-                            : "text-gray-800 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white/30 dark:hover:bg-gray-800/30"
+                            : "text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100/70 dark:hover:bg-gray-800/70"
                         } flex items-center gap-1.5`
                       }
                     >
@@ -341,13 +333,7 @@ const NavBarUser = () => {
 
                     {/* Menú desplegable de Productos con categorías dinámicas */}
                     <div className="relative group">
-                      <button
-                        className={`text-sm font-medium transition-all duration-200 flex items-center gap-1.5 group px-3 py-2 rounded-full ${
-                          scrolled
-                            ? "text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100/70 dark:hover:bg-gray-800/70"
-                            : "text-gray-800 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white/30 dark:hover:bg-gray-800/30"
-                        }`}
-                      >
+                      <button className="text-sm font-medium transition-all duration-200 flex items-center gap-1.5 group px-3 py-2 rounded-full text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100/70 dark:hover:bg-gray-800/70">
                         <ShoppingBag className="w-4 h-4" />
                         <span>Productos</span>
                         <ChevronDown className="w-3.5 h-3.5 transition-transform duration-300 group-hover:rotate-180" />
@@ -421,9 +407,7 @@ const NavBarUser = () => {
                         `text-sm font-medium transition-all duration-200 relative group px-3 py-2 rounded-full ${
                           isActive
                             ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
-                            : scrolled
-                            ? "text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100/70 dark:hover:bg-gray-800/70"
-                            : "text-gray-800 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white/30 dark:hover:bg-gray-800/30"
+                            : "text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100/70 dark:hover:bg-gray-800/70"
                         } flex items-center gap-1.5`
                       }
                     >
@@ -442,29 +426,15 @@ const NavBarUser = () => {
               <button
                 ref={searchButtonRef}
                 onClick={() => setIsSearchOpen(true)}
-                className={`p-2 rounded-full transition-colors duration-200 ${
-                  scrolled
-                    ? "bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
-                    : "bg-white/20 dark:bg-gray-800/40 hover:bg-white/30 dark:hover:bg-gray-800/60 backdrop-blur-sm"
-                }`}
+                className="p-2 rounded-full transition-colors duration-200 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
                 aria-label="Buscar productos"
               >
-                <Search
-                  className={`h-4 w-4 transition-colors duration-200 text-gray-700 dark:text-gray-300`}
-                />
+                <Search className="h-4 w-4 transition-colors duration-200 text-gray-700 dark:text-gray-300" />
               </button>
 
               <Link to="/carrito" className="relative group">
-                <div
-                  className={`p-2 rounded-full transition-colors duration-200 ${
-                    scrolled
-                      ? "bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
-                      : "bg-white/20 dark:bg-gray-800/40 hover:bg-white/30 dark:hover:bg-gray-800/60 backdrop-blur-sm"
-                  }`}
-                >
-                  <ShoppingCart
-                    className={`h-4 w-4 transition-colors duration-200 text-gray-700 dark:text-gray-300`}
-                  />
+                <div className="p-2 rounded-full transition-colors duration-200 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700">
+                  <ShoppingCart className="h-4 w-4 transition-colors duration-200 text-gray-700 dark:text-gray-300" />
                 </div>
                 <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center group-hover:scale-110 transition-transform px-1">
                   {itemCount}
@@ -474,11 +444,7 @@ const NavBarUser = () => {
 
               <button
                 onClick={toggleTheme}
-                className={`p-2 rounded-full transition-colors duration-200 ${
-                  scrolled
-                    ? "bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
-                    : "bg-white/20 dark:bg-gray-800/40 hover:bg-white/30 dark:hover:bg-gray-800/60 backdrop-blur-sm"
-                }`}
+                className="p-2 rounded-full transition-colors duration-200 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
                 aria-label={
                   darkMode ? "Cambiar a modo claro" : "Cambiar a modo oscuro"
                 }
@@ -499,11 +465,7 @@ const NavBarUser = () => {
                       ? "/perfil-empleado"
                       : "/perfil-usuario"
                   }
-                  className={`flex items-center gap-2 transition-colors duration-200 group ml-1 px-2 py-1.5 rounded-full ${
-                    scrolled
-                      ? "hover:bg-gray-100 dark:hover:bg-gray-800"
-                      : "hover:bg-white/20 dark:hover:bg-gray-800/40"
-                  }`}
+                  className="flex items-center gap-2 transition-colors duration-200 group ml-1 px-2 py-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
                 >
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold shadow-md group-hover:shadow-blue-500/20 group-hover:scale-105 transition-all duration-200">
                     {getInitial(user?.name || "")}
@@ -515,11 +477,7 @@ const NavBarUser = () => {
               ) : (
                 <Link
                   to="/login"
-                  className={`flex items-center gap-2 transition-colors duration-200 ml-1 px-3 py-2 rounded-full ${
-                    scrolled
-                      ? "bg-blue-600 hover:bg-blue-700 text-white"
-                      : "bg-blue-600/90 hover:bg-blue-700/90 text-white backdrop-blur-sm"
-                  }`}
+                  className="flex items-center gap-2 transition-colors duration-200 ml-1 px-3 py-2 rounded-full bg-blue-600 hover:bg-blue-700 text-white"
                 >
                   <User className="h-4 w-4" />
                   <span className="font-medium text-sm">Ingresar</span>
@@ -588,11 +546,7 @@ const NavBarUser = () => {
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.2 }}
                     onClick={() => setIsSearchOpen(true)}
-                    className={`p-2 rounded-full transition-colors ${
-                      scrolled
-                        ? "text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
-                        : "text-gray-800 dark:text-white hover:bg-white/20 dark:hover:bg-gray-800/40"
-                    }`}
+                    className="p-2 rounded-full transition-colors text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
                     aria-label="Buscar productos"
                   >
                     <Search className="w-5 h-5" />
@@ -601,13 +555,7 @@ const NavBarUser = () => {
               </AnimatePresence>
 
               <Link to="/carrito" className="relative">
-                <div
-                  className={`p-2 rounded-full transition-colors ${
-                    scrolled
-                      ? "text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
-                      : "text-gray-800 dark:text-white hover:bg-white/20 dark:hover:bg-gray-800/40"
-                  }`}
-                >
+                <div className="p-2 rounded-full transition-colors text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">
                   <ShoppingCart className="w-5 h-5" />
                 </div>
                 <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
@@ -617,11 +565,7 @@ const NavBarUser = () => {
 
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className={`p-2 rounded-full transition-colors ${
-                  scrolled
-                    ? "text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
-                    : "text-gray-800 dark:text-white hover:bg-white/20 dark:hover:bg-gray-800/40"
-                }`}
+                className="p-2 rounded-full transition-colors text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
                 aria-label="Abrir menú"
               >
                 {isMenuOpen ? (
