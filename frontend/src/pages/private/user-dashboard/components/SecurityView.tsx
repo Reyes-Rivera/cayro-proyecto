@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import Swal from "sweetalert2";
-import "sweetalert2/dist/sweetalert2.min.css";
-import { motion, AnimatePresence } from "framer-motion";
+import { updateAnswer, updatePasswordUser } from "@/api/users";
+import { useAuth } from "@/context/AuthContextType";
+import { motion } from "framer-motion";
 import {
   Lock,
   Shield,
@@ -14,19 +14,17 @@ import {
   Check,
   ChevronRight,
   Loader2,
-  KeyRound,
-  ArrowRight,
   HelpCircle,
   ShieldQuestion,
   ArrowLeft,
   Info,
+  Save,
 } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils";
 import { getQuestions } from "@/api/auth";
-import { updateAnswer, updatePasswordUser } from "@/api/users";
-import { useAuth } from "@/context/AuthContextType";
 
 // Tipos para los formularios
 type PasswordFormValues = {
@@ -45,7 +43,7 @@ type QuestionData = {
   question: string;
 };
 
-const SecurityView = () => {
+export default function SecurityView() {
   // Estados generales
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -60,9 +58,13 @@ const SecurityView = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRecoverySubmitting, setIsRecoverySubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
+  const [isSuccess] = useState(false);
   const [recoverySuccess, setRecoverySuccess] = useState(false);
   const [questions, setQuestions] = useState<QuestionData[]>([]);
+  const [pageLoading, setPageLoading] = useState(true);
+  const [animateContent, setAnimateContent] = useState(false);
+  const [activeTab, setActiveTab] = useState("password");
+
   const { user, signOut } = useAuth();
 
   // React Hook Form para cambio de contraseña
@@ -71,7 +73,6 @@ const SecurityView = () => {
     handleSubmit: handleSubmitPassword,
     formState: { errors: passwordErrors },
     watch: watchPassword,
-    reset: resetPassword,
   } = useForm<PasswordFormValues>({
     defaultValues: {
       currentPassword: "",
@@ -102,12 +103,26 @@ const SecurityView = () => {
     return value.replace(/[<>'"`]/g, "");
   };
 
+  // Simular carga de página
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPageLoading(false);
+      // Activar animaciones después de que desaparezca la pantalla de carga
+      setTimeout(() => {
+        setAnimateContent(true);
+      }, 100);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   useEffect(() => {
     const getQuestionsApi = async () => {
       const res = await getQuestions();
       setQuestions(res.data);
     };
     getQuestionsApi();
+
     if (newPassword) {
       const checks = {
         length: newPassword.length >= 8,
@@ -166,38 +181,16 @@ const SecurityView = () => {
         password: data.newPassword,
       };
       await updatePasswordUser(Number(user?.id), newData);
-      Swal.fire({
-        icon: "success",
-        title: "¡Contraseña actualizada exitosamente!",
-        toast: true,
-        text: "Por favor, inicia sesión nuevamente con tu nueva contraseña.",
-        position: "top-end",
-        timer: 3000,
-        showConfirmButton: false,
-        animation: true,
-        background: "#F0FDF4",
-        color: "#166534",
-        iconColor: "#22C55E",
-      });
+      alert(
+        "¡Contraseña actualizada exitosamente! Por favor, inicia sesión nuevamente con tu nueva contraseña."
+      );
       setIsSubmitting(false);
       await signOut();
       return;
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message || "Error desconocido.";
-      Swal.fire({
-        icon: "error",
-        title: "Error al actualizar.",
-        toast: true,
-        text: errorMessage,
-        position: "top-end",
-        timer: 3000,
-        showConfirmButton: false,
-        animation: true,
-        background: "#FEF2F2",
-        color: "#B91C1C",
-        iconColor: "#EF4444",
-      });
+      alert(errorMessage);
       setIsSubmitting(false);
       return;
     }
@@ -218,19 +211,7 @@ const SecurityView = () => {
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message || "Error desconocido.";
-      Swal.fire({
-        icon: "error",
-        title: "Error al guardar",
-        toast: true,
-        text: errorMessage,
-        position: "top-end",
-        timer: 3000,
-        showConfirmButton: false,
-        animation: true,
-        background: "#FEF2F2",
-        color: "#B91C1C",
-        iconColor: "#EF4444",
-      });
+      alert(errorMessage);
       setIsRecoverySubmitting(false);
       return;
     }
@@ -248,165 +229,126 @@ const SecurityView = () => {
   };
 
   return (
-    <div className="p-6 md:p-8">
-      {/* Security header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="mb-8"
-      >
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="flex items-center">
-            <div className="bg-gradient-to-br from-blue-600 to-blue-700 p-3 rounded-xl shadow-md mr-4 relative overflow-hidden">
-              <div className="absolute inset-0 bg-white/20 rounded-full w-8 h-8 -top-4 -left-4 blur-md"></div>
-              <Lock className="w-6 h-6 text-white relative z-10" />
-            </div>
+    <div className="relative">
+      {/* Loading Screen */}
+      {pageLoading && (
+        <div className="flex flex-col items-center justify-center py-20">
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-blue-100 border-t-blue-500 rounded-full animate-spin mb-4"></div>
+            <Lock className="w-6 h-6 text-blue-500 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+          </div>
+          <p className="text-blue-500 mt-4 font-medium">
+            Cargando seguridad...
+          </p>
+        </div>
+      )}
+
+      {!pageLoading && (
+        <div className="p-6 md:p-8">
+          {/* Security Header */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={
+              animateContent ? { opacity: 1, y: 0 } : { opacity: 0, y: -20 }
+            }
+            transition={{ duration: 0.6 }}
+            className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6"
+          >
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-                Seguridad de la Cuenta
-              </h1>
-              <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-1">
-                <span>Mi Cuenta</span>
-                <ChevronRight className="w-4 h-4 mx-1" />
-                <span className="text-blue-600 dark:text-blue-400 font-medium">
-                  Seguridad
+              <div className="mb-2 inline-flex items-center justify-center rounded-full bg-blue-100 px-4 py-1.5">
+                <Lock className="w-4 h-4 mr-2 text-blue-600" />
+                <span className="text-sm font-medium text-blue-600">
+                  SEGURIDAD
                 </span>
               </div>
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
+                Seguridad de la{" "}
+                <span className="relative inline-block">
+                  <span className="relative z-10 text-blue-600">Cuenta</span>
+                  <span className="absolute bottom-1 left-0 w-full h-3 bg-blue-600/20 -z-10 rounded"></span>
+                </span>
+              </h1>
+              <p className="text-gray-600 mt-2">
+                Gestiona tu contraseña y opciones de recuperación
+              </p>
             </div>
-          </div>
-        </div>
+          </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="mt-6 bg-gradient-to-br from-blue-50 to-blue-50/50 dark:from-blue-900/20 dark:to-blue-900/10 border border-blue-100 dark:border-blue-800/50 rounded-xl p-4 shadow-sm"
-        >
-          <p className="text-sm text-blue-800 dark:text-blue-300 flex items-start">
-            <Shield className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5 text-blue-600 dark:text-blue-400" />
-            <span>
-              Mantén tu cuenta segura actualizando regularmente tu contraseña y
-              configurando opciones de recuperación.
-            </span>
-          </p>
-        </motion.div>
-      </motion.div>
-
-      {/* Tabs for different security options */}
-      <Tabs defaultValue="password" className="mb-8">
-        <TabsList className="grid grid-cols-2 mb-6 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
-          <TabsTrigger
-            value="password"
-            className="text-sm md:text-base data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400 rounded-md transition-all"
+          {/* Main Content */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={
+              animateContent ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }
+            }
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="bg-white rounded-2xl shadow-xl border border-blue-100 overflow-hidden"
           >
-            <Lock className="w-4 h-4 mr-2" />
-            Cambiar Contraseña
-          </TabsTrigger>
-          <TabsTrigger
-            value="recovery"
-            className="text-sm md:text-base data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400 rounded-md transition-all"
-          >
-            <HelpCircle className="w-4 h-4 mr-2" />
-            Recuperar Contraseña
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Password Change Tab */}
-        <TabsContent value="password">
-          <AnimatePresence mode="wait">
-            {isSuccess ? (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-                className="mb-8"
+            <div className="p-6 md:p-8">
+              <Tabs
+                defaultValue="password"
+                value={activeTab}
+                onValueChange={setActiveTab}
+                className="w-full"
               >
-                <Alert className="bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800 rounded-lg p-6 shadow-sm">
-                  <div className="flex items-start gap-4">
-                    <div className="bg-green-100 dark:bg-green-800/50 p-3 rounded-full flex-shrink-0">
-                      <Check className="h-6 w-6 text-green-600 dark:text-green-400" />
-                    </div>
-                    <div>
-                      <AlertTitle className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                        Contraseña actualizada con éxito
-                      </AlertTitle>
-                      <AlertDescription className="text-gray-700 dark:text-gray-300">
-                        <p>Tu contraseña ha sido actualizada correctamente.</p>
-                        <p className="mt-2">
-                          Recuerda utilizar esta nueva contraseña la próxima vez
-                          que inicies sesión.
-                        </p>
-                        <motion.button
-                          whileHover={{ scale: 1.03 }}
-                          whileTap={{ scale: 0.97 }}
-                          onClick={() => {
-                            setIsSuccess(false);
-                            resetPassword();
-                            window.scrollTo({ top: 0, behavior: "smooth" });
-                          }}
-                          className="mt-4 flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-700 text-green-600 dark:text-green-400 rounded-lg border border-green-200 dark:border-green-800 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
-                        >
-                          <KeyRound className="w-4 h-4" />
-                          <span>Actualizar otra contraseña</span>
-                          <ArrowRight className="w-4 h-4 ml-1" />
-                        </motion.button>
-                      </AlertDescription>
-                    </div>
+                <TabsList className="grid grid-cols-2 mb-6 bg-gray-100 p-1 rounded-lg">
+                  <TabsTrigger
+                    value="password"
+                    className="text-sm md:text-base data-[state=active]:bg-white data-[state=active]:text-blue-600 rounded-md transition-all"
+                  >
+                    <Lock className="w-4 h-4 mr-2" />
+                    Cambiar Contraseña
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="recovery"
+                    className="text-sm md:text-base data-[state=active]:bg-white data-[state=active]:text-blue-600 rounded-md transition-all"
+                  >
+                    <HelpCircle className="w-4 h-4 mr-2" />
+                    Recuperar Contraseña
+                  </TabsTrigger>
+                </TabsList>
+
+                {/* Password Change Tab */}
+                <TabsContent value="password">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+                      <Lock className="w-5 h-5 mr-2 text-blue-600" />
+                      Cambio de Contraseña
+                    </h2>
                   </div>
-                </Alert>
-              </motion.div>
-            ) : (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-gray-100 dark:border-gray-700"
-              >
-                <div className="p-6">
-                  <div className="flex flex-col gap-6">
-                    {/* Encabezado de cambio de contraseña */}
-                    <div className="flex items-center gap-4">
-                      <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full">
-                        <Lock className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                          Cambio de contraseña
-                        </h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Última actualización: hace 3 meses
-                        </p>
-                      </div>
-                    </div>
 
-                    {/* Formulario de contraseña */}
+                  {isSuccess ? (
+                    <Alert className="mb-6 bg-green-50 border border-green-100 text-gray-700 py-3 rounded-lg">
+                      <Check className="h-5 w-5 text-green-500" />
+                      <AlertDescription className="text-sm">
+                        Tu contraseña ha sido actualizada correctamente.
+                        Recuerda utilizar esta nueva contraseña la próxima vez
+                        que inicies sesión.
+                      </AlertDescription>
+                    </Alert>
+                  ) : (
                     <form
                       onSubmit={handleSubmitPassword(onPasswordSubmit)}
-                      className="space-y-5"
+                      className="relative"
                     >
-                      <div className="space-y-4">
-                        <div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                        {/* Current Password field */}
+                        <div className="space-y-2">
                           <label
                             htmlFor="currentPassword"
-                            className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center mb-1.5"
+                            className="flex items-center text-gray-600 text-sm font-medium"
                           >
-                            <Lock className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
+                            <Lock className="w-4 h-4 mr-2 text-blue-500" />
                             Contraseña actual
                           </label>
                           <div className="relative group">
                             <input
                               id="currentPassword"
                               type="password"
-                              placeholder="Ingresa tu contraseña actual"
-                              className={cn(
-                                "block w-full rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-400",
+                              className={`block w-full rounded-lg border ${
                                 passwordErrors.currentPassword
-                                  ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                                  : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
-                              )}
+                                  ? "border-red-300 focus:ring-red-300 focus:border-red-300"
+                                  : "border-blue-200 focus:ring-blue-300 focus:border-blue-300"
+                              } bg-white text-gray-900 p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300`}
                               {...registerPassword("currentPassword", {
                                 required: "La contraseña actual es requerida",
                                 onChange: (e) => {
@@ -418,37 +360,36 @@ const SecurityView = () => {
                             />
                             {passwordErrors.currentPassword && (
                               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                <AlertCircle className="h-5 w-5 text-red-500" />
+                                <AlertCircle className="h-5 w-5 text-red-400" />
                               </div>
                             )}
                           </div>
                           {passwordErrors.currentPassword && (
-                            <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1 mt-1">
+                            <p className="text-sm text-red-500 flex items-center gap-1 mt-1">
                               <AlertCircle className="h-3 w-3" />
                               {passwordErrors.currentPassword.message}
                             </p>
                           )}
                         </div>
 
-                        <div>
+                        {/* New Password field */}
+                        <div className="space-y-2">
                           <label
                             htmlFor="newPassword"
-                            className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center mb-1.5"
+                            className="flex items-center text-gray-600 text-sm font-medium"
                           >
-                            <Lock className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
+                            <Lock className="w-4 h-4 mr-2 text-blue-500" />
                             Nueva contraseña
                           </label>
                           <div className="relative group">
                             <input
                               id="newPassword"
                               type={showPassword ? "text" : "password"}
-                              placeholder="Ingresa una nueva contraseña"
-                              className={cn(
-                                "block w-full rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-400",
+                              className={`block w-full rounded-lg border ${
                                 passwordErrors.newPassword
-                                  ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                                  : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
-                              )}
+                                  ? "border-red-300 focus:ring-red-300 focus:border-red-300"
+                                  : "border-blue-200 focus:ring-blue-300 focus:border-blue-300"
+                              } bg-white text-gray-900 p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300`}
                               {...registerPassword("newPassword", {
                                 required: "La nueva contraseña es requerida",
                                 validate: {
@@ -482,7 +423,7 @@ const SecurityView = () => {
                             />
                             <button
                               type="button"
-                              className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none"
+                              className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500"
                               onClick={() => setShowPassword(!showPassword)}
                               tabIndex={-1}
                             >
@@ -492,34 +433,38 @@ const SecurityView = () => {
                                 <Eye size={20} />
                               )}
                             </button>
+                            {passwordErrors.newPassword && (
+                              <div className="absolute inset-y-0 right-0 flex items-center pr-10 pointer-events-none">
+                                <AlertCircle className="h-5 w-5 text-red-400" />
+                              </div>
+                            )}
                           </div>
                           {passwordErrors.newPassword && (
-                            <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1 mt-1">
+                            <p className="text-sm text-red-500 flex items-center gap-1 mt-1">
                               <AlertCircle className="h-3 w-3" />
                               {passwordErrors.newPassword.message}
                             </p>
                           )}
                         </div>
 
-                        <div>
+                        {/* Confirm Password field */}
+                        <div className="space-y-2">
                           <label
                             htmlFor="confirmPassword"
-                            className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center mb-1.5"
+                            className="flex items-center text-gray-600 text-sm font-medium"
                           >
-                            <Lock className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                            Confirmar nueva contraseña
+                            <Lock className="w-4 h-4 mr-2 text-blue-500" />
+                            Confirmar contraseña
                           </label>
                           <div className="relative group">
                             <input
                               id="confirmPassword"
                               type={showConfirmPassword ? "text" : "password"}
-                              placeholder="Confirma tu nueva contraseña"
-                              className={cn(
-                                "block w-full rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-400",
+                              className={`block w-full rounded-lg border ${
                                 passwordErrors.confirmPassword
-                                  ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                                  : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
-                              )}
+                                  ? "border-red-300 focus:ring-red-300 focus:border-red-300"
+                                  : "border-blue-200 focus:ring-blue-300 focus:border-blue-300"
+                              } bg-white text-gray-900 p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300`}
                               {...registerPassword("confirmPassword", {
                                 required:
                                   "La confirmación de contraseña es requerida",
@@ -535,7 +480,7 @@ const SecurityView = () => {
                             />
                             <button
                               type="button"
-                              className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none"
+                              className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500"
                               onClick={() =>
                                 setShowConfirmPassword(!showConfirmPassword)
                               }
@@ -547,233 +492,167 @@ const SecurityView = () => {
                                 <Eye size={20} />
                               )}
                             </button>
+                            {passwordErrors.confirmPassword && (
+                              <div className="absolute inset-y-0 right-0 flex items-center pr-10 pointer-events-none">
+                                <AlertCircle className="h-5 w-5 text-red-400" />
+                              </div>
+                            )}
                           </div>
                           {passwordErrors.confirmPassword && (
-                            <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1 mt-1">
+                            <p className="text-sm text-red-500 flex items-center gap-1 mt-1">
                               <AlertCircle className="h-3 w-3" />
                               {passwordErrors.confirmPassword.message}
                             </p>
                           )}
                         </div>
+
+                        {/* Password Strength */}
+                        {newPassword && (
+                          <div className="space-y-2">
+                            <label className="flex items-center text-gray-600 text-sm font-medium">
+                              <Shield className="w-4 h-4 mr-2 text-blue-500" />
+                              Fortaleza de contraseña
+                            </label>
+                            <div className="bg-gray-100 rounded-lg p-3">
+                              <div className="flex justify-between items-center mb-2">
+                                <span className="text-sm text-gray-600">
+                                  {getStrengthName(passwordStrength)}
+                                </span>
+                                <span
+                                  className={`text-xs font-medium px-2 py-0.5 rounded-full ${getStrengthColor(
+                                    passwordStrength
+                                  ).replace("bg-", "bg-opacity-20 text-")}`}
+                                >
+                                  {passwordStrength}%
+                                </span>
+                              </div>
+                              <div className="w-full h-2 rounded-full bg-gray-200 overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full ${getStrengthColor(
+                                    passwordStrength
+                                  )}`}
+                                  style={{ width: `${passwordStrength}%` }}
+                                ></div>
+                              </div>
+                              <div className="mt-3 grid grid-cols-2 gap-1.5">
+                                {Object.entries(passwordChecks).map(
+                                  ([key, isValid]) => {
+                                    const labels: Record<string, string> = {
+                                      length: "Mínimo 8 caracteres",
+                                      uppercase: "Una mayúscula",
+                                      lowercase: "Una minúscula",
+                                      number: "Un número",
+                                      special: "Un carácter especial",
+                                      noSequential: "Sin secuencias obvias",
+                                    };
+
+                                    return (
+                                      <div
+                                        key={key}
+                                        className={`flex items-center text-xs ${
+                                          isValid
+                                            ? "text-green-600"
+                                            : "text-gray-500"
+                                        }`}
+                                      >
+                                        <div
+                                          className={`flex-shrink-0 w-3.5 h-3.5 rounded-full flex items-center justify-center mr-1.5 ${
+                                            isValid
+                                              ? "bg-green-100"
+                                              : "bg-gray-100"
+                                          }`}
+                                        >
+                                          {isValid && (
+                                            <Check className="w-2 h-2" />
+                                          )}
+                                        </div>
+                                        {labels[key]}
+                                      </div>
+                                    );
+                                  }
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
 
-                      {/* Indicadores de fortaleza de contraseña */}
-                      {newPassword && passwordStrength < 100 && (
-                        <motion.div
-                          className="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-lg border border-blue-100 dark:border-blue-800/30 shadow-sm"
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          <div className="flex justify-between items-center mb-2">
-                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center">
-                              <Shield className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                              Fortaleza:
-                            </span>
-                            <span
-                              className={`text-xs font-medium px-2 py-0.5 rounded-full ${getStrengthColor(
-                                passwordStrength
-                              ).replace("bg-", "bg-opacity-20 text-")}`}
-                            >
-                              {getStrengthName(passwordStrength)}
-                            </span>
-                          </div>
-                          <div className="w-full h-2 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
-                            <motion.div
-                              className={`h-full rounded-full ${getStrengthColor(
-                                passwordStrength
-                              )}`}
-                              initial={{ width: 0 }}
-                              animate={{ width: `${passwordStrength}%` }}
-                              transition={{ duration: 0.5 }}
-                            ></motion.div>
-                          </div>
-
-                          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                            {Object.entries(passwordChecks).map(
-                              ([key, isValid]) => {
-                                const labels: Record<string, string> = {
-                                  length: "Mínimo 8 caracteres",
-                                  uppercase: "Una mayúscula",
-                                  lowercase: "Una minúscula",
-                                  number: "Un número",
-                                  special: "Un carácter especial",
-                                  noSequential: "Sin secuencias obvias",
-                                };
-
-                                return (
-                                  <motion.div
-                                    key={key}
-                                    className={`flex items-center text-xs p-1 rounded ${
-                                      isValid
-                                        ? "text-green-600 dark:text-green-400"
-                                        : key === "number"
-                                        ? "text-red-600 dark:text-red-400 font-medium"
-                                        : "text-gray-500 dark:text-gray-400"
-                                    }`}
-                                    initial={{ opacity: 0, x: -5 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ duration: 0.2 }}
-                                  >
-                                    <div
-                                      className={`flex-shrink-0 w-3.5 h-3.5 rounded-full flex items-center justify-center mr-1.5 ${
-                                        isValid
-                                          ? "bg-green-100 dark:bg-green-900/30"
-                                          : key === "number"
-                                          ? "bg-red-100 dark:bg-red-900/30"
-                                          : "bg-gray-100 dark:bg-gray-700"
-                                      }`}
-                                    >
-                                      {isValid && <Check className="w-2 h-2" />}
-                                    </div>
-                                    {labels[key]}
-                                  </motion.div>
-                                );
-                              }
-                            )}
-                          </div>
-                        </motion.div>
-                      )}
-
-                      {newPassword && passwordStrength === 100 && (
-                        <motion.div
-                          className="flex items-center gap-2 bg-green-50 dark:bg-green-900/10 p-3 rounded-lg text-green-600 dark:text-green-400 font-medium border border-green-100 dark:border-green-900/30"
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          <div className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center bg-green-100 dark:bg-green-900/30">
-                            <Check className="w-4 h-4" />
-                          </div>
-                          <span className="text-sm">
-                            ¡Excelente contraseña!
-                          </span>
-                        </motion.div>
-                      )}
-
-                      {/* Botón de guardar */}
-                      <div className="flex justify-end pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
+                      {/* Submit Button */}
+                      <Separator className="my-6" />
+                      <div className="flex justify-end gap-3">
+                        <Button
                           type="submit"
                           disabled={isSubmitting}
-                          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-lg shadow-md hover:from-blue-700 hover:to-blue-800 transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed relative overflow-hidden group"
+                          className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
                         >
-                          <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-500/0 via-blue-500/30 to-blue-500/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
                           {isSubmitting ? (
                             <>
-                              <Loader2 className="animate-spin h-4 w-4" />
+                              <Loader2 className="w-4 h-4 animate-spin" />
                               <span>Actualizando...</span>
                             </>
                           ) : (
                             <>
-                              <Lock className="w-4 h-4" />
+                              <Save className="w-4 h-4" />
                               <span>Actualizar Contraseña</span>
                             </>
                           )}
-                        </motion.button>
+                        </Button>
                       </div>
                     </form>
+                  )}
+                </TabsContent>
+
+                {/* Recovery Tab */}
+                <TabsContent value="recovery">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+                      <ShieldQuestion className="w-5 h-5 mr-2 text-blue-600" />
+                      Pregunta de Seguridad
+                    </h2>
                   </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </TabsContent>
 
-        {/* Password Recovery Tab */}
-        <TabsContent value="recovery">
-          <AnimatePresence mode="wait">
-            {recoverySuccess ? (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-                className="mb-8"
-              >
-                <Alert className="bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800 rounded-lg p-6 shadow-sm">
-                  <div className="flex items-start gap-4">
-                    <div className="bg-green-100 dark:bg-green-800/50 p-3 rounded-full flex-shrink-0">
-                      <Check className="h-6 w-6 text-green-600 dark:text-green-400" />
-                    </div>
-                    <div>
-                      <AlertTitle className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                        Cambio de pregunta secreta realizado con éxito.
-                      </AlertTitle>
-                      <AlertDescription className="text-gray-700 dark:text-gray-300">
-                        <p>
-                          El cambio se realizó de forma correcta, la próxima vez
-                          que desees recuperar tu contraseña puedes seleccionar,
-                          recuperar contraseña por pregunta secreta.
-                        </p>
-
-                        <motion.button
-                          whileHover={{ scale: 1.03 }}
-                          whileTap={{ scale: 0.97 }}
-                          onClick={() => {
-                            setRecoverySuccess(false);
-                            resetRecoveryForm();
-                          }}
-                          className="mt-4 flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-700 text-green-600 dark:text-green-400 rounded-lg border border-green-200 dark:border-green-800 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
-                        >
-                          <ArrowLeft className="w-4 h-4" />
-                          <span>Regresar</span>
-                        </motion.button>
+                  {recoverySuccess ? (
+                    <Alert className="mb-6 bg-green-50 border border-green-100 text-gray-700 py-3 rounded-lg">
+                      <Check className="h-5 w-5 text-green-500" />
+                      <AlertDescription className="text-sm">
+                        El cambio se realizó de forma correcta. La próxima vez
+                        que desees recuperar tu contraseña puedes seleccionar
+                        recuperar contraseña por pregunta secreta.
+                        <div className="mt-4">
+                          <Button
+                            onClick={resetRecoveryForm}
+                            variant="outline"
+                            className="gap-2"
+                          >
+                            <ArrowLeft className="w-4 h-4" />
+                            <span>Regresar</span>
+                          </Button>
+                        </div>
                       </AlertDescription>
-                    </div>
-                  </div>
-                </Alert>
-              </motion.div>
-            ) : (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-gray-100 dark:border-gray-700"
-              >
-                <div className="p-6">
-                  <div className="flex flex-col gap-6">
-                    {/* Encabezado de recuperación */}
-                    <div className="flex items-center gap-4">
-                      <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full">
-                        <ShieldQuestion className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                          Recuperación por pregunta secreta
-                        </h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Responde correctamente para recuperar el acceso
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Formulario de recuperación por pregunta secreta */}
+                    </Alert>
+                  ) : (
                     <form
                       onSubmit={handleSubmitRecovery(onRecoverySubmit)}
-                      className="space-y-5"
+                      className="relative"
                     >
-                      <div className="space-y-4">
-                        <div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                        {/* Security Question field */}
+                        <div className="space-y-2">
                           <label
                             htmlFor="securityQuestion"
-                            className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center mb-1.5"
+                            className="flex items-center text-gray-600 text-sm font-medium"
                           >
-                            <HelpCircle className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
+                            <HelpCircle className="w-4 h-4 mr-2 text-blue-500" />
                             Pregunta de seguridad
                           </label>
                           <div className="relative group">
                             <select
                               id="securityQuestion"
-                              className={cn(
-                                "block w-full rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-400 appearance-none",
+                              className={`block w-full rounded-lg border ${
                                 recoveryErrors.securityQuestion
-                                  ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                                  : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
-                              )}
+                                  ? "border-red-300 focus:ring-red-300 focus:border-red-300"
+                                  : "border-blue-200 focus:ring-blue-300 focus:border-blue-300"
+                              } bg-white text-gray-900 p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300 appearance-none`}
                               {...registerRecovery("securityQuestion", {
                                 required:
                                   "Selecciona una pregunta de seguridad",
@@ -785,48 +664,50 @@ const SecurityView = () => {
                               <option value="">
                                 Selecciona una pregunta de seguridad
                               </option>
-                              {questions?.map((question, index) => (
-                                <option key={index} value={String(question.id)}>
+                              {questions?.map((question) => (
+                                <option
+                                  key={question.id}
+                                  value={String(question.id)}
+                                >
                                   {question.question}
                                 </option>
                               ))}
                             </select>
-                            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
-                              <ChevronRight className="h-5 w-5 rotate-90" />
+                            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                              <ChevronRight className="h-5 w-5 text-gray-400 rotate-90" />
                             </div>
                             {recoveryErrors.securityQuestion && (
                               <div className="absolute inset-y-0 right-0 flex items-center pr-10 pointer-events-none">
-                                <AlertCircle className="h-5 w-5 text-red-500" />
+                                <AlertCircle className="h-5 w-5 text-red-400" />
                               </div>
                             )}
                           </div>
                           {recoveryErrors.securityQuestion && (
-                            <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1 mt-1">
+                            <p className="text-sm text-red-500 flex items-center gap-1 mt-1">
                               <AlertCircle className="h-3 w-3" />
                               {recoveryErrors.securityQuestion.message}
                             </p>
                           )}
                         </div>
 
-                        <div>
+                        {/* Security Answer field */}
+                        <div className="space-y-2">
                           <label
                             htmlFor="securityAnswer"
-                            className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center mb-1.5"
+                            className="flex items-center text-gray-600 text-sm font-medium"
                           >
-                            <Lock className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
+                            <Lock className="w-4 h-4 mr-2 text-blue-500" />
                             Respuesta
                           </label>
                           <div className="relative group">
                             <input
                               id="securityAnswer"
                               type="text"
-                              placeholder="Ingresa tu respuesta"
-                              className={cn(
-                                "block w-full rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-400",
+                              className={`block w-full rounded-lg border ${
                                 recoveryErrors.securityAnswer
-                                  ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                                  : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
-                              )}
+                                  ? "border-red-300 focus:ring-red-300 focus:border-red-300"
+                                  : "border-blue-200 focus:ring-blue-300 focus:border-blue-300"
+                              } bg-white text-gray-900 p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300`}
                               {...registerRecovery("securityAnswer", {
                                 required: "La respuesta es requerida",
                                 minLength: {
@@ -843,12 +724,12 @@ const SecurityView = () => {
                             />
                             {recoveryErrors.securityAnswer && (
                               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                <AlertCircle className="h-5 w-5 text-red-500" />
+                                <AlertCircle className="h-5 w-5 text-red-400" />
                               </div>
                             )}
                           </div>
                           {recoveryErrors.securityAnswer && (
-                            <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1 mt-1">
+                            <p className="text-sm text-red-500 flex items-center gap-1 mt-1">
                               <AlertCircle className="h-3 w-3" />
                               {recoveryErrors.securityAnswer.message}
                             </p>
@@ -856,8 +737,8 @@ const SecurityView = () => {
                         </div>
                       </div>
 
-                      {/* Información de seguridad */}
-                      <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/30 rounded-lg p-4 text-blue-800 dark:text-blue-300 text-sm">
+                      {/* Security Info */}
+                      <div className="mt-6 bg-blue-50 border border-blue-100 rounded-lg p-4 text-blue-800 text-sm">
                         <div className="flex items-start gap-2">
                           <Info className="w-5 h-5 flex-shrink-0 mt-0.5" />
                           <div>
@@ -872,96 +753,83 @@ const SecurityView = () => {
                         </div>
                       </div>
 
-                      {/* Botón de enviar */}
-                      <div className="flex justify-end pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
+                      {/* Submit Button */}
+                      <Separator className="my-6" />
+                      <div className="flex justify-end gap-3">
+                        <Button
                           type="submit"
                           disabled={isRecoverySubmitting}
-                          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-lg shadow-md hover:from-blue-700 hover:to-blue-800 transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed relative overflow-hidden group"
+                          className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
                         >
-                          <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-500/0 via-blue-500/30 to-blue-500/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
                           {isRecoverySubmitting ? (
                             <>
-                              <Loader2 className="animate-spin h-4 w-4" />
-                              <span>Enviando...</span>
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              <span>Guardando...</span>
                             </>
                           ) : (
                             <>
-                              <KeyRound className="w-4 h-4" />
-                              <span>Guardar</span>
+                              <Save className="w-4 h-4" />
+                              <span>Guardar Cambios</span>
                             </>
                           )}
-                        </motion.button>
+                        </Button>
                       </div>
                     </form>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </TabsContent>
-      </Tabs>
+                  )}
+                </TabsContent>
+              </Tabs>
+            </div>
+          </motion.div>
 
-      {/* Security tips */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.3 }}
-        className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-md"
-      >
-        <div className="flex items-start gap-4">
-          <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-lg">
-            <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-          </div>
-          <div className="flex-1">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              Consejos de seguridad
-            </h3>
-            <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-700 dark:text-gray-300">
-              <motion.li
-                initial={{ opacity: 0, x: -5 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, delay: 0.4 }}
-                className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800/50 p-2 rounded-lg border border-gray-100 dark:border-gray-700"
-              >
-                <ChevronRight className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-                <span>Cambia tu contraseña regularmente</span>
-              </motion.li>
-              <motion.li
-                initial={{ opacity: 0, x: -5 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, delay: 0.5 }}
-                className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800/50 p-2 rounded-lg border border-gray-100 dark:border-gray-700"
-              >
-                <ChevronRight className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-                <span>No compartas tus credenciales</span>
-              </motion.li>
-              <motion.li
-                initial={{ opacity: 0, x: -5 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, delay: 0.6 }}
-                className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800/50 p-2 rounded-lg border border-gray-100 dark:border-gray-700"
-              >
-                <ChevronRight className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-                <span>Usa contraseñas diferentes para cada servicio</span>
-              </motion.li>
-              <motion.li
-                initial={{ opacity: 0, x: -5 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, delay: 0.7 }}
-                className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800/50 p-2 rounded-lg border border-gray-100 dark:border-gray-700"
-              >
-                <ChevronRight className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-                <span>Configura preguntas de seguridad únicas</span>
-              </motion.li>
-            </ul>
-          </div>
+          {/* Security Tips */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={
+              animateContent ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }
+            }
+            transition={{ duration: 0.6, delay: 0.6 }}
+            className="mt-8 bg-white rounded-2xl shadow-xl border border-blue-100 overflow-hidden"
+          >
+            <div className="p-6 md:p-8">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="bg-blue-100 p-3 rounded-full">
+                  <Shield className="w-5 h-5 text-blue-600" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900">
+                  Consejos de seguridad
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                  <ChevronRight className="w-4 h-4 text-blue-600" />
+                  <span className="text-sm text-gray-700">
+                    Cambia tu contraseña regularmente
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                  <ChevronRight className="w-4 h-4 text-blue-600" />
+                  <span className="text-sm text-gray-700">
+                    No compartas tus credenciales
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                  <ChevronRight className="w-4 h-4 text-blue-600" />
+                  <span className="text-sm text-gray-700">
+                    Usa contraseñas diferentes para cada servicio
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                  <ChevronRight className="w-4 h-4 text-blue-600" />
+                  <span className="text-sm text-gray-700">
+                    Configura preguntas de seguridad únicas
+                  </span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
         </div>
-      </motion.div>
+      )}
     </div>
   );
-};
-
-export default SecurityView;
+}

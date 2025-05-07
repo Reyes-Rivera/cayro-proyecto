@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Bell,
@@ -11,9 +11,9 @@ import {
   Trash,
   Check,
   X,
-  ChevronRight,
   Shield,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 type Notification = {
   id: string;
@@ -24,7 +24,9 @@ type Notification = {
   read: boolean;
 };
 
-const NotificationsView = () => {
+export default function NotificationsView() {
+  const [pageLoading, setPageLoading] = useState(true);
+  const [animateContent, setAnimateContent] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([
     {
       id: "1",
@@ -63,6 +65,19 @@ const NotificationsView = () => {
       read: true,
     },
   ]);
+
+  // Simulate page loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPageLoading(false);
+      // Activate animations after loading screen disappears
+      setTimeout(() => {
+        setAnimateContent(true);
+      }, 100);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const markAsRead = (id: string) => {
     setNotifications(
@@ -106,15 +121,15 @@ const NotificationsView = () => {
   const getNotificationColor = (type: string) => {
     switch (type) {
       case "order":
-        return "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400";
+        return "bg-blue-100 text-blue-600";
       case "shipping":
-        return "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400";
+        return "bg-green-100 text-green-600";
       case "promotion":
-        return "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400";
+        return "bg-purple-100 text-purple-600";
       case "system":
-        return "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400";
+        return "bg-gray-100 text-gray-600";
       default:
-        return "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400";
+        return "bg-gray-100 text-gray-600";
     }
   };
 
@@ -146,164 +161,185 @@ const NotificationsView = () => {
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 p-4 md:p-6">
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
-      >
-        <div className="flex items-center gap-4">
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-3 rounded-xl shadow-md">
-            <Bell className="w-6 h-6" />
+    <div className="relative">
+      {/* Loading Screen */}
+      {pageLoading && (
+        <div className="flex flex-col items-center justify-center py-20">
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-blue-100 border-t-blue-500 rounded-full animate-spin mb-4"></div>
+            <Bell className="w-6 h-6 text-blue-500 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
           </div>
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-              Notificaciones
-              {unreadCount > 0 && (
-                <span className="ml-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-sm font-medium px-2.5 py-0.5 rounded-full">
-                  {unreadCount} nuevas
-                </span>
-              )}
-            </h1>
-            <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-1">
-              <span>Mi Cuenta</span>
-              <ChevronRight className="w-4 h-4 mx-1" />
-              <span className="text-blue-600 dark:text-blue-400">
-                Notificaciones
-              </span>
-            </div>
-          </div>
+          <p className="text-blue-500 mt-4 font-medium">
+            Cargando notificaciones...
+          </p>
         </div>
-        <div className="flex gap-2">
-          {unreadCount > 0 && (
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={markAllAsRead}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-md relative overflow-hidden group"
-            >
-              <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-500/0 via-blue-500/30 to-blue-500/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
-              <Check className="w-4 h-4" />
-              <span>Marcar todo como leído</span>
-            </motion.button>
-          )}
-          {notifications.length > 0 && (
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={clearAllNotifications}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-            >
-              <Trash className="w-4 h-4" />
-              <span>Borrar todo</span>
-            </motion.button>
-          )}
-        </div>
-      </motion.div>
+      )}
 
-      {notifications.length > 0 ? (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="space-y-4"
-        >
-          {notifications.map((notification, index) => (
+      {!pageLoading && (
+        <div className="p-6 md:p-8">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={
+              animateContent ? { opacity: 1, y: 0 } : { opacity: 0, y: -20 }
+            }
+            transition={{ duration: 0.6 }}
+            className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6"
+          >
+            <div>
+              <div className="mb-2 inline-flex items-center justify-center rounded-full bg-blue-100 px-4 py-1.5">
+                <Bell className="w-4 h-4 mr-2 text-blue-600" />
+                <span className="text-sm font-medium text-blue-600">
+                  NOTIFICACIONES
+                </span>
+              </div>
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
+                Centro de{" "}
+                <span className="relative inline-block">
+                  <span className="relative z-10 text-blue-600">Mensajes</span>
+                  <span className="absolute bottom-1 left-0 w-full h-3 bg-blue-600/20 -z-10 rounded"></span>
+                </span>
+                {unreadCount > 0 && (
+                  <span className="ml-2 bg-blue-100 text-blue-600 text-sm font-medium px-2.5 py-0.5 rounded-full">
+                    {unreadCount} nuevas
+                  </span>
+                )}
+              </h1>
+              <p className="text-gray-600 mt-2">
+                Mantente al día con tus pedidos y ofertas especiales
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              {unreadCount > 0 && (
+                <Button
+                  onClick={markAllAsRead}
+                  className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>Marcar todo como leído</span>
+                </Button>
+              )}
+              {notifications.length > 0 && (
+                <Button
+                  onClick={clearAllNotifications}
+                  variant="outline"
+                  className="gap-2"
+                >
+                  <Trash className="w-4 h-4" />
+                  <span>Borrar todo</span>
+                </Button>
+              )}
+            </div>
+          </motion.div>
+
+          {/* Notifications list */}
+          {notifications.length > 0 ? (
             <motion.div
-              key={notification.id}
               initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
-              className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border-l-4 ${
-                notification.read
-                  ? "border-gray-200 dark:border-gray-700"
-                  : "border-blue-500 dark:border-blue-600"
-              } hover:shadow-xl transition-all duration-300`}
+              animate={
+                animateContent ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }
+              }
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="space-y-4"
             >
-              <div className="p-6">
-                <div className="flex items-start gap-4">
-                  <div
-                    className={`p-3 rounded-lg ${getNotificationColor(
-                      notification.type
-                    )}`}
-                  >
-                    {getNotificationIcon(notification.type)}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                          {notification.title}
-                        </h3>
-                        <p className="text-gray-600 dark:text-gray-400 mt-1">
-                          {notification.message}
-                        </p>
+              {notifications.map((notification, index) => (
+                <motion.div
+                  key={notification.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={
+                    animateContent
+                      ? { opacity: 1, y: 0 }
+                      : { opacity: 0, y: 20 }
+                  }
+                  transition={{ duration: 0.6, delay: 0.3 + index * 0.1 }}
+                  className={`bg-white rounded-2xl shadow-xl overflow-hidden border-l-4 ${
+                    notification.read ? "border-gray-200" : "border-blue-500"
+                  } border-t border-r border-b border-blue-100`}
+                >
+                  <div className="p-6">
+                    <div className="flex items-start gap-4">
+                      <div
+                        className={`p-3 rounded-lg ${getNotificationColor(
+                          notification.type
+                        )}`}
+                      >
+                        {getNotificationIcon(notification.type)}
                       </div>
-                      <div className="flex items-center gap-2">
-                        {!notification.read && (
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => markAsRead(notification.id)}
-                            className="p-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
-                            aria-label="Marcar como leído"
-                          >
-                            <Check className="w-4 h-4" />
-                          </motion.button>
-                        )}
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => deleteNotification(notification.id)}
-                          className="p-1.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                          aria-label="Eliminar notificación"
-                        >
-                          <X className="w-4 h-4" />
-                        </motion.button>
+                      <div className="flex-1">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-900">
+                              {notification.title}
+                            </h3>
+                            <p className="text-gray-600 mt-1">
+                              {notification.message}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {!notification.read && (
+                              <button
+                                onClick={() => markAsRead(notification.id)}
+                                className="p-1.5 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200 transition-colors"
+                                aria-label="Marcar como leído"
+                              >
+                                <Check className="w-4 h-4" />
+                              </button>
+                            )}
+                            <button
+                              onClick={() =>
+                                deleteNotification(notification.id)
+                              }
+                              className="p-1.5 bg-gray-100 text-gray-600 rounded-full hover:bg-gray-200 transition-colors"
+                              aria-label="Eliminar notificación"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="flex items-center mt-3 text-sm text-gray-500">
+                          <Clock className="w-4 h-4 mr-1" />
+                          <span>{formatDate(notification.date)}</span>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center mt-3 text-sm text-gray-500 dark:text-gray-400">
-                      <Clock className="w-4 h-4 mr-1" />
-                      <span>{formatDate(notification.date)}</span>
-                    </div>
                   </div>
-                </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={
+                animateContent ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }
+              }
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="bg-white rounded-2xl shadow-xl border border-blue-100 overflow-hidden p-8 text-center"
+            >
+              <div className="bg-blue-50 p-4 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+                <Bell className="w-10 h-10 text-blue-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                No tienes notificaciones
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Te notificaremos cuando haya actualizaciones sobre tus pedidos o
+                promociones especiales.
+              </p>
+              <div className="mt-6 bg-blue-50 border border-blue-100 rounded-lg p-4 max-w-md mx-auto">
+                <p className="text-sm text-blue-800 flex items-start">
+                  <Shield className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5 text-blue-600" />
+                  <span>
+                    Las notificaciones te mantendrán informado sobre el estado
+                    de tus pedidos, ofertas especiales y actualizaciones
+                    importantes.
+                  </span>
+                </p>
               </div>
             </motion.div>
-          ))}
-        </motion.div>
-      ) : (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center"
-        >
-          <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
-            <Bell className="w-10 h-10 text-blue-600 dark:text-blue-400" />
-          </div>
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-            No tienes notificaciones
-          </h3>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
-            Te notificaremos cuando haya actualizaciones sobre tus pedidos o
-            promociones especiales.
-          </p>
-          <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-lg p-4 max-w-md mx-auto">
-            <p className="text-sm text-blue-800 dark:text-blue-300 flex items-start">
-              <Shield className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5 text-blue-600 dark:text-blue-400" />
-              <span>
-                Las notificaciones te mantendrán informado sobre el estado de
-                tus pedidos, ofertas especiales y actualizaciones importantes.
-              </span>
-            </p>
-          </div>
-        </motion.div>
+          )}
+        </div>
       )}
     </div>
   );
-};
-
-export default NotificationsView;
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Package,
@@ -17,8 +17,9 @@ import {
   ShoppingBag,
   AlertCircle,
   Shield,
-  ChevronRight,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 
 type OrderStatus = "completed" | "processing" | "shipped" | "cancelled";
 
@@ -37,7 +38,14 @@ type Order = {
   tracking?: string;
 };
 
-const OrderHistoryView = () => {
+export default function OrderHistoryView() {
+  const [pageLoading, setPageLoading] = useState(true);
+  const [animateContent, setAnimateContent] = useState(false);
+  const [expandedOrders, setExpandedOrders] = useState<Record<string, boolean>>(
+    {}
+  );
+  const [searchTerm, setSearchTerm] = useState("");
+
   const orders: Order[] = [
     {
       id: "ORD-12345",
@@ -102,10 +110,18 @@ const OrderHistoryView = () => {
     },
   ];
 
-  const [expandedOrders, setExpandedOrders] = useState<Record<string, boolean>>(
-    {}
-  );
-  const [searchTerm, setSearchTerm] = useState("");
+  // Simulate page loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPageLoading(false);
+      // Activate animations after loading screen disappears
+      setTimeout(() => {
+        setAnimateContent(true);
+      }, 100);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const toggleOrderExpand = (orderId: string) => {
     setExpandedOrders((prev) => ({
@@ -117,15 +133,15 @@ const OrderHistoryView = () => {
   const getStatusColor = (status: OrderStatus) => {
     switch (status) {
       case "completed":
-        return "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400";
+        return "bg-green-100 text-green-600";
       case "processing":
-        return "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400";
+        return "bg-blue-100 text-blue-600";
       case "shipped":
-        return "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400";
+        return "bg-amber-100 text-amber-600";
       case "cancelled":
-        return "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400";
+        return "bg-red-100 text-red-600";
       default:
-        return "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400";
+        return "bg-gray-100 text-gray-600";
     }
   };
 
@@ -153,259 +169,276 @@ const OrderHistoryView = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 p-4 md:p-6">
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="mb-8"
-      >
-        <div className="flex items-center gap-4">
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-3 rounded-xl shadow-md">
-            <ShoppingBag className="w-6 h-6" />
-          </div>
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-              Historial de Pedidos
-            </h1>
-            <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-1">
-              <span>Mi Cuenta</span>
-              <ChevronRight className="w-4 h-4 mx-1" />
-              <span className="text-blue-600 dark:text-blue-400">
-                Mis Pedidos
-              </span>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Search and filter */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
-        className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden mb-8 border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all duration-300"
-      >
-        <div className="p-6">
+    <div className="relative">
+      {/* Loading Screen */}
+      {pageLoading && (
+        <div className="flex flex-col items-center justify-center py-20">
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
-            </div>
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Buscar por número de pedido o producto..."
-              className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-3.5"
-            />
+            <div className="w-16 h-16 border-4 border-blue-100 border-t-blue-500 rounded-full animate-spin mb-4"></div>
+            <ShoppingBag className="w-6 h-6 text-blue-500 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
           </div>
+          <p className="text-blue-500 mt-4 font-medium">Cargando pedidos...</p>
         </div>
-      </motion.div>
+      )}
 
-      {/* Orders list */}
-      <div className="space-y-6">
-        {filteredOrders.length > 0 ? (
-          filteredOrders.map((order, index) => (
-            <motion.div
-              key={order.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all duration-300"
-            >
-              {/* Order header */}
-              <div
-                className="p-6 border-b border-gray-200 dark:border-gray-700 cursor-pointer bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-800"
-                onClick={() => toggleOrderExpand(order.id)}
-              >
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-3 rounded-lg shadow-md">
-                      <Package className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        {order.id}
-                      </h3>
-                      <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                        <Calendar className="w-4 h-4" />
-                        <span>{new Date(order.date).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-4">
-                    <div className="flex items-center gap-2">
-                      <CreditCard className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                      <span className="font-medium text-gray-900 dark:text-white">
-                        ${order.total.toFixed(2)}
-                      </span>
-                    </div>
-                    <div
-                      className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                        order.status
-                      )}`}
-                    >
-                      {getStatusIcon(order.status)}
-                      <span>
-                        {order.status === "completed" && "Completado"}
-                        {order.status === "processing" && "En proceso"}
-                        {order.status === "shipped" && "Enviado"}
-                        {order.status === "cancelled" && "Cancelado"}
-                      </span>
-                    </div>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      className="ml-auto"
-                    >
-                      {expandedOrders[order.id] ? (
-                        <ChevronUp className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                      ) : (
-                        <ChevronDown className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                      )}
-                    </motion.button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Order details */}
-              <AnimatePresence>
-                {expandedOrders[order.id] && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="p-6"
-                  >
-                    <div className="space-y-6">
-                      {/* Order items */}
-                      <div>
-                        <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4 flex items-center">
-                          <ShoppingBag className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                          Productos
-                        </h4>
-                        <div className="space-y-4">
-                          {order.items.map((item) => (
-                            <motion.div
-                              key={item.id}
-                              whileHover={{
-                                y: -3,
-                                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                              }}
-                              className="flex items-center gap-4 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 rounded-lg border border-blue-100 dark:border-blue-800/30"
-                            >
-                              <img
-                                src={
-                                  item.image ||
-                                  "/placeholder.svg?height=80&width=80"
-                                }
-                                alt={item.name}
-                                className="w-16 h-16 object-cover rounded-md border border-gray-200 dark:border-gray-700"
-                              />
-                              <div className="flex-1">
-                                <h5 className="font-medium text-gray-900 dark:text-white">
-                                  {item.name}
-                                </h5>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">
-                                  Cantidad: {item.quantity}
-                                </p>
-                              </div>
-                              <div className="text-right">
-                                <p className="font-medium text-gray-900 dark:text-white">
-                                  ${item.price.toFixed(2)}
-                                </p>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">
-                                  por unidad
-                                </p>
-                              </div>
-                            </motion.div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Order tracking */}
-                      {order.tracking && (
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4 flex items-center">
-                            <Truck className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                            Información de envío
-                          </h4>
-                          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 p-4 rounded-lg border border-blue-100 dark:border-blue-800/30">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <Truck className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                                <span className="text-gray-900 dark:text-white font-medium">
-                                  Número de seguimiento:
-                                </span>
-                              </div>
-                              <span className="font-mono text-gray-900 dark:text-white bg-white dark:bg-gray-700 px-3 py-1 rounded-lg border border-gray-200 dark:border-gray-600">
-                                {order.tracking}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Order actions */}
-                      <div className="flex justify-end gap-4">
-                        <motion.button
-                          whileHover={{ scale: 1.03 }}
-                          whileTap={{ scale: 0.97 }}
-                          className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                        >
-                          <FileText className="w-4 h-4" />
-                          <span>Ver factura</span>
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.03 }}
-                          whileTap={{ scale: 0.97 }}
-                          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-md relative overflow-hidden group"
-                        >
-                          <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-500/0 via-blue-500/30 to-blue-500/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
-                          <Eye className="w-4 h-4" />
-                          <span>Ver detalles</span>
-                        </motion.button>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          ))
-        ) : (
+      {!pageLoading && (
+        <div className="p-6 md:p-8">
+          {/* Header */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center"
+            initial={{ opacity: 0, y: -20 }}
+            animate={
+              animateContent ? { opacity: 1, y: 0 } : { opacity: 0, y: -20 }
+            }
+            transition={{ duration: 0.6 }}
+            className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6"
           >
-            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
-              <Package className="w-10 h-10 text-blue-600 dark:text-blue-400" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-              No se encontraron pedidos
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              {searchTerm
-                ? "No hay pedidos que coincidan con tu búsqueda."
-                : "Aún no has realizado ningún pedido."}
-            </p>
-            <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-lg p-4 max-w-md mx-auto">
-              <p className="text-sm text-blue-800 dark:text-blue-300 flex items-start">
-                <Shield className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5 text-blue-600 dark:text-blue-400" />
-                <span>
-                  Aquí podrás ver el historial de todos tus pedidos y realizar
-                  un seguimiento de su estado en tiempo real.
+            <div>
+              <div className="mb-2 inline-flex items-center justify-center rounded-full bg-blue-100 px-4 py-1.5">
+                <ShoppingBag className="w-4 h-4 mr-2 text-blue-600" />
+                <span className="text-sm font-medium text-blue-600">
+                  HISTORIAL DE PEDIDOS
                 </span>
+              </div>
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
+                Mis{" "}
+                <span className="relative inline-block">
+                  <span className="relative z-10 text-blue-600">Compras</span>
+                  <span className="absolute bottom-1 left-0 w-full h-3 bg-blue-600/20 -z-10 rounded"></span>
+                </span>
+              </h1>
+              <p className="text-gray-600 mt-2">
+                Consulta y gestiona tus pedidos recientes
               </p>
             </div>
           </motion.div>
-        )}
-      </div>
+
+          {/* Search */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={
+              animateContent ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }
+            }
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="bg-white rounded-2xl shadow-xl border border-blue-100 overflow-hidden mb-8"
+          >
+            <div className="p-6 md:p-8">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Buscar por número de pedido o producto..."
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-3.5"
+                />
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Orders list */}
+          <div className="space-y-6">
+            {filteredOrders.length > 0 ? (
+              filteredOrders.map((order, index) => (
+                <motion.div
+                  key={order.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={
+                    animateContent
+                      ? { opacity: 1, y: 0 }
+                      : { opacity: 0, y: 20 }
+                  }
+                  transition={{ duration: 0.6, delay: 0.3 + index * 0.1 }}
+                  className="bg-white rounded-2xl shadow-xl border border-blue-100 overflow-hidden"
+                >
+                  {/* Order header */}
+                  <div
+                    className="p-6 border-b border-gray-200 cursor-pointer bg-gradient-to-r from-gray-50 to-white"
+                    onClick={() => toggleOrderExpand(order.id)}
+                  >
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div className="flex items-center gap-4">
+                        <div className="bg-blue-100 p-3 rounded-lg">
+                          <Package className="w-6 h-6 text-blue-600" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            {order.id}
+                          </h3>
+                          <div className="flex items-center gap-2 text-sm text-gray-500">
+                            <Calendar className="w-4 h-4" />
+                            <span>
+                              {new Date(order.date).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-4">
+                        <div className="flex items-center gap-2">
+                          <CreditCard className="w-4 h-4 text-gray-500" />
+                          <span className="font-medium text-gray-900">
+                            ${order.total.toFixed(2)}
+                          </span>
+                        </div>
+                        <div
+                          className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                            order.status
+                          )}`}
+                        >
+                          {getStatusIcon(order.status)}
+                          <span>
+                            {order.status === "completed" && "Completado"}
+                            {order.status === "processing" && "En proceso"}
+                            {order.status === "shipped" && "Enviado"}
+                            {order.status === "cancelled" && "Cancelado"}
+                          </span>
+                        </div>
+                        <button className="ml-auto">
+                          {expandedOrders[order.id] ? (
+                            <ChevronUp className="w-5 h-5 text-gray-500" />
+                          ) : (
+                            <ChevronDown className="w-5 h-5 text-gray-500" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Order details */}
+                  <AnimatePresence>
+                    {expandedOrders[order.id] && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="p-6"
+                      >
+                        <div className="space-y-6">
+                          {/* Order items */}
+                          <div>
+                            <h4 className="text-sm font-medium text-gray-500 mb-4 flex items-center">
+                              <ShoppingBag className="w-4 h-4 mr-2 text-blue-600" />
+                              Productos
+                            </h4>
+                            <div className="space-y-4">
+                              {order.items.map((item) => (
+                                <motion.div
+                                  key={item.id}
+                                  whileHover={{
+                                    y: -3,
+                                    boxShadow:
+                                      "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                                  }}
+                                  className="flex items-center gap-4 p-4 bg-blue-50 rounded-lg border border-blue-100"
+                                >
+                                  <img
+                                    src={
+                                      item.image ||
+                                      "/placeholder.svg?height=80&width=80"
+                                    }
+                                    alt={item.name}
+                                    className="w-16 h-16 object-cover rounded-md border border-gray-200"
+                                  />
+                                  <div className="flex-1">
+                                    <h5 className="font-medium text-gray-900">
+                                      {item.name}
+                                    </h5>
+                                    <p className="text-sm text-gray-500">
+                                      Cantidad: {item.quantity}
+                                    </p>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="font-medium text-gray-900">
+                                      ${item.price.toFixed(2)}
+                                    </p>
+                                    <p className="text-sm text-gray-500">
+                                      por unidad
+                                    </p>
+                                  </div>
+                                </motion.div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Order tracking */}
+                          {order.tracking && (
+                            <div>
+                              <h4 className="text-sm font-medium text-gray-500 mb-4 flex items-center">
+                                <Truck className="w-4 h-4 mr-2 text-blue-600" />
+                                Información de envío
+                              </h4>
+                              <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <Truck className="w-5 h-5 text-blue-600" />
+                                    <span className="text-gray-900 font-medium">
+                                      Número de seguimiento:
+                                    </span>
+                                  </div>
+                                  <span className="font-mono text-gray-900 bg-white px-3 py-1 rounded-lg border border-gray-200">
+                                    {order.tracking}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          <Separator />
+
+                          {/* Order actions */}
+                          <div className="flex justify-end gap-3">
+                            <Button variant="outline" className="gap-2">
+                              <FileText className="w-4 h-4" />
+                              <span>Ver factura</span>
+                            </Button>
+                            <Button className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
+                              <Eye className="w-4 h-4" />
+                              <span>Ver detalles</span>
+                            </Button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              ))
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={
+                  animateContent ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }
+                }
+                transition={{ duration: 0.6, delay: 0.3 }}
+                className="bg-white rounded-2xl shadow-xl border border-blue-100 overflow-hidden p-8 text-center"
+              >
+                <div className="bg-blue-50 p-4 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+                  <Package className="w-10 h-10 text-blue-600" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  No se encontraron pedidos
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  {searchTerm
+                    ? "No hay pedidos que coincidan con tu búsqueda."
+                    : "Aún no has realizado ningún pedido."}
+                </p>
+                <div className="mt-6 bg-blue-50 border border-blue-100 rounded-lg p-4 max-w-md mx-auto">
+                  <p className="text-sm text-blue-800 flex items-start">
+                    <Shield className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5 text-blue-600" />
+                    <span>
+                      Aquí podrás ver el historial de todos tus pedidos y
+                      realizar un seguimiento de su estado en tiempo real.
+                    </span>
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
-};
-
-export default OrderHistoryView;
+}

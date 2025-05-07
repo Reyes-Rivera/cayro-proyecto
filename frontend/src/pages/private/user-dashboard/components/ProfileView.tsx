@@ -1,6 +1,5 @@
 "use client";
 
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { updateUser } from "@/api/users";
@@ -123,8 +122,6 @@ export default function ProfileView() {
     }
   };
 
-
-
   return (
     <div className="relative">
       {/* Loading Screen */}
@@ -167,8 +164,6 @@ export default function ProfileView() {
                 Gestiona tus datos personales y preferencias
               </p>
             </div>
-
-            
           </motion.div>
 
           {/* Main Form */}
@@ -483,7 +478,7 @@ export default function ProfileView() {
                       <select
                         id="gender"
                         disabled={!isEditable}
-                        className={`block w-full rounded-lg border ${
+                        className={`block w-full rounded-lg border appearance-none ${
                           errors.gender
                             ? "border-red-300 focus:ring-red-300 focus:border-red-300"
                             : "border-blue-200 focus:ring-blue-300 focus:border-blue-300"

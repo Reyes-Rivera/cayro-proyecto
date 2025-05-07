@@ -3,6 +3,9 @@ import { Type } from 'class-transformer';
 
 class ProductVariantDto {
   @IsInt()
+  @IsOptional()
+  id?: number;
+  @IsInt()
   colorId: number;
 
   @IsInt()

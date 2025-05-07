@@ -139,7 +139,7 @@ const CombinedDashboard = () => {
   ];
 
   return (
-    <main className="min-h-screen bg-white mt-24 pb-8 px-4 md:px-8 lg:px-12 overflow-x-hidden">
+    <main className="min-h-screen bg-gray-50 pt-24 pb-8 px-4 md:px-8 lg:px-12 overflow-x-hidden">
       {/* Background elements - minimal style */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 right-0 w-1/4 h-1/4 bg-blue-50 rounded-full opacity-70 blur-3xl"></div>

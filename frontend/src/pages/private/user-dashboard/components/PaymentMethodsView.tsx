@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   CreditCard,
@@ -10,15 +10,19 @@ import {
   Trash,
   Check,
   Edit,
-  Calendar,
   User,
   AlertCircle,
-  CreditCardIcon,
   DollarSign,
   Mail,
   ChevronRight,
   Shield,
+  X,
+  Save,
+  Loader2,
 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 
 type PaymentMethodType = "credit" | "debit" | "paypal";
 
@@ -27,19 +31,17 @@ type PaymentMethod = {
   type: PaymentMethodType;
   cardNumber?: string;
   cardHolder?: string;
-  expiryDate?: string;
   paypalEmail?: string;
   isDefault: boolean;
 };
 
-const PaymentMethodsView = () => {
+export default function PaymentMethodsView() {
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([
     {
       id: "1",
       type: "credit",
       cardNumber: "4111 1111 1111 1111",
       cardHolder: "Juan Pérez",
-      expiryDate: "12/25",
       isDefault: true,
     },
     {
@@ -47,7 +49,6 @@ const PaymentMethodsView = () => {
       type: "debit",
       cardNumber: "5555 5555 5555 4444",
       cardHolder: "Juan Pérez",
-      expiryDate: "10/26",
       isDefault: false,
     },
     {
@@ -61,16 +62,31 @@ const PaymentMethodsView = () => {
   const [isAddingCard, setIsAddingCard] = useState(false);
   const [editingCardId, setEditingCardId] = useState<string | null>(null);
   const [paymentType, setPaymentType] = useState<PaymentMethodType>("credit");
+  const [pageLoading, setPageLoading] = useState(true);
+  const [animateContent, setAnimateContent] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState<Omit<PaymentMethod, "id">>({
     type: "credit",
     cardNumber: "",
     cardHolder: "",
-    expiryDate: "",
     isDefault: false,
   });
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+  // Simulate page loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPageLoading(false);
+      // Activate animations after loading screen disappears
+      setTimeout(() => {
+        setAnimateContent(true);
+      }, 100);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -105,7 +121,6 @@ const PaymentMethodsView = () => {
       type: "credit",
       cardNumber: "",
       cardHolder: "",
-      expiryDate: "",
       isDefault: false,
     });
     setFormErrors({});
@@ -119,7 +134,6 @@ const PaymentMethodsView = () => {
       type: card.type,
       cardNumber: card.cardNumber || "",
       cardHolder: card.cardHolder || "",
-      expiryDate: card.expiryDate || "",
       paypalEmail: card.paypalEmail || "",
       isDefault: card.isDefault,
     });
@@ -153,12 +167,6 @@ const PaymentMethodsView = () => {
       if (!formData.cardHolder?.trim()) {
         errors.cardHolder = "El nombre del titular es requerido";
       }
-
-      if (!formData.expiryDate?.trim()) {
-        errors.expiryDate = "La fecha de expiración es requerida";
-      } else if (!/^\d{2}\/\d{2}$/.test(formData.expiryDate)) {
-        errors.expiryDate = "Formato inválido. Usa el formato: MM/YY";
-      }
     } else if (paymentType === "paypal") {
       if (!formData.paypalEmail?.trim()) {
         errors.paypalEmail = "El correo electrónico de PayPal es requerido";
@@ -173,8 +181,10 @@ const PaymentMethodsView = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
     if (!validateForm()) {
+      setIsSubmitting(false);
       return;
     }
 
@@ -188,25 +198,28 @@ const PaymentMethodsView = () => {
       );
     }
 
-    if (editingCardId) {
-      // Update existing card
-      setPaymentMethods(
-        paymentMethods.map((card) =>
-          card.id === editingCardId ? { ...card, ...formData } : card
-        )
-      );
-    } else {
-      // Add new card
-      const newCard: PaymentMethod = {
-        id: Date.now().toString(),
-        ...formData,
-      };
-      setPaymentMethods([...paymentMethods, newCard]);
-    }
+    setTimeout(() => {
+      if (editingCardId) {
+        // Update existing card
+        setPaymentMethods(
+          paymentMethods.map((card) =>
+            card.id === editingCardId ? { ...card, ...formData } : card
+          )
+        );
+      } else {
+        // Add new card
+        const newCard: PaymentMethod = {
+          id: Date.now().toString(),
+          ...formData,
+        };
+        setPaymentMethods([...paymentMethods, newCard]);
+      }
 
-    // Reset form
-    setIsAddingCard(false);
-    setEditingCardId(null);
+      // Reset form
+      setIsAddingCard(false);
+      setEditingCardId(null);
+      setIsSubmitting(false);
+    }, 1000);
   };
 
   const handleCancel = () => {
@@ -225,17 +238,11 @@ const PaymentMethodsView = () => {
     switch (type) {
       case "credit":
       case "debit":
-        return (
-          <CreditCard className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-        );
+        return <CreditCard className="w-5 h-5 text-blue-600" />;
       case "paypal":
-        return (
-          <DollarSign className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-        );
+        return <DollarSign className="w-5 h-5 text-blue-600" />;
       default:
-        return (
-          <CreditCard className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-        );
+        return <CreditCard className="w-5 h-5 text-blue-600" />;
     }
   };
 
@@ -253,413 +260,438 @@ const PaymentMethodsView = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 p-4 md:p-6">
-      {/* Mejorar el diseño del encabezado */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
-      >
-        <div className="flex items-center gap-4">
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-3 rounded-xl shadow-md">
-            <CreditCard className="w-6 h-6" />
+    <div className="relative">
+      {/* Loading Screen */}
+      {pageLoading && (
+        <div className="flex flex-col items-center justify-center py-20">
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-blue-100 border-t-blue-500 rounded-full animate-spin mb-4"></div>
+            <CreditCard className="w-6 h-6 text-blue-500 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
           </div>
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-              Métodos de Pago
-            </h1>
-            <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-1">
-              <span>Mi Cuenta</span>
-              <ChevronRight className="w-4 h-4 mx-1" />
-              <span className="text-blue-600 dark:text-blue-400">
-                Métodos de Pago
-              </span>
-            </div>
-          </div>
+          <p className="text-blue-500 mt-4 font-medium">
+            Cargando métodos de pago...
+          </p>
         </div>
-        <motion.button
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.97 }}
-          onClick={handleAddCard}
-          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-md relative overflow-hidden group"
-        >
-          <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-500/0 via-blue-500/30 to-blue-500/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
-          <Plus className="w-4 h-4" />
-          <span>Añadir método de pago</span>
-        </motion.button>
-      </motion.div>
+      )}
 
-      {/* Card Form */}
-      <AnimatePresence>
-        {(isAddingCard || editingCardId) && (
+      {!pageLoading && (
+        <div className="p-6 md:p-8">
+          {/* Header */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden mb-8 border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all duration-300"
+            initial={{ opacity: 0, y: -20 }}
+            animate={
+              animateContent ? { opacity: 1, y: 0 } : { opacity: 0, y: -20 }
+            }
+            transition={{ duration: 0.6 }}
+            className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6"
           >
-            <div className="p-6 md:p-8 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-white dark:from-gray-800 dark:to-gray-800">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
-                <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-2 rounded-lg mr-3 shadow-md">
-                  <CreditCardIcon className="w-5 h-5 text-white" />
-                </div>
-                {editingCardId
-                  ? "Editar método de pago"
-                  : "Añadir nuevo método de pago"}
-              </h2>
+            <div>
+              <div className="mb-2 inline-flex items-center justify-center rounded-full bg-blue-100 px-4 py-1.5">
+                <CreditCard className="w-4 h-4 mr-2 text-blue-600" />
+                <span className="text-sm font-medium text-blue-600">
+                  MÉTODOS DE PAGO
+                </span>
+              </div>
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
+                Formas de{" "}
+                <span className="relative inline-block">
+                  <span className="relative z-10 text-blue-600">Pago</span>
+                  <span className="absolute bottom-1 left-0 w-full h-3 bg-blue-600/20 -z-10 rounded"></span>
+                </span>
+              </h1>
+              <p className="text-gray-600 mt-2">
+                Gestiona tus métodos de pago para compras futuras
+              </p>
             </div>
 
-            <div className="p-6 md:p-8">
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="type"
-                      className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center"
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={handleAddCard}
+              className="px-4 py-2 rounded-lg text-sm font-medium flex items-center bg-blue-600 hover:bg-blue-700 text-white transition-all"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Añadir método de pago
+            </motion.button>
+          </motion.div>
+
+          {/* Card Form */}
+          <AnimatePresence>
+            {(isAddingCard || editingCardId) && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+                className="bg-white rounded-2xl shadow-xl border border-blue-100 overflow-hidden mb-8"
+              >
+                <div className="p-6 md:p-8">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+                      <CreditCard className="w-5 h-5 mr-2 text-blue-600" />
+                      {editingCardId
+                        ? "Editar método de pago"
+                        : "Añadir nuevo método de pago"}
+                    </h2>
+                    <motion.button
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
+                      type="button"
+                      onClick={handleCancel}
+                      className="px-2 py-2 rounded-lg text-sm font-medium flex items-center bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all"
                     >
-                      <CreditCardIcon className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                      Tipo de método de pago
-                    </label>
-                    <div className="relative">
-                      <select
-                        name="type"
-                        id="type"
-                        value={formData.type}
-                        onChange={handleChange}
-                        className="block w-full rounded-xl border border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3.5 shadow-sm transition-colors focus:outline-none"
-                      >
-                        <option value="credit">Tarjeta de Crédito</option>
-                        <option value="debit">Tarjeta de Débito</option>
-                        <option value="paypal">PayPal</option>
-                      </select>
-                    </div>
+                      <X className="w-4 h-4" />
+                    </motion.button>
                   </div>
 
-                  {(paymentType === "credit" || paymentType === "debit") && (
-                    <>
+                  <form onSubmit={handleSubmit} className="relative">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                      {/* Payment Type */}
                       <div className="space-y-2">
                         <label
-                          htmlFor="cardNumber"
-                          className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center"
+                          htmlFor="type"
+                          className="flex items-center text-gray-600 text-sm font-medium"
                         >
-                          <CreditCard className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                          Número de tarjeta
+                          <CreditCard className="w-4 h-4 mr-2 text-blue-500" />
+                          Tipo de método de pago
                         </label>
-                        <div className="relative">
-                          <input
-                            type="text"
-                            name="cardNumber"
-                            id="cardNumber"
-                            placeholder="1234 5678 9012 3456"
-                            value={formData.cardNumber}
+                        <div className="relative group">
+                          <select
+                            id="type"
+                            name="type"
+                            value={formData.type}
                             onChange={handleChange}
-                            className={`block w-full rounded-xl border ${
-                              formErrors.cardNumber
-                                ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                                : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
-                            } bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3.5 shadow-sm transition-colors focus:outline-none`}
-                          />
-                          {formErrors.cardNumber && (
-                            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                              <AlertCircle className="h-5 w-5 text-red-500" />
-                            </div>
-                          )}
-                        </div>
-                        {formErrors.cardNumber && (
-                          <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1 mt-1">
-                            <AlertCircle className="h-4 w-4" />
-                            {formErrors.cardNumber}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <label
-                          htmlFor="cardHolder"
-                          className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center"
-                        >
-                          <User className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                          Titular de la tarjeta
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="text"
-                            name="cardHolder"
-                            id="cardHolder"
-                            placeholder="Nombre como aparece en la tarjeta"
-                            value={formData.cardHolder}
-                            onChange={handleChange}
-                            className={`block w-full rounded-xl border ${
-                              formErrors.cardHolder
-                                ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                                : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
-                            } bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3.5 shadow-sm transition-colors focus:outline-none`}
-                          />
-                          {formErrors.cardHolder && (
-                            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                              <AlertCircle className="h-5 w-5 text-red-500" />
-                            </div>
-                          )}
-                        </div>
-                        {formErrors.cardHolder && (
-                          <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1 mt-1">
-                            <AlertCircle className="h-4 w-4" />
-                            {formErrors.cardHolder}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <label
-                          htmlFor="expiryDate"
-                          className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center"
-                        >
-                          <Calendar className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                          Fecha de expiración
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="text"
-                            name="expiryDate"
-                            id="expiryDate"
-                            placeholder="MM/YY"
-                            value={formData.expiryDate}
-                            onChange={handleChange}
-                            className={`block w-full rounded-xl border ${
-                              formErrors.expiryDate
-                                ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                                : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
-                            } bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3.5 shadow-sm transition-colors focus:outline-none`}
-                          />
-                          {formErrors.expiryDate && (
-                            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                              <AlertCircle className="h-5 w-5 text-red-500" />
-                            </div>
-                          )}
-                        </div>
-                        {formErrors.expiryDate && (
-                          <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1 mt-1">
-                            <AlertCircle className="h-4 w-4" />
-                            {formErrors.expiryDate}
-                          </p>
-                        )}
-                      </div>
-                    </>
-                  )}
-
-                  {paymentType === "paypal" && (
-                    <div className="space-y-2">
-                      <label
-                        htmlFor="paypalEmail"
-                        className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center"
-                      >
-                        <Mail className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                        Correo electrónico de PayPal
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="email"
-                          name="paypalEmail"
-                          id="paypalEmail"
-                          placeholder="tu@email.com"
-                          value={formData.paypalEmail}
-                          onChange={handleChange}
-                          className={`block w-full rounded-xl border ${
-                            formErrors.paypalEmail
-                              ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                              : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
-                          } bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3.5 shadow-sm transition-colors focus:outline-none`}
-                        />
-                        {formErrors.paypalEmail && (
+                            className="block w-full rounded-lg border appearance-none border-blue-200 focus:ring-blue-300 focus:border-blue-300 bg-white text-gray-900 p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300"
+                          >
+                            <option value="credit">Tarjeta de Crédito</option>
+                            <option value="debit">Tarjeta de Débito</option>
+                            <option value="paypal">PayPal</option>
+                          </select>
                           <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                            <AlertCircle className="h-5 w-5 text-red-500" />
+                            <ChevronRight className="h-5 w-5 text-gray-400 rotate-90" />
+                          </div>
+                        </div>
+                      </div>
+
+                      {(paymentType === "credit" ||
+                        paymentType === "debit") && (
+                        <>
+                          {/* Card Number */}
+                          <div className="space-y-2">
+                            <label
+                              htmlFor="cardNumber"
+                              className="flex items-center text-gray-600 text-sm font-medium"
+                            >
+                              <CreditCard className="w-4 h-4 mr-2 text-blue-500" />
+                              Número de tarjeta
+                            </label>
+                            <div className="relative group">
+                              <input
+                                id="cardNumber"
+                                name="cardNumber"
+                                type="text"
+                                placeholder="1234 5678 9012 3456"
+                                value={formData.cardNumber}
+                                onChange={handleChange}
+                                className={`block w-full rounded-lg border ${
+                                  formErrors.cardNumber
+                                    ? "border-red-300 focus:ring-red-300 focus:border-red-300"
+                                    : "border-blue-200 focus:ring-blue-300 focus:border-blue-300"
+                                } bg-white text-gray-900 p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300`}
+                              />
+                              {formErrors.cardNumber && (
+                                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                  <AlertCircle className="h-5 w-5 text-red-400" />
+                                </div>
+                              )}
+                            </div>
+                            {formErrors.cardNumber && (
+                              <p className="text-sm text-red-500 flex items-center gap-1 mt-1">
+                                <AlertCircle className="h-3 w-3" />
+                                {formErrors.cardNumber}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Card Holder */}
+                          <div className="space-y-2">
+                            <label
+                              htmlFor="cardHolder"
+                              className="flex items-center text-gray-600 text-sm font-medium"
+                            >
+                              <User className="w-4 h-4 mr-2 text-blue-500" />
+                              Titular de la tarjeta
+                            </label>
+                            <div className="relative group">
+                              <input
+                                id="cardHolder"
+                                name="cardHolder"
+                                type="text"
+                                placeholder="Nombre como aparece en la tarjeta"
+                                value={formData.cardHolder}
+                                onChange={handleChange}
+                                className={`block w-full rounded-lg border ${
+                                  formErrors.cardHolder
+                                    ? "border-red-300 focus:ring-red-300 focus:border-red-300"
+                                    : "border-blue-200 focus:ring-blue-300 focus:border-blue-300"
+                                } bg-white text-gray-900 p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300`}
+                              />
+                              {formErrors.cardHolder && (
+                                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                  <AlertCircle className="h-5 w-5 text-red-400" />
+                                </div>
+                              )}
+                            </div>
+                            {formErrors.cardHolder && (
+                              <p className="text-sm text-red-500 flex items-center gap-1 mt-1">
+                                <AlertCircle className="h-3 w-3" />
+                                {formErrors.cardHolder}
+                              </p>
+                            )}
+                          </div>
+                        </>
+                      )}
+
+                      {paymentType === "paypal" && (
+                        <div className="space-y-2 md:col-span-2">
+                          <label
+                            htmlFor="paypalEmail"
+                            className="flex items-center text-gray-600 text-sm font-medium"
+                          >
+                            <Mail className="w-4 h-4 mr-2 text-blue-500" />
+                            Correo electrónico de PayPal
+                          </label>
+                          <div className="relative group">
+                            <input
+                              id="paypalEmail"
+                              name="paypalEmail"
+                              type="email"
+                              placeholder="tu@email.com"
+                              value={formData.paypalEmail}
+                              onChange={handleChange}
+                              className={`block w-full rounded-lg border ${
+                                formErrors.paypalEmail
+                                  ? "border-red-300 focus:ring-red-300 focus:border-red-300"
+                                  : "border-blue-200 focus:ring-blue-300 focus:border-blue-300"
+                              } bg-white text-gray-900 p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300`}
+                            />
+                            {formErrors.paypalEmail && (
+                              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                <AlertCircle className="h-5 w-5 text-red-400" />
+                              </div>
+                            )}
+                          </div>
+                          {formErrors.paypalEmail && (
+                            <p className="text-sm text-red-500 flex items-center gap-1 mt-1">
+                              <AlertCircle className="h-3 w-3" />
+                              {formErrors.paypalEmail}
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Default Payment Method */}
+                      <div className="space-y-2 md:col-span-2">
+                        <div className="flex items-center bg-blue-50 p-3 rounded-lg border border-blue-100">
+                          <input
+                            type="checkbox"
+                            id="isDefault"
+                            name="isDefault"
+                            checked={formData.isDefault}
+                            onChange={handleChange}
+                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                          />
+                          <label
+                            htmlFor="isDefault"
+                            className="ml-2 text-sm font-medium text-gray-700"
+                          >
+                            Establecer como método de pago predeterminado
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                    <Separator className="my-6" />
+                    <div className="flex justify-end gap-3">
+                      <Button
+                        type="button"
+                        onClick={handleCancel}
+                        variant="outline"
+                        className="gap-2"
+                      >
+                        <X className="w-4 h-4" />
+                        Cancelar
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>Guardando...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Save className="w-4 h-4" />
+                            <span>Guardar Método</span>
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </form>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Payment Methods List */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={
+              animateContent ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }
+            }
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="bg-white rounded-2xl shadow-xl border border-blue-100 overflow-hidden"
+          >
+            <div className="p-6 md:p-8">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+                  <CreditCard className="w-5 h-5 mr-2 text-blue-600" />
+                  Mis Métodos de Pago
+                </h2>
+              </div>
+
+              {paymentMethods.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {paymentMethods.map((method) => (
+                    <div
+                      key={method.id}
+                      className={`bg-white rounded-xl shadow-md overflow-hidden border-2 ${
+                        method.isDefault
+                          ? "border-blue-500"
+                          : "border-gray-100 hover:border-gray-200"
+                      } hover:shadow-lg transition-all duration-300`}
+                    >
+                      <div className="p-5 relative">
+                        {method.isDefault && (
+                          <div className="absolute top-0 right-0 bg-blue-600 text-white px-3 py-1 text-xs font-bold">
+                            Predeterminado
                           </div>
                         )}
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="flex items-center gap-2">
+                            <div className="p-2 rounded-full bg-blue-100">
+                              {getPaymentMethodIcon(method.type)}
+                            </div>
+                            <h3 className="text-lg font-semibold text-gray-900">
+                              {getPaymentMethodName(method.type)}
+                            </h3>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleEditCard(method)}
+                              className="p-1.5 bg-gray-100 text-gray-600 rounded-full hover:bg-gray-200 transition-all"
+                              aria-label="Editar método de pago"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteCard(method.id)}
+                              className="p-1.5 bg-gray-100 text-red-600 rounded-full hover:bg-red-100 transition-all"
+                              aria-label="Eliminar método de pago"
+                            >
+                              <Trash className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2 text-gray-700">
+                          {method.type === "paypal" ? (
+                            <div className="flex items-center gap-2 bg-blue-50 p-4 rounded-lg border border-blue-100">
+                              <Mail className="w-4 h-4 text-blue-600" />
+                              <p className="font-medium">
+                                {method.paypalEmail}
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-4 rounded-lg shadow-md mb-3">
+                              <p className="font-mono text-lg mb-2">
+                                {formatCardNumber(method.cardNumber || "")}
+                              </p>
+                              <p className="text-sm">{method.cardHolder}</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {!method.isDefault && (
+                          <button
+                            onClick={() => handleSetDefaultCard(method.id)}
+                            className="mt-4 text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 hover:underline"
+                          >
+                            <Check className="w-4 h-4" />
+                            Establecer como predeterminado
+                          </button>
+                        )}
                       </div>
-                      {formErrors.paypalEmail && (
-                        <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1 mt-1">
-                          <AlertCircle className="h-4 w-4" />
-                          {formErrors.paypalEmail}
-                        </p>
-                      )}
                     </div>
-                  )}
-
-                  <div className="flex items-center mt-2 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-xl border border-blue-100 dark:border-blue-800/30">
-                    <input
-                      type="checkbox"
-                      name="isDefault"
-                      id="isDefault"
-                      checked={formData.isDefault}
-                      onChange={handleChange}
-                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                    />
-                    <label
-                      htmlFor="isDefault"
-                      className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
-                      Establecer como método de pago predeterminado
-                    </label>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-10">
+                  <div className="bg-blue-50 p-4 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+                    <CreditCard className="w-10 h-10 text-blue-600" />
                   </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row justify-end gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <motion.button
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                    type="button"
-                    onClick={handleCancel}
-                    className="px-6 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                  >
-                    Cancelar
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                    type="submit"
-                    className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-lg shadow-md hover:from-blue-700 hover:to-blue-800 transition-colors relative overflow-hidden group"
-                  >
-                    <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-500/0 via-blue-500/30 to-blue-500/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
-                    <Check className="w-4 h-4" />
-                    <span>Guardar método de pago</span>
-                  </motion.button>
-                </div>
-              </form>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Cards List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {paymentMethods.map((method, index) => (
-          <motion.div
-            key={method.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: index * 0.1 }}
-            className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border-2 ${
-              method.isDefault
-                ? "border-blue-500 dark:border-blue-600"
-                : "border-transparent hover:border-gray-200 dark:hover:border-gray-700"
-            } hover:shadow-xl transition-all duration-300`}
-          >
-            <div className="p-6 relative overflow-hidden">
-              {method.isDefault && (
-                <div className="absolute top-0 right-0 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-1 transform rotate-45 translate-x-2 translate-y-3 text-xs font-bold shadow-md">
-                  Predeterminado
-                </div>
-              )}
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-2">
-                  <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/30">
-                    {getPaymentMethodIcon(method.type)}
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {getPaymentMethodName(method.type)}
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                    No tienes métodos de pago guardados
                   </h3>
-                </div>
-                <div className="flex gap-2">
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => handleEditCard(method)}
-                    className="p-1.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-300"
-                    aria-label="Editar método de pago"
+                  <p className="text-gray-600 mb-6">
+                    Añade un método de pago para agilizar tus compras futuras.
+                  </p>
+                  <Button
+                    onClick={handleAddCard}
+                    className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
                   >
-                    <Edit className="w-4 h-4" />
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => handleDeleteCard(method.id)}
-                    className="p-1.5 bg-gray-100 dark:bg-gray-700 text-red-600 dark:text-red-400 rounded-full hover:bg-red-100 dark:hover:bg-red-900/20 transition-all duration-300"
-                    aria-label="Eliminar método de pago"
-                  >
-                    <Trash className="w-4 h-4" />
-                  </motion.button>
+                    <Plus className="w-4 h-4" />
+                    <span>Añadir método de pago</span>
+                  </Button>
                 </div>
-              </div>
-
-              <div className="space-y-2 text-gray-700 dark:text-gray-300">
-                {method.type === "paypal" ? (
-                  <div className="flex items-center gap-2 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800/30">
-                    <Mail className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                    <p className="font-medium">{method.paypalEmail}</p>
-                  </div>
-                ) : (
-                  <>
-                    <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-4 rounded-lg shadow-md mb-3">
-                      <p className="font-mono text-lg mb-2">
-                        {formatCardNumber(method.cardNumber || "")}
-                      </p>
-                      <div className="flex justify-between">
-                        <p className="text-sm">{method.cardHolder}</p>
-                        <p className="text-sm">Exp: {method.expiryDate}</p>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {!method.isDefault && (
-                <motion.button
-                  whileHover={{ scale: 1.02, x: 5 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => handleSetDefaultCard(method.id)}
-                  className="mt-4 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium flex items-center gap-1 hover:underline transition-all duration-300"
-                >
-                  <Check className="w-4 h-4" />
-                  Establecer como predeterminado
-                </motion.button>
               )}
             </div>
           </motion.div>
-        ))}
-      </div>
 
-      {paymentMethods.length === 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center"
-        >
-          <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
-            <CreditCard className="w-10 h-10 text-blue-600 dark:text-blue-400" />
-          </div>
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-            No tienes métodos de pago guardados
-          </h3>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Añade un método de pago para agilizar tus compras futuras.
-          </p>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleAddCard}
-            className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-lg shadow-md hover:from-blue-700 hover:to-blue-800 transition-colors mx-auto relative overflow-hidden group"
+          {/* Security Info */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={
+              animateContent ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }
+            }
+            transition={{ duration: 0.6, delay: 0.6 }}
+            className="mt-8 bg-white rounded-2xl shadow-xl border border-blue-100 overflow-hidden"
           >
-            <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-500/0 via-blue-500/30 to-blue-500/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
-            <Plus className="w-4 h-4" />
-            <span>Añadir método de pago</span>
-          </motion.button>
+            <div className="p-6 md:p-8">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="bg-blue-100 p-3 rounded-full">
+                  <Shield className="w-5 h-5 text-blue-600" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900">
+                  Información de seguridad
+                </h3>
+              </div>
 
-          <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-lg p-4 max-w-md mx-auto">
-            <p className="text-sm text-blue-800 dark:text-blue-300 flex items-start">
-              <Shield className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5 text-blue-600 dark:text-blue-400" />
-              <span>
-                Añadir métodos de pago te permitirá completar tus compras más
-                rápido y de forma segura.
-              </span>
-            </p>
-          </div>
-        </motion.div>
+              <Alert className="bg-blue-50 border border-blue-100 text-gray-700 py-3 rounded-lg">
+                <Shield className="h-5 w-5 text-blue-500" />
+                <AlertDescription className="text-sm">
+                  Tus datos de pago están protegidos con los más altos
+                  estándares de seguridad. Nunca compartimos tu información con
+                  terceros.
+                </AlertDescription>
+              </Alert>
+            </div>
+          </motion.div>
+        </div>
       )}
     </div>
   );
-};
-
-export default PaymentMethodsView;
+}

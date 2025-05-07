@@ -13,7 +13,6 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class ProductService {
   constructor(private prismaService: PrismaService) {}
   async create(createProductDto: CreateProductDto) {
-    console.log(createProductDto);
     const { variants, ...productData } = createProductDto;
     try {
       const existingProduct = await this.prismaService.product.findFirst({
@@ -67,7 +66,7 @@ export class ProductService {
               select: {
                 id: true,
                 name: true,
-                hexValue:true
+                hexValue: true,
               },
             },
             size: {
@@ -96,7 +95,7 @@ export class ProductService {
               select: {
                 id: true,
                 name: true,
-                hexValue:true
+                hexValue: true,
               },
             },
             size: {
@@ -127,27 +126,50 @@ export class ProductService {
         throw new NotFoundException(`Producto con id ${id} no encontrado`);
       }
 
-      const { variants, ...productData } = updateProductDto;
+      const { variants: incomingVariants, ...productData } = updateProductDto;
 
-      await this.prismaService.productVariant.deleteMany({
-        where: { productId: id },
-      });
-
-      const updatedProduct = await this.prismaService.product.update({
+      // Actualiza el producto principal
+      await this.prismaService.product.update({
         where: { id },
         data: {
           ...productData,
-          variants: {
-            create: variants.map((variant) => ({
-              colorId: variant.colorId,
-              sizeId: variant.sizeId,
-              price: variant.price,
-              stock: variant.stock,
-              barcode: variant.barcode,
-              imageUrl: variant.imageUrl ?? '',
-            })),
-          },
         },
+      });
+
+      // Manejo de variantes
+      for (const variantDto of incomingVariants) {
+        if (variantDto.id) {
+          // Si tiene ID, actualizarla
+          await this.prismaService.productVariant.update({
+            where: { id: variantDto.id },
+            data: {
+              colorId: variantDto.colorId,
+              sizeId: variantDto.sizeId,
+              price: variantDto.price,
+              stock: variantDto.stock,
+              barcode: variantDto.barcode,
+              imageUrl: variantDto.imageUrl ?? '',
+            },
+          });
+        } else {
+          // Si no tiene ID, crear nueva
+          await this.prismaService.productVariant.create({
+            data: {
+              productId: id,
+              colorId: variantDto.colorId,
+              sizeId: variantDto.sizeId,
+              price: variantDto.price,
+              stock: variantDto.stock,
+              barcode: variantDto.barcode,
+              imageUrl: variantDto.imageUrl ?? '',
+            },
+          });
+        }
+      }
+
+      // Regresa el producto actualizado con relaciones
+      const finalProduct = await this.prismaService.product.findUnique({
+        where: { id },
         include: {
           variants: {
             include: {
@@ -162,9 +184,8 @@ export class ProductService {
         },
       });
 
-      return updatedProduct;
+      return finalProduct;
     } catch (error) {
-      console.log(error);
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         'Error interno en el servidor.',
