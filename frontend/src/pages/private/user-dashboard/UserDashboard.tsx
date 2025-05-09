@@ -139,22 +139,18 @@ const CombinedDashboard = () => {
   ];
 
   return (
-    <main className="min-h-screen bg-gray-50 pt-24 pb-8 px-4 md:px-8 lg:px-12 overflow-x-hidden">
-      {/* Background elements - minimal style */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 right-0 w-1/4 h-1/4 bg-blue-50 rounded-full opacity-70 blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 w-1/4 h-1/4 bg-blue-50 rounded-full opacity-60 blur-3xl"></div>
-      </div>
+    <main className="min-h-screen bg-white dark:bg-gray-900 pt-24 pb-8 px-4 md:px-8 lg:px-12 overflow-x-hidden">
+      
 
       <div className="container mx-auto max-w-7xl relative z-10">
         {/* Loading Screen */}
         {pageLoading && (
           <div className="flex flex-col items-center justify-center py-20">
             <div className="relative">
-              <div className="w-16 h-16 border-4 border-blue-100 border-t-blue-500 rounded-full animate-spin mb-4"></div>
-              <User className="w-6 h-6 text-blue-500 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+              <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 dark:border-blue-800 dark:border-t-blue-400 rounded-full animate-spin mb-4"></div>
+              <User className="w-6 h-6 text-blue-600 dark:text-blue-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
             </div>
-            <p className="text-blue-500 mt-4 font-medium">
+            <p className="text-blue-600 dark:text-blue-400 mt-4 font-medium">
               Cargando dashboard...
             </p>
           </div>
@@ -162,7 +158,7 @@ const CombinedDashboard = () => {
 
         {!pageLoading && (
           <>
-            {/* Dashboard Header - Tomado de la opción 3 */}
+            {/* Dashboard Header */}
             <motion.div
               initial={{ opacity: 0, y: -30 }}
               animate={
@@ -180,8 +176,8 @@ const CombinedDashboard = () => {
                     className="mr-6"
                   >
                     <div className="relative">
-                      <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-white shadow-xl">
-                        <div className="w-full h-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-3xl">
+                      <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-white dark:border-gray-800 shadow-xl">
+                        <div className="w-full h-full bg-blue-600 dark:bg-blue-700 flex items-center justify-center text-white font-bold text-3xl">
                           {user?.name?.charAt(0) || "U"}
                         </div>
                       </div>
@@ -189,7 +185,7 @@ const CombinedDashboard = () => {
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{ delay: 0.3, duration: 0.4 }}
-                        className="absolute -bottom-2 -right-2 bg-white rounded-full p-1 shadow-md"
+                        className="absolute -bottom-2 -right-2 bg-white dark:bg-gray-800 rounded-full p-1 shadow-md"
                       >
                         <div className="bg-green-500 w-4 h-4 rounded-full"></div>
                       </motion.div>
@@ -200,10 +196,10 @@ const CombinedDashboard = () => {
                       initial={{ opacity: 0, y: -20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.6, delay: 0.2 }}
-                      className="mb-2 inline-flex items-center justify-center rounded-full bg-blue-100 px-4 py-1.5"
+                      className="mb-2 inline-flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-4 py-1.5"
                     >
-                      <User className="w-4 h-4 mr-2 text-blue-600" />
-                      <span className="text-sm font-medium text-blue-600">
+                      <User className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
+                      <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
                         PANEL DE USUARIO
                       </span>
                     </motion.div>
@@ -211,21 +207,21 @@ const CombinedDashboard = () => {
                       initial={{ opacity: 0, y: -20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.6, delay: 0.3 }}
-                      className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight"
+                      className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white leading-tight"
                     >
                       Bienvenido,{" "}
                       <span className="relative inline-block">
-                        <span className="relative z-10 text-blue-600">
+                        <span className="relative z-10 text-blue-600 dark:text-blue-400">
                           {user?.name || "Usuario"}
                         </span>
-                        <span className="absolute bottom-1 left-0 w-full h-3 bg-blue-600/20 -z-10 rounded"></span>
+                        <span className="absolute bottom-1 left-0 w-full h-3 bg-blue-600/20 dark:bg-blue-400/20 -z-10 rounded"></span>
                       </span>
                     </motion.h1>
                     <motion.p
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.6, delay: 0.4 }}
-                      className="text-blue-500 flex items-center mt-2"
+                      className="text-blue-600 dark:text-blue-400 flex items-center mt-2"
                     >
                       <Home className="w-4 h-4 mr-1.5" />
                       <span>Panel de Usuario</span>
@@ -242,18 +238,18 @@ const CombinedDashboard = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.6, delay: 0.5 }}
-                  className="flex items-center gap-3 bg-white p-3 px-5 rounded-xl shadow-md border border-blue-100"
+                  className="flex items-center gap-3 bg-white dark:bg-gray-800 p-3 px-5 rounded-xl shadow-md border border-blue-100 dark:border-gray-700"
                 >
                   <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-blue-500" />
-                    <span className="text-sm text-gray-600 capitalize">
+                    <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    <span className="text-sm text-gray-600 dark:text-gray-300 capitalize">
                       {formattedDate}
                     </span>
                   </div>
-                  <span className="text-blue-200">|</span>
+                  <span className="text-blue-200 dark:text-blue-800">|</span>
                   <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-blue-500" />
-                    <span className="text-sm text-gray-600">
+                    <Clock className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    <span className="text-sm text-gray-600 dark:text-gray-300">
                       {formattedTime}
                     </span>
                   </div>
@@ -272,7 +268,7 @@ const CombinedDashboard = () => {
                 className="hidden lg:block w-64 shrink-0"
               >
                 <div className="sticky top-24">
-                  <div className="bg-white rounded-xl shadow-md overflow-hidden border border-blue-100">
+                  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-blue-100 dark:border-gray-700">
                     {/* Navigation */}
                     <div className="p-4">
                       <nav className="space-y-1">
@@ -290,15 +286,15 @@ const CombinedDashboard = () => {
                             onClick={() => setActiveTab(item.key as TabKey)}
                             className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
                               activeTab === item.key
-                                ? "bg-blue-50 text-blue-600 font-medium"
-                                : "text-gray-700 hover:bg-gray-50"
+                                ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium"
+                                : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50"
                             }`}
                           >
                             <span
                               className={
                                 activeTab === item.key
-                                  ? "text-blue-600"
-                                  : "text-gray-500"
+                                  ? "text-blue-600 dark:text-blue-400"
+                                  : "text-gray-500 dark:text-gray-400"
                               }
                             >
                               {item.icon}
@@ -308,7 +304,7 @@ const CombinedDashboard = () => {
                               <motion.div
                                 initial={{ scale: 0 }}
                                 animate={{ scale: 1 }}
-                                className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-500"
+                                className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400"
                               ></motion.div>
                             )}
                           </motion.button>
@@ -317,12 +313,12 @@ const CombinedDashboard = () => {
                     </div>
 
                     {/* Logout button */}
-                    <div className="p-4 border-t border-gray-100">
+                    <div className="p-4 border-t border-gray-100 dark:border-gray-700">
                       <motion.button
                         whileHover={{ x: 3 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={handleSignOut}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-red-600 hover:bg-red-50 transition-all duration-200"
+                        className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200"
                       >
                         <LogOut className="w-5 h-5" />
                         <span>Cerrar sesión</span>
@@ -356,27 +352,27 @@ const CombinedDashboard = () => {
                         damping: 25,
                         stiffness: 300,
                       }}
-                      className="fixed top-0 left-0 h-full bg-white shadow-lg w-72 z-50 lg:hidden overflow-y-auto"
+                      className="fixed top-0 left-0 h-full bg-white dark:bg-gray-800 shadow-lg w-72 z-50 lg:hidden overflow-y-auto"
                     >
-                      <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+                      <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full overflow-hidden">
-                            <div className="w-full h-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg">
+                            <div className="w-full h-full bg-blue-600 dark:bg-blue-700 flex items-center justify-center text-white font-bold text-lg">
                               {user?.name?.charAt(0) || "U"}
                             </div>
                           </div>
                           <div>
-                            <h3 className="font-medium text-gray-900">
+                            <h3 className="font-medium text-gray-900 dark:text-white">
                               {user?.name || "Usuario"}
                             </h3>
-                            <p className="text-blue-500 text-xs">
+                            <p className="text-blue-600 dark:text-blue-400 text-xs">
                               {user?.email || "usuario@ejemplo.com"}
                             </p>
                           </div>
                         </div>
                         <button
                           onClick={() => setIsMenuOpen(false)}
-                          className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
+                          className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                         >
                           <X className="w-5 h-5" />
                         </button>
@@ -398,15 +394,15 @@ const CombinedDashboard = () => {
                               }}
                               className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
                                 activeTab === item.key
-                                  ? "bg-blue-50 text-blue-600 font-medium"
-                                  : "text-gray-700 hover:bg-gray-50"
+                                  ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium"
+                                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50"
                               }`}
                             >
                               <span
                                 className={
                                   activeTab === item.key
-                                    ? "text-blue-600"
-                                    : "text-gray-500"
+                                    ? "text-blue-600 dark:text-blue-400"
+                                    : "text-gray-500 dark:text-gray-400"
                                 }
                               >
                                 {item.icon}
@@ -416,7 +412,7 @@ const CombinedDashboard = () => {
                                 <motion.div
                                   initial={{ scale: 0 }}
                                   animate={{ scale: 1 }}
-                                  className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-500"
+                                  className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400"
                                 ></motion.div>
                               )}
                             </motion.button>
@@ -425,14 +421,14 @@ const CombinedDashboard = () => {
                       </div>
 
                       {/* Logout in mobile */}
-                      <div className="p-4 border-t border-gray-100 mt-auto">
+                      <div className="p-4 border-t border-gray-100 dark:border-gray-700 mt-auto">
                         <motion.button
                           whileTap={{ scale: 0.98 }}
                           onClick={() => {
                             handleSignOut();
                             setIsMenuOpen(false);
                           }}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-red-600 hover:bg-red-50 transition-all duration-200"
+                          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200"
                         >
                           <LogOut className="w-5 h-5" />
                           <span>Cerrar sesión</span>
@@ -443,12 +439,12 @@ const CombinedDashboard = () => {
                 )}
               </AnimatePresence>
 
-              {/* Main content - Simplified */}
+              {/* Main content */}
               <div className="w-full">
                 <AnimatePresence mode="wait">
                   {!isExiting ? (
                     <motion.div
-                      className="bg-white rounded-xl shadow-md border border-blue-100 overflow-hidden"
+                      className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-blue-100 dark:border-gray-700 overflow-hidden"
                       initial="hidden"
                       animate="visible"
                       exit="exit"
@@ -456,10 +452,10 @@ const CombinedDashboard = () => {
                       key={activeTab}
                     >
                       {/* Tab Header */}
-                      <div className="border-b border-gray-100 bg-blue-600">
+                      <div className="border-b border-gray-100 dark:border-gray-700 bg-blue-600 dark:bg-blue-700">
                         <div className="p-6 text-white">
                           <div className="flex items-center gap-3">
-                            <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg">
+                            <div className="bg-white/10 p-2.5 rounded-lg">
                               <span className="text-white">
                                 {
                                   navItems.find(
@@ -480,7 +476,6 @@ const CombinedDashboard = () => {
                                 Gestiona tu información personal
                               </p>
                             </div>
-                            
                           </div>
                         </div>
                       </div>
@@ -510,7 +505,7 @@ const CombinedDashboard = () => {
                         animate={{ scale: 0.9 }}
                         exit={{ scale: 0.9 }}
                         transition={{ duration: 0.3 }}
-                        className="text-xl font-medium"
+                        className="text-xl font-medium dark:text-white"
                       >
                         Cerrando sesión...
                       </motion.div>
@@ -529,8 +524,7 @@ const CombinedDashboard = () => {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setIsMenuOpen(true)}
-          className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-3 rounded-full shadow-xl flex items-center justify-center"
-          aria-label="Abrir menú"
+          className="bg-blue-600 dark:bg-blue-700 text-white p-3 rounded-full shadow-xl flex items-center justify-center"
         >
           <Menu className="w-6 h-6" />
         </motion.button>

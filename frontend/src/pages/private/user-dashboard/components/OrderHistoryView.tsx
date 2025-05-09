@@ -174,10 +174,12 @@ export default function OrderHistoryView() {
       {pageLoading && (
         <div className="flex flex-col items-center justify-center py-20">
           <div className="relative">
-            <div className="w-16 h-16 border-4 border-blue-100 border-t-blue-500 rounded-full animate-spin mb-4"></div>
-            <ShoppingBag className="w-6 h-6 text-blue-500 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 dark:border-blue-800 dark:border-t-blue-400 rounded-full animate-spin mb-4"></div>
+            <ShoppingBag className="w-6 h-6 text-blue-600 dark:text-blue-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
           </div>
-          <p className="text-blue-500 mt-4 font-medium">Cargando pedidos...</p>
+          <p className="text-blue-600 dark:text-blue-400 mt-4 font-medium">
+            Cargando pedidos...
+          </p>
         </div>
       )}
 
@@ -193,20 +195,22 @@ export default function OrderHistoryView() {
             className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6"
           >
             <div>
-              <div className="mb-2 inline-flex items-center justify-center rounded-full bg-blue-100 px-4 py-1.5">
-                <ShoppingBag className="w-4 h-4 mr-2 text-blue-600" />
-                <span className="text-sm font-medium text-blue-600">
+              <div className="mb-2 inline-flex items-center justify-center rounded-full bg-blue-100 dark:bg-gray-800 px-4 py-1.5">
+                <ShoppingBag className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
+                <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
                   HISTORIAL DE PEDIDOS
                 </span>
               </div>
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white leading-tight">
                 Mis{" "}
                 <span className="relative inline-block">
-                  <span className="relative z-10 text-blue-600">Compras</span>
+                  <span className="relative z-10 text-blue-600 dark:text-blue-400">
+                    Compras
+                  </span>
                   <span className="absolute bottom-1 left-0 w-full h-3 bg-blue-600/20 -z-10 rounded"></span>
                 </span>
               </h1>
-              <p className="text-gray-600 mt-2">
+              <p className="text-gray-600 dark:text-gray-300 mt-2">
                 Consulta y gestiona tus pedidos recientes
               </p>
             </div>
@@ -219,19 +223,19 @@ export default function OrderHistoryView() {
               animateContent ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }
             }
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="bg-white rounded-2xl shadow-xl border border-blue-100 overflow-hidden mb-8"
+            className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-blue-100 dark:border-gray-700 overflow-hidden mb-8"
           >
             <div className="p-6 md:p-8">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search className="h-5 w-5 text-gray-400" />
+                  <Search className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                 </div>
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Buscar por número de pedido o producto..."
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-3.5"
+                  className="bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-3.5"
                 />
               </div>
             </div>
@@ -250,23 +254,23 @@ export default function OrderHistoryView() {
                       : { opacity: 0, y: 20 }
                   }
                   transition={{ duration: 0.6, delay: 0.3 + index * 0.1 }}
-                  className="bg-white rounded-2xl shadow-xl border border-blue-100 overflow-hidden"
+                  className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-blue-100 dark:border-gray-700 overflow-hidden"
                 >
                   {/* Order header */}
                   <div
-                    className="p-6 border-b border-gray-200 cursor-pointer bg-gradient-to-r from-gray-50 to-white"
+                    className="p-6 border-b border-gray-200 dark:border-gray-700 cursor-pointer bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-900"
                     onClick={() => toggleOrderExpand(order.id)}
                   >
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div className="flex items-center gap-4">
-                        <div className="bg-blue-100 p-3 rounded-lg">
-                          <Package className="w-6 h-6 text-blue-600" />
+                        <div className="bg-blue-100 dark:bg-gray-800 p-3 rounded-lg">
+                          <Package className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                         </div>
                         <div>
-                          <h3 className="text-lg font-semibold text-gray-900">
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                             {order.id}
                           </h3>
-                          <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                             <Calendar className="w-4 h-4" />
                             <span>
                               {new Date(order.date).toLocaleDateString()}
@@ -277,8 +281,8 @@ export default function OrderHistoryView() {
 
                       <div className="flex flex-wrap items-center gap-4">
                         <div className="flex items-center gap-2">
-                          <CreditCard className="w-4 h-4 text-gray-500" />
-                          <span className="font-medium text-gray-900">
+                          <CreditCard className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                          <span className="font-medium text-gray-900 dark:text-white">
                             ${order.total.toFixed(2)}
                           </span>
                         </div>
@@ -297,9 +301,9 @@ export default function OrderHistoryView() {
                         </div>
                         <button className="ml-auto">
                           {expandedOrders[order.id] ? (
-                            <ChevronUp className="w-5 h-5 text-gray-500" />
+                            <ChevronUp className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                           ) : (
-                            <ChevronDown className="w-5 h-5 text-gray-500" />
+                            <ChevronDown className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                           )}
                         </button>
                       </div>
@@ -319,8 +323,8 @@ export default function OrderHistoryView() {
                         <div className="space-y-6">
                           {/* Order items */}
                           <div>
-                            <h4 className="text-sm font-medium text-gray-500 mb-4 flex items-center">
-                              <ShoppingBag className="w-4 h-4 mr-2 text-blue-600" />
+                            <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4 flex items-center">
+                              <ShoppingBag className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
                               Productos
                             </h4>
                             <div className="space-y-4">
@@ -332,29 +336,28 @@ export default function OrderHistoryView() {
                                     boxShadow:
                                       "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
                                   }}
-                                  className="flex items-center gap-4 p-4 bg-blue-50 rounded-lg border border-blue-100"
+                                  className="flex items-center gap-4 p-4 bg-blue-50 dark:bg-gray-800 rounded-lg border border-blue-100 dark:border-gray-700"
                                 >
                                   <img
                                     src={
-                                      item.image ||
-                                      "/placeholder.svg?height=80&width=80"
+                                      item.image
                                     }
                                     alt={item.name}
-                                    className="w-16 h-16 object-cover rounded-md border border-gray-200"
+                                    className="w-16 h-16 object-cover rounded-md border border-gray-200 dark:border-gray-700"
                                   />
                                   <div className="flex-1">
-                                    <h5 className="font-medium text-gray-900">
+                                    <h5 className="font-medium text-gray-900 dark:text-white">
                                       {item.name}
                                     </h5>
-                                    <p className="text-sm text-gray-500">
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">
                                       Cantidad: {item.quantity}
                                     </p>
                                   </div>
                                   <div className="text-right">
-                                    <p className="font-medium text-gray-900">
+                                    <p className="font-medium text-gray-900 dark:text-white">
                                       ${item.price.toFixed(2)}
                                     </p>
-                                    <p className="text-sm text-gray-500">
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">
                                       por unidad
                                     </p>
                                   </div>
@@ -366,19 +369,19 @@ export default function OrderHistoryView() {
                           {/* Order tracking */}
                           {order.tracking && (
                             <div>
-                              <h4 className="text-sm font-medium text-gray-500 mb-4 flex items-center">
-                                <Truck className="w-4 h-4 mr-2 text-blue-600" />
+                              <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4 flex items-center">
+                                <Truck className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
                                 Información de envío
                               </h4>
-                              <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                              <div className="bg-blue-50 dark:bg-gray-800 p-4 rounded-lg border border-blue-100 dark:border-gray-700">
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-2">
-                                    <Truck className="w-5 h-5 text-blue-600" />
-                                    <span className="text-gray-900 font-medium">
+                                    <Truck className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                                    <span className="text-gray-900 dark:text-white font-medium">
                                       Número de seguimiento:
                                     </span>
                                   </div>
-                                  <span className="font-mono text-gray-900 bg-white px-3 py-1 rounded-lg border border-gray-200">
+                                  <span className="font-mono text-gray-900 dark:text-white bg-white dark:bg-gray-900 px-3 py-1 rounded-lg border border-gray-200 dark:border-gray-700">
                                     {order.tracking}
                                   </span>
                                 </div>
@@ -412,22 +415,22 @@ export default function OrderHistoryView() {
                   animateContent ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }
                 }
                 transition={{ duration: 0.6, delay: 0.3 }}
-                className="bg-white rounded-2xl shadow-xl border border-blue-100 overflow-hidden p-8 text-center"
+                className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-blue-100 dark:border-gray-700 overflow-hidden p-8 text-center"
               >
-                <div className="bg-blue-50 p-4 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
-                  <Package className="w-10 h-10 text-blue-600" />
+                <div className="bg-blue-50 dark:bg-gray-800 p-4 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+                  <Package className="w-10 h-10 text-blue-600 dark:text-blue-400" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                   No se encontraron pedidos
                 </h3>
-                <p className="text-gray-600 mb-4">
+                <p className="text-gray-600 dark:text-gray-300 mb-4">
                   {searchTerm
                     ? "No hay pedidos que coincidan con tu búsqueda."
                     : "Aún no has realizado ningún pedido."}
                 </p>
-                <div className="mt-6 bg-blue-50 border border-blue-100 rounded-lg p-4 max-w-md mx-auto">
-                  <p className="text-sm text-blue-800 flex items-start">
-                    <Shield className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5 text-blue-600" />
+                <div className="mt-6 bg-blue-50 dark:bg-gray-800 border border-blue-100 dark:border-gray-700 rounded-lg p-4 max-w-md mx-auto">
+                  <p className="text-sm text-blue-800 dark:text-blue-100 flex items-start">
+                    <Shield className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5 text-blue-600 dark:text-blue-400" />
                     <span>
                       Aquí podrás ver el historial de todos tus pedidos y
                       realizar un seguimiento de su estado en tiempo real.

@@ -166,10 +166,10 @@ export default function NotificationsView() {
       {pageLoading && (
         <div className="flex flex-col items-center justify-center py-20">
           <div className="relative">
-            <div className="w-16 h-16 border-4 border-blue-100 border-t-blue-500 rounded-full animate-spin mb-4"></div>
-            <Bell className="w-6 h-6 text-blue-500 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 dark:border-blue-800 dark:border-t-blue-400 rounded-full animate-spin mb-4"></div>
+            <Bell className="w-6 h-6 text-blue-600 dark:text-blue-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
           </div>
-          <p className="text-blue-500 mt-4 font-medium">
+          <p className="text-blue-600 dark:text-blue-400 mt-4 font-medium">
             Cargando notificaciones...
           </p>
         </div>
@@ -187,25 +187,27 @@ export default function NotificationsView() {
             className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6"
           >
             <div>
-              <div className="mb-2 inline-flex items-center justify-center rounded-full bg-blue-100 px-4 py-1.5">
-                <Bell className="w-4 h-4 mr-2 text-blue-600" />
-                <span className="text-sm font-medium text-blue-600">
+              <div className="mb-2 inline-flex items-center justify-center rounded-full bg-blue-100 dark:bg-gray-800 px-4 py-1.5">
+                <Bell className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
+                <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
                   NOTIFICACIONES
                 </span>
               </div>
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white leading-tight">
                 Centro de{" "}
                 <span className="relative inline-block">
-                  <span className="relative z-10 text-blue-600">Mensajes</span>
-                  <span className="absolute bottom-1 left-0 w-full h-3 bg-blue-600/20 -z-10 rounded"></span>
+                  <span className="relative z-10 text-blue-600 dark:text-blue-400">
+                    Mensajes
+                  </span>
+                  <span className="absolute bottom-1 left-0 w-full h-3 bg-blue-600/20 dark:bg-blue-400/20 -z-10 rounded"></span>
                 </span>
                 {unreadCount > 0 && (
-                  <span className="ml-2 bg-blue-100 text-blue-600 text-sm font-medium px-2.5 py-0.5 rounded-full">
+                  <span className="ml-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-sm font-medium px-2.5 py-0.5 rounded-full">
                     {unreadCount} nuevas
                   </span>
                 )}
               </h1>
-              <p className="text-gray-600 mt-2">
+              <p className="text-gray-600 dark:text-gray-300 mt-2">
                 Mantente al día con tus pedidos y ofertas especiales
               </p>
             </div>
@@ -253,9 +255,11 @@ export default function NotificationsView() {
                       : { opacity: 0, y: 20 }
                   }
                   transition={{ duration: 0.6, delay: 0.3 + index * 0.1 }}
-                  className={`bg-white rounded-2xl shadow-xl overflow-hidden border-l-4 ${
-                    notification.read ? "border-gray-200" : "border-blue-500"
-                  } border-t border-r border-b border-blue-100`}
+                  className={`bg-white dark:bg-gray-900 rounded-2xl shadow-xl overflow-hidden border-l-4 ${
+                    notification.read
+                      ? "border-gray-200 dark:border-gray-700"
+                      : "border-blue-500 dark:border-blue-400"
+                  } border-t border-r border-b border-blue-100 dark:border-gray-700`}
                 >
                   <div className="p-6">
                     <div className="flex items-start gap-4">
@@ -269,10 +273,10 @@ export default function NotificationsView() {
                       <div className="flex-1">
                         <div className="flex justify-between items-start">
                           <div>
-                            <h3 className="text-lg font-semibold text-gray-900">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                               {notification.title}
                             </h3>
-                            <p className="text-gray-600 mt-1">
+                            <p className="text-gray-600 dark:text-gray-300 mt-1">
                               {notification.message}
                             </p>
                           </div>
@@ -280,7 +284,7 @@ export default function NotificationsView() {
                             {!notification.read && (
                               <button
                                 onClick={() => markAsRead(notification.id)}
-                                className="p-1.5 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200 transition-colors"
+                                className="p-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full hover:bg-blue-200 dark:hover:bg-blue-800/30 transition-colors"
                                 aria-label="Marcar como leído"
                               >
                                 <Check className="w-4 h-4" />
@@ -290,14 +294,14 @@ export default function NotificationsView() {
                               onClick={() =>
                                 deleteNotification(notification.id)
                               }
-                              className="p-1.5 bg-gray-100 text-gray-600 rounded-full hover:bg-gray-200 transition-colors"
+                              className="p-1.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                               aria-label="Eliminar notificación"
                             >
                               <X className="w-4 h-4" />
                             </button>
                           </div>
                         </div>
-                        <div className="flex items-center mt-3 text-sm text-gray-500">
+                        <div className="flex items-center mt-3 text-sm text-gray-500 dark:text-gray-400">
                           <Clock className="w-4 h-4 mr-1" />
                           <span>{formatDate(notification.date)}</span>
                         </div>
@@ -314,21 +318,21 @@ export default function NotificationsView() {
                 animateContent ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }
               }
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="bg-white rounded-2xl shadow-xl border border-blue-100 overflow-hidden p-8 text-center"
+              className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-blue-100 dark:border-gray-700 overflow-hidden p-8 text-center"
             >
-              <div className="bg-blue-50 p-4 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
-                <Bell className="w-10 h-10 text-blue-600" />
+              <div className="bg-blue-50 dark:bg-gray-800 p-4 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+                <Bell className="w-10 h-10 text-blue-600 dark:text-blue-400" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                 No tienes notificaciones
               </h3>
-              <p className="text-gray-600 mb-4">
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
                 Te notificaremos cuando haya actualizaciones sobre tus pedidos o
                 promociones especiales.
               </p>
-              <div className="mt-6 bg-blue-50 border border-blue-100 rounded-lg p-4 max-w-md mx-auto">
-                <p className="text-sm text-blue-800 flex items-start">
-                  <Shield className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5 text-blue-600" />
+              <div className="mt-6 bg-blue-50 dark:bg-gray-800 border border-blue-100 dark:border-gray-700 rounded-lg p-4 max-w-md mx-auto">
+                <p className="text-sm text-blue-800 dark:text-blue-100 flex items-start">
+                  <Shield className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5 text-blue-600 dark:text-blue-400" />
                   <span>
                     Las notificaciones te mantendrán informado sobre el estado
                     de tus pedidos, ofertas especiales y actualizaciones

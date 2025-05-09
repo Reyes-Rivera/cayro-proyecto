@@ -234,10 +234,10 @@ export default function SecurityView() {
       {pageLoading && (
         <div className="flex flex-col items-center justify-center py-20">
           <div className="relative">
-            <div className="w-16 h-16 border-4 border-blue-100 border-t-blue-500 rounded-full animate-spin mb-4"></div>
-            <Lock className="w-6 h-6 text-blue-500 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 dark:border-blue-800 dark:border-t-blue-400 rounded-full animate-spin mb-4"></div>
+            <Lock className="w-6 h-6 text-blue-600 dark:text-blue-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
           </div>
-          <p className="text-blue-500 mt-4 font-medium">
+          <p className="text-blue-600 dark:text-blue-400 mt-4 font-medium">
             Cargando seguridad...
           </p>
         </div>
@@ -255,20 +255,22 @@ export default function SecurityView() {
             className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6"
           >
             <div>
-              <div className="mb-2 inline-flex items-center justify-center rounded-full bg-blue-100 px-4 py-1.5">
-                <Lock className="w-4 h-4 mr-2 text-blue-600" />
-                <span className="text-sm font-medium text-blue-600">
+              <div className="mb-2 inline-flex items-center justify-center rounded-full bg-blue-100 dark:bg-gray-900 px-4 py-1.5">
+                <Lock className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
+                <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
                   SEGURIDAD
                 </span>
               </div>
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white leading-tight">
                 Seguridad de la{" "}
                 <span className="relative inline-block">
-                  <span className="relative z-10 text-blue-600">Cuenta</span>
-                  <span className="absolute bottom-1 left-0 w-full h-3 bg-blue-600/20 -z-10 rounded"></span>
+                  <span className="relative z-10 text-blue-600 dark:text-blue-400">
+                    Cuenta
+                  </span>
+                  <span className="absolute bottom-1 left-0 w-full h-3 bg-blue-600/20 dark:bg-blue-400/20 -z-10 rounded"></span>
                 </span>
               </h1>
-              <p className="text-gray-600 mt-2">
+              <p className="text-gray-600 dark:text-gray-300 mt-2">
                 Gestiona tu contraseña y opciones de recuperación
               </p>
             </div>
@@ -281,7 +283,7 @@ export default function SecurityView() {
               animateContent ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }
             }
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="bg-white rounded-2xl shadow-xl border border-blue-100 overflow-hidden"
+            className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-blue-100 dark:border-gray-700 overflow-hidden"
           >
             <div className="p-6 md:p-8">
               <Tabs
@@ -290,17 +292,17 @@ export default function SecurityView() {
                 onValueChange={setActiveTab}
                 className="w-full"
               >
-                <TabsList className="grid grid-cols-2 mb-6 bg-gray-100 p-1 rounded-lg">
+                <TabsList className="grid grid-cols-2 mb-6 bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
                   <TabsTrigger
                     value="password"
-                    className="text-sm md:text-base data-[state=active]:bg-white data-[state=active]:text-blue-600 rounded-md transition-all"
+                    className="text-sm md:text-base data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400 rounded-md transition-all dark:text-gray-300"
                   >
                     <Lock className="w-4 h-4 mr-2" />
                     Cambiar Contraseña
                   </TabsTrigger>
                   <TabsTrigger
                     value="recovery"
-                    className="text-sm md:text-base data-[state=active]:bg-white data-[state=active]:text-blue-600 rounded-md transition-all"
+                    className="text-sm md:text-base data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400 rounded-md transition-all dark:text-gray-300"
                   >
                     <HelpCircle className="w-4 h-4 mr-2" />
                     Recuperar Contraseña
@@ -310,15 +312,15 @@ export default function SecurityView() {
                 {/* Password Change Tab */}
                 <TabsContent value="password">
                   <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-                      <Lock className="w-5 h-5 mr-2 text-blue-600" />
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
+                      <Lock className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" />
                       Cambio de Contraseña
                     </h2>
                   </div>
 
                   {isSuccess ? (
-                    <Alert className="mb-6 bg-green-50 border border-green-100 text-gray-700 py-3 rounded-lg">
-                      <Check className="h-5 w-5 text-green-500" />
+                    <Alert className="mb-6 bg-green-50 dark:bg-green-900 border border-green-100 dark:border-green-800 text-gray-700 dark:text-green-100 py-3 rounded-lg">
+                      <Check className="h-5 w-5 text-green-500 dark:text-green-300" />
                       <AlertDescription className="text-sm">
                         Tu contraseña ha sido actualizada correctamente.
                         Recuerda utilizar esta nueva contraseña la próxima vez
@@ -335,20 +337,20 @@ export default function SecurityView() {
                         <div className="space-y-2">
                           <label
                             htmlFor="currentPassword"
-                            className="flex items-center text-gray-600 text-sm font-medium"
+                            className="flex items-center text-gray-600 dark:text-gray-300 text-sm font-medium"
                           >
-                            <Lock className="w-4 h-4 mr-2 text-blue-500" />
+                            <Lock className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
                             Contraseña actual
                           </label>
                           <div className="relative group">
                             <input
                               id="currentPassword"
                               type="password"
-                              className={`block w-full rounded-lg border ${
+                              className={`block w-full rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300 ${
                                 passwordErrors.currentPassword
                                   ? "border-red-300 focus:ring-red-300 focus:border-red-300"
-                                  : "border-blue-200 focus:ring-blue-300 focus:border-blue-300"
-                              } bg-white text-gray-900 p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300`}
+                                  : "border-blue-200 dark:border-gray-700 focus:ring-blue-300 dark:focus:border-blue-400 focus:border-blue-300"
+                              }`}
                               {...registerPassword("currentPassword", {
                                 required: "La contraseña actual es requerida",
                                 onChange: (e) => {
@@ -376,20 +378,20 @@ export default function SecurityView() {
                         <div className="space-y-2">
                           <label
                             htmlFor="newPassword"
-                            className="flex items-center text-gray-600 text-sm font-medium"
+                            className="flex items-center text-gray-600 dark:text-gray-300 text-sm font-medium"
                           >
-                            <Lock className="w-4 h-4 mr-2 text-blue-500" />
+                            <Lock className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
                             Nueva contraseña
                           </label>
                           <div className="relative group">
                             <input
                               id="newPassword"
                               type={showPassword ? "text" : "password"}
-                              className={`block w-full rounded-lg border ${
+                              className={`block w-full rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300 ${
                                 passwordErrors.newPassword
                                   ? "border-red-300 focus:ring-red-300 focus:border-red-300"
-                                  : "border-blue-200 focus:ring-blue-300 focus:border-blue-300"
-                              } bg-white text-gray-900 p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300`}
+                                  : "border-blue-200 dark:border-gray-700 focus:ring-blue-300 dark:focus:border-blue-400 focus:border-blue-300"
+                              }`}
                               {...registerPassword("newPassword", {
                                 required: "La nueva contraseña es requerida",
                                 validate: {
@@ -423,7 +425,7 @@ export default function SecurityView() {
                             />
                             <button
                               type="button"
-                              className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500"
+                              className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 dark:text-gray-400"
                               onClick={() => setShowPassword(!showPassword)}
                               tabIndex={-1}
                             >
@@ -451,20 +453,20 @@ export default function SecurityView() {
                         <div className="space-y-2">
                           <label
                             htmlFor="confirmPassword"
-                            className="flex items-center text-gray-600 text-sm font-medium"
+                            className="flex items-center text-gray-600 dark:text-gray-300 text-sm font-medium"
                           >
-                            <Lock className="w-4 h-4 mr-2 text-blue-500" />
+                            <Lock className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
                             Confirmar contraseña
                           </label>
                           <div className="relative group">
                             <input
                               id="confirmPassword"
                               type={showConfirmPassword ? "text" : "password"}
-                              className={`block w-full rounded-lg border ${
+                              className={`block w-full rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300 ${
                                 passwordErrors.confirmPassword
                                   ? "border-red-300 focus:ring-red-300 focus:border-red-300"
-                                  : "border-blue-200 focus:ring-blue-300 focus:border-blue-300"
-                              } bg-white text-gray-900 p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300`}
+                                  : "border-blue-200 dark:border-gray-700 focus:ring-blue-300 dark:focus:border-blue-400 focus:border-blue-300"
+                              }`}
                               {...registerPassword("confirmPassword", {
                                 required:
                                   "La confirmación de contraseña es requerida",
@@ -480,7 +482,7 @@ export default function SecurityView() {
                             />
                             <button
                               type="button"
-                              className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500"
+                              className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 dark:text-gray-400"
                               onClick={() =>
                                 setShowConfirmPassword(!showConfirmPassword)
                               }
@@ -509,13 +511,13 @@ export default function SecurityView() {
                         {/* Password Strength */}
                         {newPassword && (
                           <div className="space-y-2">
-                            <label className="flex items-center text-gray-600 text-sm font-medium">
-                              <Shield className="w-4 h-4 mr-2 text-blue-500" />
+                            <label className="flex items-center text-gray-600 dark:text-gray-300 text-sm font-medium">
+                              <Shield className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
                               Fortaleza de contraseña
                             </label>
-                            <div className="bg-gray-100 rounded-lg p-3">
+                            <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-3">
                               <div className="flex justify-between items-center mb-2">
-                                <span className="text-sm text-gray-600">
+                                <span className="text-sm text-gray-600 dark:text-gray-300">
                                   {getStrengthName(passwordStrength)}
                                 </span>
                                 <span
@@ -526,7 +528,7 @@ export default function SecurityView() {
                                   {passwordStrength}%
                                 </span>
                               </div>
-                              <div className="w-full h-2 rounded-full bg-gray-200 overflow-hidden">
+                              <div className="w-full h-2 rounded-full bg-gray-200 dark:bg-gray-600 overflow-hidden">
                                 <div
                                   className={`h-full rounded-full ${getStrengthColor(
                                     passwordStrength
@@ -551,15 +553,15 @@ export default function SecurityView() {
                                         key={key}
                                         className={`flex items-center text-xs ${
                                           isValid
-                                            ? "text-green-600"
-                                            : "text-gray-500"
+                                            ? "text-green-600 dark:text-green-400"
+                                            : "text-gray-500 dark:text-gray-400"
                                         }`}
                                       >
                                         <div
                                           className={`flex-shrink-0 w-3.5 h-3.5 rounded-full flex items-center justify-center mr-1.5 ${
                                             isValid
-                                              ? "bg-green-100"
-                                              : "bg-gray-100"
+                                              ? "bg-green-100 dark:bg-green-900"
+                                              : "bg-gray-100 dark:bg-gray-600"
                                           }`}
                                         >
                                           {isValid && (
@@ -578,12 +580,12 @@ export default function SecurityView() {
                       </div>
 
                       {/* Submit Button */}
-                      <Separator className="my-6" />
+                      <Separator className="my-6 dark:bg-gray-700" />
                       <div className="flex justify-end gap-3">
                         <Button
                           type="submit"
                           disabled={isSubmitting}
-                          className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
+                          className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white gap-2"
                         >
                           {isSubmitting ? (
                             <>
@@ -605,15 +607,15 @@ export default function SecurityView() {
                 {/* Recovery Tab */}
                 <TabsContent value="recovery">
                   <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-                      <ShieldQuestion className="w-5 h-5 mr-2 text-blue-600" />
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
+                      <ShieldQuestion className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" />
                       Pregunta de Seguridad
                     </h2>
                   </div>
 
                   {recoverySuccess ? (
-                    <Alert className="mb-6 bg-green-50 border border-green-100 text-gray-700 py-3 rounded-lg">
-                      <Check className="h-5 w-5 text-green-500" />
+                    <Alert className="mb-6 bg-green-50 dark:bg-green-900 border border-green-100 dark:border-green-800 text-gray-700 dark:text-green-100 py-3 rounded-lg">
+                      <Check className="h-5 w-5 text-green-500 dark:text-green-300" />
                       <AlertDescription className="text-sm">
                         El cambio se realizó de forma correcta. La próxima vez
                         que desees recuperar tu contraseña puedes seleccionar
@@ -622,7 +624,7 @@ export default function SecurityView() {
                           <Button
                             onClick={resetRecoveryForm}
                             variant="outline"
-                            className="gap-2"
+                            className="gap-2 dark:border-gray-600 dark:text-gray-300"
                           >
                             <ArrowLeft className="w-4 h-4" />
                             <span>Regresar</span>
@@ -640,19 +642,19 @@ export default function SecurityView() {
                         <div className="space-y-2">
                           <label
                             htmlFor="securityQuestion"
-                            className="flex items-center text-gray-600 text-sm font-medium"
+                            className="flex items-center text-gray-600 dark:text-gray-300 text-sm font-medium"
                           >
-                            <HelpCircle className="w-4 h-4 mr-2 text-blue-500" />
+                            <HelpCircle className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
                             Pregunta de seguridad
                           </label>
                           <div className="relative group">
                             <select
                               id="securityQuestion"
-                              className={`block w-full rounded-lg border ${
+                              className={`block w-full rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300 appearance-none ${
                                 recoveryErrors.securityQuestion
                                   ? "border-red-300 focus:ring-red-300 focus:border-red-300"
-                                  : "border-blue-200 focus:ring-blue-300 focus:border-blue-300"
-                              } bg-white text-gray-900 p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300 appearance-none`}
+                                  : "border-blue-200 dark:border-gray-700 focus:ring-blue-300 dark:focus:border-blue-400 focus:border-blue-300"
+                              }`}
                               {...registerRecovery("securityQuestion", {
                                 required:
                                   "Selecciona una pregunta de seguridad",
@@ -674,7 +676,7 @@ export default function SecurityView() {
                               ))}
                             </select>
                             <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                              <ChevronRight className="h-5 w-5 text-gray-400 rotate-90" />
+                              <ChevronRight className="h-5 w-5 text-gray-400 dark:text-gray-500 rotate-90" />
                             </div>
                             {recoveryErrors.securityQuestion && (
                               <div className="absolute inset-y-0 right-0 flex items-center pr-10 pointer-events-none">
@@ -694,20 +696,20 @@ export default function SecurityView() {
                         <div className="space-y-2">
                           <label
                             htmlFor="securityAnswer"
-                            className="flex items-center text-gray-600 text-sm font-medium"
+                            className="flex items-center text-gray-600 dark:text-gray-300 text-sm font-medium"
                           >
-                            <Lock className="w-4 h-4 mr-2 text-blue-500" />
+                            <Lock className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
                             Respuesta
                           </label>
                           <div className="relative group">
                             <input
                               id="securityAnswer"
                               type="text"
-                              className={`block w-full rounded-lg border ${
+                              className={`block w-full rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300 ${
                                 recoveryErrors.securityAnswer
                                   ? "border-red-300 focus:ring-red-300 focus:border-red-300"
-                                  : "border-blue-200 focus:ring-blue-300 focus:border-blue-300"
-                              } bg-white text-gray-900 p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300`}
+                                  : "border-blue-200 dark:border-gray-700 focus:ring-blue-300 dark:focus:border-blue-400 focus:border-blue-300"
+                              }`}
                               {...registerRecovery("securityAnswer", {
                                 required: "La respuesta es requerida",
                                 minLength: {
@@ -738,7 +740,7 @@ export default function SecurityView() {
                       </div>
 
                       {/* Security Info */}
-                      <div className="mt-6 bg-blue-50 border border-blue-100 rounded-lg p-4 text-blue-800 text-sm">
+                      <div className="mt-6 bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 text-blue-800 dark:text-blue-100 text-sm">
                         <div className="flex items-start gap-2">
                           <Info className="w-5 h-5 flex-shrink-0 mt-0.5" />
                           <div>
@@ -754,12 +756,12 @@ export default function SecurityView() {
                       </div>
 
                       {/* Submit Button */}
-                      <Separator className="my-6" />
+                      <Separator className="my-6 dark:bg-gray-700" />
                       <div className="flex justify-end gap-3">
                         <Button
                           type="submit"
                           disabled={isRecoverySubmitting}
-                          className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
+                          className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white gap-2"
                         >
                           {isRecoverySubmitting ? (
                             <>
@@ -788,40 +790,40 @@ export default function SecurityView() {
               animateContent ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }
             }
             transition={{ duration: 0.6, delay: 0.6 }}
-            className="mt-8 bg-white rounded-2xl shadow-xl border border-blue-100 overflow-hidden"
+            className="mt-8 bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-blue-100 dark:border-gray-700 overflow-hidden"
           >
             <div className="p-6 md:p-8">
               <div className="flex items-center gap-4 mb-6">
-                <div className="bg-blue-100 p-3 rounded-full">
-                  <Shield className="w-5 h-5 text-blue-600" />
+                <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full">
+                  <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
                   Consejos de seguridad
                 </h3>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg border border-gray-100">
-                  <ChevronRight className="w-4 h-4 text-blue-600" />
-                  <span className="text-sm text-gray-700">
+                <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg border border-gray-100 dark:border-gray-600">
+                  <ChevronRight className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
                     Cambia tu contraseña regularmente
                   </span>
                 </div>
-                <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg border border-gray-100">
-                  <ChevronRight className="w-4 h-4 text-blue-600" />
-                  <span className="text-sm text-gray-700">
+                <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg border border-gray-100 dark:border-gray-600">
+                  <ChevronRight className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
                     No compartas tus credenciales
                   </span>
                 </div>
-                <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg border border-gray-100">
-                  <ChevronRight className="w-4 h-4 text-blue-600" />
-                  <span className="text-sm text-gray-700">
+                <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg border border-gray-100 dark:border-gray-600">
+                  <ChevronRight className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
                     Usa contraseñas diferentes para cada servicio
                   </span>
                 </div>
-                <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg border border-gray-100">
-                  <ChevronRight className="w-4 h-4 text-blue-600" />
-                  <span className="text-sm text-gray-700">
+                <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg border border-gray-100 dark:border-gray-600">
+                  <ChevronRight className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
                     Configura preguntas de seguridad únicas
                   </span>
                 </div>

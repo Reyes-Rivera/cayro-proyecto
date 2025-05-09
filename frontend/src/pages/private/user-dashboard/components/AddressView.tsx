@@ -351,10 +351,10 @@ export default function AddressView() {
       {pageLoading && (
         <div className="flex flex-col items-center justify-center py-20">
           <div className="relative">
-            <div className="w-16 h-16 border-4 border-blue-100 border-t-blue-500 rounded-full animate-spin mb-4"></div>
-            <MapPin className="w-6 h-6 text-blue-500 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 dark:border-blue-800 dark:border-t-blue-400 rounded-full animate-spin mb-4"></div>
+            <MapPin className="w-6 h-6 text-blue-600 dark:text-blue-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
           </div>
-          <p className="text-blue-500 mt-4 font-medium">
+          <p className="text-blue-600 dark:text-blue-400 mt-4 font-medium">
             Cargando direcciones...
           </p>
         </div>
@@ -372,20 +372,22 @@ export default function AddressView() {
             className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6"
           >
             <div>
-              <div className="mb-2 inline-flex items-center justify-center rounded-full bg-blue-100 px-4 py-1.5">
-                <MapPin className="w-4 h-4 mr-2 text-blue-600" />
-                <span className="text-sm font-medium text-blue-600">
+              <div className="mb-2 inline-flex items-center justify-center rounded-full bg-blue-100 dark:bg-gray-800 px-4 py-1.5">
+                <MapPin className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
+                <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
                   MIS DIRECCIONES
                 </span>
               </div>
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white leading-tight">
                 Direcciones de{" "}
                 <span className="relative inline-block">
-                  <span className="relative z-10 text-blue-600">Envío</span>
-                  <span className="absolute bottom-1 left-0 w-full h-3 bg-blue-600/20 -z-10 rounded"></span>
+                  <span className="relative z-10 text-blue-600 dark:text-blue-400">
+                    Envío
+                  </span>
+                  <span className="absolute bottom-1 left-0 w-full h-3 bg-blue-600/20 dark:bg-blue-400/20 -z-10 rounded"></span>
                 </span>
               </h1>
-              <p className="text-gray-600 mt-2">
+              <p className="text-gray-600 dark:text-gray-300 mt-2">
                 Gestiona tus direcciones para envíos y facturación
               </p>
             </div>
@@ -405,10 +407,10 @@ export default function AddressView() {
               animateContent ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }
             }
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="mt-6 bg-blue-50 border border-blue-100 rounded-lg p-4 shadow-sm mb-8"
+            className="mt-6 bg-blue-50 dark:bg-gray-800 border border-blue-100 dark:border-gray-700 rounded-lg p-4 shadow-sm mb-8"
           >
-            <p className="text-sm text-blue-800 flex items-start">
-              <Shield className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5 text-blue-600" />
+            <p className="text-sm text-blue-800 dark:text-blue-100 flex items-start">
+              <Shield className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5 text-blue-600 dark:text-blue-400" />
               <span>
                 Las direcciones guardadas te permitirán completar tus compras
                 más rápido y enviar productos a múltiples ubicaciones.
@@ -427,9 +429,9 @@ export default function AddressView() {
                 transition={{ duration: 0.3 }}
                 className="mb-10"
               >
-                <div className="bg-white rounded-2xl shadow-xl border border-blue-100 overflow-hidden relative">
+                <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-blue-100 dark:border-gray-700 overflow-hidden relative">
                   {/* Form Header */}
-                  <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white relative overflow-hidden">
+                  <div className="bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-700 dark:to-blue-900 p-6 text-white relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl"></div>
                     <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl"></div>
 
@@ -474,7 +476,7 @@ export default function AddressView() {
                               {...register("country", {
                                 required: "El país es requerido",
                               })}
-                              className="block w-full rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-400 appearance-none"
+                              className="block w-full rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-400 appearance-none"
                             >
                               <option value="México">México</option>
                             </select>
@@ -521,8 +523,8 @@ export default function AddressView() {
                               className={`block w-full rounded-lg border ${
                                 errors.city
                                   ? "border-red-300 focus:ring-red-300 focus:border-red-300"
-                                  : "border-gray-300 focus:ring-blue-300 focus:border-blue-300"
-                              } bg-white text-gray-900 p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300`}
+                                  : "border-gray-300 dark:border-gray-600 focus:ring-blue-300 focus:border-blue-300"
+                              } bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300`}
                             />
                             {errors.city && (
                               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -556,8 +558,8 @@ export default function AddressView() {
                               className={`block w-full rounded-lg border appearance-none ${
                                 errors.state
                                   ? "border-red-300 focus:ring-red-300 focus:border-red-300"
-                                  : "border-gray-300 focus:ring-blue-300 focus:border-blue-300"
-                              } bg-white text-gray-900 p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300`}
+                                  : "border-gray-300 dark:border-gray-600 focus:ring-blue-300 focus:border-blue-300"
+                              } bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300`}
                             >
                               <option value="">Seleccionar estado</option>
                               {states.map((state) => (
@@ -618,8 +620,8 @@ export default function AddressView() {
                               className={`block w-full rounded-lg border ${
                                 errors.postalCode
                                   ? "border-red-300 focus:ring-red-300 focus:border-red-300"
-                                  : "border-gray-300 focus:ring-blue-300 focus:border-blue-300"
-                              } bg-white text-gray-900 p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300`}
+                                  : "border-gray-300 dark:border-gray-600 focus:ring-blue-300 focus:border-blue-300"
+                              } bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300`}
                             />
                             {errors.postalCode ? (
                               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -676,8 +678,8 @@ export default function AddressView() {
                               className={`block w-full rounded-lg border ${
                                 errors.colony
                                   ? "border-red-300 focus:ring-red-300 focus:border-red-300"
-                                  : "border-gray-300 focus:ring-blue-300 focus:border-blue-300"
-                              } bg-white text-gray-900 p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300`}
+                                  : "border-gray-300 dark:border-gray-600 focus:ring-blue-300 focus:border-blue-300"
+                              } bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300`}
                             />
                             {errors.colony && (
                               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -730,8 +732,8 @@ export default function AddressView() {
                               className={`block w-full rounded-lg border ${
                                 errors.street
                                   ? "border-red-300 focus:ring-red-300 focus:border-red-300"
-                                  : "border-gray-300 focus:ring-blue-300 focus:border-blue-300"
-                              } bg-white text-gray-900 p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300`}
+                                  : "border-gray-300 dark:border-gray-600 focus:ring-blue-300 focus:border-blue-300"
+                              } bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300`}
                             />
                             {errors.street && (
                               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -749,18 +751,18 @@ export default function AddressView() {
                       </div>
 
                       {/* Dirección predeterminada */}
-                      <div className="flex items-center mt-4 bg-blue-50 border border-blue-100 text-blue-800 py-3 rounded-lg px-4">
+                      <div className="flex items-center mt-4 bg-blue-50 dark:bg-gray-800 border border-blue-100 dark:border-gray-700 text-blue-800 dark:text-blue-100 py-3 rounded-lg px-4">
                         <input
                           type="checkbox"
                           id="isDefault"
                           {...register("isDefault")}
-                          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                          className="w-4 h-4 text-blue-600 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
                         />
                         <label
                           htmlFor="isDefault"
-                          className="ml-2 text-sm font-medium text-gray-700 flex items-center"
+                          className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center"
                         >
-                          <CheckCircle2 className="w-4 h-4 mr-1.5 text-blue-600" />
+                          <CheckCircle2 className="w-4 h-4 mr-1.5 text-blue-600 dark:text-blue-400" />
                           Establecer como dirección predeterminada
                         </label>
                       </div>
@@ -833,17 +835,17 @@ export default function AddressView() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: i * 0.1 }}
-                    className="bg-white rounded-xl shadow-md border border-blue-100 hover:shadow-lg transition-all duration-300 relative w-full"
+                    className="bg-white dark:bg-gray-900 rounded-xl shadow-md border border-blue-100 dark:border-gray-700 hover:shadow-lg transition-all duration-300 relative w-full"
                   >
                     <div className="p-4 relative">
                       {/* Header with icon and title */}
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
-                          <div className="bg-blue-100 rounded-full p-2 w-10 h-10 flex items-center justify-center">
-                            <MapPin className="w-5 h-5 text-blue-600" />
+                          <div className="bg-blue-100 dark:bg-gray-800 rounded-full p-2 w-10 h-10 flex items-center justify-center">
+                            <MapPin className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                           </div>
                           <div>
-                            <h3 className="text-lg font-medium text-gray-900">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-white">
                               Dirección {i + 1}
                             </h3>
                           </div>
@@ -851,7 +853,7 @@ export default function AddressView() {
                         <div className="flex gap-1">
                           <button
                             onClick={() => handleEditAddress(address)}
-                            className="p-2 rounded-md hover:bg-gray-100 text-gray-500 transition-colors"
+                            className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
                             aria-label="Editar dirección"
                           >
                             <Edit2 className="w-4 h-4" />
@@ -859,7 +861,7 @@ export default function AddressView() {
                           <button
                             onClick={() => handleDeleteAddress(address.id)}
                             disabled={isDeleting === address.id}
-                            className="p-2 rounded-md hover:bg-gray-100 text-red-500 transition-colors"
+                            className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-red-500 transition-colors"
                             aria-label="Eliminar dirección"
                           >
                             {isDeleting === address.id ? (
@@ -872,29 +874,29 @@ export default function AddressView() {
                       </div>
 
                       {/* Address details */}
-                      <div className="bg-blue-50 rounded-lg p-3 space-y-2">
+                      <div className="bg-blue-50 dark:bg-gray-800 rounded-lg p-3 space-y-2">
                         <div className="flex items-start gap-2">
-                          <Home className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                          <p className="text-sm text-gray-700">
+                          <Home className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                          <p className="text-sm text-gray-700 dark:text-gray-300">
                             {address.street}
                           </p>
                         </div>
                         <div className="flex items-start gap-2">
-                          <Building className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                          <p className="text-sm text-gray-700">
+                          <Building className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                          <p className="text-sm text-gray-700 dark:text-gray-300">
                             {address.colony}
                           </p>
                         </div>
                         <div className="flex items-start gap-2">
-                          <MapPin className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                          <p className="text-sm text-gray-700">
+                          <MapPin className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                          <p className="text-sm text-gray-700 dark:text-gray-300">
                             {address.city}, {address.state},{" "}
                             {address.postalCode}
                           </p>
                         </div>
                         <div className="flex items-start gap-2">
-                          <Globe className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                          <p className="text-sm text-gray-700">
+                          <Globe className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                          <p className="text-sm text-gray-700 dark:text-gray-300">
                             {address.country}
                           </p>
                         </div>
@@ -907,14 +909,14 @@ export default function AddressView() {
                           id={`default-${address.id}`}
                           checked={address.isDefault}
                           onChange={() => handleSetDefaultAddress(address.id)}
-                          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                          className="w-4 h-4 text-blue-600 dark:text-blue-400 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
                         />
                         <label
                           htmlFor={`default-${address.id}`}
                           className={`ml-2 text-sm font-medium ${
                             address.isDefault
-                              ? "text-blue-600"
-                              : "text-gray-700 hover:text-blue-600"
+                              ? "text-blue-600 dark:text-blue-400"
+                              : "text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
                           } cursor-pointer transition-colors`}
                         >
                           Establecer como predeterminada
@@ -929,20 +931,20 @@ export default function AddressView() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5 }}
-                className="bg-white rounded-2xl shadow-lg p-8 text-center max-w-lg mx-auto border border-blue-100 relative overflow-hidden"
+                className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-8 text-center max-w-lg mx-auto border border-blue-100 dark:border-gray-700 relative overflow-hidden"
               >
                 {/* Decorative elements */}
-                <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-full blur-2xl -mr-20 -mt-20 pointer-events-none"></div>
-                <div className="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-tr from-blue-500/10 to-indigo-500/10 rounded-full blur-2xl -ml-20 -mb-20 pointer-events-none"></div>
+                <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 dark:from-blue-500/5 dark:to-indigo-500/5 rounded-full blur-2xl -mr-20 -mt-20 pointer-events-none"></div>
+                <div className="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-tr from-blue-500/10 to-indigo-500/10 dark:from-blue-500/5 dark:to-indigo-500/5 rounded-full blur-2xl -ml-20 -mb-20 pointer-events-none"></div>
 
-                <div className="bg-blue-50 p-4 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center shadow-md relative">
-                  <div className="absolute inset-0 rounded-full bg-blue-500/10 animate-pulse"></div>
-                  <MapPin className="w-10 h-10 text-blue-600 relative z-10" />
+                <div className="bg-blue-50 dark:bg-gray-800 p-4 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center shadow-md relative">
+                  <div className="absolute inset-0 rounded-full bg-blue-500/10 dark:bg-blue-500/5 animate-pulse"></div>
+                  <MapPin className="w-10 h-10 text-blue-600 dark:text-blue-400 relative z-10" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                   No tienes direcciones guardadas
                 </h3>
-                <p className="text-gray-600 mb-6">
+                <p className="text-gray-600 dark:text-gray-300 mb-6">
                   Añade una dirección para agilizar tus compras futuras y
                   facilitar el proceso de envío.
                 </p>

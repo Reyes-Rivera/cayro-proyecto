@@ -128,10 +128,12 @@ export default function ProfileView() {
       {pageLoading && (
         <div className="flex flex-col items-center justify-center py-20">
           <div className="relative">
-            <div className="w-16 h-16 border-4 border-blue-100 border-t-blue-500 rounded-full animate-spin mb-4"></div>
-            <User className="w-6 h-6 text-blue-500 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 dark:border-blue-800 dark:border-t-blue-400 rounded-full animate-spin mb-4"></div>
+            <User className="w-6 h-6 text-blue-600 dark:text-blue-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
           </div>
-          <p className="text-blue-500 mt-4 font-medium">Cargando perfil...</p>
+          <p className="text-blue-600 dark:text-blue-400 mt-4 font-medium">
+            Cargando perfil...
+          </p>
         </div>
       )}
 
@@ -147,20 +149,22 @@ export default function ProfileView() {
             className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6"
           >
             <div>
-              <div className="mb-2 inline-flex items-center justify-center rounded-full bg-blue-100 px-4 py-1.5">
-                <User className="w-4 h-4 mr-2 text-blue-600" />
-                <span className="text-sm font-medium text-blue-600">
+              <div className="mb-2 inline-flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-4 py-1.5">
+                <User className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
+                <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
                   DATOS PERSONALES
                 </span>
               </div>
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white leading-tight">
                 Información{" "}
                 <span className="relative inline-block">
-                  <span className="relative z-10 text-blue-600">Personal</span>
-                  <span className="absolute bottom-1 left-0 w-full h-3 bg-blue-600/20 -z-10 rounded"></span>
+                  <span className="relative z-10 text-blue-600 dark:text-blue-400">
+                    Personal
+                  </span>
+                  <span className="absolute bottom-1 left-0 w-full h-3 bg-blue-600/20 dark:bg-blue-400/20 -z-10 rounded"></span>
                 </span>
               </h1>
-              <p className="text-gray-600 mt-2">
+              <p className="text-gray-600 dark:text-gray-300 mt-2">
                 Gestiona tus datos personales y preferencias
               </p>
             </div>
@@ -173,12 +177,12 @@ export default function ProfileView() {
               animateContent ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }
             }
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="bg-white rounded-2xl shadow-xl border border-blue-100 overflow-hidden"
+            className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-blue-100 dark:border-gray-700 overflow-hidden"
           >
             <div className="p-6 md:p-8">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-                  <User className="w-5 h-5 mr-2 text-blue-600" />
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
+                  <User className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" />
                   Datos Personales
                 </h2>
                 <motion.button
@@ -188,8 +192,8 @@ export default function ProfileView() {
                   onClick={toggleEditable}
                   className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center transition-all ${
                     isEditable
-                      ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      : "bg-blue-600 hover:bg-blue-700 text-white"
+                      ? "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                      : "bg-blue-600 dark:bg-blue-600 hover:bg-blue-700 dark:hover:bg-blue-700 text-white"
                   }`}
                 >
                   {isEditable ? (
@@ -212,8 +216,8 @@ export default function ProfileView() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <Alert className="mb-6 bg-blue-50 border border-blue-100 text-gray-700 py-3 rounded-lg">
-                    <Shield className="h-5 w-5 text-blue-500" />
+                  <Alert className="mb-6 bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 text-gray-700 dark:text-blue-100 py-3 rounded-lg">
+                    <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                     <AlertDescription className="text-sm">
                       Si cambias tu correo electrónico, necesitarás verificarlo
                       nuevamente a través de un código que enviaremos a tu nueva
@@ -229,9 +233,9 @@ export default function ProfileView() {
                   <div className="space-y-2">
                     <label
                       htmlFor="name"
-                      className="flex items-center text-gray-600 text-sm font-medium"
+                      className="flex items-center text-gray-600 dark:text-gray-300 text-sm font-medium"
                     >
-                      <User className="w-4 h-4 mr-2 text-blue-500" />
+                      <User className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
                       Nombre
                     </label>
                     <div className="relative group">
@@ -241,10 +245,10 @@ export default function ProfileView() {
                         className={`block w-full rounded-lg border ${
                           errors.name
                             ? "border-red-300 focus:ring-red-300 focus:border-red-300"
-                            : "border-blue-200 focus:ring-blue-300 focus:border-blue-300"
-                        } bg-white text-gray-900 p-3.5 shadow-sm transition-all focus:outline-none ${
+                            : "border-blue-200 dark:border-gray-700 focus:ring-blue-300 dark:focus:border-blue-400 focus:border-blue-300"
+                        } bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-3.5 shadow-sm transition-all focus:outline-none ${
                           !isEditable
-                            ? "bg-gray-50"
+                            ? "bg-gray-50 dark:bg-gray-700"
                             : "group-hover:border-blue-300"
                         }`}
                         {...register("name", {
@@ -269,9 +273,9 @@ export default function ProfileView() {
                   <div className="space-y-2">
                     <label
                       htmlFor="surname"
-                      className="flex items-center text-gray-600 text-sm font-medium"
+                      className="flex items-center text-gray-600 dark:text-gray-300 text-sm font-medium"
                     >
-                      <User className="w-4 h-4 mr-2 text-blue-500" />
+                      <User className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
                       Apellido
                     </label>
                     <div className="relative group">
@@ -281,10 +285,10 @@ export default function ProfileView() {
                         className={`block w-full rounded-lg border ${
                           errors.surname
                             ? "border-red-300 focus:ring-red-300 focus:border-red-300"
-                            : "border-blue-200 focus:ring-blue-300 focus:border-blue-300"
-                        } bg-white text-gray-900 p-3.5 shadow-sm transition-all focus:outline-none ${
+                            : "border-blue-200 dark:border-gray-700 focus:ring-blue-300 dark:focus:border-blue-400 focus:border-blue-300"
+                        } bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-3.5 shadow-sm transition-all focus:outline-none ${
                           !isEditable
-                            ? "bg-gray-50"
+                            ? "bg-gray-50 dark:bg-gray-700"
                             : "group-hover:border-blue-300"
                         }`}
                         {...register("surname", {
@@ -309,9 +313,9 @@ export default function ProfileView() {
                   <div className="space-y-2">
                     <label
                       htmlFor="email"
-                      className="flex items-center text-gray-600 text-sm font-medium"
+                      className="flex items-center text-gray-600 dark:text-gray-300 text-sm font-medium"
                     >
-                      <Mail className="w-4 h-4 mr-2 text-blue-500" />
+                      <Mail className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
                       Correo electrónico
                     </label>
                     <div className="relative group">
@@ -322,10 +326,10 @@ export default function ProfileView() {
                         className={`block w-full rounded-lg border ${
                           errors.email
                             ? "border-red-300 focus:ring-red-300 focus:border-red-300"
-                            : "border-blue-200 focus:ring-blue-300 focus:border-blue-300"
-                        } bg-white text-gray-900 p-3.5 shadow-sm transition-all focus:outline-none ${
+                            : "border-blue-200 dark:border-gray-700 focus:ring-blue-300 dark:focus:border-blue-400 focus:border-blue-300"
+                        } bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-3.5 shadow-sm transition-all focus:outline-none ${
                           !isEditable
-                            ? "bg-gray-50"
+                            ? "bg-gray-50 dark:bg-gray-700"
                             : "group-hover:border-blue-300"
                         }`}
                         {...register("email", {
@@ -353,7 +357,7 @@ export default function ProfileView() {
                         </div>
                       ) : (
                         <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                          <AtSign className="h-5 w-5 text-gray-400" />
+                          <AtSign className="h-5 w-5 text-gray-400 dark:text-gray-500" />
                         </div>
                       )}
                     </div>
@@ -369,9 +373,9 @@ export default function ProfileView() {
                   <div className="space-y-2">
                     <label
                       htmlFor="phone"
-                      className="flex items-center text-gray-600 text-sm font-medium"
+                      className="flex items-center text-gray-600 dark:text-gray-300 text-sm font-medium"
                     >
-                      <Phone className="w-4 h-4 mr-2 text-blue-500" />
+                      <Phone className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
                       Teléfono
                     </label>
                     <div className="relative group">
@@ -382,10 +386,10 @@ export default function ProfileView() {
                         className={`block w-full rounded-lg border ${
                           errors.phone
                             ? "border-red-300 focus:ring-red-300 focus:border-red-300"
-                            : "border-blue-200 focus:ring-blue-300 focus:border-blue-300"
-                        } bg-white text-gray-900 p-3.5 shadow-sm transition-all focus:outline-none ${
+                            : "border-blue-200 dark:border-gray-700 focus:ring-blue-300 dark:focus:border-blue-400 focus:border-blue-300"
+                        } bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-3.5 shadow-sm transition-all focus:outline-none ${
                           !isEditable
-                            ? "bg-gray-50"
+                            ? "bg-gray-50 dark:bg-gray-700"
                             : "group-hover:border-blue-300"
                         }`}
                         {...register("phone", {
@@ -412,7 +416,7 @@ export default function ProfileView() {
                         </div>
                       ) : (
                         <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                          <Phone className="h-5 w-5 text-gray-400" />
+                          <Phone className="h-5 w-5 text-gray-400 dark:text-gray-500" />
                         </div>
                       )}
                     </div>
@@ -428,9 +432,9 @@ export default function ProfileView() {
                   <div className="space-y-2">
                     <label
                       htmlFor="birthdate"
-                      className="flex items-center text-gray-600 text-sm font-medium"
+                      className="flex items-center text-gray-600 dark:text-gray-300 text-sm font-medium"
                     >
-                      <Calendar className="w-4 h-4 mr-2 text-blue-500" />
+                      <Calendar className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
                       Fecha de nacimiento
                     </label>
                     <div className="relative group">
@@ -441,10 +445,10 @@ export default function ProfileView() {
                         className={`block w-full rounded-lg border ${
                           errors.birthdate
                             ? "border-red-300 focus:ring-red-300 focus:border-red-300"
-                            : "border-blue-200 focus:ring-blue-300 focus:border-blue-300"
-                        } bg-white text-gray-900 p-3.5 shadow-sm transition-all focus:outline-none ${
+                            : "border-blue-200 dark:border-gray-700 focus:ring-blue-300 dark:focus:border-blue-400 focus:border-blue-300"
+                        } bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-3.5 shadow-sm transition-all focus:outline-none ${
                           !isEditable
-                            ? "bg-gray-50"
+                            ? "bg-gray-50 dark:bg-gray-700"
                             : "group-hover:border-blue-300"
                         }`}
                         {...register("birthdate", {
@@ -469,9 +473,9 @@ export default function ProfileView() {
                   <div className="space-y-2">
                     <label
                       htmlFor="gender"
-                      className="flex items-center text-gray-600 text-sm font-medium"
+                      className="flex items-center text-gray-600 dark:text-gray-300 text-sm font-medium"
                     >
-                      <User className="w-4 h-4 mr-2 text-blue-500" />
+                      <User className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
                       Género
                     </label>
                     <div className="relative group">
@@ -481,10 +485,10 @@ export default function ProfileView() {
                         className={`block w-full rounded-lg border appearance-none ${
                           errors.gender
                             ? "border-red-300 focus:ring-red-300 focus:border-red-300"
-                            : "border-blue-200 focus:ring-blue-300 focus:border-blue-300"
-                        } bg-white text-gray-900 p-3.5 shadow-sm transition-all focus:outline-none ${
+                            : "border-blue-200 dark:border-gray-700 focus:ring-blue-300 dark:focus:border-blue-400 focus:border-blue-300"
+                        } bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-3.5 shadow-sm transition-all focus:outline-none ${
                           !isEditable
-                            ? "bg-gray-50"
+                            ? "bg-gray-50 dark:bg-gray-700"
                             : "group-hover:border-blue-300"
                         }`}
                         {...register("gender", {
@@ -504,7 +508,7 @@ export default function ProfileView() {
                         </div>
                       )}
                       <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <ChevronRight className="h-5 w-5 text-gray-400 rotate-90" />
+                        <ChevronRight className="h-5 w-5 text-gray-400 dark:text-gray-500 rotate-90" />
                       </div>
                     </div>
                     {errors.gender && (
@@ -524,13 +528,13 @@ export default function ProfileView() {
                       exit={{ opacity: 0, y: 10 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <Separator className="my-6" />
+                      <Separator className="my-6 dark:bg-gray-700" />
                       <div className="flex justify-end gap-3">
                         <Button
                           type="button"
                           onClick={toggleEditable}
                           variant="outline"
-                          className="gap-2"
+                          className="gap-2 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
                         >
                           <X className="w-4 h-4" />
                           Cancelar
@@ -538,7 +542,7 @@ export default function ProfileView() {
                         <Button
                           type="submit"
                           disabled={isSubmitting}
-                          className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
+                          className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white gap-2"
                         >
                           {isSubmitting ? (
                             <>

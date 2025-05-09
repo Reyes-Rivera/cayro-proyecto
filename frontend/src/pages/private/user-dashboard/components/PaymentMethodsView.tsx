@@ -238,11 +238,17 @@ export default function PaymentMethodsView() {
     switch (type) {
       case "credit":
       case "debit":
-        return <CreditCard className="w-5 h-5 text-blue-600" />;
+        return (
+          <CreditCard className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+        );
       case "paypal":
-        return <DollarSign className="w-5 h-5 text-blue-600" />;
+        return (
+          <DollarSign className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+        );
       default:
-        return <CreditCard className="w-5 h-5 text-blue-600" />;
+        return (
+          <CreditCard className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+        );
     }
   };
 
@@ -265,10 +271,10 @@ export default function PaymentMethodsView() {
       {pageLoading && (
         <div className="flex flex-col items-center justify-center py-20">
           <div className="relative">
-            <div className="w-16 h-16 border-4 border-blue-100 border-t-blue-500 rounded-full animate-spin mb-4"></div>
-            <CreditCard className="w-6 h-6 text-blue-500 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 dark:border-blue-800 dark:border-t-blue-400 rounded-full animate-spin mb-4"></div>
+            <CreditCard className="w-6 h-6 text-blue-600 dark:text-blue-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
           </div>
-          <p className="text-blue-500 mt-4 font-medium">
+          <p className="text-blue-600 dark:text-blue-400 mt-4 font-medium">
             Cargando métodos de pago...
           </p>
         </div>
@@ -286,20 +292,22 @@ export default function PaymentMethodsView() {
             className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6"
           >
             <div>
-              <div className="mb-2 inline-flex items-center justify-center rounded-full bg-blue-100 px-4 py-1.5">
-                <CreditCard className="w-4 h-4 mr-2 text-blue-600" />
-                <span className="text-sm font-medium text-blue-600">
+              <div className="mb-2 inline-flex items-center justify-center rounded-full bg-blue-100 dark:bg-gray-800 px-4 py-1.5">
+                <CreditCard className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
+                <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
                   MÉTODOS DE PAGO
                 </span>
               </div>
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white leading-tight">
                 Formas de{" "}
                 <span className="relative inline-block">
-                  <span className="relative z-10 text-blue-600">Pago</span>
-                  <span className="absolute bottom-1 left-0 w-full h-3 bg-blue-600/20 -z-10 rounded"></span>
+                  <span className="relative z-10 text-blue-600 dark:text-blue-400">
+                    Pago
+                  </span>
+                  <span className="absolute bottom-1 left-0 w-full h-3 bg-blue-600/20 dark:bg-blue-400/20 -z-10 rounded"></span>
                 </span>
               </h1>
-              <p className="text-gray-600 mt-2">
+              <p className="text-gray-600 dark:text-gray-300 mt-2">
                 Gestiona tus métodos de pago para compras futuras
               </p>
             </div>
@@ -323,12 +331,12 @@ export default function PaymentMethodsView() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
-                className="bg-white rounded-2xl shadow-xl border border-blue-100 overflow-hidden mb-8"
+                className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-blue-100 dark:border-gray-700 overflow-hidden mb-8"
               >
                 <div className="p-6 md:p-8">
                   <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-                      <CreditCard className="w-5 h-5 mr-2 text-blue-600" />
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
+                      <CreditCard className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" />
                       {editingCardId
                         ? "Editar método de pago"
                         : "Añadir nuevo método de pago"}
@@ -338,7 +346,7 @@ export default function PaymentMethodsView() {
                       whileTap={{ scale: 0.97 }}
                       type="button"
                       onClick={handleCancel}
-                      className="px-2 py-2 rounded-lg text-sm font-medium flex items-center bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all"
+                      className="px-2 py-2 rounded-lg text-sm font-medium flex items-center bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all"
                     >
                       <X className="w-4 h-4" />
                     </motion.button>
@@ -350,9 +358,9 @@ export default function PaymentMethodsView() {
                       <div className="space-y-2">
                         <label
                           htmlFor="type"
-                          className="flex items-center text-gray-600 text-sm font-medium"
+                          className="flex items-center text-gray-600 dark:text-gray-300 text-sm font-medium"
                         >
-                          <CreditCard className="w-4 h-4 mr-2 text-blue-500" />
+                          <CreditCard className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
                           Tipo de método de pago
                         </label>
                         <div className="relative group">
@@ -361,14 +369,14 @@ export default function PaymentMethodsView() {
                             name="type"
                             value={formData.type}
                             onChange={handleChange}
-                            className="block w-full rounded-lg border appearance-none border-blue-200 focus:ring-blue-300 focus:border-blue-300 bg-white text-gray-900 p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300"
+                            className="block w-full rounded-lg border appearance-none border-blue-200 dark:border-gray-700 focus:ring-blue-300 focus:border-blue-300 bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300"
                           >
                             <option value="credit">Tarjeta de Crédito</option>
                             <option value="debit">Tarjeta de Débito</option>
                             <option value="paypal">PayPal</option>
                           </select>
                           <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                            <ChevronRight className="h-5 w-5 text-gray-400 rotate-90" />
+                            <ChevronRight className="h-5 w-5 text-gray-500 dark:text-gray-400 rotate-90" />
                           </div>
                         </div>
                       </div>
@@ -380,9 +388,9 @@ export default function PaymentMethodsView() {
                           <div className="space-y-2">
                             <label
                               htmlFor="cardNumber"
-                              className="flex items-center text-gray-600 text-sm font-medium"
+                              className="flex items-center text-gray-600 dark:text-gray-300 text-sm font-medium"
                             >
-                              <CreditCard className="w-4 h-4 mr-2 text-blue-500" />
+                              <CreditCard className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
                               Número de tarjeta
                             </label>
                             <div className="relative group">
@@ -396,8 +404,8 @@ export default function PaymentMethodsView() {
                                 className={`block w-full rounded-lg border ${
                                   formErrors.cardNumber
                                     ? "border-red-300 focus:ring-red-300 focus:border-red-300"
-                                    : "border-blue-200 focus:ring-blue-300 focus:border-blue-300"
-                                } bg-white text-gray-900 p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300`}
+                                    : "border-blue-200 dark:border-gray-700 focus:ring-blue-300 focus:border-blue-300"
+                                } bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300`}
                               />
                               {formErrors.cardNumber && (
                                 <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -417,9 +425,9 @@ export default function PaymentMethodsView() {
                           <div className="space-y-2">
                             <label
                               htmlFor="cardHolder"
-                              className="flex items-center text-gray-600 text-sm font-medium"
+                              className="flex items-center text-gray-600 dark:text-gray-300 text-sm font-medium"
                             >
-                              <User className="w-4 h-4 mr-2 text-blue-500" />
+                              <User className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
                               Titular de la tarjeta
                             </label>
                             <div className="relative group">
@@ -433,8 +441,8 @@ export default function PaymentMethodsView() {
                                 className={`block w-full rounded-lg border ${
                                   formErrors.cardHolder
                                     ? "border-red-300 focus:ring-red-300 focus:border-red-300"
-                                    : "border-blue-200 focus:ring-blue-300 focus:border-blue-300"
-                                } bg-white text-gray-900 p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300`}
+                                    : "border-blue-200 dark:border-gray-700 focus:ring-blue-300 focus:border-blue-300"
+                                } bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300`}
                               />
                               {formErrors.cardHolder && (
                                 <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -456,9 +464,9 @@ export default function PaymentMethodsView() {
                         <div className="space-y-2 md:col-span-2">
                           <label
                             htmlFor="paypalEmail"
-                            className="flex items-center text-gray-600 text-sm font-medium"
+                            className="flex items-center text-gray-600 dark:text-gray-300 text-sm font-medium"
                           >
-                            <Mail className="w-4 h-4 mr-2 text-blue-500" />
+                            <Mail className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
                             Correo electrónico de PayPal
                           </label>
                           <div className="relative group">
@@ -472,8 +480,8 @@ export default function PaymentMethodsView() {
                               className={`block w-full rounded-lg border ${
                                 formErrors.paypalEmail
                                   ? "border-red-300 focus:ring-red-300 focus:border-red-300"
-                                  : "border-blue-200 focus:ring-blue-300 focus:border-blue-300"
-                              } bg-white text-gray-900 p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300`}
+                                  : "border-blue-200 dark:border-gray-700 focus:ring-blue-300 focus:border-blue-300"
+                              } bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300`}
                             />
                             {formErrors.paypalEmail && (
                               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -492,18 +500,18 @@ export default function PaymentMethodsView() {
 
                       {/* Default Payment Method */}
                       <div className="space-y-2 md:col-span-2">
-                        <div className="flex items-center bg-blue-50 p-3 rounded-lg border border-blue-100">
+                        <div className="flex items-center bg-blue-50 dark:bg-gray-800 p-3 rounded-lg border border-blue-100 dark:border-gray-700">
                           <input
                             type="checkbox"
                             id="isDefault"
                             name="isDefault"
                             checked={formData.isDefault}
                             onChange={handleChange}
-                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                            className="w-4 h-4 text-blue-600 dark:text-blue-400 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
                           />
                           <label
                             htmlFor="isDefault"
-                            className="ml-2 text-sm font-medium text-gray-700"
+                            className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300"
                           >
                             Establecer como método de pago predeterminado
                           </label>
@@ -553,12 +561,12 @@ export default function PaymentMethodsView() {
               animateContent ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }
             }
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="bg-white rounded-2xl shadow-xl border border-blue-100 overflow-hidden"
+            className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-blue-100 dark:border-gray-700 overflow-hidden"
           >
             <div className="p-6 md:p-8">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-                  <CreditCard className="w-5 h-5 mr-2 text-blue-600" />
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
+                  <CreditCard className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" />
                   Mis Métodos de Pago
                 </h2>
               </div>
@@ -568,10 +576,10 @@ export default function PaymentMethodsView() {
                   {paymentMethods.map((method) => (
                     <div
                       key={method.id}
-                      className={`bg-white rounded-xl shadow-md overflow-hidden border-2 ${
+                      className={`bg-white dark:bg-gray-900 rounded-xl shadow-md overflow-hidden border-2 ${
                         method.isDefault
-                          ? "border-blue-500"
-                          : "border-gray-100 hover:border-gray-200"
+                          ? "border-blue-500 dark:border-blue-400"
+                          : "border-gray-100 dark:border-gray-600 hover:border-gray-200 dark:hover:border-gray-700"
                       } hover:shadow-lg transition-all duration-300`}
                     >
                       <div className="p-5 relative">
@@ -582,24 +590,24 @@ export default function PaymentMethodsView() {
                         )}
                         <div className="flex justify-between items-start mb-4">
                           <div className="flex items-center gap-2">
-                            <div className="p-2 rounded-full bg-blue-100">
+                            <div className="p-2 rounded-full bg-blue-100 dark:bg-gray-800">
                               {getPaymentMethodIcon(method.type)}
                             </div>
-                            <h3 className="text-lg font-semibold text-gray-900">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                               {getPaymentMethodName(method.type)}
                             </h3>
                           </div>
                           <div className="flex gap-2">
                             <button
                               onClick={() => handleEditCard(method)}
-                              className="p-1.5 bg-gray-100 text-gray-600 rounded-full hover:bg-gray-200 transition-all"
+                              className="p-1.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-all"
                               aria-label="Editar método de pago"
                             >
                               <Edit className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => handleDeleteCard(method.id)}
-                              className="p-1.5 bg-gray-100 text-red-600 rounded-full hover:bg-red-100 transition-all"
+                              className="p-1.5 bg-gray-100 dark:bg-gray-700 text-red-600 rounded-full hover:bg-red-100 transition-all"
                               aria-label="Eliminar método de pago"
                             >
                               <Trash className="w-4 h-4" />
@@ -607,10 +615,10 @@ export default function PaymentMethodsView() {
                           </div>
                         </div>
 
-                        <div className="space-y-2 text-gray-700">
+                        <div className="space-y-2 text-gray-700 dark:text-gray-300">
                           {method.type === "paypal" ? (
-                            <div className="flex items-center gap-2 bg-blue-50 p-4 rounded-lg border border-blue-100">
-                              <Mail className="w-4 h-4 text-blue-600" />
+                            <div className="flex items-center gap-2 bg-blue-50 dark:bg-gray-800 p-4 rounded-lg border border-blue-100 dark:border-gray-700">
+                              <Mail className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                               <p className="font-medium">
                                 {method.paypalEmail}
                               </p>
@@ -628,7 +636,7 @@ export default function PaymentMethodsView() {
                         {!method.isDefault && (
                           <button
                             onClick={() => handleSetDefaultCard(method.id)}
-                            className="mt-4 text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 hover:underline"
+                            className="mt-4 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:text-blue-100 font-medium flex items-center gap-1 hover:underline"
                           >
                             <Check className="w-4 h-4" />
                             Establecer como predeterminado
@@ -640,13 +648,13 @@ export default function PaymentMethodsView() {
                 </div>
               ) : (
                 <div className="text-center py-10">
-                  <div className="bg-blue-50 p-4 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
-                    <CreditCard className="w-10 h-10 text-blue-600" />
+                  <div className="bg-blue-50 dark:bg-gray-800 p-4 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+                    <CreditCard className="w-10 h-10 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                     No tienes métodos de pago guardados
                   </h3>
-                  <p className="text-gray-600 mb-6">
+                  <p className="text-gray-600 dark:text-gray-300 mb-6">
                     Añade un método de pago para agilizar tus compras futuras.
                   </p>
                   <Button
@@ -668,20 +676,20 @@ export default function PaymentMethodsView() {
               animateContent ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }
             }
             transition={{ duration: 0.6, delay: 0.6 }}
-            className="mt-8 bg-white rounded-2xl shadow-xl border border-blue-100 overflow-hidden"
+            className="mt-8 bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-blue-100 dark:border-gray-700 overflow-hidden"
           >
             <div className="p-6 md:p-8">
               <div className="flex items-center gap-4 mb-6">
-                <div className="bg-blue-100 p-3 rounded-full">
-                  <Shield className="w-5 h-5 text-blue-600" />
+                <div className="bg-blue-100 dark:bg-gray-800 p-3 rounded-full">
+                  <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
                   Información de seguridad
                 </h3>
               </div>
 
-              <Alert className="bg-blue-50 border border-blue-100 text-gray-700 py-3 rounded-lg">
-                <Shield className="h-5 w-5 text-blue-500" />
+              <Alert className="bg-blue-50 dark:bg-gray-800 border border-blue-100 dark:border-gray-700 text-gray-700 dark:text-gray-300 py-3 rounded-lg">
+                <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 <AlertDescription className="text-sm">
                   Tus datos de pago están protegidos con los más altos
                   estándares de seguridad. Nunca compartimos tu información con
