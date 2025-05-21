@@ -14,61 +14,124 @@ export default function Pagination({
   totalPages,
   setCurrentPage,
 }: PaginationProps) {
+  // Función para generar el array de páginas a mostrar
+  const getPageNumbers = () => {
+    const pageNumbers = [];
+    const maxPagesToShow = 5; // Número máximo de páginas a mostrar
+
+    if (totalPages <= maxPagesToShow) {
+      // Si hay menos páginas que el máximo, mostrar todas
+      for (let i = 1; i <= totalPages; i++) {
+        pageNumbers.push(i);
+      }
+    } else {
+      // Siempre mostrar la primera página
+      pageNumbers.push(1);
+
+      // Calcular el rango de páginas a mostrar alrededor de la página actual
+      let startPage = Math.max(2, currentPage - 1);
+      let endPage = Math.min(totalPages - 1, currentPage + 1);
+
+      // Ajustar si estamos cerca del inicio o del final
+      if (currentPage <= 3) {
+        endPage = 4;
+      } else if (currentPage >= totalPages - 2) {
+        startPage = totalPages - 3;
+      }
+
+      // Añadir elipsis si es necesario
+      if (startPage > 2) {
+        pageNumbers.push("...");
+      }
+
+      // Añadir páginas intermedias
+      for (let i = startPage; i <= endPage; i++) {
+        pageNumbers.push(i);
+      }
+
+      // Añadir elipsis si es necesario
+      if (endPage < totalPages - 1) {
+        pageNumbers.push("...");
+      }
+
+      // Siempre mostrar la última página
+      pageNumbers.push(totalPages);
+    }
+
+    return pageNumbers;
+  };
+
   const handlePageChange = (page: number) => {
-    window.scrollTo(0, 0);
-    setCurrentPage(page);
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+
+      // Scroll to products section
+      const productsSection = document.getElementById("products-grid");
+      if (productsSection) {
+        productsSection.scrollIntoView({ behavior: "smooth" });
+      }
+    }
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.2 }}
-      className="flex justify-center mt-12"
-    >
-      <nav className="flex items-center gap-2">
-        {currentPage > 1 && (
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
-            className="w-10 h-10 rounded-lg flex items-center justify-center border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 shadow-sm"
-            aria-label="Página anterior"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </motion.button>
-        )}
+    <div className="flex justify-center mt-16">
+      <div className="flex items-center space-x-2">
+        {/* Botón anterior */}
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className={`p-2 rounded-lg ${
+            currentPage === 1
+              ? "text-gray-400 dark:text-gray-600 cursor-not-allowed"
+              : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+          }`}
+          aria-label="Página anterior"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </motion.button>
 
-        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-          <motion.button
-            key={page}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => handlePageChange(page)}
-            className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-medium ${
-              currentPage === page
-                ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md"
-                : "border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-            }`}
-          >
-            {page}
-          </motion.button>
+        {/* Números de página */}
+        {getPageNumbers().map((page, index) => (
+          <div key={index}>
+            {page === "..." ? (
+              <span className="px-2 text-gray-500 dark:text-gray-400">...</span>
+            ) : (
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() =>
+                  typeof page === "number" && handlePageChange(page)
+                }
+                className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                  currentPage === page
+                    ? "bg-blue-600 text-white font-medium shadow-md"
+                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                }`}
+              >
+                {page}
+              </motion.button>
+            )}
+          </div>
         ))}
 
-        {currentPage < totalPages && (
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() =>
-              handlePageChange(Math.min(currentPage + 1, totalPages))
-            }
-            className="w-10 h-10 rounded-lg flex items-center justify-center border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 shadow-sm"
-            aria-label="Siguiente página"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </motion.button>
-        )}
-      </nav>
-    </motion.div>
+        {/* Botón siguiente */}
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className={`p-2 rounded-lg ${
+            currentPage === totalPages
+              ? "text-gray-400 dark:text-gray-600 cursor-not-allowed"
+              : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+          }`}
+          aria-label="Página siguiente"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </motion.button>
+      </div>
+    </div>
   );
 }

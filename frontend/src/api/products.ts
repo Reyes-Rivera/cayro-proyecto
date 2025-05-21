@@ -73,7 +73,7 @@ export const getColors = () => axios.get("/colors");
 
 // product
 
-export const getProducts = () => axios.get("/product");
+export const getProducts = (params:string) => axios.get(`/product?${params}`);
 
 export const createProduct = (data: CreateProductDto) =>
   axios.post("/product", data);

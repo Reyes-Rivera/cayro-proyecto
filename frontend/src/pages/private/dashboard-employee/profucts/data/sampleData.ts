@@ -66,6 +66,7 @@ export interface CreateProductDto {
 }
 
 export interface ProductVariantDto {
+  id?:number
   colorId: number;
   sizeId: number;
   price: number;

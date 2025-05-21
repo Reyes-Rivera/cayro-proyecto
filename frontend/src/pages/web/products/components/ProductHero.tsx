@@ -2,7 +2,7 @@
 
 import { useState, useEffect, type FormEvent } from "react";
 import { motion } from "framer-motion";
-import { Search, Sparkles, ArrowRight } from "lucide-react";
+import { Search, Sparkles } from "lucide-react";
 import type { Category } from "../utils/products";
 import { getCategories } from "@/api/products";
 
@@ -10,17 +10,19 @@ interface ProductHeroProps {
   setActiveCategoryId: (id: number | null) => void;
   setSearchTerm: (term: string) => void;
   scrollToProducts: () => void;
+  searchTerm: string; // Añadido para pasar al QuickSearch
 }
 
-export default function ProductHeroCreative({
+export default function ProductHero({
   setActiveCategoryId,
   setSearchTerm,
   scrollToProducts,
+  searchTerm,
 }: ProductHeroProps) {
   const [animateHero, setAnimateHero] = useState(false);
   const [activeCategory, setActiveCategory] = useState<number | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [inputValue, setInputValue] = useState("");
+  const [inputValue, setInputValue] = useState(searchTerm);
 
   useEffect(() => {
     setAnimateHero(true);
@@ -37,12 +39,30 @@ export default function ProductHeroCreative({
     fetchData();
   }, []);
 
+  // Actualizar inputValue cuando cambia searchTerm
+  useEffect(() => {
+    setInputValue(searchTerm);
+  }, [searchTerm]);
+
   const handleSearch = (e?: FormEvent) => {
     if (e) {
       e.preventDefault();
     }
 
+    // Actualizar el término de búsqueda
     setSearchTerm(inputValue);
+
+    // Actualizar la URL con el parámetro de búsqueda
+    const url = new URL(window.location.href);
+    if (inputValue.trim()) {
+      url.searchParams.set("search", inputValue);
+    } else {
+      url.searchParams.delete("search");
+    }
+
+    // Actualizar la URL sin recargar la página
+    window.history.pushState({}, "", url.toString());
+
     if (inputValue.trim()) {
       scrollToProducts();
     }
@@ -139,6 +159,12 @@ export default function ProductHeroCreative({
                     onClick={() => {
                       setActiveCategory(null);
                       setActiveCategoryId(null);
+
+                      // Actualizar URL al cambiar categoría
+                      const url = new URL(window.location.href);
+                      url.searchParams.delete("categoria");
+                      window.history.pushState({}, "", url.toString());
+
                       scrollToProducts();
                     }}
                     className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
@@ -155,6 +181,15 @@ export default function ProductHeroCreative({
                       onClick={() => {
                         setActiveCategory(category.id);
                         setActiveCategoryId(category.id);
+
+                        // Actualizar URL al cambiar categoría
+                        const url = new URL(window.location.href);
+                        url.searchParams.set(
+                          "categoria",
+                          category.name.toLowerCase()
+                        );
+                        window.history.pushState({}, "", url.toString());
+
                         scrollToProducts();
                       }}
                       className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
@@ -185,32 +220,23 @@ export default function ProductHeroCreative({
                 </h2>
 
                 <form onSubmit={handleSearch} className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <Search className="h-5 w-5 text-gray-400" />
-                  </div>
                   <input
                     type="text"
-                    className="block w-full pl-12 pr-20 py-4 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="block w-full pl-10 pr-20 py-4 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent transition-all"
                     placeholder="Buscar productos..."
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                   />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3">
                     <button
                       type="submit"
                       className="inline-flex items-center px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors shadow-md"
                     >
-                      Buscar
-                      <ArrowRight className="ml-2 h-4 w-4" />
+                      <Search className="h-4 w-4" />
                     </button>
                   </div>
                 </form>
-
-                <div className="mt-8 text-center">
-                  <span className="text-sm text-gray-500 dark:text-gray-400">
-                    Más de 1,000 productos disponibles
-                  </span>
-                </div>
               </div>
             </motion.div>
           </div>

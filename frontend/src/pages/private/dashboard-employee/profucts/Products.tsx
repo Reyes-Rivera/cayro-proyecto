@@ -2,56 +2,124 @@
 
 import type React from "react";
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import ProductList from "./components/ProductList";
-import ProductDetails from "./components/ProductDetails";
-import ProductForm from "./components/ProductForm";
 import type { Product } from "./data/sampleData";
 import {
   getProducts,
   activateProduct,
   deactivateProduct,
+  getProductById,
 } from "@/api/products";
-import { Loader2, Package2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import "sweetalert2/dist/sweetalert2.min.css";
 import Swal from "sweetalert2";
+import ProductList from "./components/ProductList";
+import ProductDetails from "./components/ProductDetails";
+import ProductForm from "./components/ProductForm";
 
 const Products: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isViewing, setIsViewing] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Inicialmente true para mostrar carga
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [error, setError] = useState<string | null>(null);
 
-  const loadProducts = async () => {
+  // Modificar la función loadProducts para manejar mejor los parámetros y mostrar el estado de carga
+  const loadProducts = async (params = "") => {
+    console.log("Cargando productos con parámetros:", params);
+    setError(null);
     setIsLoading(true);
-    const data = await getProducts();
-    setProducts(data.data);
-    setIsLoading(false);
+
+    try {
+      const response = await getProducts(params);
+      console.log("Respuesta de la API:", response);
+
+      if (response && response.data) {
+        const data = response.data;
+        setProducts(Array.isArray(data.data) ? data.data : []);
+        setTotalProducts(data.total || 0);
+        setTotalPages(data.totalPages || 1);
+      } else {
+        console.error("Formato de respuesta inesperado:", response);
+        setError("La respuesta de la API no tiene el formato esperado");
+      }
+    } catch (error) {
+      console.error("Error al cargar productos:", error);
+      setError("No se pudieron cargar los productos. Inténtalo de nuevo.");
+
+      Swal.fire({
+        title: "Error",
+        text: "No se pudieron cargar los productos. Inténtalo de nuevo.",
+        icon: "error",
+        confirmButtonColor: "#2563eb",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
-    loadProducts();
+    // Cargar productos iniciales con parámetros por defecto
+    loadProducts("page=1&limit=10");
   }, []);
 
   const handleAddProduct = async (newProduct: Product) => {
     setIsLoading(true);
-    setProducts([...products, newProduct]);
-    setIsLoading(false);
-    setIsEditing(false);
-    window.scrollTo(0, 0);
+    try {
+      // La lógica de creación ya está en el ProductForm
+      // Aquí solo necesitamos recargar los productos
+      await loadProducts("page=1&limit=10");
+      setIsEditing(false);
+      window.scrollTo(0, 0);
+
+      Swal.fire({
+        title: "¡Éxito!",
+        text: "Producto añadido correctamente",
+        icon: "success",
+        confirmButtonColor: "#2563eb",
+      });
+    } catch (error) {
+      console.error("Error adding product:", error);
+      Swal.fire({
+        title: "Error",
+        text: "No se pudo añadir el producto. Inténtalo de nuevo.",
+        icon: "error",
+        confirmButtonColor: "#2563eb",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleEditProduct = async (updatedProduct: Product) => {
     if (selectedProduct) {
       setIsLoading(true);
-      const updatedProducts = products.map((p) =>
-        p.id === selectedProduct.id ? updatedProduct : p
-      );
-      setProducts(updatedProducts);
-      setIsLoading(false);
-      setSelectedProduct(null);
-      setIsEditing(false);
+      try {
+        // La lógica de actualización ya está en el ProductForm
+        // Aquí solo necesitamos recargar los productos
+        await loadProducts("page=1&limit=10");
+        setSelectedProduct(null);
+        setIsEditing(false);
+
+        Swal.fire({
+          title: "¡Éxito!",
+          text: "Producto actualizado correctamente",
+          icon: "success",
+          confirmButtonColor: "#2563eb",
+        });
+      } catch (error) {
+        console.error("Error updating product:", error);
+        Swal.fire({
+          title: "Error",
+          text: "No se pudo actualizar el producto. Inténtalo de nuevo.",
+          icon: "error",
+          confirmButtonColor: "#2563eb",
+        });
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -61,7 +129,14 @@ const Products: React.FC = () => {
       // Llamar a la API para activar el producto
       await activateProduct(id);
       // Recargar la lista de productos
-      await loadProducts();
+      await loadProducts("page=1&limit=10");
+
+      Swal.fire({
+        title: "¡Activado!",
+        text: "El producto ha sido activado correctamente.",
+        icon: "success",
+        confirmButtonColor: "#2563eb",
+      });
     } catch (error) {
       console.error("Error al activar el producto:", error);
       Swal.fire({
@@ -81,7 +156,14 @@ const Products: React.FC = () => {
       // Llamar a la API para desactivar el producto
       await deactivateProduct(id);
       // Recargar la lista de productos
-      await loadProducts();
+      await loadProducts("page=1&limit=10");
+
+      Swal.fire({
+        title: "¡Desactivado!",
+        text: "El producto ha sido desactivado correctamente.",
+        icon: "success",
+        confirmButtonColor: "#2563eb",
+      });
     } catch (error) {
       console.error("Error al desactivar el producto:", error);
       Swal.fire({
@@ -95,21 +177,56 @@ const Products: React.FC = () => {
     }
   };
 
-  const handleViewProduct = (id: number) => {
-    const product = products.find((p) => p.id === id);
-    if (product) {
-      setSelectedProduct(product);
-      setIsViewing(true); // Activar la vista de detalles
-      setIsEditing(false); // Asegurarse de que el formulario de edición no esté activo
+  const handleViewProduct = async (id: number) => {
+    setIsLoading(true);
+    try {
+      // Obtener los detalles completos del producto desde la API
+      const response = await getProductById(id);
+      if (response && response.data) {
+        setSelectedProduct(response.data);
+        setIsViewing(true);
+        setIsEditing(false);
+      } else {
+        throw new Error("No se pudo obtener la información del producto");
+      }
+    } catch (error) {
+      console.error("Error al obtener detalles del producto:", error);
+      Swal.fire({
+        title: "Error",
+        text: "No se pudieron cargar los detalles del producto.",
+        icon: "error",
+        confirmButtonColor: "#2563eb",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleEdit = (id: number) => {
-    const product = products.find((p) => p.id === id);
-    if (product) {
-      setSelectedProduct(product);
-      setIsEditing(true);
-      setIsViewing(false);
+  const handleEdit = async (id: number) => {
+    setIsLoading(true);
+    try {
+      // Obtener los detalles completos del producto desde la API
+      const response = await getProductById(id);
+      if (response && response.data) {
+        setSelectedProduct(response.data);
+        setIsEditing(true);
+        setIsViewing(false);
+      } else {
+        throw new Error("No se pudo obtener la información del producto");
+      }
+    } catch (error) {
+      console.error(
+        "Error al obtener detalles del producto para editar:",
+        error
+      );
+      Swal.fire({
+        title: "Error",
+        text: "No se pudieron cargar los detalles del producto para editar.",
+        icon: "error",
+        confirmButtonColor: "#2563eb",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -121,127 +238,97 @@ const Products: React.FC = () => {
 
   const handleBack = () => {
     setSelectedProduct(null);
-    setIsViewing(false); // Volver a la lista de productos
+    setIsViewing(false);
   };
 
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.05,
-      },
-    },
+  // Función para manejar cambios en los filtros desde ProductList
+  const handleFilterChange = (filterParams: string) => {
+    loadProducts(filterParams);
   };
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        type: "spring",
-        stiffness: 100,
-        damping: 15,
-      },
-    },
-  };
-
+  // Renderizado condicional basado en el estado
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <Loader2 className="animate-spin text-blue-600" size={64} />
+      <div className="flex flex-col items-center justify-center h-screen">
+        <Loader2
+          className="animate-spin text-blue-600 dark:text-blue-400 mb-4"
+          size={64}
+        />
+        <p className="text-gray-600 dark:text-gray-400">Cargando datos...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen">
+        <div className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 p-6 rounded-lg max-w-md text-center">
+          <h2 className="text-xl font-bold mb-2">Error</h2>
+          <p>{error}</p>
+          <button
+            onClick={() => loadProducts("page=1&limit=10")}
+            className="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
+          >
+            Reintentar
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <motion.div
-      className="p-2 sm:p-4 md:p-6 space-y-4 sm:space-y-6 md:space-y-8 bg-gray-50 dark:bg-gray-900 w-full"
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
-    >
-      {/* Encabezado de Página */}
-      <motion.div variants={itemVariants} className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-blue-600 to-blue-800 opacity-10 dark:opacity-20 rounded-xl sm:rounded-2xl md:rounded-3xl"></div>
-        <div className="relative bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl md:rounded-3xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700">
-          <div className="p-4 sm:p-6 md:p-8">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6">
-              <div className="flex items-start gap-3 sm:gap-5">
-                <div className="bg-gradient-to-br from-blue-500 to-blue-700 p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-lg text-white">
-                  <Package2 className="w-6 h-6 sm:w-8 sm:h-8" />
-                </div>
-                <div>
-                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-                    Gestión de Productos
-                  </h1>
-                  <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mt-1 sm:mt-2 max-w-2xl">
-                    Administra el catálogo de productos de tu tienda. Añade,
-                    edita y visualiza todos tus productos.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Decorative elements */}
-          <div className="absolute top-0 right-0 w-24 sm:w-32 h-24 sm:h-32 bg-gradient-to-br from-blue-500/10 to-blue-700/10 rounded-full -mr-12 sm:-mr-16 -mt-12 sm:-mt-16 dark:from-blue-500/20 dark:to-blue-700/20"></div>
-          <div className="absolute bottom-0 left-0 w-16 sm:w-24 h-16 sm:h-24 bg-gradient-to-tr from-blue-400/10 to-blue-600/10 rounded-full -ml-8 sm:-ml-12 -mb-8 sm:-mb-12 dark:from-blue-400/20 dark:to-blue-600/20"></div>
-        </div>
-      </motion.div>
-
+    <div className="px-6 space-y-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
       {/* Mostrar el formulario, los detalles o la lista según el estado */}
-      <motion.div variants={itemVariants}>
-        {isEditing && !selectedProduct ? (
-          // Formulario para Agregar Producto
-          <div>
-            <ProductForm
-              product={undefined} // No hay producto seleccionado
-              onAdd={handleAddProduct}
-              onEdit={handleEditProduct}
-              onCancel={() => {
-                setSelectedProduct(null);
-                setIsEditing(false);
-                window.scrollTo(0, 0);
-              }}
-            />
-          </div>
-        ) : isEditing && selectedProduct ? (
-          // Formulario para Editar Producto
-          <div>
-            <ProductForm
-              product={selectedProduct}
-              onAdd={handleAddProduct}
-              onEdit={handleEditProduct}
-              onCancel={() => {
-                setSelectedProduct(null);
-                setIsEditing(false);
-                window.scrollTo(0, 0);
-              }}
-            />
-          </div>
-        ) : isViewing && selectedProduct ? (
-          // Detalles del Producto
-          <div>
-            <ProductDetails product={selectedProduct} onBack={handleBack} />
-          </div>
-        ) : (
-          // Tabla de Productos
-          <div>
-            <ProductList
-              products={products}
-              onEdit={handleEdit}
-              onView={handleViewProduct}
-              onAdd={handleAddProductView}
-              onActivate={handleActivateProduct}
-              onDeactivate={handleDeactivateProduct}
-            />
-          </div>
-        )}
-      </motion.div>
-    </motion.div>
+      {isEditing && !selectedProduct ? (
+        // Formulario para Agregar Producto
+        <div>
+          <ProductForm
+            product={undefined} // No hay producto seleccionado
+            onAdd={handleAddProduct}
+            onEdit={handleEditProduct}
+            onCancel={() => {
+              setSelectedProduct(null);
+              setIsEditing(false);
+              window.scrollTo(0, 0);
+            }}
+          />
+        </div>
+      ) : isEditing && selectedProduct ? (
+        // Formulario para Editar Producto
+        <div>
+          <ProductForm
+            product={selectedProduct}
+            onAdd={handleAddProduct}
+            onEdit={handleEditProduct}
+            onCancel={() => {
+              setSelectedProduct(null);
+              setIsEditing(false);
+              window.scrollTo(0, 0);
+            }}
+          />
+        </div>
+      ) : isViewing && selectedProduct ? (
+        // Detalles del Producto
+        <div>
+          <ProductDetails product={selectedProduct} onBack={handleBack} />
+        </div>
+      ) : (
+        // Tabla de Productos
+        <div>
+          <ProductList
+            products={products}
+            totalProducts={totalProducts}
+            totalPages={totalPages}
+            onEdit={handleEdit}
+            onView={handleViewProduct}
+            onAdd={handleAddProductView}
+            onActivate={handleActivateProduct}
+            onDeactivate={handleDeactivateProduct}
+            onFilterChange={handleFilterChange}
+          />
+        </div>
+      )}
+    </div>
   );
 };
 

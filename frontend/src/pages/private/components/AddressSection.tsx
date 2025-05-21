@@ -2,21 +2,21 @@
 
 import { useState, useEffect } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
-import { Label } from "@/components/ui/label";
 import {
   Save,
-  Edit,
+  Edit2,
   X,
   MapPin,
   Home,
   Building,
   Globe,
   MailIcon,
-  AlertCircle,
   Loader2,
   Map,
   Navigation,
   CheckCircle,
+  ArrowLeft,
+  ChevronRight,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContextType";
 import { getUserAddress, updateAddress } from "@/api/users";
@@ -30,7 +30,7 @@ interface Address {
   userId?: number;
   street: string;
   city: string;
-  state: string; // Agregado campo de estado
+  state: string;
   country: string;
   postalCode: string;
   colony: string;
@@ -229,441 +229,611 @@ export function AddressSection() {
   };
 
   return (
-    <motion.div
-      className="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 md:space-y-8 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800"
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 lg:gap-8 w-full">
-        {/* Tarjeta de imagen de dirección */}
-        <motion.div
-          variants={itemVariants}
-          className="bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700 relative"
-        >
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-blue-700/10 rounded-full -mr-16 -mt-16 dark:from-blue-500/20 dark:to-blue-700/20"></div>
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-400/10 to-blue-600/10 rounded-full -ml-12 -mb-12 dark:from-blue-400/20 dark:to-blue-600/20"></div>
-
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-3 sm:p-5 text-white">
-            <h2 className="text-base sm:text-lg md:text-xl font-semibold flex items-center gap-1 sm:gap-2">
-              <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />
-              Ubicación
-            </h2>
-          </div>
-
-          <div className="p-3 sm:p-4 md:p-6 lg:p-8 flex flex-col items-center space-y-3 sm:space-y-4 md:space-y-6 relative z-10">
-            <div className="relative w-28 h-28 sm:w-32 sm:h-32 lg:w-40 lg:h-40 rounded-full overflow-hidden border-4 border-blue-100 dark:border-blue-900 shadow-lg">
-              <div className="absolute inset-0 bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
-                <Navigation className="w-16 h-16 text-blue-500 dark:text-blue-400" />
-              </div>
-            </div>
-
-            <div className="text-center">
-              <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100">
-                {user?.name} {user?.surname}
-              </h3>
-              <p className="text-gray-500 dark:text-gray-400 mt-1">
-                {user?.email}
-              </p>
-              <div className="mt-4">
-                <span className="bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-medium px-4 py-1.5 rounded-full shadow-sm">
-                  Dirección Principal
-                </span>
-              </div>
-            </div>
-
-            {!isLoading && address && (
-              <div className="w-full bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-100 dark:border-blue-800/30 mt-4">
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-start gap-2">
-                    <MapPin className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">
-                      {address.street}, {address.colony}, {address.city},{" "}
-                      {address.state}, {address.country}, CP{" "}
-                      {address.postalCode}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2 mt-2">
-                    <CheckCircle className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                    <span className="text-xs text-blue-700 dark:text-blue-400">
-                      Dirección verificada
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </motion.div>
-
-        {/* Tarjeta de información de dirección */}
-        <motion.div
-          variants={itemVariants}
-          className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700 relative"
-        >
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-blue-700/10 rounded-full -mr-16 -mt-16 dark:from-blue-500/20 dark:to-blue-700/20"></div>
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-400/10 to-blue-600/10 rounded-full -ml-12 -mb-12 dark:from-blue-400/20 dark:to-blue-600/20"></div>
-
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-3 sm:p-5 text-white">
-            <div className="flex items-center justify-between">
-              <h2 className="text-base sm:text-lg md:text-xl font-semibold flex items-center gap-1 sm:gap-2">
-                <Home className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="truncate">Información de Dirección</span>
-              </h2>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                type="button"
-                onClick={toggleEditing}
-                disabled={isSubmitting || isLoading}
-                className={`px-2 sm:px-4 py-1 sm:py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-all ${
-                  isEditing
-                    ? "bg-white/20 hover:bg-white/30 backdrop-blur-sm"
-                    : "bg-white/20 hover:bg-white/30 backdrop-blur-sm"
-                } ${
-                  isSubmitting || isLoading
-                    ? "opacity-50 cursor-not-allowed"
-                    : ""
-                }`}
-              >
-                {isEditing ? (
-                  <>
-                    <X className="w-4 h-4" />
-                    <span className="hidden sm:inline">Cancelar</span>
-                  </>
-                ) : (
-                  <>
-                    <Edit className="w-4 h-4" />
-                    <span className="hidden sm:inline">Editar</span>
-                  </>
-                )}
-              </motion.button>
-            </div>
-          </div>
-
-          {isLoading ? (
-            <div className="p-8 flex justify-center items-center h-64 relative z-10">
-              <div className="flex flex-col items-center">
-                <Loader2 className="w-10 h-10 text-blue-500 animate-spin mb-4" />
-                <p className="text-gray-500 dark:text-gray-400">
-                  Cargando información de dirección...
-                </p>
-              </div>
-            </div>
-          ) : (
-            <form
-              onSubmit={handleSubmit(onSubmit)}
-              className="p-3 sm:p-4 md:p-6 lg:p-8 relative z-10"
-            >
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                {/* País y Estado en la misma columna */}
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="country"
-                    className="text-sm md:text-base text-gray-700 dark:text-gray-300 flex items-center gap-1 sm:gap-2 font-medium"
-                  >
-                    <Globe className="w-3 h-3 sm:w-4 sm:h-4 text-blue-500" />
-                    País
-                  </Label>
-                  <div className="relative">
-                    <select
-                      id="country"
-                      {...register("country", {
-                        required: "El país es obligatorio",
-                      })}
-                      disabled={!isEditing || isSubmitting}
-                      className={`w-full px-4 py-3 rounded-lg border ${
-                        isEditing
-                          ? "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                      } transition-all duration-200 shadow-sm`}
-                    >
-                      <option value="">Seleccionar país</option>
-                      <option value="MEX">México</option>
-                    </select>
-                    {errors.country && (
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <AlertCircle className="h-5 w-5 text-red-500" />
-                      </div>
-                    )}
-                  </div>
-                  {errors.country && (
-                    <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
-                      <AlertCircle className="h-4 w-4" />
-                      {errors.country.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="state"
-                    className="text-sm md:text-base text-gray-700 dark:text-gray-300 flex items-center gap-1 sm:gap-2 font-medium"
-                  >
-                    <Map className="w-4 h-4 text-blue-500" />
-                    Estado/Provincia
-                  </Label>
-                  <div className="relative">
-                    <select
-                      id="state"
-                      {...register("state", {
-                        required: "El estado es obligatorio",
-                      })}
-                      disabled={!isEditing || isSubmitting || !selectedCountry}
-                      className={`w-full px-4 py-3 rounded-lg border ${
-                        isEditing
-                          ? "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                      } transition-all duration-200 shadow-sm`}
-                    >
-                      <option value="">Seleccionar estado</option>
-                      {states.map((state) => (
-                        <option key={state.value} value={state.value}>
-                          {state.label}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.state && (
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <AlertCircle className="h-5 w-5 text-red-500" />
-                      </div>
-                    )}
-                  </div>
-                  {errors.state && (
-                    <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
-                      <AlertCircle className="h-4 w-4" />
-                      {errors.state.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Código Postal y Ciudad en la misma columna */}
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="postalCode"
-                    className="text-sm md:text-base text-gray-700 dark:text-gray-300 flex items-center gap-1 sm:gap-2 font-medium"
-                  >
-                    <MailIcon className="w-4 h-4 text-blue-500" />
-                    Código Postal
-                  </Label>
-                  <div className="relative">
-                    <input
-                      id="postalCode"
-                      {...register("postalCode", {
-                        required: "El código postal es obligatorio",
-                        pattern: {
-                          value: /^[0-9]{5}$/,
-                          message:
-                            "El código postal debe tener 5 dígitos numéricos",
-                        },
-                      })}
-                      disabled={!isEditing || isSubmitting}
-                      className={`w-full px-4 py-3 rounded-lg border ${
-                        isEditing
-                          ? "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                      } transition-all duration-200 shadow-sm`}
-                    />
-                    {errors.postalCode && (
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <AlertCircle className="h-5 w-5 text-red-500" />
-                      </div>
-                    )}
-                  </div>
-                  {errors.postalCode && (
-                    <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
-                      <AlertCircle className="h-4 w-4" />
-                      {errors.postalCode.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="city"
-                    className="text-sm md:text-base text-gray-700 dark:text-gray-300 flex items-center gap-1 sm:gap-2 font-medium"
-                  >
-                    <Building className="w-4 h-4 text-blue-500" />
-                    Ciudad
-                  </Label>
-                  <div className="relative">
-                    <input
-                      id="city"
-                      {...register("city", {
-                        required: "La ciudad es obligatoria",
-                        minLength: {
-                          value: 3,
-                          message: "La ciudad debe tener al menos 3 caracteres",
-                        },
-                        maxLength: {
-                          value: 50,
-                          message:
-                            "La ciudad no puede exceder los 50 caracteres",
-                        },
-                        pattern: {
-                          value: specialCharsPattern,
-                          message:
-                            "No se permiten caracteres especiales como <, >, ', \" o `",
-                        },
-                      })}
-                      disabled={!isEditing || isSubmitting}
-                      className={`w-full px-4 py-3 rounded-lg border ${
-                        isEditing
-                          ? "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                      } transition-all duration-200 shadow-sm`}
-                    />
-                    {errors.city && (
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <AlertCircle className="h-5 w-5 text-red-500" />
-                      </div>
-                    )}
-                  </div>
-                  {errors.city && (
-                    <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
-                      <AlertCircle className="h-4 w-4" />
-                      {errors.city.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Colonia y Calle en la misma columna */}
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="colony"
-                    className="text-sm md:text-base text-gray-700 dark:text-gray-300 flex items-center gap-1 sm:gap-2 font-medium"
-                  >
-                    <Building className="w-4 h-4 text-blue-500" />
-                    Colonia
-                  </Label>
-                  <div className="relative">
-                    <input
-                      id="colony"
-                      {...register("colony", {
-                        required: "La colonia es obligatoria",
-                        minLength: {
-                          value: 3,
-                          message:
-                            "La colonia debe tener al menos 3 caracteres",
-                        },
-                        maxLength: {
-                          value: 50,
-                          message:
-                            "La colonia no puede exceder los 50 caracteres",
-                        },
-                        pattern: {
-                          value: specialCharsPattern,
-                          message:
-                            "No se permiten caracteres especiales como <, >, ', \" o `",
-                        },
-                      })}
-                      disabled={!isEditing || isSubmitting}
-                      className={`w-full px-4 py-3 rounded-lg border ${
-                        isEditing
-                          ? "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                      } transition-all duration-200 shadow-sm`}
-                    />
-                    {errors.colony && (
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <AlertCircle className="h-5 w-5 text-red-500" />
-                      </div>
-                    )}
-                  </div>
-                  {errors.colony && (
-                    <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
-                      <AlertCircle className="h-4 w-4" />
-                      {errors.colony.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="street"
-                    className="text-sm md:text-base text-gray-700 dark:text-gray-300 flex items-center gap-1 sm:gap-2 font-medium"
-                  >
-                    <Home className="w-4 h-4 text-blue-500" />
-                    Calle y Número
-                  </Label>
-                  <div className="relative">
-                    <input
-                      id="street"
-                      {...register("street", {
-                        required: "La calle es obligatoria",
-                        minLength: {
-                          value: 3,
-                          message: "La calle debe tener al menos 3 caracteres",
-                        },
-                        maxLength: {
-                          value: 100,
-                          message:
-                            "La calle no puede exceder los 100 caracteres",
-                        },
-                        pattern: {
-                          value: specialCharsPattern,
-                          message:
-                            "No se permiten caracteres especiales como <, >, ', \" o `",
-                        },
-                      })}
-                      disabled={!isEditing || isSubmitting}
-                      className={`w-full px-4 py-3 rounded-lg border ${
-                        isEditing
-                          ? "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                      } transition-all duration-200 shadow-sm`}
-                      placeholder="Calle, número exterior e interior"
-                    />
-                    {errors.street && (
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <AlertCircle className="h-5 w-5 text-red-500" />
-                      </div>
-                    )}
-                  </div>
-                  {errors.street && (
-                    <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
-                      <AlertCircle className="h-4 w-4" />
-                      {errors.street.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Botones de acción */}
-              {isEditing && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="flex justify-end mt-8"
+    <div className="px-6 space-y-6">
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+        className="space-y-6"
+      >
+        {isEditing ? (
+          // MODO EDICIÓN
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            {/* Encabezado para modo edición */}
+            <div className="relative">
+              <div className="bg-blue-500 p-6 rounded-b-[2.5rem]">
+                <button
+                  onClick={toggleEditing}
+                  className="absolute top-6 left-6 bg-white text-blue-600 p-2 rounded-full transition-colors shadow-sm hover:bg-blue-50"
                 >
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+                <div className="text-center text-white pt-2">
+                  <div className="inline-flex bg-white/20 p-3 rounded-full mb-3">
+                    <Edit2 className="w-6 h-6 text-white" />
+                  </div>
+                  <h2 className="text-2xl font-bold">Editar Dirección</h2>
+                  <p className="mt-1 text-white/80 flex items-center justify-center">
+                    <Navigation className="w-3.5 h-3.5 mr-1.5 inline" />
+                    Actualiza tu información de ubicación
+                  </p>
+                </div>
+              </div>
+              <div className="h-5"></div>
+            </div>
+
+            {/* Formulario */}
+            <form onSubmit={handleSubmit(onSubmit)} className="p-6">
+              <div className="space-y-8">
+                {/* Sección de ubicación */}
+                <motion.div variants={itemVariants}>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <MapPin className="w-5 h-5 mr-2 text-blue-500" />
+                    Ubicación
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* País */}
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="country"
+                        className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center"
+                      >
+                        País
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <Globe className="h-5 w-5 text-gray-400" />
+                        </div>
+                        <select
+                          id="country"
+                          {...register("country", {
+                            required: "El país es obligatorio",
+                          })}
+                          disabled={isSubmitting}
+                          className={`block w-full rounded-lg border ${
+                            errors.country
+                              ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                              : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
+                          } bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3 pl-10 shadow-sm transition-colors focus:outline-none`}
+                        >
+                          <option value="">Seleccionar país</option>
+                          <option value="MEX">México</option>
+                        </select>
+                        {errors.country && (
+                          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <X className="h-5 w-5 text-red-500" />
+                          </div>
+                        )}
+                      </div>
+                      {errors.country && (
+                        <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1 mt-1">
+                          <span className="inline-block h-1.5 w-1.5 rounded-full bg-red-500"></span>
+                          {errors.country.message}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Estado */}
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="state"
+                        className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center"
+                      >
+                        Estado
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <Map className="h-5 w-5 text-gray-400" />
+                        </div>
+                        <select
+                          id="state"
+                          {...register("state", {
+                            required: "El estado es obligatorio",
+                          })}
+                          disabled={isSubmitting || !selectedCountry}
+                          className={`block w-full rounded-lg border ${
+                            errors.state
+                              ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                              : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
+                          } bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3 pl-10 shadow-sm transition-colors focus:outline-none`}
+                        >
+                          <option value="">Seleccionar estado</option>
+                          {states.map((state) => (
+                            <option key={state.value} value={state.value}>
+                              {state.label}
+                            </option>
+                          ))}
+                        </select>
+                        {errors.state && (
+                          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <X className="h-5 w-5 text-red-500" />
+                          </div>
+                        )}
+                      </div>
+                      {errors.state && (
+                        <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1 mt-1">
+                          <span className="inline-block h-1.5 w-1.5 rounded-full bg-red-500"></span>
+                          {errors.state.message}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Ciudad */}
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="city"
+                        className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center"
+                      >
+                        Ciudad
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <Building className="h-5 w-5 text-gray-400" />
+                        </div>
+                        <input
+                          id="city"
+                          placeholder="Ingresa tu ciudad"
+                          {...register("city", {
+                            required: "La ciudad es obligatoria",
+                            minLength: {
+                              value: 3,
+                              message:
+                                "La ciudad debe tener al menos 3 caracteres",
+                            },
+                            pattern: {
+                              value: specialCharsPattern,
+                              message: "No se permiten caracteres especiales",
+                            },
+                          })}
+                          disabled={isSubmitting}
+                          className={`block w-full rounded-lg border ${
+                            errors.city
+                              ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                              : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
+                          } bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3 pl-10 shadow-sm transition-colors focus:outline-none`}
+                        />
+                        {errors.city && (
+                          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <X className="h-5 w-5 text-red-500" />
+                          </div>
+                        )}
+                      </div>
+                      {errors.city && (
+                        <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1 mt-1">
+                          <span className="inline-block h-1.5 w-1.5 rounded-full bg-red-500"></span>
+                          {errors.city.message}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Código Postal */}
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="postalCode"
+                        className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center"
+                      >
+                        Código Postal
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <MailIcon className="h-5 w-5 text-gray-400" />
+                        </div>
+                        <input
+                          id="postalCode"
+                          placeholder="12345"
+                          {...register("postalCode", {
+                            required: "El código postal es obligatorio",
+                            pattern: {
+                              value: /^[0-9]{5}$/,
+                              message: "El código postal debe tener 5 dígitos",
+                            },
+                          })}
+                          disabled={isSubmitting}
+                          className={`block w-full rounded-lg border ${
+                            errors.postalCode
+                              ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                              : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
+                          } bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3 pl-10 shadow-sm transition-colors focus:outline-none`}
+                        />
+                        {errors.postalCode && (
+                          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <X className="h-5 w-5 text-red-500" />
+                          </div>
+                        )}
+                      </div>
+                      {errors.postalCode && (
+                        <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1 mt-1">
+                          <span className="inline-block h-1.5 w-1.5 rounded-full bg-red-500"></span>
+                          {errors.postalCode.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* Sección de detalles */}
+                <motion.div variants={itemVariants}>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <Home className="w-5 h-5 mr-2 text-blue-500" />
+                    Detalles de la Dirección
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Colonia */}
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="colony"
+                        className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center"
+                      >
+                        Colonia
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <Building className="h-5 w-5 text-gray-400" />
+                        </div>
+                        <input
+                          id="colony"
+                          placeholder="Ingresa tu colonia"
+                          {...register("colony", {
+                            required: "La colonia es obligatoria",
+                            minLength: {
+                              value: 3,
+                              message:
+                                "La colonia debe tener al menos 3 caracteres",
+                            },
+                            pattern: {
+                              value: specialCharsPattern,
+                              message: "No se permiten caracteres especiales",
+                            },
+                          })}
+                          disabled={isSubmitting}
+                          className={`block w-full rounded-lg border ${
+                            errors.colony
+                              ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                              : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
+                          } bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3 pl-10 shadow-sm transition-colors focus:outline-none`}
+                        />
+                        {errors.colony && (
+                          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <X className="h-5 w-5 text-red-500" />
+                          </div>
+                        )}
+                      </div>
+                      {errors.colony && (
+                        <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1 mt-1">
+                          <span className="inline-block h-1.5 w-1.5 rounded-full bg-red-500"></span>
+                          {errors.colony.message}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Calle */}
+                    <div className="space-y-2 md:col-span-2">
+                      <label
+                        htmlFor="street"
+                        className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center"
+                      >
+                        Calle y Número
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <Home className="h-5 w-5 text-gray-400" />
+                        </div>
+                        <input
+                          id="street"
+                          placeholder="Calle, número exterior e interior"
+                          {...register("street", {
+                            required: "La calle es obligatoria",
+                            minLength: {
+                              value: 3,
+                              message:
+                                "La calle debe tener al menos 3 caracteres",
+                            },
+                            pattern: {
+                              value: specialCharsPattern,
+                              message: "No se permiten caracteres especiales",
+                            },
+                          })}
+                          disabled={isSubmitting}
+                          className={`block w-full rounded-lg border ${
+                            errors.street
+                              ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                              : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
+                          } bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3 pl-10 shadow-sm transition-colors focus:outline-none`}
+                        />
+                        {errors.street && (
+                          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <X className="h-5 w-5 text-red-500" />
+                          </div>
+                        )}
+                      </div>
+                      {errors.street && (
+                        <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1 mt-1">
+                          <span className="inline-block h-1.5 w-1.5 rounded-full bg-red-500"></span>
+                          {errors.street.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* Botones de acción */}
+                <motion.div
+                  variants={itemVariants}
+                  className="pt-6 flex justify-end space-x-3 border-t border-gray-200 dark:border-gray-700"
+                >
+                  <button
+                    type="button"
+                    onClick={toggleEditing}
+                    disabled={isSubmitting}
+                    className="px-4 py-2.5 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover: dark:hover:bg-gray-700 focus:outline-none transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium rounded-lg shadow-md transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="inline-flex items-center px-4 py-2.5 text-sm font-medium rounded-lg bg-blue-500 hover:bg-blue-600 text-white focus:outline-none transition-colors shadow-sm"
                   >
                     {isSubmitting ? (
                       <>
-                        <Loader2 className="animate-spin h-5 w-5" />
+                        <Loader2 className="animate-spin h-4 w-4 mr-2" />
                         <span>Guardando...</span>
                       </>
                     ) : (
                       <>
-                        <Save className="h-5 w-5" />
-                        <span className="text-sm md:text-base">
-                          Guardar Cambios
-                        </span>
+                        <Save className="h-4 w-4 mr-2" />
+                        <span>Guardar cambios</span>
                       </>
                     )}
-                  </motion.button>
+                  </button>
+                </motion.div>
+              </div>
+            </form>
+          </div>
+        ) : (
+          // MODO VISUALIZACIÓN
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            {/* Encabezado */}
+            <div className="relative">
+              <div className="bg-blue-500 p-6 rounded-b-[2.5rem]">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center">
+                    <div className="bg-white/20 p-3 rounded-full mr-4">
+                      <MapPin className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-white">
+                        Dirección
+                      </h2>
+                      <p className="mt-1 text-white/80 flex items-center">
+                        <Navigation className="w-3.5 h-3.5 mr-1.5 inline" />
+                        Información de ubicación
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={toggleEditing}
+                    className="bg-white text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-lg flex items-center transition-colors shadow-sm"
+                    disabled={isLoading}
+                  >
+                    <Edit2 className="w-4 h-4 mr-1.5" />
+                    Editar
+                  </button>
+                </div>
+              </div>
+              <div className="absolute -bottom-5 left-0 right-0 flex justify-center">
+                <div className="bg-white dark:bg-gray-700 px-4 py-2 rounded-full shadow-md border border-gray-100 dark:border-gray-600 flex items-center">
+                  <CheckCircle className="w-4 h-4 text-emerald-500 mr-2" />
+                  <span className="text-sm font-medium">
+                    Dirección verificada
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Contenido */}
+            <div className="p-6">
+              {isLoading ? (
+                <div className="flex justify-center items-center h-64">
+                  <div className="flex flex-col items-center">
+                    <Loader2 className="w-12 h-12 text-blue-500 animate-spin mb-4" />
+                    <p className="text-gray-500 dark:text-gray-400">
+                      Cargando información de dirección...
+                    </p>
+                  </div>
+                </div>
+              ) : address ? (
+                <motion.div variants={containerVariants} className="space-y-8">
+                  {/* Tarjeta principal de dirección */}
+                  <motion.div
+                    variants={itemVariants}
+                    className="flex flex-col md:flex-row gap-6 items-start"
+                  >
+                    <div className="w-full md:w-1/3">
+                      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-6 border border-blue-100 dark:border-blue-800/30 flex flex-col items-center">
+                        <div className="w-20 h-20 rounded-full bg-blue-500 flex items-center justify-center text-white shadow-md mb-4">
+                          <Navigation className="w-10 h-10" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                          Dirección Principal
+                        </h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 text-center mb-4">
+                          Esta es tu dirección registrada para envíos y
+                          correspondencia
+                        </p>
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300">
+                          <CheckCircle className="w-3.5 h-3.5 mr-1" />
+                          Verificada
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="w-full md:w-2/3 space-y-6">
+                      {/* Detalles de la dirección */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-700  dark:bg-gray-800/50">
+                          <div className="flex items-center">
+                            <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mr-3 shadow-sm">
+                              <Home className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                Calle y Número
+                              </p>
+                              <p className="font-medium text-gray-900 dark:text-white">
+                                {address.street}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-700  dark:bg-gray-800/50">
+                          <div className="flex items-center">
+                            <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mr-3 shadow-sm">
+                              <Building className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                Colonia
+                              </p>
+                              <p className="font-medium text-gray-900 dark:text-white">
+                                {address.colony}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-700  dark:bg-gray-800/50">
+                          <div className="flex items-center">
+                            <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mr-3 shadow-sm">
+                              <Building className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                Ciudad
+                              </p>
+                              <p className="font-medium text-gray-900 dark:text-white">
+                                {address.city}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-700  dark:bg-gray-800/50">
+                          <div className="flex items-center">
+                            <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mr-3 shadow-sm">
+                              <Map className="w-5 h-5 text-green-600 dark:text-green-400" />
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                Estado
+                              </p>
+                              <p className="font-medium text-gray-900 dark:text-white">
+                                {address.state}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-700  dark:bg-gray-800/50">
+                          <div className="flex items-center">
+                            <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center mr-3 shadow-sm">
+                              <Globe className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                País
+                              </p>
+                              <p className="font-medium text-gray-900 dark:text-white">
+                                {address.country === "MEX"
+                                  ? "México"
+                                  : address.country}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-700  dark:bg-gray-800/50">
+                          <div className="flex items-center">
+                            <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center mr-3 shadow-sm">
+                              <MailIcon className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                Código Postal
+                              </p>
+                              <p className="font-medium text-gray-900 dark:text-white">
+                                {address.postalCode}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+
+                  {/* Estado de verificación */}
+                  <motion.div
+                    variants={itemVariants}
+                    className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700"
+                  >
+                    <div className="flex items-center justify-between p-4  dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <div className="flex items-center">
+                        <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mr-4 shadow-sm">
+                          <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            Estado de la dirección
+                          </p>
+                          <p className="font-medium text-gray-900 dark:text-white text-lg">
+                            Verificada
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border border-green-200 bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800 mr-3">
+                          Activa
+                        </span>
+                        <a
+                          href="#"
+                          className="text-blue-500 hover:text-blue-600 text-sm font-medium flex items-center"
+                        >
+                          Detalles
+                          <ChevronRight className="w-4 h-4 ml-1" />
+                        </a>
+                      </div>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  variants={containerVariants}
+                  className="flex flex-col items-center justify-center p-8"
+                >
+                  <div className="w-24 h-24 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mb-6">
+                    <MapPin className="w-12 h-12 text-gray-400 dark:text-gray-500" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                    No hay dirección registrada
+                  </h3>
+                  <p className="text-gray-500 dark:text-gray-400 text-center mb-6 max-w-md">
+                    Añade una dirección para facilitar la entrega de documentos
+                    y correspondencia.
+                  </p>
+                  <button
+                    onClick={toggleEditing}
+                    className="inline-flex items-center px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium shadow-sm"
+                  >
+                    <MapPin className="w-4 h-4 mr-2" />
+                    Agregar dirección
+                  </button>
                 </motion.div>
               )}
-            </form>
-          )}
-        </motion.div>
-      </div>
-    </motion.div>
+            </div>
+          </div>
+        )}
+      </motion.div>
+    </div>
   );
 }

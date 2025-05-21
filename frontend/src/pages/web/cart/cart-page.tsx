@@ -18,6 +18,7 @@ import CartSummary from "@/pages/web/cart/components/cart-summary";
 import EmptyCart from "@/pages/web/cart/components/empty-cart";
 import Swal from "sweetalert2";
 import { useAuth } from "@/context/AuthContextType";
+import Loader from "@/components/web-components/Loader";
 
 export default function CartPage() {
   const { items, clearCart, itemCount } = useCart();
@@ -25,8 +26,8 @@ export default function CartPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showSummary, setShowSummary] = useState(false);
   const navigate = useNavigate();
-    const { user } = useAuth();
-  
+  const { user } = useAuth();
+
   // Calculate estimated delivery date (3-5 business days from now)
   useEffect(() => {
     const today = new Date();
@@ -119,14 +120,9 @@ export default function CartPage() {
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-white dark:bg-gray-950 pt-16">
+      <div className="min-h-screen bg-white dark:bg-gray-900 pt-16">
         {isLoading ? (
-          <div className="fixed inset-0 bg-white dark:bg-gray-950 z-50 flex items-center justify-center">
-            <div className="w-16 h-16 relative">
-              <div className="absolute inset-0 rounded-full border-4 border-gray-200 dark:border-gray-800 opacity-25"></div>
-              <div className="absolute inset-0 rounded-full border-4 border-t-blue-600 dark:border-t-blue-500 border-gray-200 dark:border-gray-800 animate-spin"></div>
-            </div>
-          </div>
+          <Loader />
         ) : (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="flex items-center mb-8">
@@ -153,12 +149,7 @@ export default function CartPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950 pt-16">
       {isLoading ? (
-        <div className="fixed inset-0 bg-white dark:bg-gray-950 z-50 flex items-center justify-center">
-          <div className="w-16 h-16 relative">
-            <div className="absolute inset-0 rounded-full border-4 border-gray-200 dark:border-gray-800 opacity-25"></div>
-            <div className="absolute inset-0 rounded-full border-4 border-t-blue-600 dark:border-t-blue-500 border-gray-200 dark:border-gray-800 animate-spin"></div>
-          </div>
-        </div>
+        <Loader />
       ) : (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}

@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   NotFoundException,
+  Query,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -22,13 +23,40 @@ export class ProductController {
   }
 
   @Get()
-  async findAll() {
+  async findAll(
+    @Query('search') search: string,
+    @Query('category') category: string,
+    @Query('priceMin') priceMin: number,
+    @Query('priceMax') priceMax: number,
+    @Query('colors') colors: string,
+    @Query('sizes') sizes: string,
+    @Query('genders') genders: string,
+    @Query('sleeves') sleeves: string,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ) {
     try {
-      const res = await this.productService.findAll();
-      if(!res) throw new NotFoundException('No se encontraron productos.');
+      const res = await this.productService.findAll({
+        search,
+        category,
+        priceMin,
+        priceMax,
+        colors,
+        sizes,
+        genders,
+        sleeves,
+        page,
+        limit,
+      });
+
+      if (!res || res.total === 0) {
+        throw new NotFoundException('No se encontraron productos.');
+      }
+
       return res;
     } catch (error) {
       console.log(error);
+      throw error;
     }
   }
 
@@ -36,7 +64,7 @@ export class ProductController {
   async findOne(@Param('id') id: string) {
     try {
       const res = await this.productService.findOne(Number(id));
-      if(!res) throw new NotFoundException('No se encontraron productos.');
+      if (!res) throw new NotFoundException('No se encontraron productos.');
       return res;
     } catch (error) {
       console.log(error);
@@ -52,7 +80,7 @@ export class ProductController {
   async remove(@Param('id') id: string) {
     try {
       const res = await this.productService.remove(+id);
-      if(!res) throw new NotFoundException('Producto no encontrado.');
+      if (!res) throw new NotFoundException('Producto no encontrado.');
       return res;
     } catch (error) {
       console.log(error);
@@ -62,7 +90,7 @@ export class ProductController {
   async active(@Param('id') id: string) {
     try {
       const res = await this.productService.active(+id);
-      if(!res) throw new NotFoundException('Producto no encontrado.');
+      if (!res) throw new NotFoundException('Producto no encontrado.');
       return res;
     } catch (error) {
       console.log(error);

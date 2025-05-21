@@ -1,10 +1,20 @@
 import { IsBoolean, IsInt, IsNotEmpty, IsOptional, IsString, IsArray, ValidateNested, IsNumber, IsUrl } from 'class-validator';
 import { Type } from 'class-transformer';
 
-class ProductVariantDto {
+export class ProductImageDto {
+  @IsUrl()
+  url: string;
+
+  @IsString()
+  @IsOptional()
+  angle?: string = 'front'; // Valor por defecto
+}
+
+export class ProductVariantDto {
   @IsInt()
   @IsOptional()
   id?: number;
+
   @IsInt()
   colorId: number;
 
@@ -20,6 +30,12 @@ class ProductVariantDto {
   @IsString()
   barcode: string;
 
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ProductImageDto)
+  images: ProductImageDto[];
+
+  // Mantener imageUrl como opcional para compatibilidad durante la transición
   @IsUrl()
   @IsOptional()
   imageUrl?: string;

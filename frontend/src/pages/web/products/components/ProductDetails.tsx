@@ -23,69 +23,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Color, Product } from "../utils/products";
 
 // Interfaces based on the database schema
-interface Product {
-  id: number;
-  name: string;
-  description: string;
-  active: boolean;
-  createdAt: string;
-  updatedAt: string;
-  brandId: number;
-  genderId: number;
-  sleeveId: number;
-  categoryId: number;
-  brand: Brand;
-  gender: Gender;
-  sleeve: Sleeve;
-  category: Category;
-  variants: ProductVariant[];
-}
 
-interface ProductVariant {
-  id: number;
-  productId: number;
-  colorId: number;
-  sizeId: number;
-  price: number;
-  stock: number;
-  barcode: string;
-  imageUrl: string;
-  color: Color;
-  size: Size;
-}
-
-interface Color {
-  id: number;
-  name: string;
-  hexValue?: string;
-}
-
-interface Size {
-  id: number;
-  name: string;
-}
-
-interface Brand {
-  id: number;
-  name: string;
-}
-
-interface Category {
-  id: number;
-  name: string;
-}
-
-interface Gender {
-  id: number;
-  name: string;
-}
-
-interface Sleeve {
-  id: number;
-  name:string;
-}
 
 export default function ProductDetail() {
   const params = useParams<{ id: string }>();
@@ -325,7 +266,7 @@ export default function ProductDetail() {
                   <div className="absolute inset-0 bg-gradient-to-br from-blue-600/5 to-transparent dark:from-blue-400/10 z-0"></div>
                   <motion.img
                     src={
-                      selectedVariant?.imageUrl ||
+                      selectedVariant?.images.find(img => img.angle === "front")?.url ||
                       "/placeholder.svg?height=800&width=800"
                     }
                     alt={product.name}
@@ -333,7 +274,7 @@ export default function ProductDetail() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.3 }}
-                    key={selectedVariant?.imageUrl} // Force re-render on variant change
+                    key={selectedVariant?.images.find(img=> img.angle==="front")?.id} // Force re-render on variant change
                   />
                 </div>
               </motion.div>

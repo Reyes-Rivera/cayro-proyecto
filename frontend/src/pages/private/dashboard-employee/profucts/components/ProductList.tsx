@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import type {
   Product,
   Brand,
@@ -32,16 +32,21 @@ import {
   ChevronRight,
   SlidersHorizontal,
   XCircle,
+  Package2,
 } from "lucide-react";
 import Swal from "sweetalert2";
 
+// Modificar la interfaz ProductListProps para incluir onFilterChange
 interface ProductListProps {
   products: Product[];
+  totalProducts: number;
+  totalPages: number;
   onEdit: (id: number) => void;
   onView: (id: number) => void;
   onAdd: () => void;
   onActivate: (id: number) => void;
   onDeactivate: (id: number) => void;
+  onFilterChange: (filterParams: string) => void;
 }
 
 // Opciones de ordenación
@@ -62,24 +67,28 @@ const sortOptions: SortOption[] = [
 
 const ProductList: React.FC<ProductListProps> = ({
   products,
+  totalProducts,
+  totalPages,
   onEdit,
   onView,
   onAdd,
   onActivate,
   onDeactivate,
+  onFilterChange,
 }) => {
   // Estado para búsqueda
   const [searchTerm, setSearchTerm] = useState("");
 
   // Estado para filtros
   const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState({
+  const initialFilters = {
     categories: [] as number[],
     brands: [] as number[],
     genders: [] as number[],
     neckTypes: [] as number[],
     active: null as boolean | null,
-  });
+  };
+  const [filters, setFilters] = useState(initialFilters);
 
   // Estado para ordenación
   const [sortBy, setSortBy] = useState<SortOption>(sortOptions[0]);
@@ -92,43 +101,126 @@ const ProductList: React.FC<ProductListProps> = ({
   // Estado para carga de datos
   const [isLoading, setIsLoading] = useState(true);
 
+  // Añadir esta variable de estado al inicio del componente, justo después de las otras declaraciones de estado
+  const searchTimeout = useRef<NodeJS.Timeout | null>(null);
+
   // Tipos de claves de filtro
   type FilterKey = keyof typeof filters;
 
-  // Función para manejar cambios en los filtros
+  // Modificar la función handleFilterChange para construir y enviar los parámetros de filtro a la API
   const handleFilterChange = (type: FilterKey, id: number) => {
     setFilters((prev) => {
       const currentFilter = prev[type] as number[];
-      return {
+      const newFilters = {
         ...prev,
         [type]: currentFilter.includes(id)
           ? currentFilter.filter((item) => item !== id)
           : [...currentFilter, id],
       };
+
+      // Construir y enviar los parámetros de filtro
+      const filterParams = buildFilterParams(
+        newFilters,
+        searchTerm,
+        currentPage,
+        itemsPerPage
+      );
+      onFilterChange(filterParams);
+
+      return newFilters;
     });
     setCurrentPage(1);
   };
 
-  // Función para manejar cambio en el filtro de activo
+  // Modificar handleActiveFilterChange para enviar los parámetros de filtro
   const handleActiveFilterChange = (value: boolean | null) => {
-    setFilters((prev) => ({
-      ...prev,
-      active: prev.active === value ? null : value,
-    }));
+    setFilters((prev) => {
+      const newFilters = {
+        ...prev,
+        active: prev.active === value ? null : value,
+      };
+
+      // Construir y enviar los parámetros de filtro
+      const filterParams = buildFilterParams(
+        newFilters,
+        searchTerm,
+        currentPage,
+        itemsPerPage
+      );
+      onFilterChange(filterParams);
+
+      return newFilters;
+    });
     setCurrentPage(1);
   };
 
-  // Función para limpiar todos los filtros
+  // Modificar clearAllFilters para enviar los parámetros de filtro vacíos
   const clearAllFilters = () => {
-    setFilters({
+    const emptyFilters = {
       categories: [],
       brands: [],
       genders: [],
       neckTypes: [],
       active: null,
-    });
+    };
+    setFilters(emptyFilters);
     setSearchTerm("");
     setCurrentPage(1);
+
+    // Enviar parámetros de filtro vacíos
+    const filterParams = buildFilterParams(
+      emptyFilters,
+      "",
+      currentPage,
+      itemsPerPage
+    );
+    onFilterChange(filterParams);
+  };
+
+  // Modificar la función buildFilterParams para manejar correctamente el término de búsqueda
+  const buildFilterParams = (
+    filters: typeof initialFilters,
+    search: string,
+    page: number,
+    limit: number
+  ) => {
+    const params = new URLSearchParams();
+
+    // Añadir parámetros de paginación
+    params.append("page", page.toString());
+    params.append("limit", limit.toString());
+
+    // Añadir término de búsqueda
+    if (search) {
+      params.append("search", search);
+    }
+
+    // Añadir categorías
+    if (filters.categories.length > 0) {
+      params.append("category", filters.categories[0].toString());
+    }
+
+    // Añadir géneros
+    if (filters.genders.length > 0) {
+      params.append("genders", filters.genders.join(","));
+    }
+
+    // Añadir tipos de manga/cuello
+    if (filters.neckTypes.length > 0) {
+      params.append("sleeves", filters.neckTypes.join(","));
+    }
+
+    // Añadir estado activo/inactivo
+    if (filters.active !== null) {
+      params.append("active", filters.active.toString());
+    }
+
+    // Añadir marcas
+    if (filters.brands.length > 0) {
+      params.append("brand", filters.brands[0].toString());
+    }
+
+    return params.toString();
   };
 
   // Filtrar y ordenar productos
@@ -216,9 +308,6 @@ const ProductList: React.FC<ProductListProps> = ({
     );
   }, [filteredAndSortedProducts, currentPage, itemsPerPage]);
 
-  // Calcular total de páginas
-  const totalPages = Math.ceil(filteredAndSortedProducts.length / itemsPerPage);
-
   // Verificar si hay filtros activos
   const hasActiveFilters = useMemo(() => {
     return (
@@ -262,25 +351,31 @@ const ProductList: React.FC<ProductListProps> = ({
   }, []);
 
   return (
-    <div >
-      <div className="bg-white shadow-2xl rounded-xl overflow-hidden border border-gray-100 mb-8">
-        <div className="bg-white border-b p-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h1 className="text-2xl font-bold mb-2 flex items-center">
-                <Package className="w-6 h-6 mr-2" />
-                Listado de Productos
-              </h1>
-              <p className="text-blue-700">
-                {filteredAndSortedProducts.length}{" "}
-                {filteredAndSortedProducts.length === 1
-                  ? "producto"
-                  : "productos"}{" "}
-                en el catálogo
-              </p>
+    <div className="space-y-6">
+      {/* Encabezado de Página - Rediseñado para parecerse a la imagen */}
+      <div className="bg-blue-500 rounded-xl shadow-xl overflow-hidden relative">
+        <div className="p-6">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center">
+              <div className="bg-white/20 p-3 rounded-full mr-4">
+                <Package2 className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-white">
+                  Listado de Productos
+                </h2>
+                <p className="mt-1 text-white/80 flex items-center">
+                  <Package className="w-3.5 h-3.5 mr-1.5 inline" />
+                  {filteredAndSortedProducts.length}{" "}
+                  {filteredAndSortedProducts.length === 1
+                    ? "producto"
+                    : "productos"}{" "}
+                  en el catálogo
+                </p>
+              </div>
             </div>
             <button
-              className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-lg font-medium flex items-center transition-colors shadow-md"
+              className="bg-white/20 hover:bg-white/30 transition-colors text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center"
               onClick={() => onAdd()}
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -288,58 +383,77 @@ const ProductList: React.FC<ProductListProps> = ({
             </button>
           </div>
         </div>
+      </div>
 
-        {/* Barra de búsqueda y filtros */}
-        <div className="bg-white p-4 border-b border-gray-200 flex flex-wrap gap-4 items-center justify-between">
+      {/* Barra de búsqueda y filtros - Rediseñado para parecerse a la imagen */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
+        <div className="flex flex-wrap gap-4 items-center justify-between mb-6">
+          {/* Barra de búsqueda */}
           <div className="relative flex-grow max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               type="text"
               placeholder="Buscar productos..."
-              className="pl-12 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+              className="pl-12 pr-4 py-3 w-full border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               value={searchTerm}
               onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
+                const newSearchTerm = e.target.value;
+                setSearchTerm(newSearchTerm);
+
+                // Usar un temporizador para evitar demasiadas solicitudes mientras el usuario escribe
+                if (searchTimeout.current) {
+                  clearTimeout(searchTimeout.current);
+                }
+
+                searchTimeout.current = setTimeout(() => {
+                  setCurrentPage(1);
+                  // Construir y enviar los parámetros de filtro
+                  const filterParams = buildFilterParams(
+                    filters,
+                    newSearchTerm,
+                    1,
+                    itemsPerPage
+                  );
+                  onFilterChange(filterParams);
+                }, 500); // Esperar 500ms después de que el usuario deje de escribir
               }}
             />
             {searchTerm && (
               <button
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                onClick={() => setSearchTerm("")}
+                onClick={() => {
+                  setSearchTerm("");
+                  const filterParams = buildFilterParams(
+                    filters,
+                    "",
+                    1,
+                    itemsPerPage
+                  );
+                  onFilterChange(filterParams);
+                }}
               >
                 <XCircle className="w-5 h-5" />
               </button>
             )}
           </div>
+
+          {/* Botones de filtro y ordenación */}
           <div className="flex items-center gap-2">
+            {/* Botón de filtro */}
             <div className="relative">
               <button
-                className={`flex items-center gap-1 px-3 py-2 border rounded-lg transition-colors ${
+                className={`flex items-center gap-1 px-4 py-3 border rounded-lg transition-colors ${
                   showFilters ||
                   Object.values(filters).some((f) =>
                     Array.isArray(f) ? f.length > 0 : f !== null
                   )
-                    ? "bg-blue-50 border-blue-300 text-blue-700"
-                    : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                    ? "bg-gray-100 border-gray-300 text-gray-700 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
+                    : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
                 }`}
                 onClick={() => setShowFilters(!showFilters)}
               >
                 <Filter className="w-4 h-4" />
                 <span>Filtrar</span>
-                {(filters.categories.length > 0 ||
-                  filters.brands.length > 0 ||
-                  filters.genders.length > 0 ||
-                  filters.neckTypes.length > 0 ||
-                  filters.active !== null) && (
-                  <span className="ml-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {filters.categories.length +
-                      filters.brands.length +
-                      filters.genders.length +
-                      filters.neckTypes.length +
-                      (filters.active !== null ? 1 : 0)}
-                  </span>
-                )}
                 {showFilters ? (
                   <ChevronUp className="w-4 h-4 ml-1" />
                 ) : (
@@ -347,18 +461,18 @@ const ProductList: React.FC<ProductListProps> = ({
                 )}
               </button>
 
-              {/* Panel de filtros */}
+              {/* Panel de filtros - Rediseñado para parecerse a la imagen */}
               {showFilters && (
-                <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-10">
                   <div className="p-4">
                     <div className="flex justify-between items-center mb-4">
-                      <h3 className="font-semibold text-gray-700 flex items-center">
+                      <h3 className="font-semibold text-gray-700 dark:text-gray-300 flex items-center">
                         <SlidersHorizontal className="w-4 h-4 mr-2" />
                         Filtros
                       </h3>
                       {hasActiveFilters && (
                         <button
-                          className="text-xs text-blue-600 hover:text-blue-800"
+                          className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300"
                           onClick={clearAllFilters}
                         >
                           Limpiar filtros
@@ -368,15 +482,15 @@ const ProductList: React.FC<ProductListProps> = ({
 
                     {/* Filtro por estado */}
                     <div className="mb-4">
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">
+                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Estado
                       </h4>
                       <div className="flex gap-2">
                         <button
                           className={`px-3 py-1.5 rounded-full text-xs font-medium ${
                             filters.active === true
-                              ? "bg-green-100 text-green-800 border border-green-300"
-                              : "bg-gray-100 text-gray-800 border border-gray-200 hover:bg-gray-200"
+                              ? "bg-green-100 text-green-800 border border-green-300 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800"
+                              : "bg-gray-100 text-gray-800 border border-gray-200 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
                           }`}
                           onClick={() => handleActiveFilterChange(true)}
                         >
@@ -385,8 +499,8 @@ const ProductList: React.FC<ProductListProps> = ({
                         <button
                           className={`px-3 py-1.5 rounded-full text-xs font-medium ${
                             filters.active === false
-                              ? "bg-red-100 text-red-800 border border-red-300"
-                              : "bg-gray-100 text-gray-800 border border-gray-200 hover:bg-gray-200"
+                              ? "bg-red-100 text-red-800 border border-red-300 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800"
+                              : "bg-gray-100 text-gray-800 border border-gray-200 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
                           }`}
                           onClick={() => handleActiveFilterChange(false)}
                         >
@@ -397,31 +511,28 @@ const ProductList: React.FC<ProductListProps> = ({
 
                     {/* Filtro por categoría */}
                     <div className="mb-4">
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">
+                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Categoría
                       </h4>
                       {isLoading ? (
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
                           Cargando categorías...
                         </div>
                       ) : (
                         <div className="space-y-1 max-h-32 overflow-y-auto">
-                          {category?.map((category) => (
-                            <label
-                              key={category.id}
-                              className="flex items-center"
-                            >
+                          {category?.map((cat) => (
+                            <label key={cat.id} className="flex items-center">
                               <input
                                 type="checkbox"
-                                className="rounded text-blue-600 focus:ring-blue-500 mr-2"
-                                checked={filters.categories.includes(
-                                  category.id
-                                )}
+                                className="rounded text-purple-600 focus:ring-purple-500 mr-2"
+                                checked={filters.categories.includes(cat.id)}
                                 onChange={() =>
-                                  handleFilterChange("categories", category.id)
+                                  handleFilterChange("categories", cat.id)
                                 }
                               />
-                              <span className="text-sm">{category.name}</span>
+                              <span className="text-sm text-gray-700 dark:text-gray-300">
+                                {cat.name}
+                              </span>
                             </label>
                           ))}
                         </div>
@@ -430,11 +541,11 @@ const ProductList: React.FC<ProductListProps> = ({
 
                     {/* Filtro por marca */}
                     <div className="mb-4">
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">
+                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Marca
                       </h4>
                       {isLoading ? (
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
                           Cargando marcas...
                         </div>
                       ) : (
@@ -443,13 +554,15 @@ const ProductList: React.FC<ProductListProps> = ({
                             <label key={brand.id} className="flex items-center">
                               <input
                                 type="checkbox"
-                                className="rounded text-blue-600 focus:ring-blue-500 mr-2"
+                                className="rounded text-teal-600 focus:ring-teal-500 mr-2"
                                 checked={filters.brands.includes(brand.id)}
                                 onChange={() =>
                                   handleFilterChange("brands", brand.id)
                                 }
                               />
-                              <span className="text-sm">{brand.name}</span>
+                              <span className="text-sm text-gray-700 dark:text-gray-300">
+                                {brand.name}
+                              </span>
                             </label>
                           ))}
                         </div>
@@ -458,11 +571,11 @@ const ProductList: React.FC<ProductListProps> = ({
 
                     {/* Filtro por género */}
                     <div className="mb-4">
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">
+                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Género
                       </h4>
                       {isLoading ? (
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
                           Cargando géneros...
                         </div>
                       ) : (
@@ -474,13 +587,15 @@ const ProductList: React.FC<ProductListProps> = ({
                             >
                               <input
                                 type="checkbox"
-                                className="rounded text-blue-600 focus:ring-blue-500 mr-2"
+                                className="rounded text-pink-600 focus:ring-pink-500 mr-2"
                                 checked={filters.genders.includes(gender.id)}
                                 onChange={() =>
                                   handleFilterChange("genders", gender.id)
                                 }
                               />
-                              <span className="text-sm">{gender.name}</span>
+                              <span className="text-sm text-gray-700 dark:text-gray-300">
+                                {gender.name}
+                              </span>
                             </label>
                           ))}
                         </div>
@@ -489,11 +604,11 @@ const ProductList: React.FC<ProductListProps> = ({
 
                     {/* Filtro por tipo de cuello */}
                     <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">
+                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Tipo de Cuello
                       </h4>
                       {isLoading ? (
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
                           Cargando tipos de cuello...
                         </div>
                       ) : (
@@ -505,7 +620,7 @@ const ProductList: React.FC<ProductListProps> = ({
                             >
                               <input
                                 type="checkbox"
-                                className="rounded text-blue-600 focus:ring-blue-500 mr-2"
+                                className="rounded text-amber-600 focus:ring-amber-500 mr-2"
                                 checked={filters.neckTypes.includes(
                                   neckType.id
                                 )}
@@ -513,7 +628,9 @@ const ProductList: React.FC<ProductListProps> = ({
                                   handleFilterChange("neckTypes", neckType.id)
                                 }
                               />
-                              <span className="text-sm">{neckType.name}</span>
+                              <span className="text-sm text-gray-700 dark:text-gray-300">
+                                {neckType.name}
+                              </span>
                             </label>
                           ))}
                         </div>
@@ -524,10 +641,10 @@ const ProductList: React.FC<ProductListProps> = ({
               )}
             </div>
 
-            {/* Dropdown de ordenación */}
+            {/* Botón de ordenación */}
             <div className="relative">
               <button
-                className="flex items-center gap-1 px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-1 px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 onClick={() => setShowSortOptions(!showSortOptions)}
               >
                 <ArrowUpDown className="w-4 h-4" />
@@ -540,7 +657,7 @@ const ProductList: React.FC<ProductListProps> = ({
               </button>
 
               {showSortOptions && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-10">
                   <div className="py-1">
                     {sortOptions.map((option) => (
                       <button
@@ -548,8 +665,8 @@ const ProductList: React.FC<ProductListProps> = ({
                         className={`w-full text-left px-4 py-2 text-sm ${
                           sortBy.value === option.value &&
                           sortBy.direction === option.direction
-                            ? "bg-blue-50 text-blue-700"
-                            : "text-gray-700 hover:bg-gray-100"
+                            ? "bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-gray-100"
+                            : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                         }`}
                         onClick={() => {
                           setSortBy(option);
@@ -568,15 +685,26 @@ const ProductList: React.FC<ProductListProps> = ({
 
         {/* Chips de filtros activos */}
         {hasActiveFilters && (
-          <div className="bg-white p-3 border-b border-gray-200 flex flex-wrap gap-2 items-center">
-            <span className="text-sm text-gray-500">Filtros activos:</span>
+          <div className="flex flex-wrap gap-2 items-center mb-6">
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              Filtros activos:
+            </span>
 
             {searchTerm && (
-              <div className="bg-blue-50 text-blue-700 text-xs rounded-full px-3 py-1 flex items-center">
+              <div className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs rounded-full px-3 py-1 flex items-center">
                 <span>Búsqueda: {searchTerm}</span>
                 <button
-                  className="ml-2 text-blue-500 hover:text-blue-700"
-                  onClick={() => setSearchTerm("")}
+                  className="ml-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                  onClick={() => {
+                    setSearchTerm("");
+                    const filterParams = buildFilterParams(
+                      filters,
+                      "",
+                      currentPage,
+                      itemsPerPage
+                    );
+                    onFilterChange(filterParams);
+                  }}
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -587,16 +715,16 @@ const ProductList: React.FC<ProductListProps> = ({
               <div
                 className={`text-xs rounded-full px-3 py-1 flex items-center ${
                   filters.active
-                    ? "bg-green-50 text-green-700"
-                    : "bg-red-50 text-red-700"
+                    ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                    : "bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400"
                 }`}
               >
                 <span>Estado: {filters.active ? "Activo" : "Inactivo"}</span>
                 <button
                   className={`ml-2 ${
                     filters.active
-                      ? "text-green-500 hover:text-green-700"
-                      : "text-red-500 hover:text-red-700"
+                      ? "text-green-500 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300"
+                      : "text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
                   }`}
                   onClick={() => handleActiveFilterChange(null)}
                 >
@@ -608,11 +736,11 @@ const ProductList: React.FC<ProductListProps> = ({
             {filters.categories.map((categoryId) => (
               <div
                 key={`cat-${categoryId}`}
-                className="bg-purple-50 text-purple-700 text-xs rounded-full px-3 py-1 flex items-center"
+                className="bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 text-xs rounded-full px-3 py-1 flex items-center"
               >
                 <span>Categoría: {getCategoryName(categoryId)}</span>
                 <button
-                  className="ml-2 text-purple-500 hover:text-purple-700"
+                  className="ml-2 text-purple-500 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300"
                   onClick={() => handleFilterChange("categories", categoryId)}
                 >
                   <X className="w-3 h-3" />
@@ -623,11 +751,11 @@ const ProductList: React.FC<ProductListProps> = ({
             {filters.brands.map((brandId) => (
               <div
                 key={`brand-${brandId}`}
-                className="bg-indigo-50 text-indigo-700 text-xs rounded-full px-3 py-1 flex items-center"
+                className="bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 text-xs rounded-full px-3 py-1 flex items-center"
               >
                 <span>Marca: {getBrandName(brandId)}</span>
                 <button
-                  className="ml-2 text-indigo-500 hover:text-indigo-700"
+                  className="ml-2 text-teal-500 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300"
                   onClick={() => handleFilterChange("brands", brandId)}
                 >
                   <X className="w-3 h-3" />
@@ -638,11 +766,11 @@ const ProductList: React.FC<ProductListProps> = ({
             {filters.genders.map((genderId) => (
               <div
                 key={`gender-${genderId}`}
-                className="bg-pink-50 text-pink-700 text-xs rounded-full px-3 py-1 flex items-center"
+                className="bg-pink-50 dark:bg-pink-900/30 text-pink-700 dark:text-pink-400 text-xs rounded-full px-3 py-1 flex items-center"
               >
                 <span>Género: {getGenderName(genderId)}</span>
                 <button
-                  className="ml-2 text-pink-500 hover:text-pink-700"
+                  className="ml-2 text-pink-500 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300"
                   onClick={() => handleFilterChange("genders", genderId)}
                 >
                   <X className="w-3 h-3" />
@@ -653,11 +781,11 @@ const ProductList: React.FC<ProductListProps> = ({
             {filters.neckTypes.map((neckTypeId) => (
               <div
                 key={`neck-${neckTypeId}`}
-                className="bg-amber-50 text-amber-700 text-xs rounded-full px-3 py-1 flex items-center"
+                className="bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs rounded-full px-3 py-1 flex items-center"
               >
                 <span>Cuello: {getNeckTypeName(neckTypeId)}</span>
                 <button
-                  className="ml-2 text-amber-500 hover:text-amber-700"
+                  className="ml-2 text-amber-500 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300"
                   onClick={() => handleFilterChange("neckTypes", neckTypeId)}
                 >
                   <X className="w-3 h-3" />
@@ -666,7 +794,7 @@ const ProductList: React.FC<ProductListProps> = ({
             ))}
 
             <button
-              className="text-xs text-gray-500 hover:text-gray-700 underline ml-auto"
+              className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 underline ml-auto"
               onClick={clearAllFilters}
             >
               Limpiar todos
@@ -674,218 +802,202 @@ const ProductList: React.FC<ProductListProps> = ({
           </div>
         )}
 
-        {/* Tabla de productos */}
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse min-h-[300px]">
-            <thead>
-              <tr className="bg-indigo-50">
-                <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase tracking-wider border-b border-indigo-100">
-                  ID
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase tracking-wider border-b border-indigo-100">
-                  Nombre
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase tracking-wider border-b border-indigo-100">
-                  Categoría
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase tracking-wider border-b border-indigo-100">
-                  Marca
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase tracking-wider border-b border-indigo-100">
-                  Estado
-                </th>
-                <th className="px-6 py-4 text-center text-xs font-medium text-indigo-600 uppercase tracking-wider border-b border-indigo-100">
-                  Acciones
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {paginatedProducts.length > 0 ? (
-                paginatedProducts.map((product, index) => (
-                  <tr
-                    key={product.id}
-                    className={`${
-                      index % 2 === 0 ? "bg-white" : "bg-indigo-50/30"
-                    } hover:bg-indigo-50 transition-colors`}
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded border border-gray-200">
-                        #{product.id}
+        {/* Tabla de productos - Rediseñada para parecerse a la imagen */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden">
+          {/* Encabezado de tabla */}
+          <div className="bg-blue-50 dark:bg-gray-700 text-blue-700 dark:text-white py-4 px-6">
+            <div className="grid grid-cols-12 gap-4 items-center">
+              <div className="col-span-1 font-medium">ID</div>
+              <div className="col-span-3 font-medium">Nombre</div>
+              <div className="col-span-2 font-medium">Categoría</div>
+              <div className="col-span-2 font-medium">Marca</div>
+              <div className="col-span-2 font-medium">Estado</div>
+              <div className="col-span-2 text-right font-medium">Acciones</div>
+            </div>
+          </div>
+
+          {/* Filas de productos */}
+          {paginatedProducts.length > 0 ? (
+            <div className="divide-y divide-gray-100 dark:divide-gray-700">
+              {paginatedProducts.map((product) => (
+                <div
+                  key={product.id}
+                  className="px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
+                >
+                  <div className="grid grid-cols-12 gap-4 items-center">
+                    {/* ID */}
+                    <div className="col-span-1">
+                      <span className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium text-sm">
+                        {product.id}
                       </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-gray-900">
+                    </div>
+
+                    {/* Nombre */}
+                    <div className="col-span-3">
+                      <h3 className="font-medium text-gray-900 dark:text-white">
                         {product.name}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="bg-purple-100 text-purple-800 text-xs px-2.5 py-1 rounded-full">
+                      </h3>
+                    </div>
+
+                    {/* Categoría */}
+                    <div className="col-span-2">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-400 border border-purple-200 dark:border-purple-800/30">
                         {getCategoryName(product.categoryId)}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="bg-indigo-100 text-indigo-800 text-xs px-2.5 py-1 rounded-full">
+                    </div>
+
+                    {/* Marca */}
+                    <div className="col-span-2">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-400 border border-teal-200 dark:border-teal-800/30">
                         {getBrandName(product.brandId)}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    </div>
+
+                    {/* Estado */}
+                    <div className="col-span-2">
                       {product.active ? (
-                        <span className="bg-gradient-to-r from-green-500 to-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center w-fit">
-                          <Check className="w-3.5 h-3.5 mr-1" />
-                          Activo
-                        </span>
+                        <div className="flex items-center">
+                          <span className="relative flex h-2.5 w-2.5 mr-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                          </span>
+                          <span className="text-green-600 dark:text-green-400 font-medium text-sm">
+                            Activo
+                          </span>
+                        </div>
                       ) : (
-                        <span className="bg-gradient-to-r from-red-500 to-pink-600 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center w-fit">
-                          <X className="w-3.5 h-3.5 mr-1" />
-                          Inactivo
-                        </span>
+                        <div className="flex items-center">
+                          <span className="h-2.5 w-2.5 rounded-full bg-red-500 mr-2"></span>
+                          <span className="text-red-600 dark:text-red-400 font-medium text-sm">
+                            Inactivo
+                          </span>
+                        </div>
                       )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-center space-x-3">
-                        {/* Botón Ver */}
-                        <button
-                          onClick={() => onView(product.id)}
-                          className="bg-blue-100 p-2 rounded-lg text-blue-600 hover:bg-blue-200 transition-colors group relative"
-                          title="Ver detalles"
-                        >
-                          <Eye size={18} />
-                          <span className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                            Ver detalles
-                          </span>
-                        </button>
+                    </div>
 
-                        {/* Botón Editar */}
-                        <button
-                          onClick={() => onEdit(product.id)}
-                          className="bg-amber-100 p-2 rounded-lg text-amber-600 hover:bg-amber-200 transition-colors group relative"
-                          title="Editar producto"
-                        >
-                          <Edit size={18} />
-                          <span className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                            Editar producto
-                          </span>
-                        </button>
+                    {/* Acciones */}
+                    <div className="col-span-2 flex items-center justify-end space-x-2">
+                      <button
+                        onClick={() => onView(product.id)}
+                        className="p-2 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                        title="Ver detalles"
+                      >
+                        <Eye size={18} />
+                      </button>
 
-                        {/* Botón Activar/Desactivar */}
-                        {product.active ? (
-                          <button
-                            onClick={() => {
-                              Swal.fire({
-                                title: "¿Desactivar producto?",
-                                text: `¿Estás seguro de que deseas desactivar "${product.name}"?`,
-                                icon: "warning",
-                                showCancelButton: true,
-                                confirmButtonColor: "#d33",
-                                cancelButtonColor: "#6b7280",
-                                confirmButtonText: "Sí, desactivar",
-                                cancelButtonText: "Cancelar",
-                              }).then((result) => {
-                                if (result.isConfirmed) {
-                                  onDeactivate(product.id);
-                                  Swal.fire({
-                                    title: "Desactivado!",
-                                    text: `El producto "${product.name}" ha sido desactivado.`,
-                                    icon: "success",
-                                    confirmButtonColor: "#2563eb",
-                                  });
-                                }
-                              });
-                            }}
-                            className="bg-red-100 p-2 rounded-lg text-red-600 hover:bg-red-200 transition-colors group relative"
-                            title="Desactivar producto"
-                          >
-                            <Trash size={18} />
-                            <span className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                              Desactivar producto
-                            </span>
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => {
-                              Swal.fire({
-                                title: "¿Activar producto?",
-                                text: `¿Estás seguro de que deseas activar "${product.name}"?`,
-                                icon: "question",
-                                showCancelButton: true,
-                                confirmButtonColor: "#2563eb",
-                                cancelButtonColor: "#6b7280",
-                                confirmButtonText: "Sí, activar",
-                                cancelButtonText: "Cancelar",
-                              }).then((result) => {
-                                if (result.isConfirmed) {
-                                  onActivate(product.id);
-                                  Swal.fire({
-                                    title: "Activado!",
-                                    text: `El producto "${product.name}" ha sido activado.`,
-                                    icon: "success",
-                                    confirmButtonColor: "#2563eb",
-                                  });
-                                }
-                              });
-                            }}
-                            className="bg-green-100 p-2 rounded-lg text-green-600 hover:bg-green-200 transition-colors group relative"
-                            title="Activar producto"
-                          >
-                            <Check size={18} />
-                            <span className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                              Activar producto
-                            </span>
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center">
-                    <div className="flex flex-col items-center justify-center text-gray-500">
-                      <Package className="w-12 h-12 text-gray-300 mb-3" />
-                      <p className="text-lg font-medium">
-                        No hay productos disponibles
-                      </p>
-                      <p className="text-sm mb-4">
-                        {hasActiveFilters
-                          ? "No se encontraron productos con los filtros seleccionados"
-                          : "Añade productos para comenzar a gestionar tu inventario"}
-                      </p>
-                      {hasActiveFilters ? (
+                      <button
+                        onClick={() => onEdit(product.id)}
+                        className="p-2 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-800/50 transition-colors"
+                        title="Editar producto"
+                      >
+                        <Edit size={18} />
+                      </button>
+
+                      {product.active ? (
                         <button
-                          onClick={clearAllFilters}
-                          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium flex items-center transition-colors"
+                          onClick={() => {
+                            Swal.fire({
+                              title: "¿Desactivar producto?",
+                              text: `¿Estás seguro de que deseas desactivar "${product.name}"?`,
+                              icon: "warning",
+                              showCancelButton: true,
+                              confirmButtonColor: "#d33",
+                              cancelButtonColor: "#6b7280",
+                              confirmButtonText: "Sí, desactivar",
+                              cancelButtonText: "Cancelar",
+                            }).then((result) => {
+                              if (result.isConfirmed) {
+                                onDeactivate(product.id);
+                              }
+                            });
+                          }}
+                          className="p-2 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800/50 transition-colors"
+                          title="Desactivar producto"
                         >
-                          <XCircle className="w-4 h-4 mr-2" />
-                          Limpiar filtros
+                          <Trash size={18} />
                         </button>
                       ) : (
                         <button
-                          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium flex items-center transition-colors"
-                          onClick={() => onAdd()}
+                          onClick={() => {
+                            Swal.fire({
+                              title: "¿Activar producto?",
+                              text: `¿Estás seguro de que deseas activar "${product.name}"?`,
+                              icon: "question",
+                              showCancelButton: true,
+                              confirmButtonColor: "#2563eb",
+                              cancelButtonColor: "#6b7280",
+                              confirmButtonText: "Sí, activar",
+                              cancelButtonText: "Cancelar",
+                            }).then((result) => {
+                              if (result.isConfirmed) {
+                                onActivate(product.id);
+                              }
+                            });
+                          }}
+                          className="p-2 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-800/50 transition-colors"
+                          title="Activar producto"
                         >
-                          <Plus className="w-4 h-4 mr-2" />
-                          Añadir Producto
+                          <Check size={18} />
                         </button>
                       )}
                     </div>
-                  </td>
-                </tr>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <Package className="h-12 w-12 text-gray-300 dark:text-gray-600 mb-3" />
+              <p className="text-lg font-medium text-gray-700 dark:text-gray-300">
+                No hay productos disponibles
+              </p>
+              <p className="text-sm mb-4 text-gray-500 dark:text-gray-400">
+                {hasActiveFilters
+                  ? "No se encontraron productos con los filtros seleccionados"
+                  : "Añade productos para comenzar a gestionar tu inventario"}
+              </p>
+              {hasActiveFilters ? (
+                <button
+                  onClick={clearAllFilters}
+                  className="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg font-medium flex items-center transition-colors"
+                >
+                  <XCircle className="w-4 h-4 mr-2" />
+                  Limpiar filtros
+                </button>
+              ) : (
+                <button
+                  className="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg font-medium flex items-center transition-colors"
+                  onClick={() => onAdd()}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Añadir Producto
+                </button>
               )}
-            </tbody>
-          </table>
-        </div>
+            </div>
+          )}
 
-        {/* Paginación */}
-        {filteredAndSortedProducts.length > 0 && (
-          <div className="bg-gray-50 p-4 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4">
+          {/* Paginación */}
+          <div className="bg-gray-50 dark:bg-gray-800/50 p-4 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500">Mostrar</span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                Mostrar
+              </span>
               <select
-                className="border border-gray-300 rounded-md text-sm p-1"
+                className="border border-gray-300 dark:border-gray-600 rounded-md text-sm p-1 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                 value={itemsPerPage}
                 onChange={(e) => {
-                  setItemsPerPage(Number(e.target.value));
+                  const newItemsPerPage = Number(e.target.value);
+                  setItemsPerPage(newItemsPerPage);
                   setCurrentPage(1);
+
+                  // Construir y enviar los parámetros de filtro
+                  const filterParams = buildFilterParams(
+                    filters,
+                    searchTerm,
+                    1,
+                    newItemsPerPage
+                  );
+                  onFilterChange(filterParams);
                 }}
               >
                 <option value={5}>5</option>
@@ -893,47 +1005,88 @@ const ProductList: React.FC<ProductListProps> = ({
                 <option value={20}>20</option>
                 <option value={50}>50</option>
               </select>
-              <span className="text-sm text-gray-500">por página</span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                por página
+              </span>
             </div>
 
-            <div className="text-sm text-gray-500">
-              Mostrando {(currentPage - 1) * itemsPerPage + 1} a{" "}
-              {Math.min(
-                currentPage * itemsPerPage,
-                filteredAndSortedProducts.length
-              )}{" "}
-              de {filteredAndSortedProducts.length} productos
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              Mostrando{" "}
+              {totalProducts > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} a{" "}
+              {Math.min(currentPage * itemsPerPage, totalProducts)} de{" "}
+              {totalProducts} productos
             </div>
 
             <div className="flex items-center space-x-2">
               <button
-                className="px-3 py-1 border border-gray-300 rounded-md text-sm bg-white hover:bg-gray-50 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={currentPage === 1}
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                onClick={() => {
+                  const newPage = Math.max(currentPage - 1, 1);
+                  setCurrentPage(newPage);
+
+                  // Construir y enviar los parámetros de filtro
+                  const filterParams = buildFilterParams(
+                    filters,
+                    searchTerm,
+                    newPage,
+                    itemsPerPage
+                  );
+                  onFilterChange(filterParams);
+                }}
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
 
               <div className="flex items-center">
-                <span className="px-3 py-1 bg-blue-50 border border-blue-300 rounded-md text-sm text-blue-700 font-medium">
-                  {currentPage}
+                <input
+                  type="text"
+                  className="w-12 px-2 py-1 text-center border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                  value={currentPage}
+                  onChange={(e) => {
+                    const page = Number.parseInt(e.target.value);
+                    if (!isNaN(page) && page > 0 && page <= totalPages) {
+                      setCurrentPage(page);
+                      const filterParams = buildFilterParams(
+                        filters,
+                        searchTerm,
+                        page,
+                        itemsPerPage
+                      );
+                      onFilterChange(filterParams);
+                    }
+                  }}
+                />
+                <span className="mx-1 text-gray-500 dark:text-gray-400">
+                  de
                 </span>
-                <span className="mx-1 text-gray-500">de</span>
-                <span className="text-gray-700">{totalPages || 1}</span>
+                <span className="text-gray-700 dark:text-gray-300">
+                  {totalPages || 1}
+                </span>
               </div>
 
               <button
-                className="px-3 py-1 border border-gray-300 rounded-md text-sm bg-white hover:bg-gray-50 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={currentPage === totalPages || totalPages === 0}
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                }
+                onClick={() => {
+                  const newPage = Math.min(currentPage + 1, totalPages);
+                  setCurrentPage(newPage);
+
+                  // Construir y enviar los parámetros de filtro
+                  const filterParams = buildFilterParams(
+                    filters,
+                    searchTerm,
+                    newPage,
+                    itemsPerPage
+                  );
+                  onFilterChange(filterParams);
+                }}
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

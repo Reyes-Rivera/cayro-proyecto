@@ -27,6 +27,7 @@ import {
   ArrowRight,
   Sparkles,
 } from "lucide-react";
+import Loader from "@/components/web-components/Loader";
 
 // Animated Section Component
 interface AnimatedSectionProps {
@@ -141,23 +142,11 @@ export default function Terms() {
     });
   };
 
-  // Loading Component - Memoized to prevent unnecessary re-renders
-  const LoadingScreen = memo(() => {
-    return (
-      <div className="fixed inset-0 bg-white dark:bg-gray-900 z-50 flex flex-col items-center justify-center">
-        <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4"></div>
-        <p className="text-gray-700 dark:text-gray-300 text-lg font-medium">
-          Cargando...
-        </p>
-      </div>
-    );
-  });
-  LoadingScreen.displayName = "LoadingScreen";
 
   return (
     <>
-      {isPageLoading && <LoadingScreen />}
-      <div className="min-h-screen bg-white dark:bg-gray-900 overflow-x-hidden">
+      {isPageLoading && <Loader />}
+      <div className="min-h-screen bg-white mt-5 dark:bg-gray-900 overflow-x-hidden">
         {/* Hero Section */}
         <div className="relative min-h-screen bg-white dark:bg-gray-900 flex items-center">
           {/* Background decoration - Enhanced with about page style */}

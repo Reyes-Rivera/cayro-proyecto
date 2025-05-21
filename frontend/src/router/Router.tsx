@@ -31,7 +31,9 @@ import PasswordRecoveryQuestionPage from "@/pages/web/auth/PasswordRecoveryQuest
 import AdminDashboard from "@/pages/private/dashboard-admin/DashboardLayout";
 import ProductDetails from "@/pages/web/products/components/ProductDetails";
 import CheckoutPage from "@/pages/CheckOut/checkout-page";
+import { useAuth } from "@/context/AuthContextType";
 const AppRoutes = () => {
+  const { auth, user } = useAuth();
   useEffect(() => {
     const getInfoPage = async () => {
       const res = getCompanyInfoApi();
@@ -41,12 +43,14 @@ const AppRoutes = () => {
   }, []);
   return (
     <>
-      <div className="fixed w-full z-50 top-0">
-        <NavBarUser />
-      </div>
+      {(!auth ||
+        (auth && user?.role !== "ADMIN" && user?.role !== "EMPLOYEE")) && (
+        <div className="fixed w-full z-50 top-0">
+          <NavBarUser />
+        </div>
+      )}
       <div className="container-bg">
         <ScrollToTop />
-
         <Routes>
           <Route path="/carrito" element={<CartPage />} />
           <Route path="/carrito" element={<CartPage />} />
@@ -97,9 +101,12 @@ const AppRoutes = () => {
           <Route path="/400" element={<Error400 />} />
         </Routes>
       </div>
-      <div className="w-full">
-        <Footer />
-      </div>
+      {(!auth ||
+        (auth && user?.role !== "ADMIN" && user?.role !== "EMPLOYEE")) && (
+        <div className="w-full">
+          <Footer />
+        </div>
+      )}
     </>
   );
 };

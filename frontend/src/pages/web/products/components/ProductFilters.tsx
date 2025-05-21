@@ -3,7 +3,15 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Filter, Check } from "lucide-react";
-import type { Brand, Category, Color, Gender, Size } from "../utils/products";
+import type {
+  Brand,
+  Category,
+  Color,
+  Gender,
+  Size,
+  Sleeve,
+} from "../utils/products";
+import PriceRangeFilter from "./price-range-filter";
 
 interface ProductFiltersProps {
   categories: Category[];
@@ -11,6 +19,7 @@ interface ProductFiltersProps {
   colors: Color[];
   sizes: Size[];
   genders: Gender[];
+  sleeves: Sleeve[];
   activeCategoryId: number | null;
   setActiveCategoryId: (id: number | null) => void;
   activeBrandId: number | null;
@@ -21,8 +30,12 @@ interface ProductFiltersProps {
   setActiveSizeId: (id: number | null) => void;
   activeGenderId: number | null;
   setActiveGenderId: (id: number | null) => void;
+  activeSleeveId: number | null;
+  setActiveSleeveId: (id: number | null) => void;
   activeSort: string;
   setActiveSort: (sort: any) => void;
+  priceRange: { min: number | null; max: number | null };
+  setPriceRange: (range: { min: number | null; max: number | null }) => void;
   hasActiveFilters: boolean;
   clearAllFilters: () => void;
 }
@@ -32,6 +45,7 @@ export default function ProductFilters({
   colors = [],
   sizes = [],
   genders = [],
+  sleeves = [],
   activeCategoryId = null,
   setActiveCategoryId = () => {},
   activeColorId = null,
@@ -40,18 +54,38 @@ export default function ProductFilters({
   setActiveSizeId = () => {},
   activeGenderId = null,
   setActiveGenderId = () => {},
+  activeSleeveId = null,
+  setActiveSleeveId = () => {},
   activeSort = "default",
   setActiveSort = () => {},
+  priceRange = { min: null, max: null },
+  setPriceRange = () => {},
   hasActiveFilters = false,
   clearAllFilters = () => {},
 }: ProductFiltersProps) {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+
+  // Asegúrate de que todos los arrays sean arrays válidos
+  const safeCategories = Array.isArray(categories) ? categories : [];
+
+
+
 
   const scrollToProducts = () => {
     const productsSection = document.getElementById("products-grid");
     if (productsSection) {
       productsSection.scrollIntoView({ behavior: "smooth" });
     }
+  };
+
+  // Función para manejar el cambio de precio en móvil
+  const handleMobilePriceChange = (newRange: {
+    min: number | null;
+    max: number | null;
+  }) => {
+    setPriceRange(newRange);
+    scrollToProducts();
+    setMobileFiltersOpen(false);
   };
 
   // Mobile filters drawer
@@ -62,7 +96,7 @@ export default function ProductFilters({
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         onClick={() => setMobileFiltersOpen(true)}
-        className="fixed bottom-6 right-6 z-50 bg-blue-600 text-white rounded-full p-4 shadow-lg flex items-center gap-2"
+        className="md:hidden fixed bottom-6 right-6 z-50 bg-blue-600 text-white rounded-full p-4 shadow-lg flex items-center gap-2"
       >
         <Filter className="w-5 h-5" />
         <span>Filtros</span>
@@ -75,7 +109,7 @@ export default function ProductFilters({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-50"
+            className="md:hidden fixed inset-0 bg-black/50 z-50"
             onClick={() => setMobileFiltersOpen(false)}
           >
             <motion.div
@@ -83,7 +117,7 @@ export default function ProductFilters({
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25 }}
-              className="absolute right-0 top-0 h-full w-[85%] max-w-md bg-white dark:bg-gray-900 overflow-y-auto"
+              className="absolute right-0 top-0 h-full w-[85%] max-w-md bg-white dark:bg-gray-900 overflow-y-auto md:hidden"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center sticky top-0 bg-white dark:bg-gray-900 z-10">
@@ -119,6 +153,7 @@ export default function ProductFilters({
                       onClick={() => {
                         setActiveCategoryId(null);
                         scrollToProducts();
+                        setMobileFiltersOpen(false);
                       }}
                     >
                       <div className="flex items-center">
@@ -134,34 +169,120 @@ export default function ProductFilters({
                         </span>
                       </div>
                     </button>
-                    {categories.map((category) => (
-                      <button
-                        key={category.id}
-                        className={`block w-full text-left py-2.5 px-4 text-sm transition-all rounded-lg ${
-                          activeCategoryId === category.id
-                            ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium shadow-sm"
-                            : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                        }`}
-                        onClick={() => {
-                          setActiveCategoryId(category.id);
-                          scrollToProducts();
-                        }}
-                      >
-                        <div className="flex items-center">
-                          {activeCategoryId === category.id && (
-                            <Check className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                          )}
-                          <span
-                            className={
-                              activeCategoryId === category.id ? "ml-0" : "ml-6"
-                            }
-                          >
-                            {category.name}
-                          </span>
-                        </div>
-                      </button>
-                    ))}
+                    {Array.isArray(categories) ? (
+                      categories.map((category) => (
+                        <button
+                          key={category.id}
+                          className={`block w-full text-left py-2.5 px-4 text-sm transition-all rounded-lg ${
+                            activeCategoryId === category.id
+                              ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium shadow-sm"
+                              : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                          }`}
+                          onClick={() => {
+                            setActiveCategoryId(category.id);
+                            scrollToProducts();
+                            setMobileFiltersOpen(false);
+                          }}
+                        >
+                          <div className="flex items-center">
+                            {activeCategoryId === category.id && (
+                              <Check className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
+                            )}
+                            <span
+                              className={
+                                activeCategoryId === category.id
+                                  ? "ml-0"
+                                  : "ml-6"
+                              }
+                            >
+                              {category.name}
+                            </span>
+                          </div>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="text-gray-500 dark:text-gray-400 text-sm py-2">
+                        No hay categorías disponibles
+                      </div>
+                    )}
                   </div>
+                </div>
+
+                {/* Tipo de manga/cuello */}
+                <div className="mb-8">
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-4 text-sm uppercase tracking-widest flex items-center">
+                    <span className="w-6 h-0.5 bg-blue-600 dark:bg-blue-400 mr-2"></span>
+                    Tipo de Manga
+                  </h4>
+                  <div className="space-y-2">
+                    <button
+                      className={`block w-full text-left py-2.5 px-4 text-sm transition-all rounded-lg ${
+                        activeSleeveId === null
+                          ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium shadow-sm"
+                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                      }`}
+                      onClick={() => {
+                        setActiveSleeveId(null);
+                        scrollToProducts();
+                        setMobileFiltersOpen(false);
+                      }}
+                    >
+                      <div className="flex items-center">
+                        {activeSleeveId === null && (
+                          <Check className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
+                        )}
+                        <span
+                          className={activeSleeveId === null ? "ml-0" : "ml-6"}
+                        >
+                          Todos los Tipos
+                        </span>
+                      </div>
+                    </button>
+                    {Array.isArray(sleeves) ? (
+                      sleeves.map((sleeve) => (
+                        <button
+                          key={sleeve.id}
+                          className={`block w-full text-left py-2.5 px-4 text-sm transition-all rounded-lg ${
+                            activeSleeveId === sleeve.id
+                              ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium shadow-sm"
+                              : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                          }`}
+                          onClick={() => {
+                            setActiveSleeveId(sleeve.id);
+                            scrollToProducts();
+                            setMobileFiltersOpen(false);
+                          }}
+                        >
+                          <div className="flex items-center">
+                            {activeSleeveId === sleeve.id && (
+                              <Check className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
+                            )}
+                            <span
+                              className={
+                                activeSleeveId === sleeve.id ? "ml-0" : "ml-6"
+                              }
+                            >
+                              {sleeve.name}
+                            </span>
+                          </div>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="text-gray-500 dark:text-gray-400 text-sm py-2">
+                        No hay tipos disponibles
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Rango de precio */}
+                <div className="mb-8">
+                  <PriceRangeFilter
+                    priceRange={priceRange}
+                    setPriceRange={(newRange) =>
+                      handleMobilePriceChange(newRange)
+                    }
+                  />
                 </div>
 
                 {/* Colores */}
@@ -180,31 +301,39 @@ export default function ProductFilters({
                       onClick={() => {
                         setActiveColorId(null);
                         scrollToProducts();
+                        setMobileFiltersOpen(false);
                       }}
                       aria-label="Todos los colores"
                     >
                       <X className="h-4 w-4 text-gray-700 dark:text-gray-300" />
                     </button>
-                    {colors.map((color) => (
-                      <button
-                        key={color.id}
-                        className={`w-10 h-10 rounded-full transition-all duration-200 ${
-                          activeColorId === color.id
-                            ? "ring-2 ring-offset-2 ring-blue-500 dark:ring-blue-400 dark:ring-offset-gray-900"
-                            : ""
-                        } relative group border border-gray-200 dark:border-gray-700 shadow-md`}
-                        style={{ backgroundColor: color.hexValue }}
-                        onClick={() => {
-                          setActiveColorId(color.id);
-                          scrollToProducts();
-                        }}
-                        aria-label={`Color: ${color.name}`}
-                      >
-                        <span className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-3 py-1.5 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap z-10 shadow-lg">
-                          {color.name}
-                        </span>
-                      </button>
-                    ))}
+                    {Array.isArray(colors) ? (
+                      colors.map((color) => (
+                        <button
+                          key={color.id}
+                          className={`w-10 h-10 rounded-full transition-all duration-200 ${
+                            activeColorId === color.id
+                              ? "ring-2 ring-offset-2 ring-blue-500 dark:ring-blue-400 dark:ring-offset-gray-900"
+                              : ""
+                          } relative group border border-gray-200 dark:border-gray-700 shadow-md`}
+                          style={{ backgroundColor: color.hexValue }}
+                          onClick={() => {
+                            setActiveColorId(color.id);
+                            scrollToProducts();
+                            setMobileFiltersOpen(false);
+                          }}
+                          aria-label={`Color: ${color.name}`}
+                        >
+                          <span className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-3 py-1.5 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap z-10 shadow-lg pointer-events-none">
+                            {color.name}
+                          </span>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="text-gray-500 dark:text-gray-400 text-sm py-2">
+                        No hay colores disponibles
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -223,27 +352,47 @@ export default function ProductFilters({
                       }`}
                       onClick={() => {
                         setActiveSizeId(null);
+
+                        // Actualizar URL directamente
+                        const url = new URL(window.location.href);
+                        url.searchParams.delete("talla");
+                        window.history.pushState({}, "", url.toString());
+
                         scrollToProducts();
+                        setMobileFiltersOpen(false);
                       }}
                     >
                       Todas
                     </button>
-                    {sizes.map((size) => (
-                      <button
-                        key={size.id}
-                        className={`py-3 text-sm font-medium transition-all rounded-lg ${
-                          activeSizeId === size.id
-                            ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
-                            : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700"
-                        }`}
-                        onClick={() => {
-                          setActiveSizeId(size.id);
-                          scrollToProducts();
-                        }}
-                      >
-                        {size.name}
-                      </button>
-                    ))}
+                    {Array.isArray(sizes) ? (
+                      sizes.map((size) => (
+                        <button
+                          key={size.id}
+                          className={`py-3 text-sm font-medium transition-all rounded-lg ${
+                            activeSizeId === size.id
+                              ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
+                              : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700"
+                          }`}
+                          onClick={() => {
+                            setActiveSizeId(size.id);
+
+                            // Actualizar URL directamente
+                            const url = new URL(window.location.href);
+                            url.searchParams.set("talla", size.id.toString());
+                            window.history.pushState({}, "", url.toString());
+
+                            scrollToProducts();
+                            setMobileFiltersOpen(false);
+                          }}
+                        >
+                          {size.name}
+                        </button>
+                      ))
+                    ) : (
+                      <div className="text-gray-500 dark:text-gray-400 text-sm py-2">
+                        No hay tallas disponibles
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -263,6 +412,7 @@ export default function ProductFilters({
                       onClick={() => {
                         setActiveGenderId(null);
                         scrollToProducts();
+                        setMobileFiltersOpen(false);
                       }}
                     >
                       <div className="flex items-center">
@@ -276,33 +426,49 @@ export default function ProductFilters({
                         </span>
                       </div>
                     </button>
-                    {genders.map((gender) => (
-                      <button
-                        key={gender.id}
-                        className={`block w-full text-left py-2.5 px-4 text-sm transition-all rounded-lg ${
-                          activeGenderId === gender.id
-                            ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium shadow-sm"
-                            : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                        }`}
-                        onClick={() => {
-                          setActiveGenderId(gender.id);
-                          scrollToProducts();
-                        }}
-                      >
-                        <div className="flex items-center">
-                          {activeGenderId === gender.id && (
-                            <Check className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                          )}
-                          <span
-                            className={
-                              activeGenderId === gender.id ? "ml-0" : "ml-6"
-                            }
-                          >
-                            {gender.name}
-                          </span>
-                        </div>
-                      </button>
-                    ))}
+                    {Array.isArray(genders) ? (
+                      genders.map((gender) => (
+                        <button
+                          key={gender.id}
+                          className={`block w-full text-left py-2.5 px-4 text-sm transition-all rounded-lg ${
+                            activeGenderId === gender.id
+                              ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium shadow-sm"
+                              : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                          }`}
+                          onClick={() => {
+                            setActiveGenderId(gender.id);
+
+                            // Actualizar URL directamente
+                            const url = new URL(window.location.href);
+                            url.searchParams.set(
+                              "genero",
+                              gender.id.toString()
+                            );
+                            window.history.pushState({}, "", url.toString());
+
+                            scrollToProducts();
+                            setMobileFiltersOpen(false);
+                          }}
+                        >
+                          <div className="flex items-center">
+                            {activeGenderId === gender.id && (
+                              <Check className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
+                            )}
+                            <span
+                              className={
+                                activeGenderId === gender.id ? "ml-0" : "ml-6"
+                              }
+                            >
+                              {gender.name}
+                            </span>
+                          </div>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="text-gray-500 dark:text-gray-400 text-sm py-2">
+                        No hay géneros disponibles
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -322,6 +488,7 @@ export default function ProductFilters({
                       onClick={() => {
                         setActiveSort("default");
                         scrollToProducts();
+                        setMobileFiltersOpen(false);
                       }}
                     >
                       <div className="flex items-center">
@@ -344,6 +511,7 @@ export default function ProductFilters({
                       onClick={() => {
                         setActiveSort("price-low");
                         scrollToProducts();
+                        setMobileFiltersOpen(false);
                       }}
                     >
                       <div className="flex items-center">
@@ -368,6 +536,7 @@ export default function ProductFilters({
                       onClick={() => {
                         setActiveSort("price-high");
                         scrollToProducts();
+                        setMobileFiltersOpen(false);
                       }}
                     >
                       <div className="flex items-center">
@@ -392,6 +561,7 @@ export default function ProductFilters({
                       onClick={() => {
                         setActiveSort("newest");
                         scrollToProducts();
+                        setMobileFiltersOpen(false);
                       }}
                     >
                       <div className="flex items-center">
@@ -416,6 +586,7 @@ export default function ProductFilters({
                     onClick={() => {
                       clearAllFilters();
                       scrollToProducts();
+                      setMobileFiltersOpen(false);
                     }}
                     className="w-full py-3 mt-4 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center justify-center gap-1.5 bg-blue-50 dark:bg-blue-900/20 px-3 rounded-lg"
                   >
@@ -441,7 +612,7 @@ export default function ProductFilters({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6 }}
-        className="hidden w-72 flex-shrink-0"
+        className="hidden md:block w-72 flex-shrink-0"
       >
         {/* Decorative elements */}
         <div className="absolute -z-10 pointer-events-none">
@@ -497,34 +668,111 @@ export default function ProductFilters({
                   </span>
                 </div>
               </button>
-              {categories.map((category) => (
-                <button
-                  key={category.id}
-                  className={`block w-full text-left py-2.5 px-4 text-sm transition-all rounded-lg ${
-                    activeCategoryId === category.id
-                      ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium shadow-sm"
-                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                  }`}
-                  onClick={() => {
-                    setActiveCategoryId(category.id);
-                    scrollToProducts();
-                  }}
-                >
-                  <div className="flex items-center">
-                    {activeCategoryId === category.id && (
-                      <Check className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                    )}
-                    <span
-                      className={
-                        activeCategoryId === category.id ? "ml-0" : "ml-6"
-                      }
-                    >
-                      {category.name}
-                    </span>
-                  </div>
-                </button>
-              ))}
+              {safeCategories.length > 0 ? (
+                safeCategories.map((category) => (
+                  <button
+                    key={category.id}
+                    className={`block w-full text-left py-2.5 px-4 text-sm transition-all rounded-lg ${
+                      activeCategoryId === category.id
+                        ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium shadow-sm"
+                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                    }`}
+                    onClick={() => {
+                      setActiveCategoryId(category.id);
+                      scrollToProducts();
+                    }}
+                  >
+                    <div className="flex items-center">
+                      {activeCategoryId === category.id && (
+                        <Check className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
+                      )}
+                      <span
+                        className={
+                          activeCategoryId === category.id ? "ml-0" : "ml-6"
+                        }
+                      >
+                        {category.name}
+                      </span>
+                    </div>
+                  </button>
+                ))
+              ) : (
+                <div className="text-gray-500 dark:text-gray-400 text-sm py-2">
+                  No hay categorías disponibles
+                </div>
+              )}
             </div>
+          </div>
+
+          {/* Tipo de manga/cuello */}
+          <div className="mb-12">
+            <h4 className="font-medium text-gray-900 dark:text-white mb-6 text-sm uppercase tracking-widest flex items-center">
+              <span className="w-6 h-0.5 bg-blue-600 dark:bg-blue-400 mr-2"></span>
+              Tipo de Manga
+            </h4>
+            <div className="space-y-3">
+              <button
+                className={`block w-full text-left py-2.5 px-4 text-sm transition-all rounded-lg ${
+                  activeSleeveId === null
+                    ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium shadow-sm"
+                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                }`}
+                onClick={() => {
+                  setActiveSleeveId(null);
+                  scrollToProducts();
+                }}
+              >
+                <div className="flex items-center">
+                  {activeSleeveId === null && (
+                    <Check className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
+                  )}
+                  <span className={activeSleeveId === null ? "ml-0" : "ml-6"}>
+                    Todos los Tipos
+                  </span>
+                </div>
+              </button>
+              {Array.isArray(sleeves) ? (
+                sleeves.map((sleeve) => (
+                  <button
+                    key={sleeve.id}
+                    className={`block w-full text-left py-2.5 px-4 text-sm transition-all rounded-lg ${
+                      activeSleeveId === sleeve.id
+                        ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium shadow-sm"
+                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                    }`}
+                    onClick={() => {
+                      setActiveSleeveId(sleeve.id);
+                      scrollToProducts();
+                    }}
+                  >
+                    <div className="flex items-center">
+                      {activeSleeveId === sleeve.id && (
+                        <Check className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
+                      )}
+                      <span
+                        className={
+                          activeSleeveId === sleeve.id ? "ml-0" : "ml-6"
+                        }
+                      >
+                        {sleeve.name}
+                      </span>
+                    </div>
+                  </button>
+                ))
+              ) : (
+                <div className="text-gray-500 dark:text-gray-400 text-sm py-2">
+                  No hay tipos disponibles
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Rango de precio */}
+          <div className="mb-12">
+            <PriceRangeFilter
+              priceRange={priceRange}
+              setPriceRange={setPriceRange}
+            />
           </div>
 
           {/* Colores */}
@@ -548,26 +796,32 @@ export default function ProductFilters({
               >
                 <X className="h-4 w-4 text-gray-700 dark:text-gray-300" />
               </button>
-              {colors.map((color) => (
-                <button
-                  key={color.id}
-                  className={`w-10 h-10 rounded-full transition-all duration-200 ${
-                    activeColorId === color.id
-                      ? "ring-2 ring-offset-2 ring-blue-500 dark:ring-blue-400 dark:ring-offset-gray-900"
-                      : ""
-                  } relative group border border-gray-200 dark:border-gray-700 shadow-md`}
-                  style={{ backgroundColor: color.hexValue }}
-                  onClick={() => {
-                    setActiveColorId(color.id);
-                    scrollToProducts();
-                  }}
-                  aria-label={`Color: ${color.name}`}
-                >
-                  <span className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-3 py-1.5 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap z-10 shadow-lg">
-                    {color.name}
-                  </span>
-                </button>
-              ))}
+              {Array.isArray(colors) ? (
+                colors.map((color) => (
+                  <button
+                    key={color.id}
+                    className={`w-10 h-10 rounded-full transition-all duration-200 ${
+                      activeColorId === color.id
+                        ? "ring-2 ring-offset-2 ring-blue-500 dark:ring-blue-400 dark:ring-offset-gray-900"
+                        : ""
+                    } relative group border border-gray-200 dark:border-gray-700 shadow-md`}
+                    style={{ backgroundColor: color.hexValue }}
+                    onClick={() => {
+                      setActiveColorId(color.id);
+                      scrollToProducts();
+                    }}
+                    aria-label={`Color: ${color.name}`}
+                  >
+                    <span className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-3 py-1.5 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap z-10 shadow-lg pointer-events-none">
+                      {color.name}
+                    </span>
+                  </button>
+                ))
+              ) : (
+                <div className="text-gray-500 dark:text-gray-400 text-sm py-2">
+                  No hay colores disponibles
+                </div>
+              )}
             </div>
           </div>
 
@@ -586,27 +840,45 @@ export default function ProductFilters({
                 }`}
                 onClick={() => {
                   setActiveSizeId(null);
+
+                  // Actualizar URL directamente
+                  const url = new URL(window.location.href);
+                  url.searchParams.delete("talla");
+                  window.history.pushState({}, "", url.toString());
+
                   scrollToProducts();
                 }}
               >
                 Todas
               </button>
-              {sizes.map((size) => (
-                <button
-                  key={size.id}
-                  className={`py-3 text-sm font-medium transition-all rounded-lg ${
-                    activeSizeId === size.id
-                      ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
-                      : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700"
-                  }`}
-                  onClick={() => {
-                    setActiveSizeId(size.id);
-                    scrollToProducts();
-                  }}
-                >
-                  {size.name}
-                </button>
-              ))}
+              {Array.isArray(sizes) ? (
+                sizes.map((size) => (
+                  <button
+                    key={size.id}
+                    className={`py-3 text-sm font-medium transition-all rounded-lg ${
+                      activeSizeId === size.id
+                        ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
+                        : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700"
+                    }`}
+                    onClick={() => {
+                      setActiveSizeId(size.id);
+
+                      // Actualizar URL directamente
+                      const url = new URL(window.location.href);
+                      url.searchParams.set("talla", size.id.toString());
+                      window.history.pushState({}, "", url.toString());
+
+                      scrollToProducts();
+                    }}
+                  >
+                    {size.name}
+                  </button>
+                ))
+              ) : (
+                <div className="text-gray-500 dark:text-gray-400 text-sm py-2">
+                  No hay tallas disponibles
+                </div>
+              )}
             </div>
           </div>
 
@@ -637,31 +909,45 @@ export default function ProductFilters({
                   </span>
                 </div>
               </button>
-              {genders.map((gender) => (
-                <button
-                  key={gender.id}
-                  className={`block w-full text-left py-2.5 px-4 text-sm transition-all rounded-lg ${
-                    activeGenderId === gender.id
-                      ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium shadow-sm"
-                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                  }`}
-                  onClick={() => {
-                    setActiveGenderId(gender.id);
-                    scrollToProducts();
-                  }}
-                >
-                  <div className="flex items-center">
-                    {activeGenderId === gender.id && (
-                      <Check className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                    )}
-                    <span
-                      className={activeGenderId === gender.id ? "ml-0" : "ml-6"}
-                    >
-                      {gender.name}
-                    </span>
-                  </div>
-                </button>
-              ))}
+              {Array.isArray(genders) ? (
+                genders.map((gender) => (
+                  <button
+                    key={gender.id}
+                    className={`block w-full text-left py-2.5 px-4 text-sm transition-all rounded-lg ${
+                      activeGenderId === gender.id
+                        ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium shadow-sm"
+                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                    }`}
+                    onClick={() => {
+                      setActiveGenderId(gender.id);
+
+                      // Actualizar URL directamente
+                      const url = new URL(window.location.href);
+                      url.searchParams.set("genero", gender.id.toString());
+                      window.history.pushState({}, "", url.toString());
+
+                      scrollToProducts();
+                    }}
+                  >
+                    <div className="flex items-center">
+                      {activeGenderId === gender.id && (
+                        <Check className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
+                      )}
+                      <span
+                        className={
+                          activeGenderId === gender.id ? "ml-0" : "ml-6"
+                        }
+                      >
+                        {gender.name}
+                      </span>
+                    </div>
+                  </button>
+                ))
+              ) : (
+                <div className="text-gray-500 dark:text-gray-400 text-sm py-2">
+                  No hay géneros disponibles
+                </div>
+              )}
             </div>
           </div>
 

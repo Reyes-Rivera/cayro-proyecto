@@ -28,6 +28,7 @@ import {
 import { cn } from "@/lib/utils";
 import { getCategoriesFaqs, getFaqs } from "@/api/faqs";
 import Breadcrumbs from "@/components/web-components/Breadcrumbs";
+import Loader from "@/components/web-components/Loader";
 
 // Tipos basados en los modelos de la base de datos
 export interface FaqItem {
@@ -259,23 +260,11 @@ const Faq = ({
     return category ? category.name : "General";
   };
 
-  // Loading Component - Memoized to prevent unnecessary re-renders
-  const LoadingScreen = memo(() => {
-    return (
-      <div className="fixed inset-0 bg-white dark:bg-gray-900 z-50 flex flex-col items-center justify-center">
-        <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4"></div>
-        <p className="text-gray-700 dark:text-gray-300 text-lg font-medium">
-          Cargando...
-        </p>
-      </div>
-    );
-  });
-  LoadingScreen.displayName = "LoadingScreen";
-
+  
   return (
     <>
-      {isPageLoading && <LoadingScreen />}
-      <div className="min-h-screen bg-white dark:bg-gray-900 overflow-x-hidden">
+      {isPageLoading && <Loader />}
+      <div className="min-h-screen mt-5 bg-white dark:bg-gray-900 overflow-x-hidden">
         {/* Hero Section */}
         <div className="relative min-h-screen bg-white dark:bg-gray-900 flex items-center">
           {/* Background decoration - Enhanced with about page style */}
@@ -478,37 +467,7 @@ const Faq = ({
             </div>
           </div>
 
-          {/* Scroll indicator - Enhanced with about page style */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={animateHero ? { opacity: 1 } : { opacity: 0 }}
-            transition={{ delay: 1.5, duration: 1 }}
-            className="absolute bottom-6 left-1/2 transform -translate-x-1/2 cursor-pointer z-20"
-            onClick={scrollToContent}
-          >
-            <motion.div
-              animate={{ y: [0, 10, 0] }}
-              transition={{
-                duration: 2,
-                repeat: Number.POSITIVE_INFINITY,
-                repeatType: "loop",
-              }}
-              className="flex flex-col items-center gap-2"
-            >
-              <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">
-                Descubre más
-              </p>
-              <motion.div
-                animate={{
-                  y: [0, 5, 0],
-                }}
-                transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
-                className="w-8 h-8 rounded-full flex items-center justify-center border border-gray-300 dark:border-gray-700"
-              >
-                <ChevronDown className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-              </motion.div>
-            </motion.div>
-          </motion.div>
+        
         </div>
 
         {/* FAQ Content */}

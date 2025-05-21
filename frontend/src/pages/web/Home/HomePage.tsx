@@ -25,6 +25,7 @@ import HomeHero from "./components/HeroPage";
 import { NavLink } from "react-router-dom";
 import WhyUs from "./assets/whyus.jpg";
 import Custom from "./assets/personalizar.jpg";
+import Loader from "@/components/web-components/Loader";
 // Types
 interface Category {
   title: string;
@@ -38,17 +39,6 @@ interface CategoryCardProps {
   index: number;
 }
 
-// Loading Component - Simplified
-const LoadingScreen = () => {
-  return (
-    <div className="fixed inset-0 bg-white dark:bg-gray-900 z-50 flex flex-col items-center justify-center">
-      <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4"></div>
-      <p className="text-gray-700 dark:text-gray-300 text-lg font-medium">
-        Cargando...
-      </p>
-    </div>
-  );
-};
 
 const categories: Category[] = [
   { title: "Polos", image: Polos },
@@ -131,8 +121,8 @@ export default function Home() {
 
   return (
     <>
-      {isLoading && <LoadingScreen />}
-      <main className="min-h-screen bg-white dark:bg-gray-900 overflow-x-hidden">
+      {isLoading && <Loader />}
+      <main className="min-h-screen mt-5 bg-white dark:bg-gray-900 overflow-x-hidden">
         {/* Hero Section */}
         <HomeHero />
 

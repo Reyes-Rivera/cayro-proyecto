@@ -270,7 +270,7 @@ const ContactFormSection = ({
                       value={formData.firstName}
                       onChange={handleChange}
                       required
-                      className="w-full rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-100 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 outline-none transition-all"
+                      className="w-full rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-100 border border-gray-300 dark:border-gray-600  focus:ring-blue-500 focus:border-blue-500 p-3 outline-none transition-all"
                     />
                   </div>
 
@@ -291,7 +291,7 @@ const ContactFormSection = ({
                       value={formData.lastName}
                       onChange={handleChange}
                       required
-                      className="w-full rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-100 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 outline-none transition-all"
+                      className="w-full rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-100 border border-gray-300 dark:border-gray-600  focus:ring-blue-500 focus:border-blue-500 p-3 outline-none transition-all"
                     />
                   </div>
 
@@ -313,7 +313,7 @@ const ContactFormSection = ({
                       onChange={handleChange}
                       required
                       pattern="^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
-                      className="w-full rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-100 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 outline-none transition-all"
+                      className="w-full rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-100 border border-gray-300 dark:border-gray-600  focus:ring-blue-500 focus:border-blue-500 p-3 outline-none transition-all"
                     />
                   </div>
 
@@ -334,7 +334,7 @@ const ContactFormSection = ({
                       value={formData.service}
                       onChange={handleChange}
                       required
-                      className="w-full rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-100 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 outline-none transition-all"
+                      className="w-full rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-100 border border-gray-300 dark:border-gray-600  focus:ring-blue-500 focus:border-blue-500 p-3 outline-none transition-all"
                     />
                   </div>
 
@@ -355,7 +355,7 @@ const ContactFormSection = ({
                       value={formData.subject}
                       onChange={handleChange}
                       required
-                      className="w-full rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-100 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 outline-none transition-all"
+                      className="w-full rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-100 border border-gray-300 dark:border-gray-600  focus:ring-blue-500 focus:border-blue-500 p-3 outline-none transition-all"
                     />
                   </div>
 
@@ -376,7 +376,7 @@ const ContactFormSection = ({
                       onChange={handleChange}
                       required
                       rows={5}
-                      className="w-full rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-100 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 outline-none transition-all resize-none"
+                      className="w-full rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-100 border border-gray-300 dark:border-gray-600  focus:ring-blue-500 focus:border-blue-500 p-3 outline-none transition-all resize-none"
                     />
                   </div>
 

@@ -147,7 +147,7 @@ export default function ProductGrid({
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-14 relative z-10"
+            className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 md:gap-x-8 gap-y-10 md:gap-y-14 relative z-10"
           >
             {validProducts.map((product) => (
               <motion.div key={product.id} variants={itemVariants}>
@@ -198,7 +198,7 @@ export default function ProductGrid({
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-14 relative z-10"
+        className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 md:gap-x-8 gap-y-10 md:gap-y-14 relative z-10"
       >
         {validProducts.map((product) => (
           <motion.div key={product.id} variants={itemVariants}>

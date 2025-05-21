@@ -9,7 +9,7 @@ interface SearchBarProps {
   setSearchTerm: (term: string) => void;
 }
 
-export default function SearchBar({
+export default function QuickSearch({
   searchTerm,
   setSearchTerm,
 }: SearchBarProps) {
@@ -18,7 +18,20 @@ export default function SearchBar({
     const searchValue = (
       e.currentTarget.elements.namedItem("search") as HTMLInputElement
     ).value;
+
+    // Actualizar el término de búsqueda
     setSearchTerm(searchValue);
+
+    // Actualizar la URL con el parámetro de búsqueda
+    const url = new URL(window.location.href);
+    if (searchValue.trim()) {
+      url.searchParams.set("search", searchValue);
+    } else {
+      url.searchParams.delete("search");
+    }
+
+    // Actualizar la URL sin recargar la página
+    window.history.pushState({}, "", url.toString());
   };
 
   return (

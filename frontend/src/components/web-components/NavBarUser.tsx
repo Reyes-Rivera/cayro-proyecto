@@ -208,13 +208,18 @@ const NavBarUser = () => {
     }
     if (searchQuery.trim()) {
       // Navigate to search results page
-      window.location.href = `/productos?buscar=${encodeURIComponent(
+      window.location.href = `/productos?search=${encodeURIComponent(
         searchQuery.trim()
       )}`;
       setIsSearchOpen(false);
       setSearchQuery("");
     }
   };
+
+  // Only show navbar for non-authenticated users or users with USER role
+  if (auth && (user?.role === "ADMIN" || user?.role === "EMPLOYEE")) {
+    return null;
+  }
 
   return (
     <>

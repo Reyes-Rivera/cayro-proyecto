@@ -36,6 +36,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import Loader from "@/components/web-components/Loader";
 
 // Modificar el tipo FormData para eliminar loginType
 type FormData = {
@@ -221,13 +222,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 relative overflow-hidden mt-10">
       {/* Loading Screen */}
-      {pageLoading && (
-        <div className="fixed inset-0 bg-white dark:bg-gray-900 z-50 flex flex-col items-center justify-center">
-          <div className="relative">
-            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4"></div>
-          </div>
-        </div>
-      )}
+      {pageLoading && <Loader />}
 
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -355,9 +350,7 @@ export default function LoginPage() {
               >
                 <div className="relative">
                   <img
-                    src={
-                      backgroundImage 
-                    }
+                    src={backgroundImage}
                     alt="Cayro Uniformes"
                     className="w-full max-w-md mx-auto rounded-2xl shadow-2xl object-cover"
                   />
@@ -717,8 +710,6 @@ export default function LoginPage() {
                 </motion.div>
               </form>
             </div>
-
-           
           </motion.div>
         </div>
       </div>

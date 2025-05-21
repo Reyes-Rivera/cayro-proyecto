@@ -107,7 +107,7 @@ export default function AboutPage() {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 overflow-x-hidden">
+    <div className="bg-white mt-5 dark:bg-gray-900 overflow-x-hidden">
       {/* Hero Section - Two column layout with content left, images right */}
       <div className="relative min-h-[90vh] bg-white dark:bg-gray-900 flex items-center">
         {/* Background elements */}

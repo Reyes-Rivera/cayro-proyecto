@@ -16,6 +16,12 @@ export interface Product {
   variants: ProductVariant[]
 }
 
+export interface Image {
+  id: number
+  url:string
+  angle:string        // Puede ser "front", "side", "back", etc.
+  
+}
 export interface ProductVariant {
   id: number
   productId: number
@@ -24,7 +30,7 @@ export interface ProductVariant {
   price: number
   stock: number
   barcode: string
-  imageUrl: string
+  images: Image[]
   color: Color
   size: Size
 }

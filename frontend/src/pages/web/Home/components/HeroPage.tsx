@@ -11,7 +11,6 @@ import {
   ChevronLeft,
   Pause,
   Play,
-  ChevronDown,
 } from "lucide-react";
 
 // Importaciones de imágenes
@@ -271,9 +270,6 @@ export default function HomeHero() {
     setAnimateHero(true);
   }, []);
 
-  const scrollToCategories = () => {
-    categoriesRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
 
   return (
     <>
@@ -409,31 +405,7 @@ export default function HomeHero() {
           </div>
         </div>
 
-        {/* Scroll indicator - with animation */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={animateHero ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-          transition={{ duration: 0.5, delay: 1 }}
-          className="absolute bottom-6 left-1/2 transform -translate-x-1/2 cursor-pointer z-20"
-          onClick={scrollToCategories}
-        >
-          <motion.div
-            animate={{ y: [0, 8, 0] }}
-            transition={{
-              duration: 2,
-              repeat: Number.POSITIVE_INFINITY,
-              repeatType: "loop",
-            }}
-            className="flex flex-col items-center gap-2"
-          >
-            <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">
-              Descubre más
-            </p>
-            <div className="w-10 h-10 rounded-full flex items-center justify-center border border-gray-300 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-md">
-              <ChevronDown className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-            </div>
-          </motion.div>
-        </motion.div>
+      
       </div>
 
       {/* Categories section reference */}
