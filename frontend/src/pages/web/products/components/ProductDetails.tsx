@@ -23,7 +23,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Color, Product } from "../utils/products";
+import { Color, Product } from "../../../../types/products";
 
 // Interfaces based on the database schema
 

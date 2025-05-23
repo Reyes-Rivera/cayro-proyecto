@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import type { Product } from "../utils/products";
+import type { Product } from "../../../../types/products";
 import { AlertCircle, RefreshCw, PackageOpen, ShoppingBag } from "lucide-react";
 import ProductCard from "./ProductCard";
 

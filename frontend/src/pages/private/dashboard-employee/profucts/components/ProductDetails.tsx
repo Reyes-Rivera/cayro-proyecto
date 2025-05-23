@@ -31,31 +31,8 @@ import type {
   Category,
   NeckType,
   Color,
+  Product,
 } from "../data/sampleData";
-
-interface ProductVariant {
-  id: number;
-  colorId: number;
-  sizeId: number;
-  price: number;
-  stock: number;
-  barcode: string;
-  imageUrl: string;
-}
-
-interface Product {
-  id: number;
-  name: string;
-  description: string;
-  brandId: number;
-  genderId: number;
-  categoryId: number;
-  sleeveId: number | null;
-  active: boolean;
-  createdAt: string;
-  updatedAt: string;
-  variants: ProductVariant[];
-}
 
 interface ProductDetailsProps {
   product: Product;
@@ -70,7 +47,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, onBack }) => {
   const [category, setCategory] = useState<Category[]>();
   const [neckType, setNeckType] = useState<NeckType[]>();
   const [colors, setColors] = useState<Color[]>();
-
+  console.log(product);
   const getBrandName = (brandId: number) =>
     brands?.find((b) => b.id === brandId)?.name || "Desconocido";
   const getGenderName = (genderId: number) =>
@@ -364,13 +341,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, onBack }) => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="w-16 h-16 rounded-md overflow-hidden border border-gray-200 dark:border-gray-700">
                         <img
-                          src={
-                            variant.imageUrl ||
-                            "/placeholder.svg?height=64&width=64" ||
-                            "/placeholder.svg" ||
-                            "/placeholder.svg" ||
-                            "/placeholder.svg"
-                          }
+                          src={variant.images[0]?.url}
                           alt={`${getColorName(variant.colorId)} ${getSizeName(
                             variant.sizeId
                           )}`}

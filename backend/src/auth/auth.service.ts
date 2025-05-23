@@ -507,6 +507,7 @@ export class AuthService {
         phone: entity.phone,
         birthdate: entity.birthdate,
         role: entity.role,
+        gender:entity.gender
       };
     } catch (error) {
       if (error instanceof HttpException) {

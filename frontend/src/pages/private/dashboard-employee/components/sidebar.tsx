@@ -486,7 +486,7 @@ export default function Sidebar({
               </button>
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              Administrador
+              Empleado
             </p>
           </div>
         </div>

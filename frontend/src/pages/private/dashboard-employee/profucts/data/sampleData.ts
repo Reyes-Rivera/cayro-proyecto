@@ -11,9 +11,13 @@ export interface Product {
   categoryId: number;
   variants: ProductVariant[];
 }
-
+export interface Images {
+  id: number;
+  productVariantId: number;
+  url: string;
+}
 export interface ProductVariant {
-  imageUrl: string;
+  images: Images[];
   id: number;
   productId: number;
   colorId: number;
@@ -66,7 +70,6 @@ export interface CreateProductDto {
 }
 
 export interface ProductVariantDto {
-  id?:number
   colorId: number;
   sizeId: number;
   price: number;

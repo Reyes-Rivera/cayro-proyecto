@@ -1,24 +1,7 @@
-"use client";
-
-import type React from "react";
-import { useState, useMemo, useEffect, useRef } from "react";
-import type {
-  Product,
-  Brand,
-  Gender,
-  Category,
-  NeckType,
-} from "../data/sampleData";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import {
-  getBrands,
-  getCategories,
-  getGenders,
-  getSleeve,
-} from "@/api/products";
-import {
-  Edit,
-  Trash,
-  Eye,
+  ChevronDown,
+  ChevronUp,
   Package,
   Search,
   Plus,
@@ -26,17 +9,33 @@ import {
   ArrowUpDown,
   Check,
   X,
-  ChevronDown,
-  ChevronUp,
   ChevronLeft,
   ChevronRight,
-  SlidersHorizontal,
   XCircle,
   Package2,
+  Loader2,
+  Edit,
+  Trash,
+  Eye,
 } from "lucide-react";
+import type {
+  Brand,
+  Category,
+  Gender,
+  NeckType,
+  Product,
+} from "../data/sampleData";
+import FilterPanel from "./FilterPanel";
 import Swal from "sweetalert2";
+import {
+  getBrands,
+  getCategories,
+  getGenders,
+  getSleeve,
+} from "@/api/products";
 
-// Modificar la interfaz ProductListProps para incluir onFilterChange
+type FilterKey = "categories" | "brands" | "genders" | "neckTypes";
+
 interface ProductListProps {
   products: Product[];
   totalProducts: number;
@@ -47,6 +46,7 @@ interface ProductListProps {
   onActivate: (id: number) => void;
   onDeactivate: (id: number) => void;
   onFilterChange: (filterParams: string) => void;
+  isTableLoading?: boolean;
 }
 
 // Opciones de ordenación
@@ -75,12 +75,16 @@ const ProductList: React.FC<ProductListProps> = ({
   onActivate,
   onDeactivate,
   onFilterChange,
+  isTableLoading = false,
 }) => {
-  // Estado para búsqueda
   const [searchTerm, setSearchTerm] = useState("");
-
-  // Estado para filtros
   const [showFilters, setShowFilters] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [isLoading, setIsLoading] = useState(true);
+  const filterPanelRef = useRef<HTMLDivElement>(null);
+  const sortPanelRef = useRef<HTMLDivElement>(null);
+
   const initialFilters = {
     categories: [] as number[],
     brands: [] as number[],
@@ -88,238 +92,10 @@ const ProductList: React.FC<ProductListProps> = ({
     neckTypes: [] as number[],
     active: null as boolean | null,
   };
-  const [filters, setFilters] = useState(initialFilters);
 
-  // Estado para ordenación
+  const [filters, setFilters] = useState(initialFilters);
   const [sortBy, setSortBy] = useState<SortOption>(sortOptions[0]);
   const [showSortOptions, setShowSortOptions] = useState(false);
-
-  // Estado para paginación
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
-
-  // Estado para carga de datos
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Añadir esta variable de estado al inicio del componente, justo después de las otras declaraciones de estado
-  const searchTimeout = useRef<NodeJS.Timeout | null>(null);
-
-  // Tipos de claves de filtro
-  type FilterKey = keyof typeof filters;
-
-  // Modificar la función handleFilterChange para construir y enviar los parámetros de filtro a la API
-  const handleFilterChange = (type: FilterKey, id: number) => {
-    setFilters((prev) => {
-      const currentFilter = prev[type] as number[];
-      const newFilters = {
-        ...prev,
-        [type]: currentFilter.includes(id)
-          ? currentFilter.filter((item) => item !== id)
-          : [...currentFilter, id],
-      };
-
-      // Construir y enviar los parámetros de filtro
-      const filterParams = buildFilterParams(
-        newFilters,
-        searchTerm,
-        currentPage,
-        itemsPerPage
-      );
-      onFilterChange(filterParams);
-
-      return newFilters;
-    });
-    setCurrentPage(1);
-  };
-
-  // Modificar handleActiveFilterChange para enviar los parámetros de filtro
-  const handleActiveFilterChange = (value: boolean | null) => {
-    setFilters((prev) => {
-      const newFilters = {
-        ...prev,
-        active: prev.active === value ? null : value,
-      };
-
-      // Construir y enviar los parámetros de filtro
-      const filterParams = buildFilterParams(
-        newFilters,
-        searchTerm,
-        currentPage,
-        itemsPerPage
-      );
-      onFilterChange(filterParams);
-
-      return newFilters;
-    });
-    setCurrentPage(1);
-  };
-
-  // Modificar clearAllFilters para enviar los parámetros de filtro vacíos
-  const clearAllFilters = () => {
-    const emptyFilters = {
-      categories: [],
-      brands: [],
-      genders: [],
-      neckTypes: [],
-      active: null,
-    };
-    setFilters(emptyFilters);
-    setSearchTerm("");
-    setCurrentPage(1);
-
-    // Enviar parámetros de filtro vacíos
-    const filterParams = buildFilterParams(
-      emptyFilters,
-      "",
-      currentPage,
-      itemsPerPage
-    );
-    onFilterChange(filterParams);
-  };
-
-  // Modificar la función buildFilterParams para manejar correctamente el término de búsqueda
-  const buildFilterParams = (
-    filters: typeof initialFilters,
-    search: string,
-    page: number,
-    limit: number
-  ) => {
-    const params = new URLSearchParams();
-
-    // Añadir parámetros de paginación
-    params.append("page", page.toString());
-    params.append("limit", limit.toString());
-
-    // Añadir término de búsqueda
-    if (search) {
-      params.append("search", search);
-    }
-
-    // Añadir categorías
-    if (filters.categories.length > 0) {
-      params.append("category", filters.categories[0].toString());
-    }
-
-    // Añadir géneros
-    if (filters.genders.length > 0) {
-      params.append("genders", filters.genders.join(","));
-    }
-
-    // Añadir tipos de manga/cuello
-    if (filters.neckTypes.length > 0) {
-      params.append("sleeves", filters.neckTypes.join(","));
-    }
-
-    // Añadir estado activo/inactivo
-    if (filters.active !== null) {
-      params.append("active", filters.active.toString());
-    }
-
-    // Añadir marcas
-    if (filters.brands.length > 0) {
-      params.append("brand", filters.brands[0].toString());
-    }
-
-    return params.toString();
-  };
-
-  // Filtrar y ordenar productos
-  const filteredAndSortedProducts = useMemo(() => {
-    // Primero filtramos por término de búsqueda
-    let result = products.filter(
-      (product) =>
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (product.description &&
-          product.description.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
-
-    // Luego aplicamos los filtros
-    if (filters.categories.length > 0) {
-      result = result.filter((product) =>
-        filters.categories.includes(product.categoryId)
-      );
-    }
-
-    if (filters.brands.length > 0) {
-      result = result.filter((product) =>
-        filters.brands.includes(product.brandId)
-      );
-    }
-
-    if (filters.genders.length > 0) {
-      result = result.filter((product) =>
-        filters.genders.includes(product.genderId)
-      );
-    }
-
-    if (filters.neckTypes.length > 0) {
-      result = result.filter(
-        (product) =>
-          product.sleeveId !== null &&
-          filters.neckTypes.includes(product.sleeveId)
-      );
-    }
-
-    if (filters.active !== null) {
-      result = result.filter((product) => product.active === filters.active);
-    }
-
-    // Finalmente ordenamos
-    return result.sort((a, b) => {
-      const aValue = a[sortBy.value as keyof Product];
-      const bValue = b[sortBy.value as keyof Product];
-
-      if (typeof aValue === "string" && typeof bValue === "string") {
-        return sortBy.direction === "asc"
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue);
-      }
-
-      if (aValue instanceof Date && bValue instanceof Date) {
-        return sortBy.direction === "asc"
-          ? aValue.getTime() - bValue.getTime()
-          : bValue.getTime() - aValue.getTime();
-      }
-
-      // Para fechas en formato string
-      if (sortBy.value === "createdAt" || sortBy.value === "updatedAt") {
-        const dateA = new Date(a[sortBy.value as keyof Product] as string);
-        const dateB = new Date(b[sortBy.value as keyof Product] as string);
-        return sortBy.direction === "asc"
-          ? dateA.getTime() - dateB.getTime()
-          : dateB.getTime() - dateA.getTime();
-      }
-
-      // Para valores numéricos
-      if (typeof aValue === "number" && typeof bValue === "number") {
-        return sortBy.direction === "asc" ? aValue - bValue : bValue - aValue;
-      }
-
-      return 0;
-    });
-  }, [products, searchTerm, filters, sortBy]);
-
-  // Calcular productos paginados
-  const paginatedProducts = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return filteredAndSortedProducts.slice(
-      startIndex,
-      startIndex + itemsPerPage
-    );
-  }, [filteredAndSortedProducts, currentPage, itemsPerPage]);
-
-  // Verificar si hay filtros activos
-  const hasActiveFilters = useMemo(() => {
-    return (
-      filters.categories.length > 0 ||
-      filters.brands.length > 0 ||
-      filters.genders.length > 0 ||
-      filters.neckTypes.length > 0 ||
-      filters.active !== null ||
-      searchTerm !== ""
-    );
-  }, [filters, searchTerm]);
-
   const [brands, setBrands] = useState<Brand[]>();
   const [genders, setGenders] = useState<Gender[]>();
   const [category, setCategory] = useState<Category[]>();
@@ -334,6 +110,128 @@ const ProductList: React.FC<ProductListProps> = ({
   const getCategoryName = (categoryId: number) =>
     category?.find((c) => c.id === categoryId)?.name || "Desconocido";
 
+  // Function to handle search
+  const handleSearch = () => {
+    const filterParams = buildFilterParams(
+      filters,
+      searchTerm,
+      currentPage,
+      itemsPerPage
+    );
+    onFilterChange(filterParams);
+  };
+
+  // Function to handle filter changes
+  const handleFilterChange = (type: FilterKey, id: number) => {
+    setFilters((prev) => {
+      const currentFilter = prev[type] as number[];
+      return {
+        ...prev,
+        [type]: currentFilter.includes(id)
+          ? currentFilter.filter((item) => item !== id)
+          : [...currentFilter, id],
+      };
+    });
+  };
+
+  // Function to handle active filter change
+  const handleActiveFilterChange = (value: boolean | null) => {
+    setFilters((prev) => ({
+      ...prev,
+      active: prev.active === value ? null : value,
+    }));
+  };
+
+  // Function to clear all filters
+  const clearAllFilters = () => {
+    setFilters(initialFilters);
+    setSearchTerm("");
+    setCurrentPage(1);
+    const filterParams = buildFilterParams(initialFilters, "", 1, itemsPerPage);
+    onFilterChange(filterParams);
+  };
+
+  // Function to build filter parameters
+  const buildFilterParams = (
+    filters: typeof initialFilters,
+    search: string,
+    page: number,
+    limit: number
+  ) => {
+    const params = new URLSearchParams();
+    params.append("page", page.toString());
+    params.append("limit", limit.toString());
+    if (search) params.append("search", search);
+    if (filters.categories.length > 0)
+      params.append("category", filters.categories[0].toString());
+    if (filters.genders.length > 0)
+      params.append("genders", filters.genders.join(","));
+    if (filters.neckTypes.length > 0)
+      params.append("sleeves", filters.neckTypes.join(","));
+    if (filters.active !== null)
+      params.append("active", filters.active.toString());
+    if (filters.brands.length > 0)
+      params.append("brand", filters.brands[0].toString());
+    if (sortBy) {
+      params.append("sortBy", sortBy.value);
+      params.append("sortDirection", sortBy.direction);
+    }
+    return params.toString();
+  };
+
+  // Apply filters only when the Apply button is clicked
+  const applyFilters = () => {
+    const filterParams = buildFilterParams(
+      filters,
+      searchTerm,
+      currentPage,
+      itemsPerPage
+    );
+    onFilterChange(filterParams);
+    setShowFilters(false);
+  };
+
+  // Check if there are active filters
+  const hasActiveFilters = useMemo(() => {
+    return (
+      filters.categories.length > 0 ||
+      filters.brands.length > 0 ||
+      filters.genders.length > 0 ||
+      filters.neckTypes.length > 0 ||
+      filters.active !== null ||
+      searchTerm !== ""
+    );
+  }, [filters, searchTerm]);
+
+  // Effect to close filter and sort panels when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Handle filter panel
+      if (
+        filterPanelRef.current &&
+        !filterPanelRef.current.contains(event.target as Node) &&
+        !(event.target as Element).closest('[data-filter-button="true"]')
+      ) {
+        setShowFilters(false);
+      }
+
+      // Handle sort panel
+      if (
+        sortPanelRef.current &&
+        !sortPanelRef.current.contains(event.target as Node) &&
+        !(event.target as Element).closest('[data-sort-button="true"]')
+      ) {
+        setShowSortOptions(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Effect to load initial data
   useEffect(() => {
     const getData = async () => {
       setIsLoading(true);
@@ -352,31 +250,29 @@ const ProductList: React.FC<ProductListProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Encabezado de Página - Rediseñado para parecerse a la imagen */}
+      {/* Header section */}
       <div className="bg-blue-500 rounded-xl shadow-xl overflow-hidden relative">
-        <div className="p-6">
-          <div className="flex justify-between items-center">
+        <div className="p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex items-center">
-              <div className="bg-white/20 p-3 rounded-full mr-4">
-                <Package2 className="w-6 h-6 text-white" />
+              <div className="bg-white/20 p-2.5 sm:p-3 rounded-full mr-3 sm:mr-4">
+                <Package2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white">
+                <h2 className="text-xl sm:text-2xl font-bold text-white">
                   Listado de Productos
                 </h2>
-                <p className="mt-1 text-white/80 flex items-center">
-                  <Package className="w-3.5 h-3.5 mr-1.5 inline" />
-                  {filteredAndSortedProducts.length}{" "}
-                  {filteredAndSortedProducts.length === 1
-                    ? "producto"
-                    : "productos"}{" "}
-                  en el catálogo
+                <p className="mt-1 text-white/80 flex items-center text-sm sm:text-base">
+                  <Package className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1.5 inline" />
+                  {totalProducts}{" "}
+                  {totalProducts === 1 ? "producto" : "productos"} en el
+                  catálogo
                 </p>
               </div>
             </div>
             <button
-              className="bg-white/20 hover:bg-white/30 transition-colors text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center"
-              onClick={() => onAdd()}
+              className="w-full sm:w-auto bg-white/20 hover:bg-white/30 transition-colors text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center justify-center"
+              onClick={onAdd}
             >
               <Plus className="w-4 h-4 mr-2" />
               Nuevo Producto
@@ -385,68 +281,61 @@ const ProductList: React.FC<ProductListProps> = ({
         </div>
       </div>
 
-      {/* Barra de búsqueda y filtros - Rediseñado para parecerse a la imagen */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
-        <div className="flex flex-wrap gap-4 items-center justify-between mb-6">
-          {/* Barra de búsqueda */}
-          <div className="relative flex-grow max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="Buscar productos..."
-              className="pl-12 pr-4 py-3 w-full border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-              value={searchTerm}
-              onChange={(e) => {
-                const newSearchTerm = e.target.value;
-                setSearchTerm(newSearchTerm);
-
-                // Usar un temporizador para evitar demasiadas solicitudes mientras el usuario escribe
-                if (searchTimeout.current) {
-                  clearTimeout(searchTimeout.current);
-                }
-
-                searchTimeout.current = setTimeout(() => {
-                  setCurrentPage(1);
-                  // Construir y enviar los parámetros de filtro
-                  const filterParams = buildFilterParams(
-                    filters,
-                    newSearchTerm,
-                    1,
-                    itemsPerPage
-                  );
-                  onFilterChange(filterParams);
-                }, 500); // Esperar 500ms después de que el usuario deje de escribir
-              }}
-            />
-            {searchTerm && (
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 sm:p-6">
+        <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between mb-6">
+          {/* Search bar with button */}
+          <div className="relative flex-grow max-w-full md:max-w-md">
+            <div className="flex">
+              <div className="relative flex-grow">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder="Buscar productos..."
+                  className="pl-12 pr-4 py-3 w-full border border-gray-300 dark:border-gray-600 rounded-l-lg  focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === "Enter") {
+                      handleSearch();
+                    }
+                  }}
+                />
+                {searchTerm && (
+                  <button
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    onClick={() => {
+                      setSearchTerm("");
+                      const filterParams = buildFilterParams(
+                        filters,
+                        "",
+                        currentPage,
+                        itemsPerPage
+                      );
+                      onFilterChange(filterParams);
+                    }}
+                  >
+                    <XCircle className="w-5 h-5" />
+                  </button>
+                )}
+              </div>
               <button
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                onClick={() => {
-                  setSearchTerm("");
-                  const filterParams = buildFilterParams(
-                    filters,
-                    "",
-                    1,
-                    itemsPerPage
-                  );
-                  onFilterChange(filterParams);
-                }}
+                onClick={handleSearch}
+                className="px-4 py-3 bg-blue-500 text-white rounded-r-lg hover:bg-blue-600 transition-colors"
+                aria-label="Buscar"
               >
-                <XCircle className="w-5 h-5" />
+                <Search className="w-5 h-5" />
               </button>
-            )}
+            </div>
           </div>
 
-          {/* Botones de filtro y ordenación */}
-          <div className="flex items-center gap-2">
-            {/* Botón de filtro */}
+          {/* Filter and sort buttons */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            {/* Filter button */}
             <div className="relative">
               <button
-                className={`flex items-center gap-1 px-4 py-3 border rounded-lg transition-colors ${
-                  showFilters ||
-                  Object.values(filters).some((f) =>
-                    Array.isArray(f) ? f.length > 0 : f !== null
-                  )
+                data-filter-button="true"
+                className={`w-full sm:w-auto flex items-center justify-center gap-1 px-4 py-3 border rounded-lg transition-colors ${
+                  showFilters || hasActiveFilters
                     ? "bg-gray-100 border-gray-300 text-gray-700 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
                     : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
                 }`}
@@ -459,192 +348,61 @@ const ProductList: React.FC<ProductListProps> = ({
                 ) : (
                   <ChevronDown className="w-4 h-4 ml-1" />
                 )}
+                {hasActiveFilters && (
+                  <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-xs text-white">
+                    {filters.categories.length +
+                      filters.brands.length +
+                      filters.genders.length +
+                      filters.neckTypes.length +
+                      (filters.active !== null ? 1 : 0) +
+                      (searchTerm ? 1 : 0)}
+                  </span>
+                )}
               </button>
 
-              {/* Panel de filtros - Rediseñado para parecerse a la imagen */}
               {showFilters && (
-                <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-10">
-                  <div className="p-4">
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="font-semibold text-gray-700 dark:text-gray-300 flex items-center">
-                        <SlidersHorizontal className="w-4 h-4 mr-2" />
-                        Filtros
-                      </h3>
-                      {hasActiveFilters && (
-                        <button
-                          className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300"
-                          onClick={clearAllFilters}
-                        >
-                          Limpiar filtros
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Filtro por estado */}
-                    <div className="mb-4">
-                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Estado
-                      </h4>
-                      <div className="flex gap-2">
-                        <button
-                          className={`px-3 py-1.5 rounded-full text-xs font-medium ${
-                            filters.active === true
-                              ? "bg-green-100 text-green-800 border border-green-300 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800"
-                              : "bg-gray-100 text-gray-800 border border-gray-200 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
-                          }`}
-                          onClick={() => handleActiveFilterChange(true)}
-                        >
-                          Activo
-                        </button>
-                        <button
-                          className={`px-3 py-1.5 rounded-full text-xs font-medium ${
-                            filters.active === false
-                              ? "bg-red-100 text-red-800 border border-red-300 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800"
-                              : "bg-gray-100 text-gray-800 border border-gray-200 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
-                          }`}
-                          onClick={() => handleActiveFilterChange(false)}
-                        >
-                          Inactivo
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Filtro por categoría */}
-                    <div className="mb-4">
-                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Categoría
-                      </h4>
-                      {isLoading ? (
-                        <div className="text-sm text-gray-500 dark:text-gray-400">
-                          Cargando categorías...
-                        </div>
-                      ) : (
-                        <div className="space-y-1 max-h-32 overflow-y-auto">
-                          {category?.map((cat) => (
-                            <label key={cat.id} className="flex items-center">
-                              <input
-                                type="checkbox"
-                                className="rounded text-purple-600 focus:ring-purple-500 mr-2"
-                                checked={filters.categories.includes(cat.id)}
-                                onChange={() =>
-                                  handleFilterChange("categories", cat.id)
-                                }
-                              />
-                              <span className="text-sm text-gray-700 dark:text-gray-300">
-                                {cat.name}
-                              </span>
-                            </label>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Filtro por marca */}
-                    <div className="mb-4">
-                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Marca
-                      </h4>
-                      {isLoading ? (
-                        <div className="text-sm text-gray-500 dark:text-gray-400">
-                          Cargando marcas...
-                        </div>
-                      ) : (
-                        <div className="space-y-1 max-h-32 overflow-y-auto">
-                          {brands?.map((brand) => (
-                            <label key={brand.id} className="flex items-center">
-                              <input
-                                type="checkbox"
-                                className="rounded text-teal-600 focus:ring-teal-500 mr-2"
-                                checked={filters.brands.includes(brand.id)}
-                                onChange={() =>
-                                  handleFilterChange("brands", brand.id)
-                                }
-                              />
-                              <span className="text-sm text-gray-700 dark:text-gray-300">
-                                {brand.name}
-                              </span>
-                            </label>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Filtro por género */}
-                    <div className="mb-4">
-                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Género
-                      </h4>
-                      {isLoading ? (
-                        <div className="text-sm text-gray-500 dark:text-gray-400">
-                          Cargando géneros...
-                        </div>
-                      ) : (
-                        <div className="space-y-1">
-                          {genders?.map((gender) => (
-                            <label
-                              key={gender.id}
-                              className="flex items-center"
-                            >
-                              <input
-                                type="checkbox"
-                                className="rounded text-pink-600 focus:ring-pink-500 mr-2"
-                                checked={filters.genders.includes(gender.id)}
-                                onChange={() =>
-                                  handleFilterChange("genders", gender.id)
-                                }
-                              />
-                              <span className="text-sm text-gray-700 dark:text-gray-300">
-                                {gender.name}
-                              </span>
-                            </label>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Filtro por tipo de cuello */}
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Tipo de Cuello
-                      </h4>
-                      {isLoading ? (
-                        <div className="text-sm text-gray-500 dark:text-gray-400">
-                          Cargando tipos de cuello...
-                        </div>
-                      ) : (
-                        <div className="space-y-1">
-                          {neckType?.map((neckType) => (
-                            <label
-                              key={neckType.id}
-                              className="flex items-center"
-                            >
-                              <input
-                                type="checkbox"
-                                className="rounded text-amber-600 focus:ring-amber-500 mr-2"
-                                checked={filters.neckTypes.includes(
-                                  neckType.id
-                                )}
-                                onChange={() =>
-                                  handleFilterChange("neckTypes", neckType.id)
-                                }
-                              />
-                              <span className="text-sm text-gray-700 dark:text-gray-300">
-                                {neckType.name}
-                              </span>
-                            </label>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                <div
+                  ref={filterPanelRef}
+                  className="absolute right-0 mt-2 w-72 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-20"
+                >
+                  <FilterPanel
+                    filters={filters}
+                    brands={brands}
+                    categories={category}
+                    genders={genders}
+                    neckTypes={neckType}
+                    isLoading={isLoading}
+                    onFilterChange={handleFilterChange}
+                    onActiveFilterChange={handleActiveFilterChange}
+                    clearAllFilters={clearAllFilters}
+                    hasActiveFilters={hasActiveFilters}
+                  />
+                  <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-2">
+                    <button
+                      onClick={() => {
+                        clearAllFilters();
+                        setShowFilters(false);
+                      }}
+                      className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={applyFilters}
+                      className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm font-medium transition-colors"
+                    >
+                      Aplicar Filtros
+                    </button>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Botón de ordenación */}
+            {/* Sort button */}
             <div className="relative">
               <button
-                className="flex items-center gap-1 px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                data-sort-button="true"
+                className="w-full sm:w-auto flex items-center justify-center gap-1 px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 onClick={() => setShowSortOptions(!showSortOptions)}
               >
                 <ArrowUpDown className="w-4 h-4" />
@@ -657,7 +415,10 @@ const ProductList: React.FC<ProductListProps> = ({
               </button>
 
               {showSortOptions && (
-                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-10">
+                <div
+                  ref={sortPanelRef}
+                  className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-20"
+                >
                   <div className="py-1">
                     {sortOptions.map((option) => (
                       <button
@@ -667,10 +428,17 @@ const ProductList: React.FC<ProductListProps> = ({
                           sortBy.direction === option.direction
                             ? "bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-gray-100"
                             : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                        }`}
+                        } transition-colors`}
                         onClick={() => {
                           setSortBy(option);
                           setShowSortOptions(false);
+                          const filterParams = buildFilterParams(
+                            filters,
+                            searchTerm,
+                            currentPage,
+                            itemsPerPage
+                          );
+                          onFilterChange(filterParams);
                         }}
                       >
                         {option.label}
@@ -683,7 +451,7 @@ const ProductList: React.FC<ProductListProps> = ({
           </div>
         </div>
 
-        {/* Chips de filtros activos */}
+        {/* Active filters chips */}
         {hasActiveFilters && (
           <div className="flex flex-wrap gap-2 items-center mb-6">
             <span className="text-sm text-gray-500 dark:text-gray-400">
@@ -694,7 +462,7 @@ const ProductList: React.FC<ProductListProps> = ({
               <div className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs rounded-full px-3 py-1 flex items-center">
                 <span>Búsqueda: {searchTerm}</span>
                 <button
-                  className="ml-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                  className="ml-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
                   onClick={() => {
                     setSearchTerm("");
                     const filterParams = buildFilterParams(
@@ -705,6 +473,7 @@ const ProductList: React.FC<ProductListProps> = ({
                     );
                     onFilterChange(filterParams);
                   }}
+                  aria-label="Eliminar filtro de búsqueda"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -725,8 +494,9 @@ const ProductList: React.FC<ProductListProps> = ({
                     filters.active
                       ? "text-green-500 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300"
                       : "text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
-                  }`}
+                  } transition-colors`}
                   onClick={() => handleActiveFilterChange(null)}
+                  aria-label="Eliminar filtro de estado"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -740,8 +510,9 @@ const ProductList: React.FC<ProductListProps> = ({
               >
                 <span>Categoría: {getCategoryName(categoryId)}</span>
                 <button
-                  className="ml-2 text-purple-500 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300"
+                  className="ml-2 text-purple-500 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
                   onClick={() => handleFilterChange("categories", categoryId)}
+                  aria-label="Eliminar filtro de categoría"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -755,8 +526,9 @@ const ProductList: React.FC<ProductListProps> = ({
               >
                 <span>Marca: {getBrandName(brandId)}</span>
                 <button
-                  className="ml-2 text-teal-500 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300"
+                  className="ml-2 text-teal-500 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 transition-colors"
                   onClick={() => handleFilterChange("brands", brandId)}
+                  aria-label="Eliminar filtro de marca"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -770,8 +542,9 @@ const ProductList: React.FC<ProductListProps> = ({
               >
                 <span>Género: {getGenderName(genderId)}</span>
                 <button
-                  className="ml-2 text-pink-500 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300"
+                  className="ml-2 text-pink-500 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300 transition-colors"
                   onClick={() => handleFilterChange("genders", genderId)}
+                  aria-label="Eliminar filtro de género"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -785,8 +558,9 @@ const ProductList: React.FC<ProductListProps> = ({
               >
                 <span>Cuello: {getNeckTypeName(neckTypeId)}</span>
                 <button
-                  className="ml-2 text-amber-500 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300"
+                  className="ml-2 text-amber-500 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors"
                   onClick={() => handleFilterChange("neckTypes", neckTypeId)}
+                  aria-label="Eliminar filtro de tipo de cuello"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -794,7 +568,7 @@ const ProductList: React.FC<ProductListProps> = ({
             ))}
 
             <button
-              className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 underline ml-auto"
+              className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 underline ml-auto transition-colors"
               onClick={clearAllFilters}
             >
               Limpiar todos
@@ -802,10 +576,10 @@ const ProductList: React.FC<ProductListProps> = ({
           </div>
         )}
 
-        {/* Tabla de productos - Rediseñada para parecerse a la imagen */}
+        {/* Products table/cards */}
         <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden">
-          {/* Encabezado de tabla */}
-          <div className="bg-blue-50 dark:bg-gray-700 text-blue-700 dark:text-white py-4 px-6">
+          {/* Table header - visible only on tablet and above */}
+          <div className="bg-blue-50 dark:bg-gray-700 text-blue-700 dark:text-white py-4 px-6 hidden sm:block">
             <div className="grid grid-cols-12 gap-4 items-center">
               <div className="col-span-1 font-medium">ID</div>
               <div className="col-span-3 font-medium">Nombre</div>
@@ -816,44 +590,43 @@ const ProductList: React.FC<ProductListProps> = ({
             </div>
           </div>
 
-          {/* Filas de productos */}
-          {paginatedProducts.length > 0 ? (
+          {/* Loading state for the table only */}
+          {isTableLoading ? (
+            <div className="py-20 flex flex-col items-center justify-center">
+              <Loader2 className="h-10 w-10 text-blue-500 animate-spin mb-4" />
+              <p className="text-gray-500 dark:text-gray-400">
+                Cargando productos...
+              </p>
+            </div>
+          ) : products.length > 0 ? (
             <div className="divide-y divide-gray-100 dark:divide-gray-700">
-              {paginatedProducts.map((product) => (
+              {products.map((product) => (
                 <div
                   key={product.id}
-                  className="px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
+                  className="px-4 sm:px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
                 >
-                  <div className="grid grid-cols-12 gap-4 items-center">
-                    {/* ID */}
+                  {/* Desktop/Tablet View */}
+                  <div className="hidden sm:grid sm:grid-cols-12 sm:gap-4 sm:items-center">
                     <div className="col-span-1">
                       <span className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium text-sm">
                         {product.id}
                       </span>
                     </div>
-
-                    {/* Nombre */}
                     <div className="col-span-3">
                       <h3 className="font-medium text-gray-900 dark:text-white">
                         {product.name}
                       </h3>
                     </div>
-
-                    {/* Categoría */}
                     <div className="col-span-2">
                       <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-400 border border-purple-200 dark:border-purple-800/30">
                         {getCategoryName(product.categoryId)}
                       </span>
                     </div>
-
-                    {/* Marca */}
                     <div className="col-span-2">
                       <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-400 border border-teal-200 dark:border-teal-800/30">
                         {getBrandName(product.brandId)}
                       </span>
                     </div>
-
-                    {/* Estado */}
                     <div className="col-span-2">
                       {product.active ? (
                         <div className="flex items-center">
@@ -874,8 +647,6 @@ const ProductList: React.FC<ProductListProps> = ({
                         </div>
                       )}
                     </div>
-
-                    {/* Acciones */}
                     <div className="col-span-2 flex items-center justify-end space-x-2">
                       <button
                         onClick={() => onView(product.id)}
@@ -884,7 +655,6 @@ const ProductList: React.FC<ProductListProps> = ({
                       >
                         <Eye size={18} />
                       </button>
-
                       <button
                         onClick={() => onEdit(product.id)}
                         className="p-2 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-800/50 transition-colors"
@@ -892,7 +662,6 @@ const ProductList: React.FC<ProductListProps> = ({
                       >
                         <Edit size={18} />
                       </button>
-
                       {product.active ? (
                         <button
                           onClick={() => {
@@ -942,18 +711,127 @@ const ProductList: React.FC<ProductListProps> = ({
                       )}
                     </div>
                   </div>
+
+                  {/* Mobile View */}
+                  <div className="sm:hidden flex flex-col space-y-3">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center space-x-2">
+                        <span className="flex items-center justify-center h-7 w-7 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium text-xs">
+                          {product.id}
+                        </span>
+                        <h3 className="font-medium text-gray-900 dark:text-white line-clamp-1">
+                          {product.name}
+                        </h3>
+                      </div>
+                      {product.active ? (
+                        <div className="flex items-center">
+                          <span className="relative flex h-2 w-2 mr-1.5">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                          </span>
+                          <span className="text-green-600 dark:text-green-400 font-medium text-xs">
+                            Activo
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center">
+                          <span className="h-2 w-2 rounded-full bg-red-500 mr-1.5"></span>
+                          <span className="text-red-600 dark:text-red-400 font-medium text-xs">
+                            Inactivo
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-400 border border-purple-200 dark:border-purple-800/30">
+                        {getCategoryName(product.categoryId)}
+                      </span>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-400 border border-teal-200 dark:border-teal-800/30">
+                        {getBrandName(product.brandId)}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-end space-x-2">
+                      <button
+                        onClick={() => onView(product.id)}
+                        className="p-2 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                        title="Ver detalles"
+                        aria-label="Ver detalles"
+                      >
+                        <Eye size={16} />
+                      </button>
+                      <button
+                        onClick={() => onEdit(product.id)}
+                        className="p-2 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-800/50 transition-colors"
+                        title="Editar producto"
+                        aria-label="Editar producto"
+                      >
+                        <Edit size={16} />
+                      </button>
+                      {product.active ? (
+                        <button
+                          onClick={() => {
+                            Swal.fire({
+                              title: "¿Desactivar producto?",
+                              text: `¿Estás seguro de que deseas desactivar "${product.name}"?`,
+                              icon: "warning",
+                              showCancelButton: true,
+                              confirmButtonColor: "#d33",
+                              cancelButtonColor: "#6b7280",
+                              confirmButtonText: "Sí, desactivar",
+                              cancelButtonText: "Cancelar",
+                            }).then((result) => {
+                              if (result.isConfirmed) {
+                                onDeactivate(product.id);
+                              }
+                            });
+                          }}
+                          className="p-2 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800/50 transition-colors"
+                          title="Desactivar producto"
+                          aria-label="Desactivar producto"
+                        >
+                          <Trash size={16} />
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            Swal.fire({
+                              title: "¿Activar producto?",
+                              text: `¿Estás seguro de que deseas activar "${product.name}"?`,
+                              icon: "question",
+                              showCancelButton: true,
+                              confirmButtonColor: "#2563eb",
+                              cancelButtonColor: "#6b7280",
+                              confirmButtonText: "Sí, activar",
+                              cancelButtonText: "Cancelar",
+                            }).then((result) => {
+                              if (result.isConfirmed) {
+                                onActivate(product.id);
+                              }
+                            });
+                          }}
+                          className="p-2 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-800/50 transition-colors"
+                          title="Activar producto"
+                          aria-label="Activar producto"
+                        >
+                          <Check size={16} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="flex flex-col items-center justify-center py-12 text-center px-4">
               <Package className="h-12 w-12 text-gray-300 dark:text-gray-600 mb-3" />
               <p className="text-lg font-medium text-gray-700 dark:text-gray-300">
-                No hay productos disponibles
+                No se encontraron productos
               </p>
               <p className="text-sm mb-4 text-gray-500 dark:text-gray-400">
                 {hasActiveFilters
-                  ? "No se encontraron productos con los filtros seleccionados"
+                  ? "No hay productos que coincidan con los filtros aplicados"
                   : "Añade productos para comenzar a gestionar tu inventario"}
               </p>
               {hasActiveFilters ? (
@@ -966,8 +844,8 @@ const ProductList: React.FC<ProductListProps> = ({
                 </button>
               ) : (
                 <button
-                  className="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg font-medium flex items-center transition-colors"
-                  onClick={() => onAdd()}
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium flex items-center transition-colors"
+                  onClick={onAdd}
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Añadir Producto
@@ -976,7 +854,7 @@ const ProductList: React.FC<ProductListProps> = ({
             </div>
           )}
 
-          {/* Paginación */}
+          {/* Pagination */}
           <div className="bg-gray-50 dark:bg-gray-800/50 p-4 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-500 dark:text-gray-400">
@@ -989,8 +867,6 @@ const ProductList: React.FC<ProductListProps> = ({
                   const newItemsPerPage = Number(e.target.value);
                   setItemsPerPage(newItemsPerPage);
                   setCurrentPage(1);
-
-                  // Construir y enviar los parámetros de filtro
                   const filterParams = buildFilterParams(
                     filters,
                     searchTerm,
@@ -1019,13 +895,11 @@ const ProductList: React.FC<ProductListProps> = ({
 
             <div className="flex items-center space-x-2">
               <button
-                className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 disabled={currentPage === 1}
                 onClick={() => {
                   const newPage = Math.max(currentPage - 1, 1);
                   setCurrentPage(newPage);
-
-                  // Construir y enviar los parámetros de filtro
                   const filterParams = buildFilterParams(
                     filters,
                     searchTerm,
@@ -1034,6 +908,7 @@ const ProductList: React.FC<ProductListProps> = ({
                   );
                   onFilterChange(filterParams);
                 }}
+                aria-label="Página anterior"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
@@ -1056,6 +931,7 @@ const ProductList: React.FC<ProductListProps> = ({
                       onFilterChange(filterParams);
                     }
                   }}
+                  aria-label="Número de página"
                 />
                 <span className="mx-1 text-gray-500 dark:text-gray-400">
                   de
@@ -1066,13 +942,11 @@ const ProductList: React.FC<ProductListProps> = ({
               </div>
 
               <button
-                className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 disabled={currentPage === totalPages || totalPages === 0}
                 onClick={() => {
                   const newPage = Math.min(currentPage + 1, totalPages);
                   setCurrentPage(newPage);
-
-                  // Construir y enviar los parámetros de filtro
                   const filterParams = buildFilterParams(
                     filters,
                     searchTerm,
@@ -1081,6 +955,7 @@ const ProductList: React.FC<ProductListProps> = ({
                   );
                   onFilterChange(filterParams);
                 }}
+                aria-label="Página siguiente"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>

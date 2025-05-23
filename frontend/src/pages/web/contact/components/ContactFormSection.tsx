@@ -1,7 +1,4 @@
-"use client";
-
-import type React from "react";
-
+import React, { useEffect, useState, memo } from "react";
 import { motion } from "framer-motion";
 import {
   MessageSquare,
@@ -18,60 +15,69 @@ import {
   Loader2,
   CheckCircle,
 } from "lucide-react";
-import { memo } from "react";
-import { Label } from "@/components/ui/label";
+import { useForm } from "react-hook-form";
+import FormError from "@/components/web-components/FormError";
+import { REGEX, ERROR_MESSAGES } from "@/utils/FormValidation";
+import { CompanyProfile } from "@/types/CompanyInfo";
+import { getCompanyInfoApi } from "@/api/company";
 
-interface ContactFormSectionProps {
-  isLoading: boolean;
-  isSubmitted: boolean;
-  formData: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    service: string;
-    subject: string;
-    message: string;
-  };
-  handleChange: (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => void;
-  handleSubmit: (e: React.FormEvent) => void;
+interface FormValues {
+  firstName: string;
+  lastName: string;
+  email: string;
+  service: string;
+  subject: string;
+  message: string;
 }
 
-const ContactFormSection = ({
-  isLoading,
-  isSubmitted,
-  formData,
-  handleChange,
-  handleSubmit,
-}: ContactFormSectionProps) => {
+const ContactFormSection: React.FC = () => {
+  const [info, setInfo] = useState<CompanyProfile>();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<FormValues>({
+    mode: "onChange",
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      service: "",
+      subject: "",
+      message: "",
+    },
+  });
+
+  useEffect(() => {
+    const getInfo = async () => {
+      const res = await getCompanyInfoApi();
+      if (res) {
+        setInfo(res.data[0]);
+      }
+    };
+    getInfo();
+  }, []);
+
+  const onSubmit = async (data: FormValues) => {
+    setIsLoading(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      console.log("Form submitted:", data);
+      setIsSubmitted(true);
+      reset();
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <section className="py-24 bg-white dark:bg-gray-900 relative overflow-hidden">
-      {/* Background decoration - Enhanced with about page style */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <svg
-          className="absolute top-0 left-0 w-full h-full text-blue-500/5"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <defs>
-            <pattern
-              id="grid-pattern"
-              width="40"
-              height="40"
-              patternUnits="userSpaceOnUse"
-            >
-              <path
-                d="M0 0 L40 0 L40 40 L0 40 Z"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="0.5"
-              />
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#grid-pattern)" />
-        </svg>
-      </div>
-
       <div className="container mx-auto px-6 relative z-10 max-w-full">
         <div className="text-center mb-16">
           <motion.span
@@ -108,14 +114,12 @@ const ContactFormSection = ({
           transition={{ duration: 0.6, delay: 0.2 }}
           className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden relative"
         >
-          {/* Background decoration - Enhanced with about page style */}
           <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-30">
             <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/5 rounded-full"></div>
             <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-blue-500/5 rounded-full"></div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-5 relative z-10">
-            {/* Left Column - Info */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -123,24 +127,9 @@ const ContactFormSection = ({
               transition={{ duration: 0.6 }}
               className="lg:col-span-2 p-10 bg-gradient-to-br from-blue-600 to-blue-800 text-white relative overflow-hidden"
             >
-              {/* Background decoration - Enhanced with about page style */}
               <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
-                <svg
-                  className="absolute top-0 right-0 w-full h-full text-white/5"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <defs>
-                    <pattern
-                      id="dots-pattern"
-                      width="30"
-                      height="30"
-                      patternUnits="userSpaceOnUse"
-                    >
-                      <circle cx="2" cy="2" r="1" fill="currentColor" />
-                    </pattern>
-                  </defs>
-                  <rect width="100%" height="100%" fill="url(#dots-pattern)" />
-                </svg>
+                <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/5 rounded-full"></div>
+                <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-blue-500/5 rounded-full"></div>
               </div>
 
               <div className="h-full flex flex-col relative z-10">
@@ -181,25 +170,30 @@ const ContactFormSection = ({
                     <div className="bg-white/10 p-3 rounded-full mr-4 group-hover:bg-white/20 transition-all duration-300">
                       <Phone className="h-5 w-5" />
                     </div>
-                    <span>+52 123 456 7890</span>
+                    <span>{info?.contactInfo[0].phone || "771 178 3587"} </span>
                   </div>
 
                   <div className="flex items-center group">
                     <div className="bg-white/10 p-3 rounded-full mr-4 group-hover:bg-white/20 transition-all duration-300">
                       <Mail className="h-5 w-5" />
                     </div>
-                    <span>contacto@empresa.com</span>
+                    <span>
+                      {info?.contactInfo[0].email ||
+                        "cayrohuejutla@hotmail.com"}
+                    </span>
                   </div>
 
                   <div className="flex items-center group">
                     <div className="bg-white/10 p-3 rounded-full mr-4 group-hover:bg-white/20 transition-all duration-300">
                       <MapPin className="h-5 w-5" />
                     </div>
-                    <span>Calle Principal #123, Ciudad</span>
+                    <span>
+                      {info?.contactInfo[0].address ||
+                        "Calle 16 de Enero #4-4 Col. Centro, Huejutla de Reyes, Mexico"}
+                    </span>
                   </div>
                 </div>
 
-                {/* Redes Sociales */}
                 <div className="mt-10 flex space-x-4 justify-start">
                   <a
                     href="#"
@@ -218,7 +212,6 @@ const ContactFormSection = ({
               </div>
             </motion.div>
 
-            {/* Right Column - Form */}
             <motion.div
               className="lg:col-span-3 p-8 lg:p-12 relative z-10"
               initial={{ opacity: 0, x: 20 }}
@@ -250,137 +243,210 @@ const ContactFormSection = ({
                 </motion.div>
               ) : (
                 <form
-                  onSubmit={handleSubmit}
+                  onSubmit={handleSubmit(onSubmit)}
                   className="grid grid-cols-1 md:grid-cols-2 gap-6"
                 >
-                  {/* Nombre */}
                   <div className="col-span-1 space-y-2">
-                    <Label
+                    <label
                       htmlFor="firstName"
                       className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center"
                     >
                       <User className="w-4 h-4 mr-2 text-blue-600" />
                       Nombre
-                    </Label>
+                    </label>
                     <input
                       id="firstName"
-                      name="firstName"
-                      type="text"
+                      {...register("firstName", {
+                        required: ERROR_MESSAGES.required,
+                        minLength: {
+                          value: 2,
+                          message: ERROR_MESSAGES.minLength(2),
+                        },
+                        maxLength: {
+                          value: 50,
+                          message: ERROR_MESSAGES.maxLength(50),
+                        },
+                        pattern: {
+                          value: REGEX.NAME,
+                          message: ERROR_MESSAGES.pattern,
+                        },
+                      })}
                       placeholder="Tu nombre"
-                      value={formData.firstName}
-                      onChange={handleChange}
-                      required
-                      className="w-full rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-100 border border-gray-300 dark:border-gray-600  focus:ring-blue-500 focus:border-blue-500 p-3 outline-none transition-all"
+                      className={`w-full rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-100 border ${
+                        errors.firstName
+                          ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                          : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
+                      } p-3 outline-none transition-all`}
+                      aria-invalid={errors.firstName ? "true" : "false"}
                     />
+                    <FormError message={errors.firstName?.message} />
                   </div>
 
-                  {/* Apellido */}
                   <div className="col-span-1 space-y-2">
-                    <Label
+                    <label
                       htmlFor="lastName"
                       className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center"
                     >
                       <User className="w-4 h-4 mr-2 text-blue-600" />
                       Apellido
-                    </Label>
+                    </label>
                     <input
                       id="lastName"
-                      name="lastName"
-                      type="text"
+                      {...register("lastName", {
+                        required: ERROR_MESSAGES.required,
+                        minLength: {
+                          value: 2,
+                          message: ERROR_MESSAGES.minLength(2),
+                        },
+                        maxLength: {
+                          value: 50,
+                          message: ERROR_MESSAGES.maxLength(50),
+                        },
+                        pattern: {
+                          value: REGEX.NAME,
+                          message: ERROR_MESSAGES.pattern,
+                        },
+                      })}
                       placeholder="Tu apellido"
-                      value={formData.lastName}
-                      onChange={handleChange}
-                      required
-                      className="w-full rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-100 border border-gray-300 dark:border-gray-600  focus:ring-blue-500 focus:border-blue-500 p-3 outline-none transition-all"
+                      className={`w-full rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-100 border ${
+                        errors.lastName
+                          ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                          : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
+                      } p-3 outline-none transition-all`}
+                      aria-invalid={errors.lastName ? "true" : "false"}
                     />
+                    <FormError message={errors.lastName?.message} />
                   </div>
 
-                  {/* Correo electrónico */}
                   <div className="md:col-span-2 space-y-2">
-                    <Label
+                    <label
                       htmlFor="email"
                       className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center"
                     >
                       <AtSign className="w-4 h-4 mr-2 text-blue-600" />
                       Correo electrónico
-                    </Label>
+                    </label>
                     <input
                       id="email"
-                      name="email"
-                      type="email"
+                      {...register("email", {
+                        required: ERROR_MESSAGES.required,
+                        pattern: {
+                          value: REGEX.EMAIL,
+                          message: ERROR_MESSAGES.email,
+                        },
+                        validate: (value) => {
+                          if (!REGEX.NO_SQL_INJECTION.test(value)) {
+                            return ERROR_MESSAGES.sqlInjection;
+                          }
+                          return true;
+                        },
+                      })}
                       placeholder="tu@correo.com"
-                      value={formData.email}
-                      onChange={handleChange}
-                      required
-                      pattern="^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
-                      className="w-full rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-100 border border-gray-300 dark:border-gray-600  focus:ring-blue-500 focus:border-blue-500 p-3 outline-none transition-all"
+                      className={`w-full rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-100 border ${
+                        errors.email
+                          ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                          : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
+                      } p-3 outline-none transition-all`}
+                      aria-invalid={errors.email ? "true" : "false"}
                     />
+                    <FormError message={errors.email?.message} />
                   </div>
 
-                  {/* Servicio de interés */}
                   <div className="col-span-1 space-y-2">
-                    <Label
+                    <label
                       htmlFor="service"
                       className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center"
                     >
                       <Briefcase className="w-4 h-4 mr-2 text-blue-600" />
                       Servicio de interés
-                    </Label>
+                    </label>
                     <input
                       id="service"
-                      name="service"
-                      type="text"
+                      {...register("service", {
+                        required: ERROR_MESSAGES.required,
+                        validate: (value) => {
+                          if (!REGEX.NO_SQL_INJECTION.test(value)) {
+                            return ERROR_MESSAGES.sqlInjection;
+                          }
+                          return true;
+                        },
+                      })}
                       placeholder="Ej: Uniformes, Playeras, etc."
-                      value={formData.service}
-                      onChange={handleChange}
-                      required
-                      className="w-full rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-100 border border-gray-300 dark:border-gray-600  focus:ring-blue-500 focus:border-blue-500 p-3 outline-none transition-all"
+                      className={`w-full rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-100 border ${
+                        errors.service
+                          ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                          : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
+                      } p-3 outline-none transition-all`}
+                      aria-invalid={errors.service ? "true" : "false"}
                     />
+                    <FormError message={errors.service?.message} />
                   </div>
 
-                  {/* Asunto */}
                   <div className="col-span-1 space-y-2">
-                    <Label
+                    <label
                       htmlFor="subject"
                       className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center"
                     >
                       <FileText className="w-4 h-4 mr-2 text-blue-600" />
                       Asunto
-                    </Label>
+                    </label>
                     <input
                       id="subject"
-                      name="subject"
-                      type="text"
+                      {...register("subject", {
+                        required: ERROR_MESSAGES.required,
+                        validate: (value) => {
+                          if (!REGEX.NO_SQL_INJECTION.test(value)) {
+                            return ERROR_MESSAGES.sqlInjection;
+                          }
+                          return true;
+                        },
+                      })}
                       placeholder="Asunto de tu mensaje"
-                      value={formData.subject}
-                      onChange={handleChange}
-                      required
-                      className="w-full rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-100 border border-gray-300 dark:border-gray-600  focus:ring-blue-500 focus:border-blue-500 p-3 outline-none transition-all"
+                      className={`w-full rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-100 border ${
+                        errors.subject
+                          ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                          : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
+                      } p-3 outline-none transition-all`}
+                      aria-invalid={errors.subject ? "true" : "false"}
                     />
+                    <FormError message={errors.subject?.message} />
                   </div>
 
-                  {/* Mensaje */}
                   <div className="md:col-span-2 space-y-2">
-                    <Label
+                    <label
                       htmlFor="message"
                       className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center"
                     >
                       <MessageSquare className="w-4 h-4 mr-2 text-blue-600" />
                       Mensaje
-                    </Label>
+                    </label>
                     <textarea
                       id="message"
-                      name="message"
+                      {...register("message", {
+                        required: ERROR_MESSAGES.required,
+                        minLength: {
+                          value: 10,
+                          message: ERROR_MESSAGES.minLength(10),
+                        },
+                        validate: (value) => {
+                          if (!REGEX.NO_SQL_INJECTION.test(value)) {
+                            return ERROR_MESSAGES.sqlInjection;
+                          }
+                          return true;
+                        },
+                      })}
                       placeholder="Cuéntanos sobre tu proyecto o consulta..."
-                      value={formData.message}
-                      onChange={handleChange}
-                      required
                       rows={5}
-                      className="w-full rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-100 border border-gray-300 dark:border-gray-600  focus:ring-blue-500 focus:border-blue-500 p-3 outline-none transition-all resize-none"
+                      className={`w-full rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-100 border ${
+                        errors.message
+                          ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                          : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
+                      } p-3 outline-none transition-all resize-none`}
+                      aria-invalid={errors.message ? "true" : "false"}
                     />
+                    <FormError message={errors.message?.message} />
                   </div>
 
-                  {/* Botón Enviar */}
                   <div className="md:col-span-2 mt-4">
                     <motion.button
                       type="submit"

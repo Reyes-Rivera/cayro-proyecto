@@ -10,7 +10,7 @@ import type {
   Gender,
   Size,
   Sleeve,
-} from "../utils/products";
+} from "../../../../types/products";
 import PriceRangeFilter from "./price-range-filter";
 
 interface ProductFiltersProps {

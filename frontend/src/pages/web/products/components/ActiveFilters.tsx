@@ -10,7 +10,7 @@ import type {
   Gender,
   Size,
   Sleeve,
-} from "../utils/products";
+} from "../../../../types/products";
 
 interface ActiveFiltersProps {
   activeCategoryId: number | null;

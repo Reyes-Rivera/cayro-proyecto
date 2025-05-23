@@ -13,7 +13,7 @@ import type {
   Size,
   Color,
   Sleeve,
-} from "./utils/products";
+} from "../../../types/products";
 import ProductHero from "./components/ProductHero";
 import ProductFilters from "./components/ProductFilters";
 import ActiveFilters from "./components/ActiveFilters";

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
-import { Product } from "../../products/utils/products";
+import { Product } from "../../../../types/products";
 import { getProducts } from "@/api/products";
 import ProductCard from "../../products/components/ProductCard";
 

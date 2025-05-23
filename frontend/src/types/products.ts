@@ -65,4 +65,8 @@ export interface Sleeve {
   id: number
   name?: string
 }
+export interface NeckType {
+  id: number;
+  name: string;
+}
 

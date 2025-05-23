@@ -1,6 +1,4 @@
-"use client";
-
-import type React from "react";
+import React from "react";
 import { useState, useEffect } from "react";
 import type { Product } from "./data/sampleData";
 import {
@@ -9,7 +7,6 @@ import {
   deactivateProduct,
   getProductById,
 } from "@/api/products";
-import { Loader2 } from "lucide-react";
 import "sweetalert2/dist/sweetalert2.min.css";
 import Swal from "sweetalert2";
 import ProductList from "./components/ProductList";
@@ -21,56 +18,52 @@ const Products: React.FC = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isViewing, setIsViewing] = useState(false);
-  const [isLoading, setIsLoading] = useState(true); // Inicialmente true para mostrar carga
+  const [isLoading, setIsLoading] = useState(true);
   const [totalProducts, setTotalProducts] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  const [error, setError] = useState<string | null>(null);
+  const [currentFilters, setCurrentFilters] = useState("");
 
-  // Modificar la función loadProducts para manejar mejor los parámetros y mostrar el estado de carga
   const loadProducts = async (params = "") => {
-    console.log("Cargando productos con parámetros:", params);
-    setError(null);
     setIsLoading(true);
-
     try {
       const response = await getProducts(params);
-      console.log("Respuesta de la API:", response);
-
       if (response && response.data) {
         const data = response.data;
         setProducts(Array.isArray(data.data) ? data.data : []);
         setTotalProducts(data.total || 0);
         setTotalPages(data.totalPages || 1);
-      } else {
-        console.error("Formato de respuesta inesperado:", response);
-        setError("La respuesta de la API no tiene el formato esperado");
+        setCurrentFilters(params); // Store current filters
       }
     } catch (error) {
       console.error("Error al cargar productos:", error);
-      setError("No se pudieron cargar los productos. Inténtalo de nuevo.");
-
-      Swal.fire({
-        title: "Error",
-        text: "No se pudieron cargar los productos. Inténtalo de nuevo.",
-        icon: "error",
-        confirmButtonColor: "#2563eb",
-      });
+      if (error.response?.status === 404) {
+        // Handle 404 specifically - set products to empty array
+        setProducts([]);
+        setTotalProducts(0);
+        setTotalPages(1);
+      } else {
+        // Show error toast for other error types
+        Swal.fire({
+          title: "Error",
+          text: "No se pudieron cargar los productos. Inténtalo de nuevo.",
+          icon: "error",
+          confirmButtonColor: "#2563eb",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    // Cargar productos iniciales con parámetros por defecto
-    loadProducts("page=1&limit=10");
+    // Load products with stored filters or default params
+    loadProducts(currentFilters || "page=1&limit=10");
   }, []);
 
   const handleAddProduct = async (newProduct: Product) => {
     setIsLoading(true);
     try {
-      // La lógica de creación ya está en el ProductForm
-      // Aquí solo necesitamos recargar los productos
-      await loadProducts("page=1&limit=10");
+      await loadProducts(currentFilters);
       setIsEditing(false);
       window.scrollTo(0, 0);
 
@@ -97,9 +90,7 @@ const Products: React.FC = () => {
     if (selectedProduct) {
       setIsLoading(true);
       try {
-        // La lógica de actualización ya está en el ProductForm
-        // Aquí solo necesitamos recargar los productos
-        await loadProducts("page=1&limit=10");
+        await loadProducts(currentFilters);
         setSelectedProduct(null);
         setIsEditing(false);
 
@@ -126,10 +117,8 @@ const Products: React.FC = () => {
   const handleActivateProduct = async (id: number) => {
     setIsLoading(true);
     try {
-      // Llamar a la API para activar el producto
       await activateProduct(id);
-      // Recargar la lista de productos
-      await loadProducts("page=1&limit=10");
+      await loadProducts(currentFilters);
 
       Swal.fire({
         title: "¡Activado!",
@@ -153,10 +142,8 @@ const Products: React.FC = () => {
   const handleDeactivateProduct = async (id: number) => {
     setIsLoading(true);
     try {
-      // Llamar a la API para desactivar el producto
       await deactivateProduct(id);
-      // Recargar la lista de productos
-      await loadProducts("page=1&limit=10");
+      await loadProducts(currentFilters);
 
       Swal.fire({
         title: "¡Desactivado!",
@@ -180,7 +167,6 @@ const Products: React.FC = () => {
   const handleViewProduct = async (id: number) => {
     setIsLoading(true);
     try {
-      // Obtener los detalles completos del producto desde la API
       const response = await getProductById(id);
       if (response && response.data) {
         setSelectedProduct(response.data);
@@ -205,7 +191,6 @@ const Products: React.FC = () => {
   const handleEdit = async (id: number) => {
     setIsLoading(true);
     try {
-      // Obtener los detalles completos del producto desde la API
       const response = await getProductById(id);
       if (response && response.data) {
         setSelectedProduct(response.data);
@@ -241,49 +226,16 @@ const Products: React.FC = () => {
     setIsViewing(false);
   };
 
-  // Función para manejar cambios en los filtros desde ProductList
   const handleFilterChange = (filterParams: string) => {
     loadProducts(filterParams);
   };
 
-  // Renderizado condicional basado en el estado
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen">
-        <Loader2
-          className="animate-spin text-blue-600 dark:text-blue-400 mb-4"
-          size={64}
-        />
-        <p className="text-gray-600 dark:text-gray-400">Cargando datos...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen">
-        <div className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 p-6 rounded-lg max-w-md text-center">
-          <h2 className="text-xl font-bold mb-2">Error</h2>
-          <p>{error}</p>
-          <button
-            onClick={() => loadProducts("page=1&limit=10")}
-            className="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
-          >
-            Reintentar
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="px-6 space-y-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
-      {/* Mostrar el formulario, los detalles o la lista según el estado */}
       {isEditing && !selectedProduct ? (
-        // Formulario para Agregar Producto
         <div>
           <ProductForm
-            product={undefined} // No hay producto seleccionado
+            product={undefined}
             onAdd={handleAddProduct}
             onEdit={handleEditProduct}
             onCancel={() => {
@@ -294,7 +246,6 @@ const Products: React.FC = () => {
           />
         </div>
       ) : isEditing && selectedProduct ? (
-        // Formulario para Editar Producto
         <div>
           <ProductForm
             product={selectedProduct}
@@ -308,12 +259,10 @@ const Products: React.FC = () => {
           />
         </div>
       ) : isViewing && selectedProduct ? (
-        // Detalles del Producto
         <div>
           <ProductDetails product={selectedProduct} onBack={handleBack} />
         </div>
       ) : (
-        // Tabla de Productos
         <div>
           <ProductList
             products={products}
@@ -325,6 +274,7 @@ const Products: React.FC = () => {
             onActivate={handleActivateProduct}
             onDeactivate={handleDeactivateProduct}
             onFilterChange={handleFilterChange}
+            isTableLoading={isLoading}
           />
         </div>
       )}

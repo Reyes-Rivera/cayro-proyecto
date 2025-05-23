@@ -58,8 +58,7 @@ export function ProfileSection() {
   const [address, setAddress] = useState<Address | null>(null);
   const [isLoadingAddress, setIsLoadingAddress] = useState(true);
   const { user } = useAuth();
-
-  // Configure react-hook-form
+  
   const {
     register,
     handleSubmit,
@@ -78,7 +77,6 @@ export function ProfileSection() {
     },
   });
 
-  // Fetch user address
   useEffect(() => {
     const fetchAddress = async () => {
       if (user?.id) {

@@ -5,7 +5,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ShoppingBag, Heart, Eye, Check, MoreHorizontal } from "lucide-react";
-import type { Product } from "../utils/products";
+import type { Product } from "../../../../types/products";
 import { useCart } from "@/context/CartConrexr";
 import Swal from "sweetalert2";
 

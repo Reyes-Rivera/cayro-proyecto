@@ -3,7 +3,7 @@
 import { useState, useEffect, type FormEvent } from "react";
 import { motion } from "framer-motion";
 import { Search, Sparkles } from "lucide-react";
-import type { Category } from "../utils/products";
+import type { Category } from "../../../../types/products";
 import { getCategories } from "@/api/products";
 
 interface ProductHeroProps {
