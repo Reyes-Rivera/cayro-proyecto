@@ -1,19 +1,39 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect, useRef, memo } from "react";
 import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
-import { Product } from "../../../../types/products";
+import type { Product } from "../../../../types/products";
 import { getProducts } from "@/api/products";
 import ProductCard from "../../products/components/ProductCard";
 
-export default function FeaturedProductsCarousel() {
+const FeaturedProductsCarousel = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [hoveredProduct, setHoveredProduct] = useState<number | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLDivElement>(null);
+
+  // Intersection Observer setup
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
 
   // Number of products to display at once based on screen size
   const getItemsToShow = () => {
@@ -28,14 +48,22 @@ export default function FeaturedProductsCarousel() {
 
   const [itemsToShow, setItemsToShow] = useState(getItemsToShow());
 
-  // Update items to show on window resize
+  // Update items to show on window resize - with debounce
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+
     const handleResize = () => {
-      setItemsToShow(getItemsToShow());
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        setItemsToShow(getItemsToShow());
+      }, 200);
     };
 
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   // Fetch products
@@ -43,11 +71,11 @@ export default function FeaturedProductsCarousel() {
     const fetchProducts = async () => {
       setIsLoading(true);
       try {
-        const response = await getProducts();
+        const response = await getProducts("");
         if (response.data) {
           // Filter products to only include those with variants
           const validProducts = response.data.filter(
-            (product:any) =>
+            (product: any) =>
               product.variants && product.variants.length > 0 && product.active
           );
           setProducts(validProducts.slice(0, 8)); // Get first 8 valid products
@@ -80,16 +108,17 @@ export default function FeaturedProductsCarousel() {
     );
   };
 
-  // Auto-advance carousel
+  // Auto-advance carousel - with pause on hover
   useEffect(() => {
     if (products.length <= itemsToShow) return;
+    if (hoveredProduct !== null) return; // Pause when hovering over a product
 
     const interval = setInterval(() => {
       nextSlide();
-    }, 5000);
+    }, 6000); // Increased interval time
 
     return () => clearInterval(interval);
-  }, [currentIndex, products.length, itemsToShow]);
+  }, [currentIndex, products.length, itemsToShow, hoveredProduct]);
 
   // Loading skeleton
   if (isLoading) {
@@ -147,41 +176,34 @@ export default function FeaturedProductsCarousel() {
   }
 
   return (
-    <section className="py-16 bg-gray-50 dark:bg-gray-800 relative overflow-hidden">
-      {/* Background decoration */}
+    <section
+      ref={sectionRef}
+      className="py-16 bg-gray-50 dark:bg-gray-800 relative overflow-hidden"
+    >
+      {/* Background decoration - simplified */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 right-0 w-1/3 h-1/3 bg-gradient-to-b from-blue-500/5 to-transparent rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 left-0 w-1/3 h-1/3 bg-gradient-to-t from-blue-500/5 to-transparent rounded-full blur-3xl"></div>
       </div>
 
       <div className="container mx-auto px-6 relative z-10">
-        <div className="text-center mb-12">
-          <motion.span
-            initial={{ opacity: 0, y: -10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="inline-flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-4 py-1.5 text-sm font-medium text-blue-800 dark:text-blue-300 mb-4"
-          >
+        <div
+          className={`text-center mb-12 transition-all duration-700 ${
+            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+          }`}
+        >
+          <span className="inline-flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-4 py-1.5 text-sm font-medium text-blue-800 dark:text-blue-300 mb-4">
             <Sparkles className="w-4 h-4 mr-2" />
             PRODUCTOS DESTACADOS
-          </motion.span>
-          <motion.h2
-            initial={{ opacity: 0, y: -10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white"
-          >
+          </span>
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
             Nuestra Selección Especial
-          </motion.h2>
-          <motion.div
-            initial={{ width: 0 }}
-            whileInView={{ width: "6rem" }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="h-1 bg-blue-600 mx-auto mt-6"
-          ></motion.div>
+          </h2>
+          <div
+            className={`h-1 bg-blue-600 mx-auto mt-6 transition-all duration-700 ${
+              isVisible ? "w-24" : "w-0"
+            }`}
+          ></div>
         </div>
 
         <div className="relative">
@@ -207,30 +229,33 @@ export default function FeaturedProductsCarousel() {
 
           {/* Carousel container */}
           <div className="overflow-hidden" ref={carouselRef}>
-            <motion.div
-              className="flex"
-              animate={{
-                x: `-${currentIndex * (100 / itemsToShow)}%`,
+            <div
+              className="flex transition-transform duration-500 ease-in-out"
+              style={{
+                transform: `translateX(-${
+                  currentIndex * (100 / itemsToShow)
+                }%)`,
               }}
-              transition={{ type: "tween", ease: "easeInOut", duration: 0.5 }}
             >
               {products.map((product) => (
                 <div
                   key={product.id}
                   className="flex-none w-full sm:w-1/2 lg:w-1/3 xl:w-1/4 px-3"
+                  onMouseEnter={() => setHoveredProduct(product.id)}
+                  onMouseLeave={() => setHoveredProduct(null)}
                 >
                   <ProductCard
                     product={product}
                     isHovered={hoveredProduct === product.id}
-                    onHover={() => setHoveredProduct(product.id)}
-                    onLeave={() => setHoveredProduct(null)}
+                    onHover={() => {}}
+                    onLeave={() => {}}
                   />
                 </div>
               ))}
-            </motion.div>
+            </div>
           </div>
 
-          {/* Carousel indicators */}
+          {/* Carousel indicators - simplified */}
           {products.length > itemsToShow && (
             <div className="flex justify-center mt-8 gap-2">
               {Array.from({
@@ -253,4 +278,6 @@ export default function FeaturedProductsCarousel() {
       </div>
     </section>
   );
-}
+};
+
+export default memo(FeaturedProductsCarousel);

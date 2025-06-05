@@ -1,8 +1,4 @@
-"use client";
-
-import type React from "react";
-
-import { useState, useEffect, useRef, memo } from "react";
+import React, { useState, useEffect, useRef, memo } from "react";
 import {
   motion,
   AnimatePresence,
@@ -24,13 +20,14 @@ import {
   Sparkles,
   CheckCircle,
   Clock,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getCategoriesFaqs, getFaqs } from "@/api/faqs";
 import Breadcrumbs from "@/components/web-components/Breadcrumbs";
 import Loader from "@/components/web-components/Loader";
 
-// Tipos basados en los modelos de la base de datos
+// Types based on database models
 export interface FaqItem {
   id: number;
   question: string;
@@ -64,12 +61,13 @@ interface AnimatedSectionProps {
   children: React.ReactNode;
   className?: string;
   id?: string;
+  delay?: number;
 }
 
 const AnimatedSection = memo(
-  ({ children, className, id }: AnimatedSectionProps) => {
+  ({ children, className, id, delay = 0 }: AnimatedSectionProps) => {
     const ref = useRef(null);
-    const isInView = useInView(ref, { once: true });
+    const isInView = useInView(ref, { once: true, margin: "-10% 0px" });
     const mainControls = useAnimation();
 
     useEffect(() => {
@@ -83,12 +81,16 @@ const AnimatedSection = memo(
         id={id}
         ref={ref}
         variants={{
-          hidden: { opacity: 0, y: 50 }, // Reduced distance for smoother animation
+          hidden: { opacity: 0, y: 40 },
           visible: { opacity: 1, y: 0 },
         }}
         initial="hidden"
         animate={mainControls}
-        transition={{ duration: 0.3, ease: "easeOut" }} // Reduced duration
+        transition={{ 
+          duration: 0.4, 
+          ease: [0.22, 1, 0.36, 1], 
+          delay: delay 
+        }}
         className={className}
       >
         {children}
@@ -107,7 +109,7 @@ const Faq = ({
   itemClassName,
   showCategoryBadges = true,
 }: FaqProps) => {
-  // Estados
+  // States
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
@@ -118,12 +120,13 @@ const Faq = ({
   const [error, setError] = useState<string | null>(null);
   const [animateHero, setAnimateHero] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
+  const [searchFocused, setSearchFocused] = useState(false);
 
-  // Simulamos la carga de la página
+  // Simulate page loading
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsPageLoading(false);
-      // Activamos las animaciones del hero después de que la pantalla de carga desaparezca
+      // Activate hero animations after loading screen disappears
       setTimeout(() => {
         setAnimateHero(true);
       }, 100);
@@ -132,25 +135,28 @@ const Faq = ({
     return () => clearTimeout(timer);
   }, []);
 
-  // Smooth scroll function - Optimized to use requestAnimationFrame
+  // Smooth scroll function using requestAnimationFrame
   const scrollToContent = () => {
     const faqSection = document.getElementById("faq-content");
     if (faqSection) {
       const startPosition = window.pageYOffset;
       const targetPosition =
-        faqSection.getBoundingClientRect().top + window.pageYOffset;
+        faqSection.getBoundingClientRect().top + window.pageYOffset - 80; // Added offset for better positioning
       const distance = targetPosition - startPosition;
-      const duration = 500; // ms
+      const duration = 600; // ms - slightly longer for smoother feel
       let startTime: number | null = null;
 
       function animation(currentTime: number) {
         if (startTime === null) startTime = currentTime;
         const timeElapsed = currentTime - startTime;
         const progress = Math.min(timeElapsed / duration, 1);
-        const ease = (t: number) =>
-          t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t; // easeInOutQuad
+        
+        // Cubic bezier easing for more natural motion
+        const easeOutCubic = (t: number): number => {
+          return 1 - Math.pow(1 - t, 3);
+        };
 
-        window.scrollTo(0, startPosition + distance * ease(progress));
+        window.scrollTo(0, startPosition + distance * easeOutCubic(progress));
 
         if (timeElapsed < duration) {
           requestAnimationFrame(animation);
@@ -161,12 +167,12 @@ const Faq = ({
     }
   };
 
-  // Cargar datos de la API
+  // Load data from API
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        // Obtener categorías y FAQs
+        // Get categories and FAQs
         const [categoriesResponse, faqsResponse] = await Promise.all([
           getCategoriesFaqs(),
           getFaqs(),
@@ -181,7 +187,7 @@ const Faq = ({
           setFilteredItems(faqsResponse.data);
         }
       } catch (err) {
-        console.error("Error al cargar los datos:", err);
+        console.error("Error loading data:", err);
         setError(
           "No se pudieron cargar las preguntas frecuentes. Por favor, intenta de nuevo más tarde."
         );
@@ -193,11 +199,11 @@ const Faq = ({
     fetchData();
   }, []);
 
-  // Filtrar items cuando cambia el término de búsqueda o la categoría
+  // Filter items when search term or category changes
   useEffect(() => {
     let result = items;
 
-    // Filtrar por término de búsqueda
+    // Filter by search term
     if (searchTerm) {
       const lowerSearchTerm = searchTerm.toLowerCase();
       result = result.filter(
@@ -207,7 +213,7 @@ const Faq = ({
       );
     }
 
-    // Filtrar por categoría
+    // Filter by category
     if (selectedCategory !== null) {
       result = result.filter((item) => item.categoryId === selectedCategory);
     }
@@ -237,21 +243,49 @@ const Faq = ({
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.05,
+        staggerChildren: 0.07,
       },
     },
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
-    exit: { opacity: 0, y: -10, transition: { duration: 0.2 } },
+    hidden: { opacity: 0, y: 15 },
+    visible: { 
+      opacity: 1, 
+      y: 0, 
+      transition: { 
+        duration: 0.4,
+        ease: [0.22, 1, 0.36, 1]
+      } 
+    },
+    exit: { 
+      opacity: 0, 
+      y: -10, 
+      transition: { 
+        duration: 0.3,
+        ease: [0.22, 1, 0.36, 1]
+      } 
+    },
   };
 
   const contentVariants = {
     hidden: { opacity: 0, height: 0 },
-    visible: { opacity: 1, height: "auto", transition: { duration: 0.3 } },
-    exit: { opacity: 0, height: 0, transition: { duration: 0.2 } },
+    visible: { 
+      opacity: 1, 
+      height: "auto", 
+      transition: { 
+        duration: 0.4,
+        ease: [0.22, 1, 0.36, 1]
+      } 
+    },
+    exit: { 
+      opacity: 0, 
+      height: 0, 
+      transition: { 
+        duration: 0.3,
+        ease: [0.22, 1, 0.36, 1]
+      } 
+    },
   };
 
   // Get category name by ID
@@ -260,18 +294,25 @@ const Faq = ({
     return category ? category.name : "General";
   };
 
-  
   return (
     <>
       {isPageLoading && <Loader />}
       <div className="min-h-screen mt-5 bg-white dark:bg-gray-900 overflow-x-hidden">
         {/* Hero Section */}
         <div className="relative min-h-screen bg-white dark:bg-gray-900 flex items-center">
-          {/* Background decoration - Enhanced with about page style */}
+          {/* Background decoration - Enhanced */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-bl from-blue-50/80 to-transparent dark:from-blue-950/20 dark:to-transparent"></div>
             <div className="absolute -top-20 -right-20 w-96 h-96 bg-blue-100 dark:bg-blue-900/20 rounded-full opacity-70 blur-3xl"></div>
             <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-80 h-80 bg-blue-100 dark:bg-blue-900/20 rounded-full opacity-60 blur-3xl"></div>
+            
+            {/* Added subtle grid pattern */}
+            <div className="absolute inset-0 bg-grid-pattern opacity-[0.03] dark:opacity-[0.05]"></div>
+            
+            {/* Added decorative circles */}
+            <div className="absolute top-1/4 left-1/4 w-4 h-4 bg-blue-400 dark:bg-blue-500 rounded-full opacity-20"></div>
+            <div className="absolute top-1/3 right-1/3 w-6 h-6 bg-blue-500 dark:bg-blue-400 rounded-full opacity-20"></div>
+            <div className="absolute bottom-1/4 right-1/4 w-5 h-5 bg-blue-300 dark:bg-blue-600 rounded-full opacity-20"></div>
           </div>
 
           <div className="container mx-auto px-6 py-16 relative z-10 max-w-full">
@@ -282,7 +323,10 @@ const Faq = ({
                 animate={
                   animateHero ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }
                 }
-                transition={{ duration: 0.8 }}
+                transition={{ 
+                  duration: 0.8,
+                  ease: [0.22, 1, 0.36, 1]
+                }}
                 className="space-y-8"
               >
                 <motion.div
@@ -290,7 +334,11 @@ const Faq = ({
                   animate={
                     animateHero ? { opacity: 1, y: 0 } : { opacity: 0, y: -20 }
                   }
-                  transition={{ duration: 0.6, delay: 0.2 }}
+                  transition={{ 
+                    duration: 0.7, 
+                    delay: 0.2,
+                    ease: [0.22, 1, 0.36, 1]
+                  }}
                 >
                   <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
@@ -299,8 +347,11 @@ const Faq = ({
                         ? { opacity: 1, scale: 1 }
                         : { opacity: 0, scale: 0.9 }
                     }
-                    transition={{ duration: 0.5 }}
-                    className="mb-6 inline-flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-4 py-1.5"
+                    transition={{ 
+                      duration: 0.5,
+                      ease: [0.22, 1, 0.36, 1]
+                    }}
+                    className="mb-6 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-blue-100 to-blue-50 dark:from-blue-900/30 dark:to-blue-800/20 px-4 py-1.5 border border-blue-100 dark:border-blue-800/30"
                   >
                     <HelpCircle className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
                     <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
@@ -315,12 +366,16 @@ const Faq = ({
                         ? { opacity: 1, y: 0 }
                         : { opacity: 0, y: -20 }
                     }
-                    transition={{ duration: 0.6, delay: 0.2 }}
+                    transition={{ 
+                      duration: 0.7, 
+                      delay: 0.3,
+                      ease: [0.22, 1, 0.36, 1]
+                    }}
                     className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white leading-tight"
                   >
                     {title}{" "}
                     <span className="relative inline-block">
-                      <span className="relative z-10 text-blue-600">
+                      <span className="relative z-10 bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent">
                         que necesitas saber
                       </span>
                       <span className="absolute bottom-2 left-0 w-full h-3 bg-blue-600/20 -z-10 rounded"></span>
@@ -331,7 +386,11 @@ const Faq = ({
                 <motion.p
                   initial={{ opacity: 0 }}
                   animate={animateHero ? { opacity: 1 } : { opacity: 0 }}
-                  transition={{ duration: 0.6, delay: 0.5 }}
+                  transition={{ 
+                    duration: 0.7, 
+                    delay: 0.5,
+                    ease: [0.22, 1, 0.36, 1]
+                  }}
                   className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed max-w-lg"
                 >
                   {description}
@@ -342,32 +401,58 @@ const Faq = ({
                   animate={
                     animateHero ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }
                   }
-                  transition={{ duration: 0.6, delay: 0.7 }}
+                  transition={{ 
+                    duration: 0.7, 
+                    delay: 0.7,
+                    ease: [0.22, 1, 0.36, 1]
+                  }}
                   className="flex flex-col sm:flex-row gap-4 mt-8"
                 >
                   <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-full transition-all flex items-center justify-center shadow-lg shadow-blue-600/20"
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium py-3 px-6 rounded-full transition-all flex items-center justify-center shadow-lg shadow-blue-600/20"
                     onClick={scrollToContent}
                   >
                     <span className="flex items-center">
                       Ver preguntas frecuentes
-                      <ArrowRight className="ml-2 w-4 h-4" />
+                      <motion.div
+                        animate={{ x: [0, 4, 0] }}
+                        transition={{ 
+                          repeat: Infinity, 
+                          repeatType: "reverse", 
+                          duration: 1.5,
+                          ease: "easeInOut"
+                        }}
+                      >
+                        <ArrowRight className="ml-2 w-4 h-4" />
+                      </motion.div>
                     </span>
                   </motion.button>
 
                   <motion.a
                     href="/contacto"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="border border-gray-300 dark:border-gray-700 hover:border-blue-600 dark:hover:border-blue-500 text-gray-900 dark:text-white font-medium py-3 px-6 rounded-full transition-all flex items-center justify-center"
+                    whileHover={{ scale: 1.03, borderColor: "rgb(59, 130, 246)" }}
+                    whileTap={{ scale: 0.97 }}
+                    className="border border-gray-300 dark:border-gray-700 hover:border-blue-600 dark:hover:border-blue-500 text-gray-900 dark:text-white font-medium py-3 px-6 rounded-full transition-all flex items-center justify-center bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm"
                   >
                     <MessageSquare className="mr-2 h-5 w-5" />
                     Contactar soporte
                   </motion.a>
                 </motion.div>
-                <Breadcrumbs />
+                
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={
+                    animateHero ? { opacity: 1 } : { opacity: 0 }
+                  }
+                  transition={{ 
+                    duration: 0.5, 
+                    delay: 0.9
+                  }}
+                >
+                  <Breadcrumbs />
+                </motion.div>
               </motion.div>
 
               {/* Right column - FAQ Preview */}
@@ -376,7 +461,11 @@ const Faq = ({
                 animate={
                   animateHero ? { opacity: 1, x: 0 } : { opacity: 0, x: 30 }
                 }
-                transition={{ duration: 0.8, delay: 0.3 }}
+                transition={{ 
+                  duration: 0.8, 
+                  delay: 0.3,
+                  ease: [0.22, 1, 0.36, 1]
+                }}
                 className="relative"
               >
                 {/* Main featured FAQ preview */}
@@ -385,10 +474,15 @@ const Faq = ({
                   animate={
                     animateHero ? { y: 0, opacity: 1 } : { y: 20, opacity: 0 }
                   }
-                  transition={{ duration: 0.6, delay: 0.4 }}
-                  className="relative z-20 rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-blue-600 to-blue-700"
+                  transition={{ 
+                    duration: 0.7, 
+                    delay: 0.4,
+                    ease: [0.22, 1, 0.36, 1]
+                  }}
+                  className="relative z-20 rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 border border-blue-500/20"
                 >
-                  <div className="p-8">
+                  <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
+                  <div className="p-8 relative">
                     <div className="flex items-center mb-6">
                       <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
                       <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
@@ -398,54 +492,82 @@ const Faq = ({
                       </div>
                     </div>
 
-                    <h3 className="text-xl font-bold text-white mb-4">
+                    <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+                      <span className="bg-white/20 rounded-md w-7 h-7 inline-flex items-center justify-center mr-2">
+                        <HelpCircle className="w-4 h-4 text-white" />
+                      </span>
                       Preguntas Frecuentes
                     </h3>
 
                     <div className="space-y-4">
-                      <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
-                        <div className="flex items-center text-white/60 text-sm mb-1">
+                      <motion.div 
+                        className="bg-white/10 rounded-lg p-3 backdrop-blur-sm border border-white/10"
+                        whileHover={{ 
+                          y: -2, 
+                          backgroundColor: "rgba(255, 255, 255, 0.15)",
+                          transition: { duration: 0.2 }
+                        }}
+                      >
+                        <div className="flex items-center text-white/80 text-sm mb-1">
                           <HelpCircle className="w-4 h-4 mr-2" />
                           <span className="font-medium">
                             ¿Cómo puedo realizar un pedido?
                           </span>
                         </div>
                         <div className="h-2 w-3/4 bg-white/20 rounded-full"></div>
-                      </div>
+                      </motion.div>
 
-                      <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
-                        <div className="flex items-center text-white/60 text-sm mb-1">
+                      <motion.div 
+                        className="bg-white/10 rounded-lg p-3 backdrop-blur-sm border border-white/10"
+                        whileHover={{ 
+                          y: -2, 
+                          backgroundColor: "rgba(255, 255, 255, 0.15)",
+                          transition: { duration: 0.2 }
+                        }}
+                      >
+                        <div className="flex items-center text-white/80 text-sm mb-1">
                           <HelpCircle className="w-4 h-4 mr-2" />
                           <span className="font-medium">
                             ¿Cuáles son los tiempos de entrega?
                           </span>
                         </div>
                         <div className="h-2 w-4/5 bg-white/20 rounded-full"></div>
-                      </div>
+                      </motion.div>
 
-                      <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
-                        <div className="flex items-center text-white/60 text-sm mb-1">
+                      <motion.div 
+                        className="bg-white/10 rounded-lg p-3 backdrop-blur-sm border border-white/10"
+                        whileHover={{ 
+                          y: -2, 
+                          backgroundColor: "rgba(255, 255, 255, 0.15)",
+                          transition: { duration: 0.2 }
+                        }}
+                      >
+                        <div className="flex items-center text-white/80 text-sm mb-1">
                           <HelpCircle className="w-4 h-4 mr-2" />
                           <span className="font-medium">
                             ¿Ofrecen descuentos por volumen?
                           </span>
                         </div>
                         <div className="h-2 w-1/2 bg-white/20 rounded-full"></div>
-                      </div>
+                      </motion.div>
 
-                      <div className="bg-white text-blue-600 text-center py-2 rounded-lg font-medium flex items-center justify-center">
+                      <motion.div 
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        className="bg-white text-blue-600 text-center py-2.5 rounded-lg font-medium flex items-center justify-center shadow-md cursor-pointer"
+                      >
                         <ChevronDown className="w-4 h-4 mr-2" />
                         Ver más preguntas
-                      </div>
+                      </motion.div>
                     </div>
                   </div>
                 </motion.div>
 
-                {/* Decorative elements - Enhanced with about page style */}
+                {/* Decorative elements - Enhanced */}
                 <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-100 dark:bg-blue-900/20 rounded-full filter blur-3xl opacity-50 z-0"></div>
                 <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-blue-100 dark:bg-blue-900/20 rounded-full filter blur-3xl opacity-50 z-0"></div>
 
-                {/* Floating badge */}
+                {/* Floating badges */}
                 <motion.div
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={
@@ -453,8 +575,12 @@ const Faq = ({
                       ? { scale: 1, opacity: 1 }
                       : { scale: 0.8, opacity: 0 }
                   }
-                  transition={{ duration: 0.5, delay: 0.8 }}
-                  className="absolute top-4 -right-4 bg-white dark:bg-gray-800 shadow-lg rounded-full px-4 py-2 z-30"
+                  transition={{ 
+                    duration: 0.5, 
+                    delay: 0.8,
+                    ease: [0.22, 1, 0.36, 1]
+                  }}
+                  className="absolute top-4 -right-4 bg-white dark:bg-gray-800 shadow-lg rounded-full px-4 py-2 z-30 border border-gray-100 dark:border-gray-700"
                 >
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-yellow-500" />
@@ -463,11 +589,32 @@ const Faq = ({
                     </span>
                   </div>
                 </motion.div>
+                
+                {/* Added new floating badge */}
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={
+                    animateHero
+                      ? { scale: 1, opacity: 1 }
+                      : { scale: 0.8, opacity: 0 }
+                  }
+                  transition={{ 
+                    duration: 0.5, 
+                    delay: 1,
+                    ease: [0.22, 1, 0.36, 1]
+                  }}
+                  className="absolute -bottom-2 -left-4 bg-white dark:bg-gray-800 shadow-lg rounded-full px-4 py-2 z-30 border border-gray-100 dark:border-gray-700"
+                >
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-blue-500" />
+                    <span className="font-bold text-gray-900 dark:text-white text-sm">
+                      Soporte 24/7
+                    </span>
+                  </div>
+                </motion.div>
               </motion.div>
             </div>
           </div>
-
-        
         </div>
 
         {/* FAQ Content */}
@@ -475,32 +622,12 @@ const Faq = ({
           id="faq-content"
           className="py-24 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 relative overflow-hidden"
         >
-          {/* Background decoration - Enhanced with about page style */}
+          {/* Background decoration - Enhanced */}
           <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
             <div className="absolute -top-24 -left-24 w-64 h-64 bg-blue-500/5 rounded-full"></div>
             <div className="absolute top-1/4 right-0 w-96 h-96 bg-blue-500/5 rounded-full"></div>
             <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-blue-500/5 rounded-full"></div>
-            <svg
-              className="absolute top-0 left-0 w-full h-full text-blue-500/5 opacity-30"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <defs>
-                <pattern
-                  id="grid-pattern"
-                  width="40"
-                  height="40"
-                  patternUnits="userSpaceOnUse"
-                >
-                  <path
-                    d="M0 0 L40 0 L40 40 L0 40 Z"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="0.5"
-                  />
-                </pattern>
-              </defs>
-              <rect width="100%" height="100%" fill="url(#grid-pattern)" />
-            </svg>
+            <div className="absolute inset-0 bg-grid-pattern opacity-[0.03] dark:opacity-[0.05]"></div>
           </div>
 
           <div className="container mx-auto px-6 relative z-10 max-w-full">
@@ -508,21 +635,28 @@ const Faq = ({
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
+              transition={{ 
+                duration: 0.6,
+                ease: [0.22, 1, 0.36, 1]
+              }}
               className="text-center mb-16"
             >
-              <span className="inline-flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-4 py-1.5 text-sm font-medium text-blue-800 dark:text-blue-300 mb-4">
+              <span className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-blue-100 to-blue-50 dark:from-blue-900/30 dark:to-blue-800/20 px-4 py-1.5 text-sm font-medium text-blue-800 dark:text-blue-300 mb-4 border border-blue-100 dark:border-blue-800/30">
                 PREGUNTAS FRECUENTES
               </span>
               <h2 className="text-3xl md:text-5xl font-bold text-gray-900 dark:text-white">
-                Respuestas a tus <span className="text-blue-600">dudas</span>
+                Respuestas a tus <span className="bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent">dudas</span>
               </h2>
               <motion.div
                 initial={{ width: 0 }}
                 whileInView={{ width: "6rem" }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                className="h-1 bg-blue-600 mx-auto mt-6"
+                transition={{ 
+                  duration: 0.5, 
+                  delay: 0.3,
+                  ease: [0.22, 1, 0.36, 1]
+                }}
+                className="h-1 bg-gradient-to-r from-blue-600 to-blue-500 mx-auto mt-6 rounded-full"
               ></motion.div>
             </motion.div>
 
@@ -530,7 +664,11 @@ const Faq = ({
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2 }}
+              transition={{ 
+                duration: 0.6, 
+                delay: 0.2,
+                ease: [0.22, 1, 0.36, 1]
+              }}
               className={cn(
                 "bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden relative p-8 md:p-10 max-w-full border border-gray-100 dark:border-gray-700",
                 className
@@ -540,6 +678,7 @@ const Faq = ({
               <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
                 <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/5 rounded-full"></div>
                 <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-blue-500/5 rounded-full"></div>
+                <div className="absolute inset-0 bg-grid-pattern opacity-[0.03] dark:opacity-[0.05]"></div>
               </div>
 
               {/* Search and filters */}
@@ -548,29 +687,38 @@ const Faq = ({
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: 0.4 }}
+                  transition={{ 
+                    duration: 0.5, 
+                    delay: 0.4,
+                    ease: [0.22, 1, 0.36, 1]
+                  }}
                   className="mb-8 space-y-4 relative z-10 max-w-full"
                 >
                   {allowSearch && (
                     <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Search className="h-5 w-5 text-blue-600" />
+                      <div className={`absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none transition-opacity ${searchFocused ? 'text-blue-600' : 'text-gray-500 dark:text-gray-400'}`}>
+                        <Search className="h-5 w-5" />
                       </div>
                       <input
                         type="text"
                         placeholder="Buscar preguntas..."
-                        className="pl-10 pr-10 py-3 w-full border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm"
+                        className={`pl-10 pr-10 py-3.5 w-full border ${searchFocused ? 'border-blue-500 ring-2 ring-blue-500/20' : 'border-gray-200 dark:border-gray-600'} rounded-lg outline-none transition-all bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm`}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
+                        onFocus={() => setSearchFocused(true)}
+                        onBlur={() => setSearchFocused(false)}
                       />
                       {searchTerm && (
                         <motion.button
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.8 }}
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                           className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                           onClick={clearSearch}
                         >
-                          <XCircle className="w-5 h-5" />
+                          <X className="w-5 h-5" />
                         </motion.button>
                       )}
                     </div>
@@ -589,8 +737,8 @@ const Faq = ({
                         className={cn(
                           "px-3 py-1.5 text-sm rounded-full transition-colors",
                           selectedCategory === null
-                            ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium"
-                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                            ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium shadow-md shadow-blue-600/20"
+                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
                         )}
                       >
                         Todas
@@ -604,8 +752,8 @@ const Faq = ({
                           className={cn(
                             "px-3 py-1.5 text-sm rounded-full transition-colors",
                             selectedCategory === category.id
-                              ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium"
-                              : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                              ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium shadow-md shadow-blue-600/20"
+                              : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
                           )}
                         >
                           {category.name}
@@ -613,12 +761,15 @@ const Faq = ({
                       ))}
                       {(searchTerm || selectedCategory !== null) && (
                         <motion.button
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.8 }}
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={clearFilters}
-                          className="px-3 py-1.5 text-sm rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors ml-auto flex items-center gap-1"
+                          className="px-3 py-1.5 text-sm rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors ml-auto flex items-center gap-1 border border-red-200 dark:border-red-800/30"
                         >
-                          <XCircle className="w-3.5 h-3.5" />
+                          <X className="w-3.5 h-3.5" />
                           Limpiar filtros
                         </motion.button>
                       )}
@@ -633,7 +784,7 @@ const Faq = ({
                   <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 rounded-full shadow-md mb-4">
                     <Loader2 className="w-12 h-12 animate-spin" />
                   </div>
-                  <p className="text-gray-600 dark:text-gray-300 text-lg">
+                  <p className="text-gray-600 dark:text-gray-300 text-lg mt-4">
                     Cargando preguntas frecuentes...
                   </p>
                 </div>
@@ -642,7 +793,7 @@ const Faq = ({
               {/* Error state */}
               {error && (
                 <div className="text-center py-16 px-4 max-w-full">
-                  <div className="inline-flex items-center justify-center p-4 bg-red-100 dark:bg-red-900/30 rounded-full mb-4">
+                  <div className="inline-flex items-center justify-center p-4 bg-red-100 dark:bg-red-900/30 rounded-full mb-4 border border-red-200 dark:border-red-800/30">
                     <XCircle className="w-10 h-10 text-red-600 dark:text-red-400" />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
@@ -651,12 +802,14 @@ const Faq = ({
                   <p className="text-gray-600 dark:text-gray-400 mb-6">
                     {error}
                   </p>
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => window.location.reload()}
                     className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg transition-colors shadow-md"
                   >
                     Intentar de nuevo
-                  </button>
+                  </motion.button>
                 </div>
               )}
 
@@ -681,6 +834,7 @@ const Faq = ({
                           variants={itemVariants}
                           className={cn(
                             "border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden bg-white dark:bg-gray-800 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 max-w-full",
+                            expandedId === item.id ? "ring-2 ring-blue-500/20" : "",
                             itemClassName
                           )}
                         >
@@ -691,10 +845,10 @@ const Faq = ({
                             <div className="flex items-start gap-4">
                               <div
                                 className={cn(
-                                  "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 p-3 rounded-full flex-shrink-0 transition-all duration-300",
+                                  "p-3 rounded-full flex-shrink-0 transition-all duration-300",
                                   expandedId === item.id
-                                    ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white"
-                                    : ""
+                                    ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md shadow-blue-600/20"
+                                    : "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
                                 )}
                               >
                                 <HelpCircle className="w-5 h-5" />
@@ -705,7 +859,7 @@ const Faq = ({
                                 </h3>
                                 {showCategoryBadges && item.categoryId && (
                                   <div className="mt-1 flex items-center gap-2">
-                                    <span className="inline-flex items-center gap-1 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">
+                                    <span className="inline-flex items-center gap-1 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800/30">
                                       <Tag className="w-3 h-3" />
                                       {getCategoryName(item.categoryId)}
                                     </span>
@@ -715,11 +869,11 @@ const Faq = ({
                             </div>
                             <div className="flex-shrink-0">
                               {expandedId === item.id ? (
-                                <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-2 rounded-full">
+                                <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-2 rounded-full shadow-md shadow-blue-600/20">
                                   <ChevronUp className="w-5 h-5" />
                                 </div>
                               ) : (
-                                <div className="bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 p-2 rounded-full">
+                                <div className="bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 p-2 rounded-full border border-gray-200 dark:border-gray-600">
                                   <ChevronDown className="w-5 h-5" />
                                 </div>
                               )}
@@ -753,7 +907,7 @@ const Faq = ({
                         animate={{ opacity: 1 }}
                         className="text-center py-16 px-4 bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 max-w-full"
                       >
-                        <div className="inline-flex items-center justify-center p-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-full mb-6">
+                        <div className="inline-flex items-center justify-center p-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-full mb-6 shadow-md shadow-blue-600/20">
                           <MessageSquare className="w-8 h-8" />
                         </div>
                         <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
@@ -767,12 +921,14 @@ const Faq = ({
                             : "No hay preguntas frecuentes disponibles"}
                         </p>
                         {(searchTerm || selectedCategory !== null) && (
-                          <button
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                             onClick={clearFilters}
-                            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg transition-colors shadow-md"
+                            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg transition-colors shadow-md shadow-blue-600/20"
                           >
                             Ver todas las preguntas
-                          </button>
+                          </motion.button>
                         )}
                       </motion.div>
                     )}
@@ -783,7 +939,7 @@ const Faq = ({
           </div>
         </AnimatedSection>
 
-        {/* CTA Section - Enhanced with about page style */}
+        {/* CTA Section - Enhanced */}
         <section className="py-20 bg-gradient-to-r from-blue-600 to-blue-800 text-white relative overflow-hidden">
           {/* Background decoration */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -803,6 +959,13 @@ const Faq = ({
                 fill="currentColor"
               ></path>
             </svg>
+            <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
+            
+            {/* Added floating particles */}
+            <div className="absolute top-1/4 left-1/4 w-4 h-4 bg-white rounded-full opacity-20"></div>
+            <div className="absolute top-1/3 right-1/3 w-6 h-6 bg-white rounded-full opacity-20"></div>
+            <div className="absolute bottom-1/4 right-1/4 w-5 h-5 bg-white rounded-full opacity-20"></div>
+            <div className="absolute top-2/4 left-1/3 w-3 h-3 bg-white rounded-full opacity-20"></div>
           </div>
 
           <div className="container mx-auto px-6 text-center relative z-10 max-w-full">
@@ -816,7 +979,10 @@ const Faq = ({
                 initial={{ opacity: 0, y: -20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
+                transition={{ 
+                  duration: 0.6,
+                  ease: [0.22, 1, 0.36, 1]
+                }}
                 className="text-3xl md:text-5xl font-bold mb-6"
               >
                 ¿No encontraste lo que buscabas?
@@ -825,7 +991,11 @@ const Faq = ({
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.2 }}
+                transition={{ 
+                  duration: 0.6, 
+                  delay: 0.2,
+                  ease: [0.22, 1, 0.36, 1]
+                }}
                 className="text-blue-100 text-lg max-w-2xl mx-auto mb-10"
               >
                 Nuestro equipo de soporte está listo para ayudarte con cualquier
@@ -835,7 +1005,11 @@ const Faq = ({
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.4 }}
+                transition={{ 
+                  duration: 0.6, 
+                  delay: 0.4,
+                  ease: [0.22, 1, 0.36, 1]
+                }}
                 className="flex flex-col sm:flex-row justify-center gap-4"
               >
                 <motion.a
@@ -858,14 +1032,22 @@ const Faq = ({
                 </motion.a>
               </motion.div>
 
-              {/* Floating badges - Added from about page style */}
+              {/* Floating badges */}
               <div className="mt-12 flex flex-wrap justify-center gap-4">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: 0.6 }}
-                  animate={{ y: [0, -10, 0] }}
+                  animate={{ 
+                    y: [0, -8, 0],
+                    transition: {
+                      repeat: Infinity,
+                      repeatType: "reverse",
+                      duration: 3,
+                      ease: "easeInOut"
+                    }
+                  }}
                   className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 flex items-center gap-2"
                 >
                   <CheckCircle className="w-5 h-5 text-yellow-300" />
@@ -876,7 +1058,16 @@ const Faq = ({
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: 0.7 }}
-                  animate={{ y: [0, -10, 0] }}
+                  animate={{ 
+                    y: [0, -8, 0],
+                    transition: {
+                      repeat: Infinity,
+                      repeatType: "reverse",
+                      duration: 3.5,
+                      ease: "easeInOut",
+                      delay: 0.5
+                    }
+                  }}
                   className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 flex items-center gap-2"
                 >
                   <Sparkles className="w-5 h-5 text-blue-300" />
@@ -889,7 +1080,16 @@ const Faq = ({
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: 0.8 }}
-                  animate={{ y: [0, -10, 0] }}
+                  animate={{ 
+                    y: [0, -8, 0],
+                    transition: {
+                      repeat: Infinity,
+                      repeatType: "reverse",
+                      duration: 4,
+                      ease: "easeInOut",
+                      delay: 1
+                    }
+                  }}
                   className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 flex items-center gap-2"
                 >
                   <Clock className="w-5 h-5 text-green-300" />

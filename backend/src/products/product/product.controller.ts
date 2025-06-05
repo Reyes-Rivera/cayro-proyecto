@@ -60,10 +60,21 @@ export class ProductController {
     }
   }
 
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
+  @Get('get-by-name/:name')
+  async findOne(@Param('name') name: string) {
     try {
-      const res = await this.productService.findOne(Number(id));
+      const res = await this.productService.findOne(name);
+      if (!res) throw new NotFoundException('No se encontraron productos.');
+      return res;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  @Get(':id')
+  async findById(@Param('id') id: number) {
+    try {
+      const res = await this.productService.findById(id);
       if (!res) throw new NotFoundException('No se encontraron productos.');
       return res;
     } catch (error) {

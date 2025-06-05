@@ -1,8 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { Shield, Truck, Headphones, RefreshCw } from "lucide-react";
-import { memo } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 
 const benefits = [
   {
@@ -29,6 +28,27 @@ const benefits = [
 ];
 
 const BenefitsSection = () => {
+  const [isVisible, setIsVisible] = useState(false);
+  const sectionRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <section className="py-24 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 relative overflow-hidden">
       {/* Background decoration - Simplified */}
@@ -38,13 +58,14 @@ const BenefitsSection = () => {
         <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-blue-500/5 rounded-full"></div>
       </div>
 
-      <div className="container mx-auto px-6 relative z-10 max-w-full">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+      <div
+        className="container mx-auto px-6 relative z-10 max-w-full"
+        ref={sectionRef}
+      >
+        <div
+          className={`text-center mb-16 transition-all duration-700 ${
+            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
+          }`}
         >
           <span className="inline-flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-4 py-1.5 text-sm font-medium text-blue-800 dark:text-blue-300 mb-4">
             NUESTROS BENEFICIOS
@@ -53,20 +74,21 @@ const BenefitsSection = () => {
             Por qué comprar con nosotros
           </h2>
           <div className="w-24 h-1 bg-blue-600 mx-auto mt-6"></div>
-        </motion.div>
+        </div>
 
         {/* Lista de beneficios - Simplified */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {benefits.map((benefit, index) => {
             const Icon = benefit.icon;
             return (
-              <motion.div
+              <div
                 key={benefit.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all group relative overflow-hidden"
+                className={`bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all group relative overflow-hidden duration-500 ${
+                  isVisible
+                    ? "translate-y-0 opacity-100"
+                    : "translate-y-10 opacity-0"
+                }`}
+                style={{ transitionDelay: `${index * 100}ms` }}
               >
                 {/* Background decoration - Simplified */}
                 <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-500/5 rounded-full"></div>
@@ -90,7 +112,7 @@ const BenefitsSection = () => {
                 <div className="absolute -right-2 -top-2 text-8xl font-bold text-blue-500/5 dark:text-blue-500/10 select-none">
                   {index + 1}
                 </div>
-              </motion.div>
+              </div>
             );
           })}
         </div>

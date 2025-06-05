@@ -2,63 +2,75 @@ import { User, UserLogin } from "@/types/User";
 import axios from "./axios";
 
 export const verifyToken = async () => {
-  const res = await axios.get("/auth/verifyToken", {
+  return axios.get("/auth/verifyToken", {
     withCredentials: true,
   });
-  return res;
 };
 
 export const loginApi = async (data: UserLogin) => {
   return axios.post("/auth/login", data, {
-    withCredentials: true, // Asegura que las cookies de sesión se envíen
+    withCredentials: true,
   });
 };
 
-export const logOutApi = async () => {
-  const res = await axios.post("/auth/logout", {
+export const refreshTokenApi = () =>
+  axios.post("/auth/refresh", {
     withCredentials: true,
   });
-  return res;
+
+
+export const logOutApi = async () => {
+  return axios.post("/auth/logout", null, {
+    withCredentials: true,
+  });
 };
 
 export const signUpApi = async (data: User) => {
-  const res = await axios.post("/users", data, {});
-  return res;
+  return axios.post("/users", data, {
+    withCredentials: true,
+  });
 };
 
 export const verifyCodeApi = async (email: string, code: string) => {
-  const res = await axios.post("/users/verify-code", { email, code }, {});
-  return res;
+  return axios.post(
+    "/users/verify-code",
+    { email, code },
+    { withCredentials: true }
+  );
 };
 
 export const verifyCodeApiAuth = async (email: string, code: string) => {
-  const res = await axios.post("/auth/verify-code", { email, code });
-  return res;
+  return axios.post(
+    "/auth/verify-code",
+    { email, code },
+    { withCredentials: true }
+  );
 };
 
 export const resendCodeApi = async (email: object) => {
-  const res = await axios.post("/users/resend-code", email);
-  return res;
+  return axios.post("/users/resend-code", email, {
+    withCredentials: true,
+  });
 };
 
 export const resendCodeApiAuth = async (email: object) => {
-  const res = await axios.post("/auth/resend-code", email);
-  return res;
+  return axios.post("/auth/resend-code", email, {
+    withCredentials: true,
+  });
 };
 
 export const recoverPassword = async (email: object) => {
-  const res = await axios.post("/users/recover-password", email);
-  return res;
+  return axios.post("/users/recover-password", email);
 };
 
 export const restorePassword = async (
   token: string | undefined,
   password: object
 ) => {
-  const res = await axios.post(`/users/reset-password/${token}`, password);
-  return res;
+  return axios.post(`/users/reset-password/${token}`, password);
 };
 
 export const getQuestions = () => axios.get("/securityquestion");
+
 export const compareQuestion = async (data: object) =>
-  await axios.post("/users/compare-answer", data);
+  axios.post("/users/compare-answer", data);

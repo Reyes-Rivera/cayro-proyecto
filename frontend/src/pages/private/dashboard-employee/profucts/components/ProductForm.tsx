@@ -19,13 +19,13 @@ import type {
   Color,
   CreateProductDto,
   ProductVariantDto,
+  Images,
 } from "../data/sampleData";
 import {
   Package,
   Info,
   Palette,
   Tag,
-  Upload,
   Plus,
   X,
   ArrowLeft,
@@ -41,6 +41,9 @@ import {
   Check,
   HelpCircle,
   ArrowRight,
+  Camera,
+  Eye,
+  Upload,
 } from "lucide-react";
 import {
   createProduct,
@@ -53,13 +56,22 @@ import {
   getSleeve,
 } from "@/api/products";
 
+// Definir los tipos de ángulos disponibles
+type ImageAngle = "front" | "side" | "back";
+
+// Extender la interfaz Images para incluir el ángulo
+interface ExtendedImage extends Images {
+  angle: ImageAngle;
+  isNew?: boolean; // Para identificar imágenes nuevas que pueden ser eliminadas de Cloudinary
+}
+
 interface ColorSizeConfig {
   colorId: number;
   sizes: number[];
   prices: { [key: number]: number };
   stocks: { [key: number]: number };
   variantIds: { [key: number]: number };
-  image: string;
+  images: ExtendedImage[];
 }
 
 interface ProductFormProps {
@@ -107,6 +119,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
   const [colors, setColors] = useState<Color[]>();
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadingAngle, setUploadingAngle] = useState<ImageAngle | null>(null);
 
   // Pagination for variants table
   const [currentPage, setCurrentPage] = useState(1);
@@ -129,14 +142,23 @@ const ProductForm: React.FC<ProductFormProps> = ({
     watchSleeveId;
 
   // Validar si hay al menos un color, una talla, y que el precio y stock estén completos
+  // Además, validar que cada color tenga al menos una imagen de cada ángulo
   const isVariantsValid =
     colorConfigs.length > 0 &&
-    colorConfigs.every(
-      (config) =>
+    colorConfigs.every((config) => {
+      const hasFront = config.images.some((img) => img.angle === "front");
+      const hasSide = config.images.some((img) => img.angle === "side");
+      const hasBack = config.images.some((img) => img.angle === "back");
+
+      return (
         config.sizes.length > 0 &&
         Object.values(config.prices).every((price) => price > 0) &&
-        Object.values(config.stocks).every((stock) => stock > 0)
-    );
+        Object.values(config.stocks).every((stock) => stock > 0) &&
+        hasFront &&
+        hasSide &&
+        hasBack // Requiere al menos una imagen de cada ángulo
+      );
+    });
 
   // Animation variants
   const fadeIn = {
@@ -170,18 +192,44 @@ const ProductForm: React.FC<ProductFormProps> = ({
             existingConfig.sizes.push(variant.sizeId);
             existingConfig.prices[variant.sizeId] = variant.price;
             existingConfig.stocks[variant.sizeId] = variant.stock;
-            // Store the variant ID for each size
             existingConfig.variantIds[variant.sizeId] = variant.id;
           } else {
+            // Convertir las imágenes existentes y asignar ángulos por defecto
+            let images: ExtendedImage[] = [];
+
+            if (variant.images && variant.images.length > 0) {
+              images = variant.images.map((img, index) => ({
+                ...img,
+                angle: (index === 0
+                  ? "front"
+                  : index === 1
+                  ? "side"
+                  : "back") as ImageAngle,
+                isNew: false, // Imágenes existentes no son nuevas
+              }));
+            }
+
+            // Si no hay suficientes imágenes, agregar placeholders
+            const angles: ImageAngle[] = ["front", "side", "back"];
+            angles.forEach((angle) => {
+              if (!images.some((img) => img.angle === angle)) {
+                images.push({
+                  id: 0,
+                  productVariantId: variant.id,
+                  url: "https://res.cloudinary.com/dhhv8l6ti/image/upload/v1741550306/a58jbqkjh7csdrlw3qfd.jpg",
+                  angle: angle,
+                  isNew: false,
+                });
+              }
+            });
+
             acc.push({
               colorId: variant.colorId,
               sizes: [variant.sizeId],
               prices: { [variant.sizeId]: variant.price },
               stocks: { [variant.sizeId]: variant.stock },
               variantIds: { [variant.sizeId]: variant.id },
-              image:
-                variant.imageUrl ||
-                "https://res.cloudinary.com/dhhv8l6ti/image/upload/v1741550306/a58jbqkjh7csdrlw3qfd.jpg",
+              images: images,
             });
           }
           return acc;
@@ -221,6 +269,31 @@ const ProductForm: React.FC<ProductFormProps> = ({
   const handleAddColor = (colorId: string) => {
     const numericColorId = Number.parseInt(colorId, 10);
     if (!colorConfigs.some((config) => config.colorId === numericColorId)) {
+      // Crear imágenes placeholder para cada ángulo
+      const defaultImages: ExtendedImage[] = [
+        {
+          id: 0,
+          productVariantId: 0,
+          url: "https://res.cloudinary.com/dhhv8l6ti/image/upload/v1741550306/a58jbqkjh7csdrlw3qfd.jpg",
+          angle: "front",
+          isNew: false,
+        },
+        {
+          id: 0,
+          productVariantId: 0,
+          url: "https://res.cloudinary.com/dhhv8l6ti/image/upload/v1741550306/a58jbqkjh7csdrlw3qfd.jpg",
+          angle: "side",
+          isNew: false,
+        },
+        {
+          id: 0,
+          productVariantId: 0,
+          url: "https://res.cloudinary.com/dhhv8l6ti/image/upload/v1741550306/a58jbqkjh7csdrlw3qfd.jpg",
+          angle: "back",
+          isNew: false,
+        },
+      ];
+
       setColorConfigs((prev) => [
         ...prev,
         {
@@ -229,15 +302,28 @@ const ProductForm: React.FC<ProductFormProps> = ({
           prices: {},
           stocks: {},
           variantIds: {},
-          image:
-            "https://res.cloudinary.com/dhhv8l6ti/image/upload/v1741550306/a58jbqkjh7csdrlw3qfd.jpg",
+          images: defaultImages,
         },
       ]);
       setSelectedColorId(numericColorId);
     }
   };
 
-  const handleRemoveColor = (colorId: number) => {
+  const handleRemoveColor = async (colorId: number) => {
+    const config = colorConfigs.find((c) => c.colorId === colorId);
+    if (config) {
+      // Eliminar imágenes nuevas de Cloudinary
+      for (const image of config.images) {
+        if (
+          image.isNew &&
+          image.url !==
+            "https://res.cloudinary.com/dhhv8l6ti/image/upload/v1741550306/a58jbqkjh7csdrlw3qfd.jpg"
+        ) {
+          await deleteImageFromCloudinary(image.url);
+        }
+      }
+    }
+
     setColorConfigs((prev) =>
       prev.filter((config) => config.colorId !== colorId)
     );
@@ -347,8 +433,39 @@ const ProductForm: React.FC<ProductFormProps> = ({
     }
   };
 
+  const deleteImageFromCloudinary = async (imageUrl: string) => {
+    try {
+      // Extraer el public_id de la URL de Cloudinary
+      const urlParts = imageUrl.split("/");
+      const publicIdWithExtension = urlParts[urlParts.length - 1];
+      const publicId = publicIdWithExtension.split(".")[0];
+
+      const formData = new FormData();
+      formData.append("public_id", publicId);
+      formData.append("api_key", "your_api_key"); // Necesitarás configurar esto
+      formData.append(
+        "timestamp",
+        Math.round(new Date().getTime() / 1000).toString()
+      );
+
+      // Nota: Para eliminar imágenes de Cloudinary necesitas hacer la llamada desde el backend
+      // por seguridad, ya que requiere tu API secret
+      console.log(`Imagen marcada para eliminación: ${publicId}`);
+
+      // Aquí deberías hacer una llamada a tu backend para eliminar la imagen
+      // await fetch('/api/delete-cloudinary-image', {
+      //   method: 'POST',
+      //   body: JSON.stringify({ publicId }),
+      //   headers: { 'Content-Type': 'application/json' }
+      // })
+    } catch (error) {
+      console.error("Error al eliminar imagen de Cloudinary:", error);
+    }
+  };
+
   const handleImageUpload = async (
     colorId: number,
+    angle: ImageAngle,
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = event.target.files?.[0];
@@ -377,14 +494,87 @@ const ProductForm: React.FC<ProductFormProps> = ({
       return;
     }
 
+    setUploadingAngle(angle);
     const imageUrl = await uploadImageToCloudinary(file);
+
     if (imageUrl) {
       setColorConfigs((prev) =>
-        prev.map((config) =>
-          config.colorId === colorId ? { ...config, image: imageUrl } : config
-        )
+        prev.map((config) => {
+          if (config.colorId === colorId) {
+            const existingImageIndex = config.images.findIndex(
+              (img) => img.angle === angle
+            );
+            const newImages = [...config.images];
+
+            // Si existe una imagen para este ángulo y es nueva, eliminarla de Cloudinary
+            if (existingImageIndex >= 0) {
+              const existingImage = newImages[existingImageIndex];
+              if (
+                existingImage.isNew &&
+                existingImage.url !==
+                  "https://res.cloudinary.com/dhhv8l6ti/image/upload/v1741550306/a58jbqkjh7csdrlw3qfd.jpg"
+              ) {
+                deleteImageFromCloudinary(existingImage.url);
+              }
+
+              // Actualizar imagen existente
+              newImages[existingImageIndex] = {
+                id: 0,
+                productVariantId: 0,
+                url: imageUrl,
+                angle: angle,
+                isNew: true,
+              };
+            } else {
+              // Agregar nueva imagen
+              newImages.push({
+                id: 0,
+                productVariantId: 0,
+                url: imageUrl,
+                angle: angle,
+                isNew: true,
+              });
+            }
+
+            return { ...config, images: newImages };
+          }
+          return config;
+        })
       );
     }
+    setUploadingAngle(null);
+  };
+
+  // Función para obtener la imagen de un ángulo específico
+  const getImageForAngle = (colorId: number, angle: ImageAngle): string => {
+    const config = colorConfigs.find((c) => c.colorId === colorId);
+    if (!config)
+      return "https://res.cloudinary.com/dhhv8l6ti/image/upload/v1741550306/a58jbqkjh7csdrlw3qfd.jpg";
+
+    const image = config.images.find((img) => img.angle === angle);
+    return (
+      image?.url ||
+      "https://res.cloudinary.com/dhhv8l6ti/image/upload/v1741550306/a58jbqkjh7csdrlw3qfd.jpg"
+    );
+  };
+
+  // Función para verificar si una imagen es placeholder
+  const isPlaceholderImage = (url: string): boolean => {
+    return (
+      url ===
+      "https://res.cloudinary.com/dhhv8l6ti/image/upload/v1741550306/a58jbqkjh7csdrlw3qfd.jpg"
+    );
+  };
+
+  // Función para obtener la imagen principal (frontal o la primera disponible)
+  const getMainImage = (colorId: number): string => {
+    const config = colorConfigs.find((c) => c.colorId === colorId);
+    if (!config || config.images.length === 0) {
+      return "https://res.cloudinary.com/dhhv8l6ti/image/upload/v1741550306/a58jbqkjh7csdrlw3qfd.jpg";
+    }
+
+    const frontImage = config.images.find((img) => img.angle === "front");
+    return frontImage?.url || config.images[0].url;
   };
 
   const onSubmitForm = async (data: CreateProductDto) => {
@@ -392,7 +582,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
       Swal.fire({
         icon: "warning",
         title: "Datos incompletos",
-        text: "Debe agregar al menos un color, una talla, y completar el precio y stock (stock debe ser mayor a 0).",
+        text: "Debe agregar al menos un color, una talla, y una imagen para cada ángulo (frontal, lateral y posterior). También complete el precio y stock (stock debe ser mayor a 0).",
         confirmButtonColor: "#3B82F6",
       });
       return;
@@ -408,7 +598,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
             colors?.find((c) => c.id === config.colorId)?.name || "unknown";
           const sizeName =
             sizes?.find((s) => s.id === sizeId)?.name || "unknown";
-          // Crear la variante base sin el ID
+
+          // Crear la variante con las imágenes (sin el campo angle para el backend)
           const variant: ProductVariantDto = {
             colorId: config.colorId,
             sizeId,
@@ -418,13 +609,17 @@ const ProductForm: React.FC<ProductFormProps> = ({
               /\s+/g,
               "-"
             )}-${sizeName.replace(/\s+/g, "-")}`.toUpperCase(),
-            imageUrl:
-              config.image ||
-              "https://res.cloudinary.com/dhhv8l6ti/image/upload/v1741550306/a58jbqkjh7csdrlw3qfd.jpg",
-            // Removed idAttachment as it is not part of ProductVariantDto
+            images: config.images
+              .filter((img) => !isPlaceholderImage(img.url)) // Filtrar placeholders
+              .map((img) => ({
+                id: img.id,
+                productVariantId: img.productVariantId,
+                url: img.url,
+                angle:img.angle
+              })),
           };
 
-          // Si existe un ID para esta variante, añadirlo como propiedad adicional
+          // Si existe un ID para esta variante, añadirlo
           if (config.variantIds && config.variantIds[sizeId]) {
             (variant as any).id = config.variantIds[sizeId];
           }
@@ -441,7 +636,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
         sleeveId: +data.sleeveId,
         categoryId: +data.categoryId,
       };
-      // Llamada a la API para crear o actualizar el producto
       const response = product
         ? await updateProduct(payload, product.id)
         : await createProduct(payload);
@@ -493,11 +687,9 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
   // Función para avanzar al siguiente paso
   const nextStep = (e: React.MouseEvent) => {
-    // Prevenir comportamiento por defecto para evitar envío del formulario
     e.preventDefault();
 
     if (formStep === 0 && !isBasicInfoComplete) {
-      // Mostrar mensaje de error si la información básica no está completa
       Swal.fire({
         icon: "warning",
         title: "Información incompleta",
@@ -524,10 +716,37 @@ const ProductForm: React.FC<ProductFormProps> = ({
     return colors.find((c) => c.id === selectedColorId)?.name || "";
   };
 
+  // Definir los ángulos disponibles con sus etiquetas
+  const imageAngles: {
+    angle: ImageAngle;
+    label: string;
+    icon: React.ReactNode;
+    description: string;
+  }[] = [
+    {
+      angle: "front",
+      label: "Frontal",
+      icon: <Camera className="w-4 h-4" />,
+      description: "Vista frontal del producto",
+    },
+    {
+      angle: "side",
+      label: "Lateral",
+      icon: <Eye className="w-4 h-4" />,
+      description: "Vista lateral del producto",
+    },
+    {
+      angle: "back",
+      label: "Posterior",
+      icon: <Package className="w-4 h-4" />,
+      description: "Vista posterior del producto",
+    },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Encabezado con estilo similar al ProductList */}
-      <div className="bg-blue-500 rounded-xl shadow-xl overflow-hidden">
+      <div className="bg-blue-500 dark:bg-blue-600 rounded-xl shadow-xl overflow-hidden">
         <div className="p-6">
           <div className="flex justify-between items-center">
             <div className="flex items-center">
@@ -922,7 +1141,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
             </motion.div>
           )}
 
-          {/* Paso 2: Selección de colores */}
+          {/* Paso 2: Selección de colores e imágenes */}
           {formStep === 1 && (
             <motion.div
               className="space-y-6"
@@ -933,7 +1152,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
               <div className="flex items-center mb-4">
                 <Palette className="w-5 h-5 text-blue-500 dark:text-blue-400 mr-2" />
                 <h3 className="text-xl font-semibold text-gray-800 dark:text-white">
-                  Selección de Colores
+                  Selección de Colores e Imágenes
                 </h3>
               </div>
 
@@ -942,7 +1161,10 @@ const ProductForm: React.FC<ProductFormProps> = ({
                 <div className="text-sm text-blue-700 dark:text-blue-300">
                   <p>
                     Seleccione los colores disponibles para este producto y suba
-                    una imagen para cada color.
+                    imágenes para cada ángulo (frontal, lateral y posterior).{" "}
+                    <strong>
+                      Es obligatorio subir al menos una imagen de cada ángulo.
+                    </strong>
                   </p>
                 </div>
               </div>
@@ -990,7 +1212,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                     Colores seleccionados
                   </h4>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 gap-6">
                     {colorConfigs.length === 0 && (
                       <div className="col-span-full text-sm text-gray-500 dark:text-gray-400 italic bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg text-center">
                         No hay colores seleccionados. Seleccione al menos un
@@ -1003,106 +1225,214 @@ const ProductForm: React.FC<ProductFormProps> = ({
                         const color = colors?.find(
                           (c) => c.id === config.colorId
                         );
+                        const hasFront = config.images.some(
+                          (img) =>
+                            img.angle === "front" &&
+                            !isPlaceholderImage(img.url)
+                        );
+                        const hasSide = config.images.some(
+                          (img) =>
+                            img.angle === "side" && !isPlaceholderImage(img.url)
+                        );
+                        const hasBack = config.images.some(
+                          (img) =>
+                            img.angle === "back" && !isPlaceholderImage(img.url)
+                        );
+                        const isComplete = hasFront && hasSide && hasBack;
+
                         return (
                           <motion.div
                             key={config.colorId}
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.8 }}
-                            className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm hover:shadow-md transition-all"
+                            className={`bg-white dark:bg-gray-800 rounded-lg border overflow-hidden shadow-sm hover:shadow-md transition-all ${
+                              isComplete
+                                ? "border-green-200 dark:border-green-700"
+                                : "border-red-200 dark:border-red-700"
+                            }`}
                           >
-                            <div className="relative">
-                              <div className="w-full h-32 bg-gray-100 dark:bg-gray-700 overflow-hidden">
-                                <img
-                                  src={
-                                    config.image 
-                                  }
-                                  alt={`Color ${color?.name}`}
-                                  className="w-full h-full object-contain"
-                                />
+                            {/* Header del color */}
+                            <div
+                              className={`p-4 border-b ${
+                                isComplete
+                                  ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700"
+                                  : "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700"
+                              }`}
+                            >
+                              <div className="flex justify-between items-center">
+                                <div className="flex items-center">
+                                  <div
+                                    className="w-6 h-6 rounded-full mr-3 border-2 border-white dark:border-gray-600 shadow-sm"
+                                    style={{
+                                      backgroundColor:
+                                        color?.hexValue || "#ccc",
+                                    }}
+                                  ></div>
+                                  <h5 className="font-semibold text-gray-900 dark:text-white">
+                                    {color?.name}
+                                  </h5>
+                                  {isComplete ? (
+                                    <Check className="w-5 h-5 text-green-600 dark:text-green-400 ml-2" />
+                                  ) : (
+                                    <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 ml-2" />
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span
+                                    className={`text-xs px-2 py-1 rounded ${
+                                      isComplete
+                                        ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                                        : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
+                                    }`}
+                                  >
+                                    {isComplete ? "Completo" : "Incompleto"}
+                                  </span>
+                                  <motion.button
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
+                                    type="button"
+                                    onClick={() =>
+                                      handleRemoveColor(config.colorId)
+                                    }
+                                    className="p-1 bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-500 dark:text-red-400 rounded-full shadow-sm"
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </motion.button>
+                                </div>
                               </div>
-                              <div
-                                className="absolute top-2 right-2 p-1 rounded-full"
-                                style={{
-                                  backgroundColor: color?.hexValue || "#ccc",
-                                  border: "2px solid white",
-                                }}
-                              >
-                                <div className="w-4 h-4"></div>
-                              </div>
-
-                              <motion.button
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
-                                type="button"
-                                onClick={() =>
-                                  handleRemoveColor(config.colorId)
-                                }
-                                className="absolute top-2 left-2 p-1 bg-white/80 hover:bg-white text-red-500 rounded-full shadow-sm"
-                              >
-                                <X className="h-4 w-4" />
-                              </motion.button>
                             </div>
 
+                            {/* Grid de imágenes por ángulo */}
                             <div className="p-4">
-                              <div className="flex justify-between items-center mb-3">
-                                <h5 className="font-medium text-gray-900 dark:text-white">
-                                  {color?.name}
-                                </h5>
-                                <span className="text-xs text-gray-500 dark:text-gray-400">
-                                  {config.sizes.length} tallas
-                                </span>
-                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                {imageAngles.map(
+                                  ({ angle, label, icon, description }) => {
+                                    const hasImage = config.images.some(
+                                      (img) =>
+                                        img.angle === angle &&
+                                        !isPlaceholderImage(img.url)
+                                    );
 
-                              <motion.label
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                htmlFor={`image-upload-${config.colorId}`}
-                                className="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-3 py-2 rounded-lg cursor-pointer flex items-center justify-center text-sm font-medium transition-colors hover:bg-blue-100 dark:hover:bg-blue-900/30 w-full"
-                              >
-                                {isUploading &&
-                                selectedColorId === config.colorId ? (
-                                  <>
-                                    <svg
-                                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-current"
-                                      xmlns="http://www.w3.org/2000/svg"
-                                      fill="none"
-                                      viewBox="0 0 24 24"
-                                    >
-                                      <circle
-                                        className="opacity-25"
-                                        cx="12"
-                                        cy="12"
-                                        r="10"
-                                        stroke="currentColor"
-                                        strokeWidth="4"
-                                      ></circle>
-                                      <path
-                                        className="opacity-75"
-                                        fill="currentColor"
-                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                      ></path>
-                                    </svg>
-                                    Subiendo...
-                                  </>
-                                ) : (
-                                  <>
-                                    <Upload className="w-4 h-4 mr-2" />
-                                    Cambiar imagen
-                                  </>
+                                    return (
+                                      <div key={angle} className="space-y-3">
+                                        <div className="flex items-center justify-between">
+                                          <div
+                                            className={`flex items-center text-sm font-medium ${
+                                              hasImage
+                                                ? "text-green-700 dark:text-green-400"
+                                                : "text-red-700 dark:text-red-400"
+                                            }`}
+                                          >
+                                            {icon}
+                                            <span className="ml-2">
+                                              {label}
+                                            </span>
+                                            {hasImage ? (
+                                              <Check className="w-4 h-4 ml-1" />
+                                            ) : (
+                                              <AlertCircle className="w-4 h-4 ml-1" />
+                                            )}
+                                          </div>
+                                        </div>
+
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                                          {description}
+                                        </p>
+
+                                        {/* Imagen actual */}
+                                        <div
+                                          className={`relative aspect-square rounded-lg overflow-hidden group border-2 ${
+                                            hasImage
+                                              ? "border-green-200 dark:border-green-700 bg-green-50 dark:bg-green-900/10"
+                                              : "border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/10"
+                                          }`}
+                                        >
+                                          <img
+                                            src={
+                                              getImageForAngle(
+                                                config.colorId,
+                                                angle
+                                              ) || "/placeholder.svg"
+                                            }
+                                            alt={`${color?.name} - ${label}`}
+                                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                          />
+
+                                          {/* Overlay con botón de carga */}
+                                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                                            <motion.label
+                                              whileHover={{ scale: 1.05 }}
+                                              whileTap={{ scale: 0.95 }}
+                                              htmlFor={`image-upload-${config.colorId}-${angle}`}
+                                              className="bg-white/90 dark:bg-gray-800/90 text-gray-800 dark:text-gray-200 px-3 py-2 rounded-lg cursor-pointer flex items-center text-sm font-medium transition-colors hover:bg-white dark:hover:bg-gray-800"
+                                            >
+                                              {isUploading &&
+                                              uploadingAngle === angle ? (
+                                                <>
+                                                  <svg
+                                                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-current"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                  >
+                                                    <circle
+                                                      className="opacity-25"
+                                                      cx="12"
+                                                      cy="12"
+                                                      r="10"
+                                                      stroke="currentColor"
+                                                      strokeWidth="4"
+                                                    ></circle>
+                                                    <path
+                                                      className="opacity-75"
+                                                      fill="currentColor"
+                                                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                                    ></path>
+                                                  </svg>
+                                                  Subiendo...
+                                                </>
+                                              ) : (
+                                                <>
+                                                  <Upload className="w-4 h-4 mr-2" />
+                                                  {hasImage
+                                                    ? "Cambiar"
+                                                    : "Subir"}
+                                                </>
+                                              )}
+                                            </motion.label>
+                                          </div>
+
+                                          {/* Indicador de estado */}
+                                          <div
+                                            className={`absolute top-2 right-2 w-3 h-3 rounded-full ${
+                                              hasImage
+                                                ? "bg-green-500"
+                                                : "bg-red-500"
+                                            }`}
+                                          ></div>
+                                        </div>
+
+                                        {/* Input de archivo oculto */}
+                                        <input
+                                          id={`image-upload-${config.colorId}-${angle}`}
+                                          type="file"
+                                          accept="image/*"
+                                          className="hidden"
+                                          onChange={(e) =>
+                                            handleImageUpload(
+                                              config.colorId,
+                                              angle,
+                                              e
+                                            )
+                                          }
+                                          disabled={isUploading}
+                                        />
+                                      </div>
+                                    );
+                                  }
                                 )}
-                              </motion.label>
-                              <input
-                                id={`image-upload-${config.colorId}`}
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
-                                onChange={(e) => {
-                                  setSelectedColorId(config.colorId);
-                                  handleImageUpload(config.colorId, e);
-                                }}
-                                disabled={isUploading}
-                              />
+                              </div>
                             </div>
                           </motion.div>
                         );
@@ -1173,6 +1503,21 @@ const ProductForm: React.FC<ProductFormProps> = ({
                         const color = colors?.find(
                           (c) => c.id === config.colorId
                         );
+                        const hasFront = config.images.some(
+                          (img) =>
+                            img.angle === "front" &&
+                            !isPlaceholderImage(img.url)
+                        );
+                        const hasSide = config.images.some(
+                          (img) =>
+                            img.angle === "side" && !isPlaceholderImage(img.url)
+                        );
+                        const hasBack = config.images.some(
+                          (img) =>
+                            img.angle === "back" && !isPlaceholderImage(img.url)
+                        );
+                        const isComplete = hasFront && hasSide && hasBack;
+
                         return (
                           <motion.button
                             key={config.colorId}
@@ -1183,20 +1528,38 @@ const ProductForm: React.FC<ProductFormProps> = ({
                             className={`p-3 rounded-lg flex flex-col items-center transition-all ${
                               selectedColorId === config.colorId
                                 ? "bg-blue-100 dark:bg-blue-900/30 border-2 border-blue-500 dark:border-blue-400"
-                                : "bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700/50"
+                                : isComplete
+                                ? "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 hover:bg-green-100 dark:hover:bg-green-900/30"
+                                : "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 hover:bg-red-100 dark:hover:bg-red-900/30"
                             }`}
                           >
-                            <div
-                              className="w-8 h-8 rounded-full mb-2 border-2 border-white dark:border-gray-600 shadow-sm"
-                              style={{
-                                backgroundColor: color?.hexValue || "#ccc",
-                              }}
-                            ></div>
+                            <div className="relative mb-2">
+                              <img
+                                src={
+                                  getMainImage(config.colorId) 
+                                }
+                                alt={color?.name}
+                                className="w-12 h-12 rounded-lg object-cover border-2 border-white dark:border-gray-600 shadow-sm"
+                              />
+                              <div
+                                className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white dark:border-gray-600"
+                                style={{
+                                  backgroundColor: color?.hexValue || "#ccc",
+                                }}
+                              ></div>
+                              {isComplete ? (
+                                <Check className="absolute -top-1 -left-1 w-4 h-4 text-green-600 dark:text-green-400 bg-white dark:bg-gray-800 rounded-full" />
+                              ) : (
+                                <AlertCircle className="absolute -top-1 -left-1 w-4 h-4 text-red-600 dark:text-red-400 bg-white dark:bg-gray-800 rounded-full" />
+                              )}
+                            </div>
                             <span
                               className={`text-sm font-medium ${
                                 selectedColorId === config.colorId
                                   ? "text-blue-700 dark:text-blue-400"
-                                  : "text-gray-700 dark:text-gray-300"
+                                  : isComplete
+                                  ? "text-green-700 dark:text-green-400"
+                                  : "text-red-700 dark:text-red-400"
                               }`}
                             >
                               {color?.name}
@@ -1220,14 +1583,13 @@ const ProductForm: React.FC<ProductFormProps> = ({
                     >
                       <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center">
-                          <div
-                            className="w-6 h-6 rounded-full mr-3 border-2 border-white dark:border-gray-600 shadow-sm"
-                            style={{
-                              backgroundColor:
-                                colors?.find((c) => c.id === selectedColorId)
-                                  ?.hexValue || "#ccc",
-                            }}
-                          ></div>
+                          <img
+                            src={
+                              getMainImage(selectedColorId) 
+                            }
+                            alt={getSelectedColorName()}
+                            className="w-8 h-8 rounded-lg object-cover mr-3 border-2 border-white dark:border-gray-600 shadow-sm"
+                          />
                           <h4 className="text-lg font-semibold text-gray-800 dark:text-white">
                             Configuración para {getSelectedColorName()}
                           </h4>
@@ -1235,11 +1597,12 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
                         <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
                           <ImageIcon className="w-4 h-4 mr-1" />
-                          {colorConfigs.find(
-                            (c) => c.colorId === selectedColorId
-                          )?.image
-                            ? "Imagen cargada"
-                            : "Sin imagen"}
+                          {colorConfigs
+                            .find((c) => c.colorId === selectedColorId)
+                            ?.images.filter(
+                              (img) => !isPlaceholderImage(img.url)
+                            ).length || 0}{" "}
+                          imágenes reales
                         </div>
                       </div>
 
@@ -1366,7 +1729,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
                           <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-md border border-gray-200 dark:border-gray-700">
                             {/* Encabezado de tabla */}
-                            <div className="bg-blue-100/60 text-blue-700 py-4 px-6">
+                            <div className="bg-blue-100/60 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 py-4 px-6">
                               <div className="grid grid-cols-12 gap-4 items-center">
                                 <div className="col-span-3 font-medium">
                                   Talla

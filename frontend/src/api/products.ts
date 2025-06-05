@@ -84,5 +84,8 @@ export const updateProduct = (data: CreateProductDto, id: number) =>
 export const deactivateProduct = (id: number) => axios.delete(`/product/${id}`);
 export const activateProduct = (id: number) => axios.patch(`/product/active/${id}`);
 
+export const getProductByName = ( name: string) =>
+  axios.get(`/product/get-by-name/${name}`);
+
 export const getProductById = ( id: number) =>
   axios.get(`/product/${id}`);

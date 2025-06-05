@@ -47,7 +47,6 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, onBack }) => {
   const [category, setCategory] = useState<Category[]>();
   const [neckType, setNeckType] = useState<NeckType[]>();
   const [colors, setColors] = useState<Color[]>();
-  console.log(product);
   const getBrandName = (brandId: number) =>
     brands?.find((b) => b.id === brandId)?.name || "Desconocido";
   const getGenderName = (genderId: number) =>

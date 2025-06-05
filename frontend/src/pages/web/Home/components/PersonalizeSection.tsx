@@ -1,11 +1,31 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { Sparkles, Shirt, ArrowRight } from "lucide-react";
-import { memo } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { NavLink } from "react-router-dom";
 
 const PersonalizeSection = () => {
+  const [isVisible, setIsVisible] = useState(false);
+  const sectionRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <section className="py-24 bg-gradient-to-b from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 relative overflow-hidden">
       {/* Background decoration - Simplified */}
@@ -28,114 +48,106 @@ const PersonalizeSection = () => {
         </svg>
       </div>
 
-      <div className="container mx-auto px-6 relative z-10 max-w-full">
+      <div
+        className="container mx-auto px-6 relative z-10 max-w-full"
+        ref={sectionRef}
+      >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="order-2 lg:order-1 space-y-6"
+          <div
+            className={`order-2 lg:order-1 space-y-6 transition-all duration-700 ${
+              isVisible
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-10"
+            }`}
           >
-            <motion.span
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="inline-flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-4 py-1.5 text-sm font-medium text-blue-800 dark:text-blue-300 mb-4"
+            <span
+              className={`inline-flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-4 py-1.5 text-sm font-medium text-blue-800 dark:text-blue-300 mb-4 transition-all duration-500 ${
+                isVisible
+                  ? "opacity-100 translate-x-0"
+                  : "opacity-0 -translate-x-5"
+              }`}
+              style={{ transitionDelay: "100ms" }}
             >
               <Sparkles className="w-4 h-4 mr-2" />
               PERSONALIZACIÓN
-            </motion.span>
-            <motion.h2
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="text-3xl md:text-5xl font-bold mb-6 text-gray-900 dark:text-white"
+            </span>
+            <h2
+              className={`text-3xl md:text-5xl font-bold mb-6 text-gray-900 dark:text-white transition-all duration-500 ${
+                isVisible
+                  ? "opacity-100 translate-x-0"
+                  : "opacity-0 -translate-x-5"
+              }`}
+              style={{ transitionDelay: "200ms" }}
             >
               Personaliza Tus Prendas
-            </motion.h2>
-            <motion.p
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="text-xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed"
+            </h2>
+            <p
+              className={`text-xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed transition-all duration-500 ${
+                isVisible
+                  ? "opacity-100 translate-x-0"
+                  : "opacity-0 -translate-x-5"
+              }`}
+              style={{ transitionDelay: "300ms" }}
             >
               Crea ropa única que refleje tu personalidad. Nuestro servicio de
               personalización te permite diseñar prendas exclusivas.
-            </motion.p>
-            <motion.ul
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="space-y-6 mb-10"
+            </p>
+            <ul
+              className={`space-y-6 mb-10 transition-all duration-500 ${
+                isVisible ? "opacity-100" : "opacity-0"
+              }`}
+              style={{ transitionDelay: "400ms" }}
             >
-              <motion.li
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.4 }}
-                className="flex items-start"
-              >
-                <span className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-full p-2 mr-4 mt-1 shadow-md">
-                  <Shirt className="w-5 h-5" />
-                </span>
-                <div>
-                  <h4 className="font-bold text-gray-900 dark:text-white mb-1">
-                    Elige tu modelo
-                  </h4>
-                  <p className="text-gray-600 dark:text-gray-300">
-                    Selecciona entre nuestra amplia variedad de prendas base
-                  </p>
-                </div>
-              </motion.li>
-              <motion.li
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.5 }}
-                className="flex items-start"
-              >
-                <span className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-full p-2 mr-4 mt-1 shadow-md">
-                  <Shirt className="w-5 h-5" />
-                </span>
-                <div>
-                  <h4 className="font-bold text-gray-900 dark:text-white mb-1">
-                    Personaliza el diseño
-                  </h4>
-                  <p className="text-gray-600 dark:text-gray-300">
-                    Selecciona colores, estampados y acabados a tu gusto
-                  </p>
-                </div>
-              </motion.li>
-              <motion.li
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.6 }}
-                className="flex items-start"
-              >
-                <span className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-full p-2 mr-4 mt-1 shadow-md">
-                  <Shirt className="w-5 h-5" />
-                </span>
-                <div>
-                  <h4 className="font-bold text-gray-900 dark:text-white mb-1">
-                    Añade tu toque personal
-                  </h4>
-                  <p className="text-gray-600 dark:text-gray-300">
-                    Incorpora textos, imágenes o diseños propios a tu prenda
-                  </p>
-                </div>
-              </motion.li>
-            </motion.ul>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.7 }}
+              {[
+                {
+                  title: "Elige tu modelo",
+                  description:
+                    "Selecciona entre nuestra amplia variedad de prendas base",
+                  delay: "500ms",
+                },
+                {
+                  title: "Personaliza el diseño",
+                  description:
+                    "Selecciona colores, estampados y acabados a tu gusto",
+                  delay: "600ms",
+                },
+                {
+                  title: "Añade tu toque personal",
+                  description:
+                    "Incorpora textos, imágenes o diseños propios a tu prenda",
+                  delay: "700ms",
+                },
+              ].map((item, index) => (
+                <li
+                  key={index}
+                  className={`flex items-start transition-all duration-500 ${
+                    isVisible
+                      ? "opacity-100 translate-x-0"
+                      : "opacity-0 -translate-x-5"
+                  }`}
+                  style={{ transitionDelay: item.delay }}
+                >
+                  <span className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-full p-2 mr-4 mt-1 shadow-md">
+                    <Shirt className="w-5 h-5" />
+                  </span>
+                  <div>
+                    <h4 className="font-bold text-gray-900 dark:text-white mb-1">
+                      {item.title}
+                    </h4>
+                    <p className="text-gray-600 dark:text-gray-300">
+                      {item.description}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <div
+              className={`transition-all duration-500 ${
+                isVisible
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-5"
+              }`}
+              style={{ transitionDelay: "800ms" }}
             >
               <NavLink
                 to="/personalizar"
@@ -146,15 +158,16 @@ const PersonalizeSection = () => {
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </span>
               </NavLink>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="order-1 lg:order-2"
+          <div
+            className={`order-1 lg:order-2 transition-all duration-700 ${
+              isVisible
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-10"
+            }`}
+            style={{ transitionDelay: "300ms" }}
           >
             <div className="relative">
               <div className="absolute inset-0 border-2 border-blue-600 rounded-lg transform translate-x-4 translate-y-4 z-0"></div>
@@ -168,20 +181,19 @@ const PersonalizeSection = () => {
               />
 
               {/* Floating badge */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.5 }}
-                className="absolute top-4 -right-4 bg-white dark:bg-gray-800 px-4 py-2 rounded-full shadow-lg z-20 flex items-center gap-2"
+              <div
+                className={`absolute top-4 -right-4 bg-white dark:bg-gray-800 px-4 py-2 rounded-full shadow-lg z-20 flex items-center gap-2 transition-all duration-700 ${
+                  isVisible ? "opacity-100 scale-100" : "opacity-0 scale-80"
+                }`}
+                style={{ transitionDelay: "600ms" }}
               >
                 <Sparkles className="w-4 h-4 text-yellow-500" />
                 <span className="font-bold text-gray-900 dark:text-white">
                   ¡Diseño Único!
                 </span>
-              </motion.div>
+              </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>

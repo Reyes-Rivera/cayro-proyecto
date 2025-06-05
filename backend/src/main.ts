@@ -28,7 +28,6 @@ async function bootstrap() {
       },
     }),
   );
-  app.useGlobalFilters(new AllExceptionsFilter(app.get(AppLogger)));
 
   // app.use(
   //   rateLimit({

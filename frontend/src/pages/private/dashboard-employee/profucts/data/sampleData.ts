@@ -75,6 +75,6 @@ export interface ProductVariantDto {
   price: number;
   stock: number;
   barcode: string;
-  imageUrl?: string;
+  images: Images[];
 }
 

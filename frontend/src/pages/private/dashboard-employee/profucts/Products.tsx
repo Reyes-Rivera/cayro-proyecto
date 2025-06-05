@@ -167,7 +167,7 @@ const Products: React.FC = () => {
   const handleViewProduct = async (id: number) => {
     setIsLoading(true);
     try {
-      const response = await getProductById(id);
+      const response = await getProductById(+id);
       if (response && response.data) {
         setSelectedProduct(response.data);
         setIsViewing(true);

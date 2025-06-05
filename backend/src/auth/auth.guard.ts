@@ -1,56 +1,49 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-import * as cookie from 'cookie'; // Importar para leer cookies
+import * as cookie from 'cookie';
 import { AppLogger } from 'src/utils/logger.service';
-
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
     private jwtService: JwtService,
-    private readonly logger:AppLogger
-
+    private readonly logger: AppLogger
   ) {}
 
-  async canActivate(
-    context: ExecutionContext,
-  ): Promise<boolean> {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
 
-    // Extraer el token desde las cookies
-    const token = this.extractTokenFromCookie(request);
+    // Intenta extraer accessToken de header Authorization o cookies
+    const token = this.extractToken(request);
+
     if (!token) {
       throw new UnauthorizedException('Token no encontrado');
     }
 
     try {
-      const payload = await this.jwtService.verifyAsync(
-        token,
-        {
-          secret: "fhf fhslxo ahs", 
-        }
-      );
-      
-      // Guardar el payload en el request para su uso posterior
+      const payload = await this.jwtService.verifyAsync(token, {
+        secret: process.env.JWT_ACCESS_SECRET, // usa el secreto del access token
+      });
       request['user'] = payload;
-    } catch(error) {
-      this.logger.error("Token no valido",error.stack)
-      throw new UnauthorizedException('Token inválido');
+      return true;
+    } catch (error) {
+      this.logger.error('Token no válido', error.stack);
+      throw new UnauthorizedException('Token inválido o expirado');
     }
-
-    return true;
   }
 
-  private extractTokenFromCookie(request: Request): string | undefined {
-    const cookies = request.headers.cookie;
-
-    // Si no hay cookies, devuelve undefined
-    if (!cookies) {
-      return undefined;
+  private extractToken(request: Request): string | undefined {
+    // Buscar token en header Authorization Bearer
+    const authHeader = request.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      return authHeader.split(' ')[1];
     }
 
-    // Parsear las cookies y buscar el token
+    // Si no está en header, buscar en cookies (puede que uses cookie para accessToken)
+    const cookies = request.headers.cookie;
+    if (!cookies) return undefined;
+
     const parsedCookies = cookie.parse(cookies);
-    return parsedCookies['token']; // El nombre de la cookie con el JWT
+    return parsedCookies['accessToken']; // o 'token' si usas ese nombre
   }
 }

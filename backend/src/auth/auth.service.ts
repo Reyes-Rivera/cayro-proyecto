@@ -7,6 +7,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
   Request,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { LoginDto } from './dto/login-auth.dto';
 import { JwtService } from '@nestjs/jwt';
@@ -37,23 +38,27 @@ type UserOrEmployee = {
 @Injectable()
 export class AuthService {
   private codes = new Map<string, { code: string; expires: number }>();
-  
+
   constructor(
     private jwtSvc: JwtService,
     private prismaService: PrismaService,
     private readonly logger: AppLogger,
   ) {
-    this.logger.log({ 
+    this.logger.log({
       message: 'Servicio de autenticación inicializado',
-      context: 'AuthService' 
+      context: 'AuthService',
     });
   }
 
-  async sendEmail(correo: string, subject: string, html: string): Promise<void> {
+  async sendEmail(
+    correo: string,
+    subject: string,
+    html: string,
+  ): Promise<void> {
     try {
       this.logger.log({
         message: 'Preparando envío de correo electrónico',
-        email: correo
+        email: correo,
       });
 
       const transporter = nodemailer.createTransport({
@@ -70,12 +75,12 @@ export class AuthService {
         subject: subject,
         html: html,
       };
-      
+
       await transporter.sendMail(mailOptions);
-      this.logger.log({ 
+      this.logger.log({
         message: 'Correo electrónico enviado con éxito',
         email: correo,
-        subject: subject 
+        subject: subject,
       });
     } catch (error) {
       this.logger.error({
@@ -84,29 +89,35 @@ export class AuthService {
         stack: error.stack,
         email: correo,
       });
-      throw new InternalServerErrorException('Error al enviar el correo electrónico');
+      throw new InternalServerErrorException(
+        'Error al enviar el correo electrónico',
+      );
     }
   }
 
-  async verifyCode(userEmail: string, code: string): Promise<{ user: any; token: string }> {
+  async verifyCode(
+    userEmail: string,
+    code: string,
+  ): Promise<{ user: any; token: string }> {
     try {
       this.logger.log({
         message: 'Iniciando verificación de código',
-        email: userEmail
+        email: userEmail,
       });
-      
+
       const record = this.codes.get(userEmail);
       if (!record) {
         this.logger.warn({
           message: 'No se encontró código de verificación para el usuario',
-          email: userEmail
+          email: userEmail,
         });
         throw new ConflictException('Código no encontrado o expirado');
       }
 
-      let userFound: UserOrEmployee | null = await this.prismaService.user.findUnique({
-        where: { email: userEmail, active: true },
-      });
+      let userFound: UserOrEmployee | null =
+        await this.prismaService.user.findUnique({
+          where: { email: userEmail, active: true },
+        });
 
       if (!userFound) {
         userFound = await this.prismaService.employee.findUnique({
@@ -115,17 +126,17 @@ export class AuthService {
         if (!userFound) {
           this.logger.warn({
             message: 'Usuario no encontrado en la base de datos',
-            email: userEmail
+            email: userEmail,
           });
           throw new NotFoundException('Usuario no registrado');
         }
       }
 
       if (record.expires < Date.now()) {
-        this.logger.warn({ 
+        this.logger.warn({
           message: 'Código de verificación expirado',
           email: userEmail,
-          expiration: new Date(record.expires) 
+          expiration: new Date(record.expires),
         });
         throw new ConflictException('El código ha expirado');
       }
@@ -133,7 +144,7 @@ export class AuthService {
       if (record.code !== code) {
         this.logger.warn({
           message: 'Código de verificación incorrecto',
-          email: userEmail
+          email: userEmail,
         });
         throw new ConflictException('Código incorrecto');
       }
@@ -141,32 +152,39 @@ export class AuthService {
       this.codes.delete(userEmail);
       this.logger.log({
         message: 'Código verificado correctamente',
-        email: userEmail
+        email: userEmail,
       });
 
       let expiresIn: string;
       switch (userFound.role) {
-        case Role.ADMIN: expiresIn = '8h'; break;
-        case Role.USER: expiresIn = '1d'; break;
-        case Role.EMPLOYEE: expiresIn = '4h'; break;
-        default: expiresIn = '1h';
+        case Role.ADMIN:
+          expiresIn = '8h';
+          break;
+        case Role.USER:
+          expiresIn = '1d';
+          break;
+        case Role.EMPLOYEE:
+          expiresIn = '4h';
+          break;
+        default:
+          expiresIn = '1h';
       }
-      
+
       const payload = {
         sub: userFound.id,
         role: userFound.role,
         email: userFound.email,
       };
-      
+
       const token = this.jwtSvc.sign(payload, { expiresIn });
-      this.logger.log({ 
+      this.logger.log({
         message: 'Token JWT generado exitosamente',
         userId: userFound.id,
-        role: userFound.role 
+        role: userFound.role,
       });
 
-      return { 
-        user: { 
+      return {
+        user: {
           id: userFound.id,
           name: userFound.name,
           surname: userFound.surname,
@@ -174,8 +192,8 @@ export class AuthService {
           phone: userFound.phone,
           birthdate: userFound.birthdate,
           role: userFound.role,
-        }, 
-        token 
+        },
+        token,
       };
     } catch (error) {
       if (error instanceof HttpException) {
@@ -195,39 +213,43 @@ export class AuthService {
     try {
       this.logger.log({
         message: 'Solicitud de envío de código de verificación',
-        email
+        email,
       });
 
       const configInfo = await this.prismaService.configuration.findFirst();
       if (!configInfo) {
         this.logger.error({
-          message: 'Configuración del sistema no encontrada'
+          message: 'Configuración del sistema no encontrada',
         });
-        throw new InternalServerErrorException('Configuración del sistema no disponible');
+        throw new InternalServerErrorException(
+          'Configuración del sistema no disponible',
+        );
       }
 
       const timeToken = configInfo.timeTokenEmail;
       const dataConfig = configInfo.emailVerificationInfo?.[0];
       const expirationTime = Date.now() + timeToken * 60000;
       const verificationCode = crypto.randomInt(100000, 999999).toString();
-      
+
       this.codes.set(email, {
         code: verificationCode,
         expires: expirationTime,
       });
-      
-      this.logger.log({ 
+
+      this.logger.log({
         message: 'Código de verificación generado',
         email,
-        expiration: new Date(expirationTime) 
+        expiration: new Date(expirationTime),
       });
 
       const companyInfo = await this.prismaService.companyProfile.findFirst();
       if (!companyInfo) {
         this.logger.error({
-          message: 'Información de la compañía no encontrada'
+          message: 'Información de la compañía no encontrada',
         });
-        throw new InternalServerErrorException('Información de la compañía no disponible');
+        throw new InternalServerErrorException(
+          'Información de la compañía no disponible',
+        );
       }
 
       const currentYear = new Date().getFullYear();
@@ -263,11 +285,11 @@ export class AuthService {
         </body>
         </html>
       `;
-      
+
       await this.sendEmail(email, 'Código de verificación', html);
       this.logger.log({
         message: 'Correo con código de verificación enviado',
-        email
+        email,
       });
 
       return { message: 'Código de verificación enviado correctamente' };
@@ -282,74 +304,112 @@ export class AuthService {
     }
   }
 
-  async login(loginDto: LoginDto): Promise<{ user: any; token: string }> {
-    try {
-      this.logger.log({ 
-        message: 'Proceso de inicio de sesión iniciado',
-        identifier: loginDto.identifier,
-        type: loginDto.identifier.includes('@') ? 'email' : 'teléfono'
-      });
 
+
+  async logout(userId: string) {
+    const user = await this.prismaService.user.findUnique({
+      where: { id: +userId },
+    });
+    const employee = !user
+      ? await this.prismaService.employee.findUnique({ where: { id: +userId } })
+      : null;
+
+    if (!user && !employee) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
+    const entity = user || employee;
+    const updateData = { refreshToken: null };
+
+    if (entity.role === Role.USER) {
+      await this.prismaService.user.update({
+        where: { id: entity.id },
+        data: updateData,
+      });
+    } else {
+      await this.prismaService.employee.update({
+        where: { id: entity.id },
+        data: updateData,
+      });
+    }
+
+    return { message: 'Sesión cerrada correctamente' };
+  }
+  async refresh(userId: number, refreshToken: string,email:string) {
+    // Buscar usuario o empleado
+    const user = await this.prismaService.user.findUnique({ where: { id: +userId, email } });
+    const employee = !user
+      ? await this.prismaService.employee.findUnique({ where: { id: +userId,email } })
+      : null;
+
+    const entity = user || employee;
+    if (!entity || !entity.refreshToken) {
+      throw new UnauthorizedException('Refresh token inválido.');
+    }
+
+    // Comparar refresh token
+    const isMatch = await bcrypt.compare(refreshToken, entity.refreshToken);
+    if (!isMatch) {
+      throw new UnauthorizedException('Refresh token inválido.');
+    }
+
+    const payload = {
+      sub: entity.id,
+      email: entity.email,
+      role: entity.role,
+    };
+
+    // Generar nuevos tokens
+    const accessToken = this.jwtSvc.sign(payload, {
+      expiresIn: '15m',
+      secret: process.env.JWT_ACCESS_SECRET,  
+    });
+    return {
+      accessToken,
+    };
+  }
+  async login(
+    loginDto: LoginDto,
+  ): Promise<{ user: any; accessToken: string; refreshToken: string }> {
+    try {
       const configInfo = await this.prismaService.configuration.findFirst();
-      if (!configInfo) {
-        this.logger.error({
-          message: 'Configuración del sistema no encontrada'
-        });
-        throw new InternalServerErrorException('Configuración del sistema no disponible');
-      }
+      if (!configInfo)
+        throw new InternalServerErrorException(
+          'Configuración del sistema no disponible',
+        );
 
       const user = await this.prismaService.user.findFirst({
-        where: { 
-          OR: [
-            { email: loginDto.identifier },
-            { phone: loginDto.identifier }
-          ] 
+        where: {
+          OR: [{ email: loginDto.identifier }, { phone: loginDto.identifier }],
         },
       });
 
       let userFound: UserOrEmployee | null = user;
 
       if (!userFound) {
-        this.logger.log({
-          message: 'Buscando usuario en empleados',
-          identifier: loginDto.identifier
-        });
         const employee = await this.prismaService.employee.findFirst({
-          where: { 
+          where: {
             OR: [
               { email: loginDto.identifier },
-              { phone: loginDto.identifier }
-            ] 
+              { phone: loginDto.identifier },
+            ],
+            active: true,
           },
         });
         userFound = employee;
-
-        if (!userFound) {
-          this.logger.warn({ 
-            message: 'Credenciales inválidas - Usuario no encontrado',
-            identifier: loginDto.identifier 
-          });
-          throw new NotFoundException('Credenciales inválidas');
-        }
+        if (!userFound) throw new NotFoundException('Credenciales inválidas');
       }
 
       if (userFound.lockUntil && userFound.lockUntil > new Date()) {
-        const now = new Date();
-        const timeDifference = userFound.lockUntil.getTime() - now.getTime();
-        const minutesRemaining = Math.floor(timeDifference / (1000 * 60));
-        const secondsRemaining = Math.floor((timeDifference % (1000 * 60)) / 1000);
-        const formattedMessage = minutesRemaining > 0
-          ? `${minutesRemaining} minutos y ${secondsRemaining} segundos`
-          : `${secondsRemaining} segundos`;
-
-        this.logger.warn({
-          message: 'Cuenta temporalmente bloqueada',
-          email: userFound.email,
-          lockUntil: userFound.lockUntil,
-          remainingAttempts: configInfo.attemptsLogin - (userFound.loginAttempts || 0)
-        });
+        const timeDiff = userFound.lockUntil.getTime() - new Date().getTime();
+        const minutes = Math.floor(timeDiff / (1000 * 60));
+        const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+        const formattedTime =
+          minutes > 0
+            ? `${minutes} minutos y ${seconds} segundos`
+            : `${seconds} segundos`;
         throw new ForbiddenException(
-          `Cuenta bloqueada temporalmente. Inténtalo de nuevo en ${formattedMessage}`,
+          `Cuenta bloqueada temporalmente. Inténtalo en ${formattedTime}`,
         );
       }
 
@@ -357,108 +417,94 @@ export class AuthService {
         loginDto.password,
         userFound.password,
       );
-
       if (!isPasswordValid) {
         const updateData = {
           loginAttempts: (userFound.loginAttempts || 0) + 1,
         };
+        const condition = { email: userFound.email, active: true };
 
-        if ('active' in userFound) {
-          await this.prismaService.user.update({
-            where: { email: userFound.email },
-            data: updateData,
-          });
-        } else {
-          await this.prismaService.employee.update({
-            where: { email: userFound.email },
-            data: updateData,
-          });
-        }
+        userFound.role === Role.USER
+          ? await this.prismaService.user.update({
+              where: { email: userFound.email },
+              data: updateData,
+            })
+          : await this.prismaService.employee.update({
+              where: condition,
+              data: updateData,
+            });
 
-        if ((userFound.loginAttempts || 0) + 1 >= configInfo.attemptsLogin) {
+        if (updateData.loginAttempts >= configInfo.attemptsLogin) {
           const lockUntil = new Date(Date.now() + 5 * 60 * 1000);
           const lockData = { ...updateData, lockUntil };
-
-          if ('active' in userFound) {
-            await this.prismaService.user.update({
-              where: { email: userFound.email },
-              data: lockData,
-            });
-          } else {
-            await this.prismaService.employee.update({
-              where: { email: userFound.email },
-              data: lockData,
-            });
-          }
-
-          await this.prismaService.userActivity.create({
-            data: {
-              email: userFound.email,
-              action: 'Cuenta bloqueada por 5 minutos debido a intentos fallidos',
-              date: new Date(),
-            },
-          });
-          
-          this.logger.warn({
-            message: 'Cuenta bloqueada por intentos fallidos',
-            email: userFound.email,
-            attempts: (userFound.loginAttempts || 0) + 1,
-          });
+          userFound.role === Role.USER
+            ? await this.prismaService.user.update({
+                where: { email: userFound.email },
+                data: lockData,
+              })
+            : await this.prismaService.employee.update({
+                where: condition,
+                data: lockData,
+              });
         }
 
-        this.logger.warn({ 
-          message: 'Intento de inicio de sesión fallido',
-          email: userFound.email,
-          reason: 'contraseña incorrecta'
-        });
-        throw new HttpException('Credenciales inválidas', HttpStatus.UNAUTHORIZED);
+        throw new UnauthorizedException('Credenciales inválidas');
       }
 
-      // Resetear intentos si el login es exitoso
+      // Reset de intentos
       const resetData = { loginAttempts: 0, lockUntil: null };
-      if ('active' in userFound) {
-        await this.prismaService.user.update({
-          where: { email: userFound.email },
-          data: resetData,
-        });
-      } else {
-        await this.prismaService.employee.update({
-          where: { email: userFound.email },
-          data: resetData,
-        });
-      }
-      
-      let expiresIn: string;
-      switch (userFound.role) {
-        case Role.ADMIN: expiresIn = '8h'; break;
-        case Role.USER: expiresIn = '1d'; break;
-        case Role.EMPLOYEE: expiresIn = '4h'; break;
-        default: expiresIn = '1h';
-      }
-      
+      userFound.role === Role.USER
+        ? await this.prismaService.user.update({
+            where: { email: userFound.email },
+            data: resetData,
+          })
+        : await this.prismaService.employee.update({
+            where: { email: userFound.email, active: true },
+            data: resetData,
+          });
+
+      // Tokens
       const payload = {
         sub: userFound.id,
-        role: userFound.role,
         email: userFound.email,
+        role: userFound.role,
       };
-      
-      const token = this.jwtSvc.sign(payload, { expiresIn });
-      
-      this.logger.log({
-        message: 'Inicio de sesión exitoso',
-        userId: userFound.id,
-        email: userFound.email,
-        role: userFound.role,
+
+      let tokenExpiry = '1h';
+      switch (userFound.role) {
+        case Role.ADMIN:
+          tokenExpiry = '4h';
+          break;
+        case Role.USER:
+          tokenExpiry = '30d';
+          break;
+        case Role.EMPLOYEE:
+          tokenExpiry = '4h';
+          break;
+      }
+
+      const accessToken = this.jwtSvc.sign(payload, {
+        expiresIn: "15m",
+        secret: process.env.JWT_ACCESS_SECRET,
       });
-      await this.prismaService.userActivity.create({
-        data: {
-          email: userFound.email,
-          action: 'Inicio de sesión exitoso',
-          date: new Date(),
-        },
+      const refreshToken = this.jwtSvc.sign(payload, {
+        expiresIn: tokenExpiry,
+        secret: process.env.JWT_REFRESH_SECRET,
       });
-      return { 
-        user: { 
+
+      const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+
+      userFound.role === Role.USER
+        ? await this.prismaService.user.update({
+            where: { id: userFound.id },
+            data: { refreshToken: hashedRefreshToken },
+          })
+        : await this.prismaService.employee.update({
+            where: { id: userFound.id },
+            data: { refreshToken: hashedRefreshToken },
+          });
+
+      return {
+        user: {
           id: userFound.id,
           name: userFound.name,
           surname: userFound.surname,
@@ -466,40 +512,28 @@ export class AuthService {
           phone: userFound.phone,
           birthdate: userFound.birthdate,
           role: userFound.role,
-        }, 
-        token 
+        },
+        accessToken,
+        refreshToken,
       };
     } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
-      }
-      this.logger.error({
-        message: 'Error durante el proceso de inicio de sesión',
-        error: error.message,
-        stack: error.stack,
-        identifier: loginDto.identifier,
-      });
-      throw new InternalServerErrorException('Error interno del servidor');
+      throw new InternalServerErrorException('Error durante el login');
     }
   }
-
   async verifyToken(@Request() request): Promise<any> {
     try {
-     
-      
       const user = await this.prismaService.user.findUnique({
         where: { id: request.sub, email: request.email },
       });
-      
-      const admin = !user ? await this.prismaService.employee.findUnique({
-        where: { id: request.sub, email: request.email },
-      }) : null;
 
-     
+      const admin = !user
+        ? await this.prismaService.employee.findUnique({
+            where: { id: request.sub, email: request.email },
+          })
+        : null;
 
       const entity = user || admin;
-     
-      return { 
+      return {
         id: entity.id,
         name: entity.name,
         surname: entity.surname,
@@ -507,13 +541,13 @@ export class AuthService {
         phone: entity.phone,
         birthdate: entity.birthdate,
         role: entity.role,
-        gender:entity.gender
+        gender: entity.gender,
       };
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;
       }
-      
+
       throw new HttpException(
         'Error interno del servidor',
         HttpStatus.INTERNAL_SERVER_ERROR,

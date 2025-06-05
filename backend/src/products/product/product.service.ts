@@ -203,9 +203,17 @@ export class ProductService {
     };
   }
 
-  async findOne(id: number) {
-    const product = await this.prismaService.product.findUnique({
-      where: { id },
+  async findOne(slug: string) {
+    // Convierte el slug 'polo-hombre' a 'Polo Hombre'
+    const name = slug
+      .split('-')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+
+    const product = await this.prismaService.product.findFirst({
+      where: {
+        name: name,
+      },
       include: {
         variants: {
           include: {
@@ -231,6 +239,41 @@ export class ProductService {
         category: true,
       },
     });
+
+    return product;
+  }
+
+  async findById(id: number) {
+    const product = await this.prismaService.product.findUnique({
+      where: {
+        id: +id,
+      },
+      include: {
+        variants: {
+          include: {
+            color: {
+              select: {
+                id: true,
+                name: true,
+                hexValue: true,
+              },
+            },
+            images: true,
+            size: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+        brand: true,
+        gender: true,
+        sleeve: true,
+        category: true,
+      },
+    });
+
     return product;
   }
 

@@ -27,8 +27,6 @@ interface AnimatedSectionProps {
   className?: string;
 }
 
-
-
 // Animated Section Component - Optimized with reduced animation complexity
 const AnimatedSection = memo(
   ({ children, className }: AnimatedSectionProps) => {
@@ -69,20 +67,8 @@ const ContactFormSection = lazy(
 const MapSection = lazy(() => import("./components/MapSection"));
 
 export default function ContactPage() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [animateHero, setAnimateHero] = useState(false);
-
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    service: "",
-    subject: "",
-    message: "",
-  });
-
   // Simulamos la carga de la página - Reduced timeout
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -125,37 +111,7 @@ export default function ContactPage() {
     }
   };
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prevState) => ({ ...prevState, [name]: value }));
-  };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    setIsLoading(true);
-    e.preventDefault();
-    console.log(formData);
-
-    // Simulación de envío
-    setTimeout(() => {
-      setIsLoading(false);
-      setIsSubmitted(true);
-
-      // Reset form after 3 seconds
-      setTimeout(() => {
-        setIsSubmitted(false);
-        setFormData({
-          firstName: "",
-          lastName: "",
-          email: "",
-          service: "",
-          subject: "",
-          message: "",
-        });
-      }, 3000);
-    }, 1500);
-  };
 
   const [info, setInfo] = useState<CompanyProfile>();
   useEffect(() => {
@@ -410,14 +366,10 @@ export default function ContactPage() {
               </motion.div>
             </div>
           </div>
-
-         
         </div>
 
         {/* Contact Info Cards */}
-        <AnimatedSection
-          className="py-24 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 relative overflow-hidden"
-        >
+        <AnimatedSection className="py-24 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 relative overflow-hidden">
           {/* Background decoration - Enhanced with about page style */}
           <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
             <div className="absolute -top-24 -left-24 w-64 h-64 bg-blue-500/5 rounded-full"></div>
@@ -561,13 +513,7 @@ export default function ContactPage() {
             </div>
           }
         >
-          <ContactFormSection
-            isLoading={isLoading}
-            isSubmitted={isSubmitted}
-            formData={formData}
-            handleChange={handleChange}
-            handleSubmit={handleSubmit}
-          />
+          <ContactFormSection />
         </Suspense>
 
         {/* Map Section - Lazy loaded */}

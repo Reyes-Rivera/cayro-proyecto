@@ -29,12 +29,18 @@ import Faq from "@/pages/web/faqs/Faqs";
 import CartPage from "@/pages/web/cart/cart-page";
 import PasswordRecoveryQuestionPage from "@/pages/web/auth/PasswordRecoveryQuestionPage";
 import AdminDashboard from "@/pages/private/dashboard-admin/DashboardLayout";
-import ProductDetails from "@/pages/web/products/components/ProductDetails";
+import ProductDetails from "@/pages/web/products/ProductDetails";
 import CheckoutPage from "@/pages/CheckOut/checkout-page";
 import { useAuth } from "@/context/AuthContextType";
 const AppRoutes = () => {
   const { auth, user } = useAuth();
   useEffect(() => {
+    if(user?.role === "EMPLOYEE"){
+      window.location.href = "/perfil-empleado";
+    }
+    if(user?.role === "ADMIN"){
+      window.location.href = "/perfil-admin";
+    }
     const getInfoPage = async () => {
       const res = getCompanyInfoApi();
       document.title = (await res).data[0]?.title;
@@ -65,7 +71,7 @@ const AppRoutes = () => {
           <Route path="/registro" element={<SignUpPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/productos" element={<ProductsSection />} />
-          <Route path="/producto/:id" element={<ProductDetails />} />
+          <Route path="/producto/:name" element={<ProductDetails />} />
           <Route
             path="/recuperar-password"
             element={<PasswordRecoveryPage />}

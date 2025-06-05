@@ -43,12 +43,14 @@ model User {
   loginAttempts     Int       @default(0)
   lockUntil         DateTime?
   gender            GenderUser
+  smartWatchCode    String?   @unique @db.VarChar(255)
   active            Boolean   @default(false)
   role              Role      @default(USER)
   profilePicture    String?   @db.VarChar(255)
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
   isDeleted         Boolean   @default(false)
+  refreshToken String?
   sales             Sale[]
   addresses         Address[] @relation("UserAddresses")
   cart              Cart?     @relation("UserCart")
@@ -80,10 +82,12 @@ model Employee {
   surname           String    @db.VarChar(255)
   email             String    @unique @db.VarChar(255)
   phone             String    @db.VarChar(20)
-  birthdate          DateTime
+  birthdate         DateTime
   password          String    @db.VarChar(255)
   passwordSetAt     DateTime  @default(now())
   passwordExpiresAt DateTime
+  active            Boolean   @default(false)
+  refreshToken      String?
   passwordsHistory  Json?
   loginAttempts     Int       @default(0)
   lockUntil         DateTime?
@@ -180,7 +184,7 @@ enum DocumentTypeInter {
 
 model Product {
   id               Int      @id @default(autoincrement())
-  name             String
+  name             String   @unique
   description      String   @db.VarChar(5000)
   active           Boolean  @default(true)
   createdAt        DateTime @default(now())

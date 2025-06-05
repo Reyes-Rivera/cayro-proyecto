@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import {
   ArrowRight,
   Star,
@@ -13,7 +13,8 @@ import {
   Sparkles,
   Shirt,
 } from "lucide-react";
-import FeaturedProductsCarousel from "./components/featured-products-carousel";
+import { NavLink } from "react-router-dom";
+import Loader from "@/components/web-components/Loader";
 
 // Importaciones de imágenes
 import Playeras from "./assets/playeras.jpg.jpg";
@@ -21,11 +22,15 @@ import Camisas from "./assets/camisas.jpg";
 import Polos from "./assets/polos.jpg.jpg";
 import Pantalones from "./assets/pantalones.jpg.jpg";
 import Deportivos from "./assets/deportivos.jpg.jpg";
-import HomeHero from "./components/HeroPage";
-import { NavLink } from "react-router-dom";
 import WhyUs from "./assets/whyus.jpg";
 import Custom from "./assets/personalizar.jpg";
-import Loader from "@/components/web-components/Loader";
+
+// Lazy load components
+const HomeHero = lazy(() => import("./components/HeroPage"));
+const FeaturedProductsCarousel = lazy(
+  () => import("./components/featured-products-carousel")
+);
+
 // Types
 interface Category {
   title: string;
@@ -39,7 +44,6 @@ interface CategoryCardProps {
   index: number;
 }
 
-
 const categories: Category[] = [
   { title: "Polos", image: Polos },
   { title: "Playeras", image: Playeras },
@@ -48,18 +52,24 @@ const categories: Category[] = [
   { title: "Deportivos", image: Deportivos },
 ];
 
-// Category Card Component - Simplified animation
+// Category Card Component - Optimized for performance
 const CategoryCard = ({ image, title, isActive, index }: CategoryCardProps) => {
   return (
     <div
-      className={`relative group overflow-hidden rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 ${
-        isActive ? "ring-2 ring-blue-500 scale-[1.02]" : ""
+      className={`relative group overflow-hidden rounded-xl shadow-md transition-all duration-300 ${
+        isActive ? "ring-2 ring-blue-500" : ""
       }`}
+      style={{
+        transform: isActive ? "scale(1.02)" : "scale(1)",
+        willChange: "transform",
+      }}
     >
       <img
         src={image || "/placeholder.svg?height=300&width=300"}
         alt={title}
-        className="w-full h-48 object-cover transform transition-transform duration-300 group-hover:scale-105 max-w-full"
+        className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+        loading="lazy"
+        style={{ willChange: "transform" }}
       />
       <div className="absolute inset-0 bg-black/40 group-hover:bg-black/60 transition-colors duration-300"></div>
       <div className="absolute bottom-0 left-0 p-4 w-full">
@@ -76,20 +86,20 @@ export default function Home() {
   const [activeCategory, setActiveCategory] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Reduced loading time and simplified loading logic
+  // Reduced loading time
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 1000); // Reduced loading time
+    }, 500);
 
     return () => clearTimeout(timer);
   }, []);
 
-  // Simplified category rotation
+  // Optimized category rotation - less frequent updates
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveCategory((prev) => (prev + 1) % categories.length);
-    }, 4000); // Increased interval time
+    }, 8000); // Increased to 8 seconds for better performance
 
     return () => clearInterval(interval);
   }, []);
@@ -124,13 +134,18 @@ export default function Home() {
       {isLoading && <Loader />}
       <main className="min-h-screen mt-5 bg-white dark:bg-gray-900 overflow-x-hidden">
         {/* Hero Section */}
-        <HomeHero />
-
-        {/* Benefits Section - Simplified */}
-        <section
-          id="categories-section"
-          className="py-24 bg-white dark:bg-gray-900 relative overflow-hidden"
+        <Suspense
+          fallback={
+            <div className="h-screen flex items-center justify-center">
+              Cargando...
+            </div>
+          }
         >
+          <HomeHero />
+        </Suspense>
+
+        {/* Benefits Section */}
+        <section className="py-24 bg-white dark:bg-gray-900 relative overflow-hidden">
           <div className="container mx-auto px-6 relative z-10 max-w-full">
             <div className="text-center mb-16">
               <span className="inline-flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-4 py-1.5 text-sm font-medium text-blue-800 dark:text-blue-300 mb-4">
@@ -142,7 +157,6 @@ export default function Home() {
               <div className="w-24 h-1 bg-blue-600 mx-auto mt-6"></div>
             </div>
 
-            {/* Lista de beneficios */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {benefits.map((benefit, index) => {
                 const Icon = benefit.icon;
@@ -151,25 +165,18 @@ export default function Home() {
                     key={benefit.title}
                     className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all group relative overflow-hidden"
                   >
-                    {/* Background decoration */}
-                    <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-500/5 rounded-full transition-all duration-300 group-hover:scale-150"></div>
-
-                    {/* Icono con fondo dinámico */}
+                    <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-500/5 rounded-full"></div>
                     <div className="mb-6 relative z-10">
                       <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center text-white shadow-lg">
                         <Icon className="w-8 h-8" />
                       </div>
                     </div>
-                    {/* Título */}
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 relative z-10">
                       {benefit.title}
                     </h3>
-                    {/* Descripción */}
                     <p className="text-gray-600 dark:text-gray-300 leading-relaxed relative z-10">
                       {benefit.description}
                     </p>
-
-                    {/* Número decorativo */}
                     <div className="absolute -right-2 -top-2 text-8xl font-bold text-blue-500/5 dark:text-blue-500/10 select-none">
                       {index + 1}
                     </div>
@@ -180,8 +187,8 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Featured Categories */}
-        <section className="py-24 bg-white dark:bg-gray-900 relative overflow-hidden">
+        {/* Featured Categories - Optimized */}
+        <section className="py-24 bg-gray-50 dark:bg-gray-800 relative">
           <div className="container mx-auto px-6 relative z-10 max-w-full">
             <div className="text-center mb-16">
               <span className="inline-flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-4 py-1.5 text-sm font-medium text-blue-800 dark:text-blue-300 mb-4">
@@ -193,15 +200,17 @@ export default function Home() {
               <div className="w-24 h-1 bg-blue-600 mx-auto mt-6"></div>
             </div>
 
+            {/* Simplified grid without complex animations */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
               {categories.map((category, index) => (
-                <CategoryCard
-                  key={category.title}
-                  image={category.image}
-                  title={category.title}
-                  isActive={index === activeCategory}
-                  index={index}
-                />
+                <div key={category.title} className="transform-gpu">
+                  <CategoryCard
+                    image={category.image}
+                    title={category.title}
+                    isActive={index === activeCategory}
+                    index={index}
+                  />
+                </div>
               ))}
             </div>
 
@@ -218,7 +227,15 @@ export default function Home() {
         </section>
 
         {/* Featured Products Carousel */}
-        <FeaturedProductsCarousel />
+        <Suspense
+          fallback={
+            <div className="py-16 flex items-center justify-center">
+              Cargando productos...
+            </div>
+          }
+        >
+          <FeaturedProductsCarousel />
+        </Suspense>
 
         {/* Why Us Section */}
         <section className="py-24 bg-white dark:bg-gray-900 relative overflow-hidden">
@@ -234,20 +251,18 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              {/* Contenedor de la imagen */}
               <div className="flex justify-center">
                 <div className="relative">
                   <div className="absolute -top-4 -left-4 w-24 h-24 bg-blue-600/10 rounded-full z-0"></div>
                   <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-blue-600/10 rounded-full z-0"></div>
                   <img
-                    src={WhyUs}
+                    src={WhyUs || "/placeholder.svg"}
                     alt="Nuestro equipo"
                     width={500}
                     height={500}
                     className="rounded-lg shadow-xl relative z-10"
+                    loading="lazy"
                   />
-
-                  {/* Floating badge */}
                   <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 px-6 py-3 rounded-full shadow-lg z-20 flex items-center gap-2">
                     <Sparkles className="w-5 h-5 text-yellow-500" />
                     <span className="font-bold text-gray-900 dark:text-white">
@@ -257,51 +272,48 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Contenedor de los beneficios */}
               <div className="space-y-6">
-                <div className="border-l-4 border-blue-600 pl-6 hover:bg-gray-50 dark:hover:bg-gray-800 hover:shadow-md p-4 rounded-r-lg transition-all">
-                  <h3 className="text-2xl font-bold mb-3 text-blue-700 dark:text-blue-400">
-                    Calidad Premium
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-300">
-                    Utilizamos los mejores materiales para garantizar la
-                    durabilidad y comodidad de nuestras prendas.
-                  </p>
-                </div>
-                <div className="border-l-4 border-blue-600 pl-6 hover:bg-gray-50 dark:hover:bg-gray-800 hover:shadow-md p-4 rounded-r-lg transition-all">
-                  <h3 className="text-2xl font-bold mb-3 text-blue-700 dark:text-blue-400">
-                    Diseño Único
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-300">
-                    Nuestros diseñadores crean piezas exclusivas que no
-                    encontrarás en ningún otro lugar.
-                  </p>
-                </div>
-                <div className="border-l-4 border-blue-600 pl-6 hover:bg-gray-50 dark:hover:bg-gray-800 hover:shadow-md p-4 rounded-r-lg transition-all">
-                  <h3 className="text-2xl font-bold mb-3 text-blue-700 dark:text-blue-400">
-                    Sostenibilidad
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-300">
-                    Comprometidos con el medio ambiente, utilizamos procesos de
-                    producción responsables.
-                  </p>
-                </div>
-                <div className="border-l-4 border-blue-600 pl-6 hover:bg-gray-50 dark:hover:bg-gray-800 hover:shadow-md p-4 rounded-r-lg transition-all">
-                  <h3 className="text-2xl font-bold mb-3 text-blue-700 dark:text-blue-400">
-                    Precios Justos
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-300">
-                    Ofrecemos la mejor relación calidad-precio del mercado sin
-                    intermediarios.
-                  </p>
-                </div>
+                {[
+                  {
+                    title: "Calidad Premium",
+                    description:
+                      "Utilizamos los mejores materiales para garantizar la durabilidad y comodidad de nuestras prendas.",
+                  },
+                  {
+                    title: "Diseño Único",
+                    description:
+                      "Nuestros diseñadores crean piezas exclusivas que no encontrarás en ningún otro lugar.",
+                  },
+                  {
+                    title: "Sostenibilidad",
+                    description:
+                      "Comprometidos con el medio ambiente, utilizamos procesos de producción responsables.",
+                  },
+                  {
+                    title: "Precios Justos",
+                    description:
+                      "Ofrecemos la mejor relación calidad-precio del mercado sin intermediarios.",
+                  },
+                ].map((benefit) => (
+                  <div
+                    key={benefit.title}
+                    className="border-l-4 border-blue-600 pl-6 hover:bg-gray-50 dark:hover:bg-gray-800 hover:shadow-md p-4 rounded-r-lg transition-all"
+                  >
+                    <h3 className="text-2xl font-bold mb-3 text-blue-700 dark:text-blue-400">
+                      {benefit.title}
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-300">
+                      {benefit.description}
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         </section>
 
         {/* Personalize Section */}
-        <section className="py-24 bg-white dark:bg-gray-900 relative overflow-hidden">
+        <section className="py-24 bg-gray-50 dark:bg-gray-800 relative overflow-hidden">
           <div className="container mx-auto px-6 relative z-10 max-w-full">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
               <div className="order-2 lg:order-1 space-y-6">
@@ -317,45 +329,37 @@ export default function Home() {
                   de personalización te permite diseñar prendas exclusivas.
                 </p>
                 <ul className="space-y-6 mb-10">
-                  <li className="flex items-start">
-                    <span className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-full p-2 mr-4 mt-1 shadow-md">
-                      <Shirt className="w-5 h-5" />
-                    </span>
-                    <div>
-                      <h4 className="font-bold text-gray-900 dark:text-white mb-1">
-                        Elige tu modelo
-                      </h4>
-                      <p className="text-gray-600 dark:text-gray-300">
-                        Selecciona entre nuestra amplia variedad de prendas base
-                      </p>
-                    </div>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-full p-2 mr-4 mt-1 shadow-md">
-                      <Shirt className="w-5 h-5" />
-                    </span>
-                    <div>
-                      <h4 className="font-bold text-gray-900 dark:text-white mb-1">
-                        Personaliza el diseño
-                      </h4>
-                      <p className="text-gray-600 dark:text-gray-300">
-                        Selecciona colores, estampados y acabados a tu gusto
-                      </p>
-                    </div>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-full p-2 mr-4 mt-1 shadow-md">
-                      <Shirt className="w-5 h-5" />
-                    </span>
-                    <div>
-                      <h4 className="font-bold text-gray-900 dark:text-white mb-1">
-                        Añade tu toque personal
-                      </h4>
-                      <p className="text-gray-600 dark:text-gray-300">
-                        Incorpora textos, imágenes o diseños propios a tu prenda
-                      </p>
-                    </div>
-                  </li>
+                  {[
+                    {
+                      title: "Elige tu modelo",
+                      description:
+                        "Selecciona entre nuestra amplia variedad de prendas base",
+                    },
+                    {
+                      title: "Personaliza el diseño",
+                      description:
+                        "Selecciona colores, estampados y acabados a tu gusto",
+                    },
+                    {
+                      title: "Añade tu toque personal",
+                      description:
+                        "Incorpora textos, imágenes o diseños propios a tu prenda",
+                    },
+                  ].map((item) => (
+                    <li key={item.title} className="flex items-start">
+                      <span className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-full p-2 mr-4 mt-1 shadow-md">
+                        <Shirt className="w-5 h-5" />
+                      </span>
+                      <div>
+                        <h4 className="font-bold text-gray-900 dark:text-white mb-1">
+                          {item.title}
+                        </h4>
+                        <p className="text-gray-600 dark:text-gray-300">
+                          {item.description}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
                 </ul>
                 <div>
                   <NavLink
@@ -372,14 +376,13 @@ export default function Home() {
                 <div className="relative">
                   <div className="absolute inset-0 border-2 border-blue-600 rounded-lg transform translate-x-4 translate-y-4 z-0"></div>
                   <img
-                    src={Custom}
+                    src={Custom || "/placeholder.svg"}
                     alt="Personalización de ropa"
                     width={690}
                     height={600}
                     className="rounded-lg shadow-xl relative z-10"
+                    loading="lazy"
                   />
-
-                  {/* Floating badge */}
                   <div className="absolute top-4 -right-4 bg-white dark:bg-gray-800 px-4 py-2 rounded-full shadow-lg z-20 flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-yellow-500" />
                     <span className="font-bold text-gray-900 dark:text-white">
@@ -419,7 +422,6 @@ export default function Home() {
                 </NavLink>
               </div>
 
-              {/* Floating badges */}
               <div className="mt-12 flex flex-wrap justify-center gap-4">
                 <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 flex items-center gap-2">
                   <Check className="w-5 h-5 text-green-300" />

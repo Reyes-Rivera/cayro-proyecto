@@ -132,7 +132,7 @@ export default function ProductCard({
       whileHover={{ y: -8 }}
       transition={{ duration: 0.3 }}
     >
-      <Link to={`/producto/${product.id}`} className="block">
+      <Link to={`/producto/${product.name.toLocaleLowerCase().replace(/\s+/g, '-')}`} className="block">
         <div className="relative overflow-hidden mb-5 rounded-2xl shadow-lg group-hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-800">
           {/* Main product image with hover effect */}
           <div className="aspect-[3/4] overflow-hidden bg-gradient-to-br from-blue-50 to-white dark:from-gray-800 dark:to-gray-900">
