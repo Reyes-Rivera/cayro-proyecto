@@ -49,12 +49,12 @@ export default function OrderSummary({
   // Función para obtener la URL de la imagen del producto
   const getProductImageUrl = (item: any) => {
     // Verificar si existe la propiedad variant con imageUrl
-    if (item.variant && item.variant.imageUrl) {
-      return item.variant.imageUrl;
+    if (item.variant && item.variant.images) {
+      return item.variant.images[0].url;
     }
     // Verificar si existe la propiedad imageUrl directamente en el item
-    else if (item.imageUrl) {
-      return item.imageUrl;
+    else if (item.images) {
+      return item.images;
     }
     // Verificar si existe la propiedad product con image
     else if (item.product && item.product.image) {

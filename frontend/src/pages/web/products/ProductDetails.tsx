@@ -47,6 +47,7 @@ export default function ProductDetail() {
   const [showZoomModal, setShowZoomModal] = useState(false);
   const [activeTab, setActiveTab] = useState("description");
   const [isBuyingNow, setIsBuyingNow] = useState(false);
+
   // Fetch product data
   useEffect(() => {
     const fetchProduct = async () => {
@@ -116,37 +117,51 @@ export default function ProductDetail() {
     );
   };
 
-  // Get all images for the selected variant with proper angle handling
+  // Get all available images for the selected variant
   const getVariantImages = () => {
     const selectedVariant = getSelectedVariant();
-    if (!selectedVariant) return [];
-    return selectedVariant.images || [];
+    if (!selectedVariant || !selectedVariant.images) return [];
+
+    // Filtrar solo las imágenes que existen (no crear placeholders)
+    return selectedVariant.images.filter((img) => img && img.url);
   };
 
-  // Get ordered images with placeholders for missing angles
-  const getOrderedImages = () => {
+  // Get images with proper fallback handling
+  const getDisplayImages = () => {
     const variantImages = getVariantImages();
 
-    // Define the required angles in order
-    const requiredAngles = ["front", "side", "back"];
+    // Si hay imágenes de la variante, usarlas
+    if (variantImages.length > 0) {
+      return variantImages;
+    }
 
-    return requiredAngles.map((angle) => {
-      const foundImage = variantImages.find((img) => img.angle === angle);
-      return (
-        foundImage || {
-          id: `placeholder-${angle}`,
-          url: `/placeholder.svg?height=600&width=600&text=${angle}`,
-          angle: angle,
-          productVariantId: selectedVariant?.id || 0,
-        }
-      );
-    });
+    // Si no hay imágenes de la variante, usar una imagen placeholder genérica
+    return [
+      {
+        id: "placeholder-default",
+        url: `/placeholder.svg?height=600&width=600&text=Sin+imagen`,
+        angle: "front",
+        productVariantId: getSelectedVariant()?.id || 0,
+      },
+    ];
+  };
+
+  // Get angle display name in Spanish
+  const getAngleDisplayName = (angle: string) => {
+    const angleMap: Record<string, string> = {
+      front: "Frontal",
+      side: "Lateral",
+      back: "Trasera",
+      detail: "Detalle",
+      full: "Completa",
+    };
+    return angleMap[angle] || angle.charAt(0).toUpperCase() + angle.slice(1);
   };
 
   // Handle color selection
   const handleColorSelect = (colorId: number) => {
     setSelectedColorId(colorId);
-    setSelectedImageIndex(0);
+    setSelectedImageIndex(0); // Reset to first image when changing color
     const sizesForColor = product?.variants
       .filter((v) => v.colorId === colorId)
       .map((v) => v.sizeId);
@@ -197,15 +212,19 @@ export default function ProductDetail() {
 
   // Navigate images
   const nextImage = () => {
-    const orderedImages = getVariantImages();
-    setSelectedImageIndex((prev) => (prev + 1) % orderedImages.length);
+    const displayImages = getDisplayImages();
+    if (displayImages.length > 1) {
+      setSelectedImageIndex((prev) => (prev + 1) % displayImages.length);
+    }
   };
 
   const prevImage = () => {
-    const orderedImages = getVariantImages();
-    setSelectedImageIndex(
-      (prev) => (prev - 1 + orderedImages.length) % orderedImages.length
-    );
+    const displayImages = getDisplayImages();
+    if (displayImages.length > 1) {
+      setSelectedImageIndex(
+        (prev) => (prev - 1 + displayImages.length) % displayImages.length
+      );
+    }
   };
 
   // Color map for colors without hexValue
@@ -264,7 +283,7 @@ export default function ProductDetail() {
   const uniqueColors = getUniqueColors();
   const availableSizes = getAvailableSizes();
   const selectedVariant = getSelectedVariant();
-  const orderedImages = getOrderedImages();
+  const displayImages = getDisplayImages();
 
   const tabs = [
     { id: "description", label: "Descripción", icon: Info },
@@ -296,19 +315,17 @@ export default function ProductDetail() {
               <div className="relative aspect-[4/5] bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-2xl overflow-hidden group max-w-md mx-auto shadow-xl border border-gray-200/50 dark:border-gray-600/50">
                 <img
                   src={
-                    orderedImages[selectedImageIndex]?.url ||
-                    "/placeholder.svg?height=600&width=600"
+                    displayImages[selectedImageIndex]?.url 
                   }
-                  alt={`${product.name} - ${
-                    orderedImages[selectedImageIndex]?.angle ||
-                    "Vista principal"
-                  }`}
+                  alt={`${product.name} - ${getAngleDisplayName(
+                    displayImages[selectedImageIndex]?.angle || "front"
+                  )}`}
                   className="w-full h-full object-cover cursor-pointer transition-transform duration-500 group-hover:scale-105"
                   onClick={() => setShowZoomModal(true)}
                 />
 
-                {/* Navigation Arrows */}
-                {orderedImages.length > 1 && (
+                {/* Navigation Arrows - Solo mostrar si hay más de una imagen */}
+                {displayImages.length > 1 && (
                   <>
                     <button
                       onClick={prevImage}
@@ -329,43 +346,57 @@ export default function ProductDetail() {
                 <div className="absolute top-4 right-4 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-2 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-300">
                   <ZoomIn className="w-4 h-4 text-gray-600 dark:text-gray-300" />
                 </div>
+
+                {/* Indicador de imagen actual si hay múltiples imágenes */}
+                {displayImages.length > 1 && (
+                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
+                    {displayImages.map((_, index) => (
+                      <div
+                        key={index}
+                        className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                          selectedImageIndex === index
+                            ? "bg-white shadow-lg"
+                            : "bg-white/50"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
 
-              {/* Thumbnails */}
-              <div className="flex gap-4 justify-center">
-                {orderedImages.map((image, index) => (
-                  <div
-                    key={image?.id || index}
-                    className="flex flex-col items-center gap-2"
-                  >
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setSelectedImageIndex(index)}
-                      className={`w-20 h-20 bg-gray-50 dark:bg-gray-700 rounded-xl overflow-hidden border-2 transition-all duration-300 shadow-lg hover:shadow-xl ${
-                        selectedImageIndex === index
-                          ? "border-blue-500 ring-2 ring-blue-500/30 shadow-blue-500/20"
-                          : "border-transparent hover:border-gray-300 dark:hover:border-gray-600"
-                      }`}
+              {/* Thumbnails - Solo mostrar si hay más de una imagen */}
+              {displayImages.length > 1 && (
+                <div className="flex gap-4 justify-center">
+                  {displayImages.map((image, index) => (
+                    <div
+                      key={image?.id || index}
+                      className="flex flex-col items-center gap-2"
                     >
-                      <img
-                        src={image.url || "/placeholder.svg"}
-                        alt={`${product.name} - ${image.angle}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </motion.button>
-                    <span className="text-xs text-gray-500 dark:text-gray-400 font-medium capitalize">
-                      {image.angle === "front"
-                        ? "Frontal"
-                        : image.angle === "side"
-                        ? "Lateral"
-                        : image.angle === "back"
-                        ? "Trasera"
-                        : image.angle}
-                    </span>
-                  </div>
-                ))}
-              </div>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setSelectedImageIndex(index)}
+                        className={`w-20 h-20 bg-gray-50 dark:bg-gray-700 rounded-xl overflow-hidden border-2 transition-all duration-300 shadow-lg hover:shadow-xl ${
+                          selectedImageIndex === index
+                            ? "border-blue-500 ring-2 ring-blue-500/30 shadow-blue-500/20"
+                            : "border-transparent hover:border-gray-300 dark:hover:border-gray-600"
+                        }`}
+                      >
+                        <img
+                          src={image.url || "/placeholder.svg"}
+                          alt={`${product.name} - ${getAngleDisplayName(
+                            image.angle
+                          )}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </motion.button>
+                      <span className="text-xs text-gray-500 dark:text-gray-400 font-medium capitalize">
+                        {getAngleDisplayName(image.angle)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Product Info */}
@@ -828,12 +859,11 @@ export default function ProductDetail() {
           <div className="py-4">
             <img
               src={
-                orderedImages[selectedImageIndex]?.url ||
-                "/placeholder.svg?height=1000&width=1000"
+                displayImages[selectedImageIndex]?.url 
               }
-              alt={`${product.name} - ${
-                orderedImages[selectedImageIndex]?.angle || "Vista principal"
-              }`}
+              alt={`${product.name} - ${getAngleDisplayName(
+                displayImages[selectedImageIndex]?.angle || "front"
+              )}`}
               className="w-full max-h-[70vh] object-contain"
             />
           </div>

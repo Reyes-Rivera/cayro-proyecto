@@ -215,7 +215,7 @@ export default function CartItem({ item }: CartItemProps) {
           >
             <img
               src={
-                item.variant.imageUrl || "/placeholder.svg?height=200&width=200"
+                item.variant.images[0].url || "/placeholder.svg?height=200&width=200"
               }
               alt={item.product.name}
               className="w-full h-full object-cover"

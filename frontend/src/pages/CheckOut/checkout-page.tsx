@@ -246,7 +246,7 @@ export default function CheckoutPage() {
         {/* Header */}
         <div className="flex items-center mb-8">
           <Link
-            to="/cart"
+            to="/carrito"
             className="flex items-center text-gray-500 hover:text-blue-600 dark:hover:text-blue-500 mr-4"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
