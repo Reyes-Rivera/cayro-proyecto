@@ -640,7 +640,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
         ? await updateProduct(payload, product.id)
         : await createProduct(payload);
 
-      // Manejar la respuesta
       if (response) {
         reset();
         product ? await onEdit(response.data) : await onAdd(response.data);
