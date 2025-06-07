@@ -12,7 +12,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useCart } from "@/context/CartConrexr";
+import { useCart } from "@/context/CartContext";
 import CartItem from "@/pages/web/cart/components/cart-item";
 import CartSummary from "@/pages/web/cart/components/cart-summary";
 import EmptyCart from "@/pages/web/cart/components/empty-cart";
@@ -27,6 +27,9 @@ export default function CartPage() {
   const [showSummary, setShowSummary] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  // Calculate subtotal if not available from useCart hook
+  console.log(items);
 
   // Calculate estimated delivery date (3-5 business days from now)
   useEffect(() => {
@@ -228,7 +231,11 @@ export default function CartPage() {
                   </div>
                 </div>
               </div>
+            </div>
 
+            {/* Cart summary - Desktop */}
+            <div className="hidden lg:block w-full lg:w-1/3">
+              <CartSummary />
               {/* Shipping info */}
               <div className="mt-6 bg-white dark:bg-gray-900 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-800">
                 <div className="flex items-start">
@@ -237,11 +244,16 @@ export default function CartPage() {
                     <h3 className="font-medium text-gray-900 dark:text-white text-sm">
                       Información de envío
                     </h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                      Envío estándar: 3-5 días hábiles
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                      Envío gratis en compras mayores a $100
+                    <div className="space-y-1 text-sm text-gray-500 dark:text-gray-400 mt-1">
+                      <p>• 1-5 productos: $200</p>
+                      <p>• 6-10 productos: $250</p>
+                      <p>• 11-15 productos: $300</p>
+                      <p>• 16-20 productos: $350</p>
+                      <p>• 21-25 productos: $400</p>
+                      <p>• +25 productos: +$50 por cada 5 adicionales</p>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-2">
+                      Tiempo de entrega: 3-5 días hábiles
                     </p>
                   </div>
                 </div>
@@ -389,11 +401,6 @@ export default function CartPage() {
               </div>
             </div>
 
-            {/* Cart summary - Desktop */}
-            <div className="hidden lg:block w-full lg:w-1/3">
-              <CartSummary />
-            </div>
-
             {/* Mobile summary overlay */}
             <AnimatePresence>
               {showSummary && (
@@ -421,7 +428,7 @@ export default function CartPage() {
                       </button>
                     </div>
                     <div className="p-4">
-                      <CartSummary />
+                      <CartSummary  />
                     </div>
                   </motion.div>
                 </motion.div>

@@ -75,6 +75,7 @@ export class CartService {
                   },
                   color: true,
                   size: true,
+                  images: true,
                 },
               },
             },

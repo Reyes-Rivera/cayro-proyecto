@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useCart } from "@/context/CartConrexr";
+import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContextType";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import Swal from "sweetalert2";

@@ -14,7 +14,6 @@ import type {
   Color,
   Sleeve,
 } from "../../../types/products";
-import ProductHero from "./components/ProductHero";
 import ProductFilters from "./components/ProductFilters";
 import ActiveFilters from "./components/ActiveFilters";
 import ProductGrid from "./components/ProductGrid";
@@ -157,7 +156,6 @@ export default function ProductsPage() {
     if (pageParam && !isNaN(Number(pageParam))) {
       setCurrentPage(Number(pageParam));
     }
-
   };
 
   // Fetch data from API with filters
@@ -246,7 +244,6 @@ export default function ProductsPage() {
         }
         setSleeves(sleevesData);
 
-       
         // Marcar que los filtros se han cargado
         setFiltersLoaded(true);
 
@@ -264,14 +261,19 @@ export default function ProductsPage() {
     fetchData();
   }, []);
 
-  // Aplicar filtros desde URL después de cargar los datos de filtros
   useEffect(() => {
     if (filtersLoaded && initialLoadRef.current) {
       applyFiltersFromURL();
       initialLoadRef.current = false;
     }
+    scrollToTop();
   }, [filtersLoaded]);
-
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
   // Función para obtener productos con filtros
   const fetchProductsWithFilters = async () => {
     setIsLoading(true);
@@ -321,7 +323,6 @@ export default function ProductsPage() {
       // Build the URL with query parameters as a string
       const queryString = params.toString();
 
-
       // Obtener productos de la API
       const response = await getProducts(queryString);
 
@@ -347,29 +348,27 @@ export default function ProductsPage() {
           Object.keys(response.data).length === 0
         ) {
           // Respuesta vacía pero válida
-          
+
           productsData = [];
           totalPagesCount = 1;
         } else {
           productsData = [];
           totalPagesCount = 1;
         }
-
+        scrollToTop();
         setProducts(productsData);
         setTotalPages(totalPagesCount);
-
-        if (productsData.length === 0) {
-          console.log("No se encontraron productos con los filtros aplicados");
-        }
       } else {
-        setError(
-          "No se pudieron cargar los productos. Por favor, intente nuevamente."
-        );
+        scrollToTop();
         setProducts([]);
         setTotalPages(1);
       }
-    } catch (err) {
-      console.error("Error fetching products:", err);
+    } catch (err: any) {
+      if (err.status === 404) {
+        setProducts([]);
+        setTotalPages(1);
+        return;
+      }
       setError(
         "No se pudieron cargar los productos. Por favor, intente nuevamente."
       );
@@ -456,6 +455,7 @@ export default function ProductsPage() {
             setTotalPages(totalPagesCount);
             setCurrentPage(1);
             setError(null);
+            scrollToTop();
           } else {
             console.error(
               "La API no devolvió datos válidos al limpiar filtros:",
@@ -523,8 +523,6 @@ export default function ProductsPage() {
     // Función para manejar eventos popstate (cuando el usuario navega con los botones del navegador)
     const handlePopState = () => {
       if (!filtersLoaded) return;
-
-      console.log("Navegación detectada, actualizando filtros desde URL");
       applyFiltersFromURL();
     };
 
@@ -533,6 +531,7 @@ export default function ProductsPage() {
 
     // Limpiar el event listener al desmontar
     return () => {
+      scrollToTop();
       window.removeEventListener("popstate", handlePopState);
     };
   }, [filtersLoaded, categories, genders, sizes, colors, sleeves, brands]);
@@ -552,45 +551,12 @@ export default function ProductsPage() {
     currentPage > 1;
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
-      {/* Hero Section */}
-      <ProductHero
-        setActiveCategoryId={setActiveCategoryId}
-        setSearchTerm={setSearchTerm}
-        scrollToProducts={() => {
-          const productsSection = document.getElementById("products-grid");
-          if (productsSection) {
-            productsSection.scrollIntoView({ behavior: "smooth" });
-          }
-        }}
-        searchTerm={searchTerm}
-      />
-
+    <div className="min-h-screen  dark:bg-gray-900">
       <section
-        className="w-full py-16 md:py-24 bg-white dark:bg-gray-900 relative z-10"
+        className="w-full py-16 md:py-24 bg-gray-50 dark:bg-gray-900 relative z-10"
         id="products-grid"
       >
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          {/* Título y contador de productos */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 md:mb-16 gap-4 md:gap-8">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-            >
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
-                Nuestra Colección
-              </h2>
-              <div className="mt-2 flex items-center">
-                <div className="h-1 w-16 bg-gradient-to-r from-blue-600 to-blue-400 mr-4 rounded-full"></div>
-                <p className="text-blue-600 dark:text-blue-400 font-medium">
-                  {products.length}{" "}
-                  {products.length === 1 ? "producto" : "productos"}
-                </p>
-              </div>
-            </motion.div>
-          </div>
-
           {/* Active Filters Chips */}
           {hasActiveFilters && (
             <ActiveFilters
@@ -649,6 +615,8 @@ export default function ProductsPage() {
               setPriceRange={setPriceRange}
               hasActiveFilters={hasActiveFilters}
               clearAllFilters={clearAllFilters}
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
             />
 
             {/* Main Content */}

@@ -55,7 +55,6 @@ export class ProductController {
 
       return res;
     } catch (error) {
-      console.log(error);
       throw error;
     }
   }

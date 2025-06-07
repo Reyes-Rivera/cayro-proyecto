@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import type { Product } from "../../../../types/products";
-import { AlertCircle, RefreshCw, PackageOpen, ShoppingBag } from "lucide-react";
+import { AlertCircle, RefreshCw, PackageOpen } from "lucide-react";
 import ProductCard from "./ProductCard";
 
 interface ProductGridProps {
@@ -48,7 +48,7 @@ export default function ProductGrid({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="py-16 text-center rounded-2xl bg-gradient-to-br from-blue-50 to-white dark:from-blue-900/20 dark:to-gray-900 shadow-lg border border-blue-100 dark:border-blue-900/30"
+        className="py-16 text-center rounded-2xl  dark:bg-gray-800 shadow-lg border border-blue-100 dark:border-blue-900/30"
       >
         <div className="flex flex-col items-center justify-center py-12">
           <div className="w-20 h-20 rounded-full bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center mb-6 shadow-inner">
@@ -57,7 +57,7 @@ export default function ProductGrid({
               strokeWidth={1.5}
             />
           </div>
-          <h3 className="text-2xl font-serif text-gray-900 dark:text-white mb-4">
+          <h3 className="text-2xl  text-gray-900 dark:text-white mb-4">
             No hay productos disponibles
           </h3>
           <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
@@ -82,7 +82,7 @@ export default function ProductGrid({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="py-16 text-center rounded-2xl bg-gradient-to-br from-blue-50 to-white dark:from-blue-900/20 dark:to-gray-900 shadow-lg border border-blue-100 dark:border-blue-900/30"
+        className="py-16 text-center rounded-2xl  dark:bg-gray-800 shadow-lg border border-blue-100 dark:border-blue-900/30"
       >
         <div className="flex flex-col items-center justify-center py-16">
           <div className="w-24 h-24 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-8 shadow-inner">
@@ -91,7 +91,7 @@ export default function ProductGrid({
               strokeWidth={1.5}
             />
           </div>
-          <h3 className="text-2xl font-serif text-gray-900 dark:text-white mb-4">
+          <h3 className="text-2xl  text-gray-900 dark:text-white mb-4">
             No se encontraron productos
           </h3>
           <p className="text-gray-600 dark:text-gray-400 mb-10 max-w-md mx-auto">
@@ -169,24 +169,6 @@ export default function ProductGrid({
   return (
     <div className="relative">
       {/* Collection label */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="mb-10 inline-flex items-center"
-      >
-        <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mr-4 shadow-md">
-          <ShoppingBag className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-        </div>
-        <div>
-          <h3 className="text-xl font-medium text-gray-900 dark:text-white">
-            Colección destacada
-          </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Descubre nuestras prendas más populares
-          </p>
-        </div>
-      </motion.div>
 
       {/* Decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">

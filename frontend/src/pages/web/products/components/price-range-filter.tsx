@@ -102,10 +102,10 @@ export default function PriceRangeFilter({
 
   return (
     <div className="mb-12">
-      <h4 className="font-medium text-gray-900 dark:text-white mb-6 text-sm uppercase tracking-widest flex items-center">
+      <h3 className="font-semibold text-gray-900 dark:text-white mb-6 text-sm uppercase tracking-widest flex items-center">
         <span className="w-6 h-0.5 bg-blue-600 dark:bg-blue-400 mr-2"></span>
         Rango de Precio
-      </h4>
+      </h3>
 
       <form onSubmit={handleSubmit} className="px-2">
         <div className="flex flex-col space-y-4">

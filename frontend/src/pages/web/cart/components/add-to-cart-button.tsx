@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ShoppingCart, Check } from "lucide-react";
 import { motion } from "framer-motion";
-import { useCart } from "@/context/CartConrexr";
+import { useCart } from "@/context/CartContext";
 import Swal from "sweetalert2";
 
 interface AddToCartButtonProps {

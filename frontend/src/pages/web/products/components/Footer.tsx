@@ -68,8 +68,13 @@ export default function Pagination({
       // Scroll to products section
       const productsSection = document.getElementById("products-grid");
       if (productsSection) {
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth",
+        });
         productsSection.scrollIntoView({ behavior: "smooth" });
       }
+    
     }
   };
 

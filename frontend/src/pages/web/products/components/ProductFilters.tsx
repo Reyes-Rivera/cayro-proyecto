@@ -1,8 +1,9 @@
 "use client";
 
+import type React from "react";
+
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, Filter, Check } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import type {
   Brand,
   Category,
@@ -11,7 +12,8 @@ import type {
   Size,
   Sleeve,
 } from "../../../../types/products";
-import PriceRangeFilter from "./price-range-filter";
+import MobileFilters from "./MoobileFilters";
+import QuickSearch from "./SearchBar";
 
 interface ProductFiltersProps {
   categories: Category[];
@@ -38,16 +40,21 @@ interface ProductFiltersProps {
   setPriceRange: (range: { min: number | null; max: number | null }) => void;
   hasActiveFilters: boolean;
   clearAllFilters: () => void;
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
 }
 
 export default function ProductFilters({
   categories = [],
+  brands = [],
   colors = [],
   sizes = [],
   genders = [],
   sleeves = [],
   activeCategoryId = null,
   setActiveCategoryId = () => {},
+  activeBrandId = null,
+  setActiveBrandId = () => {},
   activeColorId = null,
   setActiveColorId = () => {},
   activeSizeId = null,
@@ -62,990 +69,479 @@ export default function ProductFilters({
   setPriceRange = () => {},
   hasActiveFilters = false,
   clearAllFilters = () => {},
+  searchTerm = "",
+  setSearchTerm = () => {},
 }: ProductFiltersProps) {
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [expandedSections, setExpandedSections] = useState({
+    category: true,
+    color: true,
+    gender: true,
+    collarType: false,
+    size: false,
+    priceRange: false,
+  });
 
-  // Asegúrate de que todos los arrays sean arrays válidos
-  const safeCategories = Array.isArray(categories) ? categories : [];
+  const toggleSection = (section: keyof typeof expandedSections) => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
+  };
 
+  // Función para hacer scroll hacia arriba
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
 
+  const handlePriceSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget as HTMLFormElement);
+    const min = formData.get("minPrice") as string;
+    const max = formData.get("maxPrice") as string;
 
+    setPriceRange({
+      min: min ? Number(min) : null,
+      max: max ? Number(max) : null,
+    });
 
-  const scrollToProducts = () => {
-    const productsSection = document.getElementById("products-grid");
-    if (productsSection) {
-      productsSection.scrollIntoView({ behavior: "smooth" });
+    // Update URL
+    const url = new URL(window.location.href);
+    if (min) {
+      url.searchParams.set("priceMin", min);
+    } else {
+      url.searchParams.delete("priceMin");
     }
+    if (max) {
+      url.searchParams.set("priceMax", max);
+    } else {
+      url.searchParams.delete("priceMax");
+    }
+    window.history.pushState({}, "", url.toString());
+
+    // Scroll to top after applying price filter
+    scrollToTop();
   };
-
-  // Función para manejar el cambio de precio en móvil
-  const handleMobilePriceChange = (newRange: {
-    min: number | null;
-    max: number | null;
-  }) => {
-    setPriceRange(newRange);
-    scrollToProducts();
-    setMobileFiltersOpen(false);
-  };
-
-  // Mobile filters drawer
-  const MobileFilters = () => (
-    <>
-      {/* Mobile filter button */}
-      <motion.button
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        onClick={() => setMobileFiltersOpen(true)}
-        className="md:hidden fixed bottom-6 right-6 z-50 bg-blue-600 text-white rounded-full p-4 shadow-lg flex items-center gap-2"
-      >
-        <Filter className="w-5 h-5" />
-        <span>Filtros</span>
-      </motion.button>
-
-      {/* Mobile filter drawer */}
-      <AnimatePresence>
-        {mobileFiltersOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="md:hidden fixed inset-0 bg-black/50 z-50"
-            onClick={() => setMobileFiltersOpen(false)}
-          >
-            <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 25 }}
-              className="absolute right-0 top-0 h-full w-[85%] max-w-md bg-white dark:bg-gray-900 overflow-y-auto md:hidden"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center sticky top-0 bg-white dark:bg-gray-900 z-10">
-                <div className="flex items-center gap-2">
-                  <Filter className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                  <h3 className="font-serif text-xl text-gray-900 dark:text-white">
-                    Filtros
-                  </h3>
-                </div>
-                <button
-                  onClick={() => setMobileFiltersOpen(false)}
-                  className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="p-4">
-                {/* Mobile filters content - same as desktop but styled for mobile */}
-                {/* Categorías */}
-                <div className="mb-8">
-                  <h4 className="font-medium text-gray-900 dark:text-white mb-4 text-sm uppercase tracking-widest flex items-center">
-                    <span className="w-6 h-0.5 bg-blue-600 dark:bg-blue-400 mr-2"></span>
-                    Categorías
-                  </h4>
-                  <div className="space-y-2">
-                    <button
-                      className={`block w-full text-left py-2.5 px-4 text-sm transition-all rounded-lg ${
-                        activeCategoryId === null
-                          ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium shadow-sm"
-                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                      }`}
-                      onClick={() => {
-                        setActiveCategoryId(null);
-                        scrollToProducts();
-                        setMobileFiltersOpen(false);
-                      }}
-                    >
-                      <div className="flex items-center">
-                        {activeCategoryId === null && (
-                          <Check className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                        )}
-                        <span
-                          className={
-                            activeCategoryId === null ? "ml-0" : "ml-6"
-                          }
-                        >
-                          Todas las Categorías
-                        </span>
-                      </div>
-                    </button>
-                    {Array.isArray(categories) ? (
-                      categories.map((category) => (
-                        <button
-                          key={category.id}
-                          className={`block w-full text-left py-2.5 px-4 text-sm transition-all rounded-lg ${
-                            activeCategoryId === category.id
-                              ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium shadow-sm"
-                              : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                          }`}
-                          onClick={() => {
-                            setActiveCategoryId(category.id);
-                            scrollToProducts();
-                            setMobileFiltersOpen(false);
-                          }}
-                        >
-                          <div className="flex items-center">
-                            {activeCategoryId === category.id && (
-                              <Check className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                            )}
-                            <span
-                              className={
-                                activeCategoryId === category.id
-                                  ? "ml-0"
-                                  : "ml-6"
-                              }
-                            >
-                              {category.name}
-                            </span>
-                          </div>
-                        </button>
-                      ))
-                    ) : (
-                      <div className="text-gray-500 dark:text-gray-400 text-sm py-2">
-                        No hay categorías disponibles
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Tipo de manga/cuello */}
-                <div className="mb-8">
-                  <h4 className="font-medium text-gray-900 dark:text-white mb-4 text-sm uppercase tracking-widest flex items-center">
-                    <span className="w-6 h-0.5 bg-blue-600 dark:bg-blue-400 mr-2"></span>
-                    Tipo de Manga
-                  </h4>
-                  <div className="space-y-2">
-                    <button
-                      className={`block w-full text-left py-2.5 px-4 text-sm transition-all rounded-lg ${
-                        activeSleeveId === null
-                          ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium shadow-sm"
-                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                      }`}
-                      onClick={() => {
-                        setActiveSleeveId(null);
-                        scrollToProducts();
-                        setMobileFiltersOpen(false);
-                      }}
-                    >
-                      <div className="flex items-center">
-                        {activeSleeveId === null && (
-                          <Check className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                        )}
-                        <span
-                          className={activeSleeveId === null ? "ml-0" : "ml-6"}
-                        >
-                          Todos los Tipos
-                        </span>
-                      </div>
-                    </button>
-                    {Array.isArray(sleeves) ? (
-                      sleeves.map((sleeve) => (
-                        <button
-                          key={sleeve.id}
-                          className={`block w-full text-left py-2.5 px-4 text-sm transition-all rounded-lg ${
-                            activeSleeveId === sleeve.id
-                              ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium shadow-sm"
-                              : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                          }`}
-                          onClick={() => {
-                            setActiveSleeveId(sleeve.id);
-                            scrollToProducts();
-                            setMobileFiltersOpen(false);
-                          }}
-                        >
-                          <div className="flex items-center">
-                            {activeSleeveId === sleeve.id && (
-                              <Check className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                            )}
-                            <span
-                              className={
-                                activeSleeveId === sleeve.id ? "ml-0" : "ml-6"
-                              }
-                            >
-                              {sleeve.name}
-                            </span>
-                          </div>
-                        </button>
-                      ))
-                    ) : (
-                      <div className="text-gray-500 dark:text-gray-400 text-sm py-2">
-                        No hay tipos disponibles
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Rango de precio */}
-                <div className="mb-8">
-                  <PriceRangeFilter
-                    priceRange={priceRange}
-                    setPriceRange={(newRange) =>
-                      handleMobilePriceChange(newRange)
-                    }
-                  />
-                </div>
-
-                {/* Colores */}
-                <div className="mb-8">
-                  <h4 className="font-medium text-gray-900 dark:text-white mb-4 text-sm uppercase tracking-widest flex items-center">
-                    <span className="w-6 h-0.5 bg-blue-600 dark:bg-blue-400 mr-2"></span>
-                    Colores
-                  </h4>
-                  <div className="grid grid-cols-5 gap-3">
-                    <button
-                      className={`w-10 h-10 rounded-full bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 ${
-                        activeColorId === null
-                          ? "ring-2 ring-offset-2 ring-blue-500 dark:ring-blue-400 dark:ring-offset-gray-900"
-                          : ""
-                      } transition-all duration-200 flex items-center justify-center shadow-md`}
-                      onClick={() => {
-                        setActiveColorId(null);
-                        scrollToProducts();
-                        setMobileFiltersOpen(false);
-                      }}
-                      aria-label="Todos los colores"
-                    >
-                      <X className="h-4 w-4 text-gray-700 dark:text-gray-300" />
-                    </button>
-                    {Array.isArray(colors) ? (
-                      colors.map((color) => (
-                        <button
-                          key={color.id}
-                          className={`w-10 h-10 rounded-full transition-all duration-200 ${
-                            activeColorId === color.id
-                              ? "ring-2 ring-offset-2 ring-blue-500 dark:ring-blue-400 dark:ring-offset-gray-900"
-                              : ""
-                          } relative group border border-gray-200 dark:border-gray-700 shadow-md`}
-                          style={{ backgroundColor: color.hexValue }}
-                          onClick={() => {
-                            setActiveColorId(color.id);
-                            scrollToProducts();
-                            setMobileFiltersOpen(false);
-                          }}
-                          aria-label={`Color: ${color.name}`}
-                        >
-                          <span className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-3 py-1.5 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap z-10 shadow-lg pointer-events-none">
-                            {color.name}
-                          </span>
-                        </button>
-                      ))
-                    ) : (
-                      <div className="text-gray-500 dark:text-gray-400 text-sm py-2">
-                        No hay colores disponibles
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Tallas */}
-                <div className="mb-8">
-                  <h4 className="font-medium text-gray-900 dark:text-white mb-4 text-sm uppercase tracking-widest flex items-center">
-                    <span className="w-6 h-0.5 bg-blue-600 dark:bg-blue-400 mr-2"></span>
-                    Tallas
-                  </h4>
-                  <div className="grid grid-cols-3 gap-3">
-                    <button
-                      className={`py-3 text-sm font-medium transition-all rounded-lg ${
-                        activeSizeId === null
-                          ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
-                          : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700"
-                      }`}
-                      onClick={() => {
-                        setActiveSizeId(null);
-
-                        // Actualizar URL directamente
-                        const url = new URL(window.location.href);
-                        url.searchParams.delete("talla");
-                        window.history.pushState({}, "", url.toString());
-
-                        scrollToProducts();
-                        setMobileFiltersOpen(false);
-                      }}
-                    >
-                      Todas
-                    </button>
-                    {Array.isArray(sizes) ? (
-                      sizes.map((size) => (
-                        <button
-                          key={size.id}
-                          className={`py-3 text-sm font-medium transition-all rounded-lg ${
-                            activeSizeId === size.id
-                              ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
-                              : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700"
-                          }`}
-                          onClick={() => {
-                            setActiveSizeId(size.id);
-
-                            // Actualizar URL directamente
-                            const url = new URL(window.location.href);
-                            url.searchParams.set("talla", size.id.toString());
-                            window.history.pushState({}, "", url.toString());
-
-                            scrollToProducts();
-                            setMobileFiltersOpen(false);
-                          }}
-                        >
-                          {size.name}
-                        </button>
-                      ))
-                    ) : (
-                      <div className="text-gray-500 dark:text-gray-400 text-sm py-2">
-                        No hay tallas disponibles
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Género */}
-                <div className="mb-8">
-                  <h4 className="font-medium text-gray-900 dark:text-white mb-4 text-sm uppercase tracking-widest flex items-center">
-                    <span className="w-6 h-0.5 bg-blue-600 dark:bg-blue-400 mr-2"></span>
-                    Género
-                  </h4>
-                  <div className="space-y-2">
-                    <button
-                      className={`block w-full text-left py-2.5 px-4 text-sm transition-all rounded-lg ${
-                        activeGenderId === null
-                          ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium shadow-sm"
-                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                      }`}
-                      onClick={() => {
-                        setActiveGenderId(null);
-                        scrollToProducts();
-                        setMobileFiltersOpen(false);
-                      }}
-                    >
-                      <div className="flex items-center">
-                        {activeGenderId === null && (
-                          <Check className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                        )}
-                        <span
-                          className={activeGenderId === null ? "ml-0" : "ml-6"}
-                        >
-                          Todos los Géneros
-                        </span>
-                      </div>
-                    </button>
-                    {Array.isArray(genders) ? (
-                      genders.map((gender) => (
-                        <button
-                          key={gender.id}
-                          className={`block w-full text-left py-2.5 px-4 text-sm transition-all rounded-lg ${
-                            activeGenderId === gender.id
-                              ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium shadow-sm"
-                              : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                          }`}
-                          onClick={() => {
-                            setActiveGenderId(gender.id);
-
-                            // Actualizar URL directamente
-                            const url = new URL(window.location.href);
-                            url.searchParams.set(
-                              "genero",
-                              gender.id.toString()
-                            );
-                            window.history.pushState({}, "", url.toString());
-
-                            scrollToProducts();
-                            setMobileFiltersOpen(false);
-                          }}
-                        >
-                          <div className="flex items-center">
-                            {activeGenderId === gender.id && (
-                              <Check className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                            )}
-                            <span
-                              className={
-                                activeGenderId === gender.id ? "ml-0" : "ml-6"
-                              }
-                            >
-                              {gender.name}
-                            </span>
-                          </div>
-                        </button>
-                      ))
-                    ) : (
-                      <div className="text-gray-500 dark:text-gray-400 text-sm py-2">
-                        No hay géneros disponibles
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Ordenar por */}
-                <div className="mb-8">
-                  <h4 className="font-medium text-gray-900 dark:text-white mb-4 text-sm uppercase tracking-widest flex items-center">
-                    <span className="w-6 h-0.5 bg-blue-600 dark:bg-blue-400 mr-2"></span>
-                    Ordenar por
-                  </h4>
-                  <div className="space-y-2">
-                    <button
-                      className={`block w-full text-left py-2.5 px-4 text-sm transition-all rounded-lg ${
-                        activeSort === "default"
-                          ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium shadow-sm"
-                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                      }`}
-                      onClick={() => {
-                        setActiveSort("default");
-                        scrollToProducts();
-                        setMobileFiltersOpen(false);
-                      }}
-                    >
-                      <div className="flex items-center">
-                        {activeSort === "default" && (
-                          <Check className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                        )}
-                        <span
-                          className={activeSort === "default" ? "ml-0" : "ml-6"}
-                        >
-                          Destacados
-                        </span>
-                      </div>
-                    </button>
-                    <button
-                      className={`block w-full text-left py-2.5 px-4 text-sm transition-all rounded-lg ${
-                        activeSort === "price-low"
-                          ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium shadow-sm"
-                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                      }`}
-                      onClick={() => {
-                        setActiveSort("price-low");
-                        scrollToProducts();
-                        setMobileFiltersOpen(false);
-                      }}
-                    >
-                      <div className="flex items-center">
-                        {activeSort === "price-low" && (
-                          <Check className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                        )}
-                        <span
-                          className={
-                            activeSort === "price-low" ? "ml-0" : "ml-6"
-                          }
-                        >
-                          Precio: Menor a Mayor
-                        </span>
-                      </div>
-                    </button>
-                    <button
-                      className={`block w-full text-left py-2.5 px-4 text-sm transition-all rounded-lg ${
-                        activeSort === "price-high"
-                          ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium shadow-sm"
-                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                      }`}
-                      onClick={() => {
-                        setActiveSort("price-high");
-                        scrollToProducts();
-                        setMobileFiltersOpen(false);
-                      }}
-                    >
-                      <div className="flex items-center">
-                        {activeSort === "price-high" && (
-                          <Check className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                        )}
-                        <span
-                          className={
-                            activeSort === "price-high" ? "ml-0" : "ml-6"
-                          }
-                        >
-                          Precio: Mayor a Menor
-                        </span>
-                      </div>
-                    </button>
-                    <button
-                      className={`block w-full text-left py-2.5 px-4 text-sm transition-all rounded-lg ${
-                        activeSort === "newest"
-                          ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium shadow-sm"
-                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                      }`}
-                      onClick={() => {
-                        setActiveSort("newest");
-                        scrollToProducts();
-                        setMobileFiltersOpen(false);
-                      }}
-                    >
-                      <div className="flex items-center">
-                        {activeSort === "newest" && (
-                          <Check className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                        )}
-                        <span
-                          className={activeSort === "newest" ? "ml-0" : "ml-6"}
-                        >
-                          Más Recientes
-                        </span>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Clear filters button */}
-                {hasActiveFilters && (
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => {
-                      clearAllFilters();
-                      scrollToProducts();
-                      setMobileFiltersOpen(false);
-                    }}
-                    className="w-full py-3 mt-4 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center justify-center gap-1.5 bg-blue-50 dark:bg-blue-900/20 px-3 rounded-lg"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                    Limpiar todos los filtros
-                  </motion.button>
-                )}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
-  );
 
   return (
     <>
-      {/* Mobile filters */}
-      <MobileFilters />
+      {/* Mobile Filters Component */}
+      <MobileFilters
+        categories={categories}
+        brands={brands}
+        colors={colors}
+        sizes={sizes}
+        genders={genders}
+        sleeves={sleeves}
+        activeCategoryId={activeCategoryId}
+        setActiveCategoryId={setActiveCategoryId}
+        activeBrandId={activeBrandId}
+        setActiveBrandId={setActiveBrandId}
+        activeColorId={activeColorId}
+        setActiveColorId={setActiveColorId}
+        activeSizeId={activeSizeId}
+        setActiveSizeId={setActiveSizeId}
+        activeGenderId={activeGenderId}
+        setActiveGenderId={setActiveGenderId}
+        activeSleeveId={activeSleeveId}
+        setActiveSleeveId={setActiveSleeveId}
+        activeSort={activeSort}
+        setActiveSort={setActiveSort}
+        priceRange={priceRange}
+        setPriceRange={setPriceRange}
+        hasActiveFilters={hasActiveFilters}
+        clearAllFilters={clearAllFilters}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+      />
 
-      {/* Desktop filters */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.6 }}
-        className="hidden md:block w-72 flex-shrink-0"
-      >
-        {/* Decorative elements */}
-        <div className="absolute -z-10 pointer-events-none">
-          <div className="absolute -top-[40%] -right-[10%] w-[70%] h-[70%] bg-blue-50 dark:bg-blue-950/20 rounded-full blur-3xl opacity-70"></div>
-          <div className="absolute -bottom-[30%] -left-[20%] w-[60%] h-[60%] bg-blue-50 dark:bg-blue-950/20 rounded-full blur-3xl opacity-60"></div>
-        </div>
-
-        <div className="pr-10 border-r border-gray-200 dark:border-gray-800 sticky top-20">
-          <div className="flex justify-between items-center mb-10">
-            <div className="flex items-center gap-2">
-              <Filter className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-              <h3 className="font-serif text-xl text-gray-900 dark:text-white">
-                Filtros
-              </h3>
-            </div>
-            {hasActiveFilters && (
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={clearAllFilters}
-                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium flex items-center gap-1.5 bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-full"
-              >
-                <X className="w-3.5 h-3.5" />
-                Limpiar
-              </motion.button>
-            )}
-          </div>
-
-          {/* Categorías */}
-          <div className="mb-12">
-            <h4 className="font-medium text-gray-900 dark:text-white mb-6 text-sm uppercase tracking-widest flex items-center">
-              <span className="w-6 h-0.5 bg-blue-600 dark:bg-blue-400 mr-2"></span>
-              Categorías
-            </h4>
-            <div className="space-y-3">
-              <button
-                className={`block w-full text-left py-2.5 px-4 text-sm transition-all rounded-lg ${
-                  activeCategoryId === null
-                    ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium shadow-sm"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                }`}
-                onClick={() => {
-                  setActiveCategoryId(null);
-                  scrollToProducts();
-                }}
-              >
-                <div className="flex items-center">
-                  {activeCategoryId === null && (
-                    <Check className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                  )}
-                  <span className={activeCategoryId === null ? "ml-0" : "ml-6"}>
-                    Todas las Categorías
-                  </span>
-                </div>
-              </button>
-              {safeCategories.length > 0 ? (
-                safeCategories.map((category) => (
-                  <button
-                    key={category.id}
-                    className={`block w-full text-left py-2.5 px-4 text-sm transition-all rounded-lg ${
-                      activeCategoryId === category.id
-                        ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium shadow-sm"
-                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                    }`}
-                    onClick={() => {
-                      setActiveCategoryId(category.id);
-                      scrollToProducts();
-                    }}
-                  >
-                    <div className="flex items-center">
-                      {activeCategoryId === category.id && (
-                        <Check className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                      )}
-                      <span
-                        className={
-                          activeCategoryId === category.id ? "ml-0" : "ml-6"
-                        }
-                      >
-                        {category.name}
-                      </span>
-                    </div>
-                  </button>
-                ))
-              ) : (
-                <div className="text-gray-500 dark:text-gray-400 text-sm py-2">
-                  No hay categorías disponibles
-                </div>
+      {/* Desktop Filters - Enhanced Card Design */}
+      <div className="hidden md:block w-64 flex-shrink-0">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-lg p-6 sticky top-6">
+          {/* Header with gradient background */}
+          <div className="bg-blue-600 -m-6 mb-6 p-6 rounded-t-2xl">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-white">Filtros</h3>
+              {hasActiveFilters && (
+                <button
+                  onClick={clearAllFilters}
+                  className="text-blue-100 hover:text-white text-sm font-medium bg-white/20 px-3 py-1 rounded-full transition-colors"
+                >
+                  Limpiar Todo
+                </button>
               )}
             </div>
           </div>
 
-          {/* Tipo de manga/cuello */}
-          <div className="mb-12">
-            <h4 className="font-medium text-gray-900 dark:text-white mb-6 text-sm uppercase tracking-widest flex items-center">
-              <span className="w-6 h-0.5 bg-blue-600 dark:bg-blue-400 mr-2"></span>
-              Tipo de Manga
+          {/* Búsqueda */}
+          <div className="mb-6">
+            <h4 className="font-semibold text-gray-900 dark:text-white mb-3 text-sm">
+              Búsqueda
             </h4>
-            <div className="space-y-3">
-              <button
-                className={`block w-full text-left py-2.5 px-4 text-sm transition-all rounded-lg ${
-                  activeSleeveId === null
-                    ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium shadow-sm"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                }`}
-                onClick={() => {
-                  setActiveSleeveId(null);
-                  scrollToProducts();
-                }}
-              >
-                <div className="flex items-center">
-                  {activeSleeveId === null && (
-                    <Check className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                  )}
-                  <span className={activeSleeveId === null ? "ml-0" : "ml-6"}>
-                    Todos los Tipos
-                  </span>
-                </div>
-              </button>
-              {Array.isArray(sleeves) ? (
-                sleeves.map((sleeve) => (
-                  <button
-                    key={sleeve.id}
-                    className={`block w-full text-left py-2.5 px-4 text-sm transition-all rounded-lg ${
-                      activeSleeveId === sleeve.id
-                        ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium shadow-sm"
-                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                    }`}
-                    onClick={() => {
-                      setActiveSleeveId(sleeve.id);
-                      scrollToProducts();
-                    }}
-                  >
-                    <div className="flex items-center">
-                      {activeSleeveId === sleeve.id && (
-                        <Check className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                      )}
-                      <span
-                        className={
-                          activeSleeveId === sleeve.id ? "ml-0" : "ml-6"
-                        }
-                      >
-                        {sleeve.name}
-                      </span>
-                    </div>
-                  </button>
-                ))
-              ) : (
-                <div className="text-gray-500 dark:text-gray-400 text-sm py-2">
-                  No hay tipos disponibles
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Rango de precio */}
-          <div className="mb-12">
-            <PriceRangeFilter
-              priceRange={priceRange}
-              setPriceRange={setPriceRange}
+            <QuickSearch
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
             />
           </div>
 
-          {/* Colores */}
-          <div className="mb-12">
-            <h4 className="font-medium text-gray-900 dark:text-white mb-6 text-sm uppercase tracking-widest flex items-center">
-              <span className="w-6 h-0.5 bg-blue-600 dark:bg-blue-400 mr-2"></span>
-              Colores
-            </h4>
-            <div className="grid grid-cols-5 gap-3">
-              <button
-                className={`w-10 h-10 rounded-full bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 ${
-                  activeColorId === null
-                    ? "ring-2 ring-offset-2 ring-blue-500 dark:ring-blue-400 dark:ring-offset-gray-900"
-                    : ""
-                } transition-all duration-200 flex items-center justify-center shadow-md`}
-                onClick={() => {
-                  setActiveColorId(null);
-                  scrollToProducts();
-                }}
-                aria-label="Todos los colores"
-              >
-                <X className="h-4 w-4 text-gray-700 dark:text-gray-300" />
-              </button>
-              {Array.isArray(colors) ? (
-                colors.map((color) => (
-                  <button
-                    key={color.id}
-                    className={`w-10 h-10 rounded-full transition-all duration-200 ${
-                      activeColorId === color.id
-                        ? "ring-2 ring-offset-2 ring-blue-500 dark:ring-blue-400 dark:ring-offset-gray-900"
-                        : ""
-                    } relative group border border-gray-200 dark:border-gray-700 shadow-md`}
-                    style={{ backgroundColor: color.hexValue }}
-                    onClick={() => {
-                      setActiveColorId(color.id);
-                      scrollToProducts();
-                    }}
-                    aria-label={`Color: ${color.name}`}
-                  >
-                    <span className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-3 py-1.5 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap z-10 shadow-lg pointer-events-none">
-                      {color.name}
-                    </span>
-                  </button>
-                ))
+          {/* Category */}
+          <div className="mb-6">
+            <button
+              onClick={() => toggleSection("category")}
+              className="flex items-center justify-between w-full text-left font-semibold text-gray-900 dark:text-white mb-4 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            >
+              Categoría
+              {expandedSections.category ? (
+                <ChevronUp className="h-4 w-4" />
               ) : (
-                <div className="text-gray-500 dark:text-gray-400 text-sm py-2">
-                  No hay colores disponibles
-                </div>
+                <ChevronDown className="h-4 w-4" />
               )}
-            </div>
-          </div>
+            </button>
 
-          {/* Tallas */}
-          <div className="mb-12">
-            <h4 className="font-medium text-gray-900 dark:text-white mb-6 text-sm uppercase tracking-widest flex items-center">
-              <span className="w-6 h-0.5 bg-blue-600 dark:bg-blue-400 mr-2"></span>
-              Tallas
-            </h4>
-            <div className="grid grid-cols-3 gap-3">
-              <button
-                className={`py-3 text-sm font-medium transition-all rounded-lg ${
-                  activeSizeId === null
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
-                    : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700"
-                }`}
-                onClick={() => {
-                  setActiveSizeId(null);
-
-                  // Actualizar URL directamente
-                  const url = new URL(window.location.href);
-                  url.searchParams.delete("talla");
-                  window.history.pushState({}, "", url.toString());
-
-                  scrollToProducts();
-                }}
-              >
-                Todas
-              </button>
-              {Array.isArray(sizes) ? (
-                sizes.map((size) => (
-                  <button
-                    key={size.id}
-                    className={`py-3 text-sm font-medium transition-all rounded-lg ${
-                      activeSizeId === size.id
-                        ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
-                        : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700"
-                    }`}
-                    onClick={() => {
-                      setActiveSizeId(size.id);
-
-                      // Actualizar URL directamente
+            {expandedSections.category && (
+              <div className="space-y-3">
+                {Array.isArray(categories) &&
+                  categories.map((category) => (
+                    <label
+                      key={category.id}
+                      className="flex items-center group cursor-pointer"
+                    >
+                      <input
+                        type="radio"
+                        name="category"
+                        checked={activeCategoryId === category.id}
+                        onChange={() => {
+                          setActiveCategoryId(category.id);
+                          const url = new URL(window.location.href);
+                          url.searchParams.set(
+                            "categoria",
+                            category.name.toLowerCase()
+                          );
+                          window.history.pushState({}, "", url.toString());
+                          scrollToTop();
+                        }}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
+                      />
+                      <span className="ml-3 text-sm text-gray-700 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                        {category.name}
+                      </span>
+                    </label>
+                  ))}
+                <label className="flex items-center group cursor-pointer">
+                  <input
+                    type="radio"
+                    name="category"
+                    checked={activeCategoryId === null}
+                    onChange={() => {
+                      setActiveCategoryId(null);
                       const url = new URL(window.location.href);
-                      url.searchParams.set("talla", size.id.toString());
+                      url.searchParams.delete("categoria");
                       window.history.pushState({}, "", url.toString());
-
-                      scrollToProducts();
+                      scrollToTop();
                     }}
-                  >
-                    {size.name}
-                  </button>
-                ))
-              ) : (
-                <div className="text-gray-500 dark:text-gray-400 text-sm py-2">
-                  No hay tallas disponibles
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Género */}
-          <div className="mb-12">
-            <h4 className="font-medium text-gray-900 dark:text-white mb-6 text-sm uppercase tracking-widest flex items-center">
-              <span className="w-6 h-0.5 bg-blue-600 dark:bg-blue-400 mr-2"></span>
-              Género
-            </h4>
-            <div className="space-y-3">
-              <button
-                className={`block w-full text-left py-2.5 px-4 text-sm transition-all rounded-lg ${
-                  activeGenderId === null
-                    ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium shadow-sm"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                }`}
-                onClick={() => {
-                  setActiveGenderId(null);
-                  scrollToProducts();
-                }}
-              >
-                <div className="flex items-center">
-                  {activeGenderId === null && (
-                    <Check className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                  )}
-                  <span className={activeGenderId === null ? "ml-0" : "ml-6"}>
-                    Todos los Géneros
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
+                  />
+                  <span className="ml-3 text-sm text-gray-700 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    Todas las Categorías
                   </span>
-                </div>
-              </button>
-              {Array.isArray(genders) ? (
-                genders.map((gender) => (
-                  <button
-                    key={gender.id}
-                    className={`block w-full text-left py-2.5 px-4 text-sm transition-all rounded-lg ${
-                      activeGenderId === gender.id
-                        ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium shadow-sm"
-                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                    }`}
-                    onClick={() => {
-                      setActiveGenderId(gender.id);
+                </label>
+              </div>
+            )}
+          </div>
 
-                      // Actualizar URL directamente
-                      const url = new URL(window.location.href);
-                      url.searchParams.set("genero", gender.id.toString());
-                      window.history.pushState({}, "", url.toString());
+          {/* Color */}
+          <div className="mb-6">
+            <button
+              onClick={() => toggleSection("color")}
+              className="flex items-center justify-between w-full text-left font-semibold text-gray-900 dark:text-white mb-4 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            >
+              Color
+              {expandedSections.color ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </button>
 
-                      scrollToProducts();
-                    }}
-                  >
-                    <div className="flex items-center">
-                      {activeGenderId === gender.id && (
-                        <Check className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                      )}
-                      <span
-                        className={
-                          activeGenderId === gender.id ? "ml-0" : "ml-6"
+            {expandedSections.color && (
+              <div className="grid grid-cols-6 gap-2">
+                {Array.isArray(colors) &&
+                  colors.map((color) => (
+                    <button
+                      key={color.id}
+                      onClick={() => {
+                        setActiveColorId(
+                          activeColorId === color.id ? null : color.id
+                        );
+                        const url = new URL(window.location.href);
+                        if (activeColorId === color.id) {
+                          url.searchParams.delete("color");
+                        } else {
+                          url.searchParams.set("color", color.id.toString());
                         }
-                      >
+                        window.history.pushState({}, "", url.toString());
+                        scrollToTop();
+                      }}
+                      className={`w-8 h-8 rounded-full border-2 transition-all duration-200 hover:scale-110 ${
+                        activeColorId === color.id
+                          ? "border-blue-600 ring-2 ring-blue-600 ring-offset-2"
+                          : "border-gray-300 hover:border-gray-400"
+                      }`}
+                      style={{ backgroundColor: color.hexValue }}
+                      title={color.name}
+                    />
+                  ))}
+              </div>
+            )}
+          </div>
+
+          {/* Gender */}
+          <div className="mb-6">
+            <button
+              onClick={() => toggleSection("gender")}
+              className="flex items-center justify-between w-full text-left font-semibold text-gray-900 dark:text-white mb-4 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            >
+              Género
+              {expandedSections.gender ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </button>
+
+            {expandedSections.gender && (
+              <div className="space-y-3">
+                {Array.isArray(genders) &&
+                  genders.map((gender) => (
+                    <label
+                      key={gender.id}
+                      className="flex items-center group cursor-pointer"
+                    >
+                      <input
+                        type="radio"
+                        name="gender"
+                        checked={activeGenderId === gender.id}
+                        onChange={() => {
+                          setActiveGenderId(gender.id);
+                          const url = new URL(window.location.href);
+                          url.searchParams.set("genero", gender.id.toString());
+                          window.history.pushState({}, "", url.toString());
+                          scrollToTop();
+                        }}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
+                      />
+                      <span className="ml-3 text-sm text-gray-700 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                         {gender.name}
                       </span>
-                    </div>
-                  </button>
-                ))
-              ) : (
-                <div className="text-gray-500 dark:text-gray-400 text-sm py-2">
-                  No hay géneros disponibles
-                </div>
-              )}
-            </div>
+                    </label>
+                  ))}
+                <label className="flex items-center group cursor-pointer">
+                  <input
+                    type="radio"
+                    name="gender"
+                    checked={activeGenderId === null}
+                    onChange={() => {
+                      setActiveGenderId(null);
+                      const url = new URL(window.location.href);
+                      url.searchParams.delete("genero");
+                      window.history.pushState({}, "", url.toString());
+                      scrollToTop();
+                    }}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
+                  />
+                  <span className="ml-3 text-sm text-gray-700 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    Todos los Géneros
+                  </span>
+                </label>
+              </div>
+            )}
           </div>
 
-          {/* Ordenar por */}
-          <div>
-            <h4 className="font-medium text-gray-900 dark:text-white mb-6 text-sm uppercase tracking-widest flex items-center">
-              <span className="w-6 h-0.5 bg-blue-600 dark:bg-blue-400 mr-2"></span>
-              Ordenar por
-            </h4>
-            <div className="space-y-3">
-              <button
-                className={`block w-full text-left py-2.5 px-4 text-sm transition-all rounded-lg ${
-                  activeSort === "default"
-                    ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium shadow-sm"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                }`}
-                onClick={() => {
-                  setActiveSort("default");
-                  scrollToProducts();
-                }}
-              >
-                <div className="flex items-center">
-                  {activeSort === "default" && (
-                    <Check className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
+          {/* Collar Type */}
+          <div className="mb-6">
+            <button
+              onClick={() => toggleSection("collarType")}
+              className="flex items-center justify-between w-full text-left font-semibold text-gray-900 dark:text-white mb-4 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            >
+              Tipo de Cuello
+              {expandedSections.collarType ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </button>
+
+            {expandedSections.collarType && (
+              <div className="space-y-3">
+                {Array.isArray(sleeves) &&
+                  sleeves.map(
+                    (sleeve) =>
+                      sleeve.id !== 4 && (
+                        <label
+                          key={sleeve.id}
+                          className="flex items-center group cursor-pointer"
+                        >
+                          <input
+                            type="radio"
+                            name="sleeve"
+                            checked={activeSleeveId === sleeve.id}
+                            onChange={() => {
+                              setActiveSleeveId(sleeve.id);
+                              const url = new URL(window.location.href);
+                              url.searchParams.set(
+                                "manga",
+                                sleeve.id.toString()
+                              );
+                              window.history.pushState({}, "", url.toString());
+                              scrollToTop();
+                            }}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
+                          />
+                          <span className="ml-3 text-sm text-gray-700 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                            {sleeve.name}
+                          </span>
+                        </label>
+                      )
                   )}
-                  <span className={activeSort === "default" ? "ml-0" : "ml-6"}>
-                    Destacados
+                <label className="flex items-center group cursor-pointer">
+                  <input
+                    type="radio"
+                    name="sleeve"
+                    checked={activeSleeveId === null}
+                    onChange={() => {
+                      setActiveSleeveId(null);
+                      const url = new URL(window.location.href);
+                      url.searchParams.delete("manga");
+                      window.history.pushState({}, "", url.toString());
+                      scrollToTop();
+                    }}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
+                  />
+                  <span className="ml-3 text-sm text-gray-700 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    Todos los Tipos
                   </span>
-                </div>
-              </button>
-              <button
-                className={`block w-full text-left py-2.5 px-4 text-sm transition-all rounded-lg ${
-                  activeSort === "price-low"
-                    ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium shadow-sm"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                }`}
-                onClick={() => {
-                  setActiveSort("price-low");
-                  scrollToProducts();
-                }}
-              >
-                <div className="flex items-center">
-                  {activeSort === "price-low" && (
-                    <Check className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                  )}
-                  <span
-                    className={activeSort === "price-low" ? "ml-0" : "ml-6"}
-                  >
-                    Precio: Menor a Mayor
+                </label>
+              </div>
+            )}
+          </div>
+
+          {/* Size */}
+          <div className="mb-6">
+            <button
+              onClick={() => toggleSection("size")}
+              className="flex items-center justify-between w-full text-left font-semibold text-gray-900 dark:text-white mb-4 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            >
+              Tallas
+              {expandedSections.size ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </button>
+
+            {expandedSections.size && (
+              <div className="space-y-3">
+                {Array.isArray(sizes) &&
+                  sizes.map((size) => (
+                    <label
+                      key={size.id}
+                      className="flex items-center group cursor-pointer"
+                    >
+                      <input
+                        type="radio"
+                        name="size"
+                        checked={activeSizeId === size.id}
+                        onChange={() => {
+                          setActiveSizeId(size.id);
+                          const url = new URL(window.location.href);
+                          url.searchParams.set("talla", size.id.toString());
+                          window.history.pushState({}, "", url.toString());
+                          scrollToTop();
+                        }}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
+                      />
+                      <span className="ml-3 text-sm text-gray-700 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                        {size.name}
+                      </span>
+                    </label>
+                  ))}
+                <label className="flex items-center group cursor-pointer">
+                  <input
+                    type="radio"
+                    name="size"
+                    checked={activeSizeId === null}
+                    onChange={() => {
+                      setActiveSizeId(null);
+                      const url = new URL(window.location.href);
+                      url.searchParams.delete("talla");
+                      window.history.pushState({}, "", url.toString());
+                      scrollToTop();
+                    }}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
+                  />
+                  <span className="ml-3 text-sm text-gray-700 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    Todas las Tallas
                   </span>
+                </label>
+              </div>
+            )}
+          </div>
+
+          {/* Price Range */}
+          <div className="mb-6">
+            <button
+              onClick={() => toggleSection("priceRange")}
+              className="flex items-center justify-between w-full text-left font-semibold text-gray-900 dark:text-white mb-4 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            >
+              Rango de Precio
+              {expandedSections.priceRange ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </button>
+
+            {expandedSections.priceRange && (
+              <form onSubmit={handlePriceSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 dark:text-white mb-1">
+                      Mín
+                    </label>
+                    <input
+                      type="number"
+                      name="minPrice"
+                      placeholder="$0"
+                      defaultValue={priceRange.min || ""}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 dark:text-white mb-1">
+                      Máx
+                    </label>
+                    <input
+                      type="number"
+                      name="maxPrice"
+                      placeholder="$1000"
+                      defaultValue={priceRange.max || ""}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    />
+                  </div>
                 </div>
-              </button>
-              <button
-                className={`block w-full text-left py-2.5 px-4 text-sm transition-all rounded-lg ${
-                  activeSort === "price-high"
-                    ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium shadow-sm"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                }`}
-                onClick={() => {
-                  setActiveSort("price-high");
-                  scrollToProducts();
-                }}
-              >
-                <div className="flex items-center">
-                  {activeSort === "price-high" && (
-                    <Check className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                  )}
-                  <span
-                    className={activeSort === "price-high" ? "ml-0" : "ml-6"}
-                  >
-                    Precio: Mayor a Menor
-                  </span>
-                </div>
-              </button>
-              <button
-                className={`block w-full text-left py-2.5 px-4 text-sm transition-all rounded-lg ${
-                  activeSort === "newest"
-                    ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium shadow-sm"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                }`}
-                onClick={() => {
-                  setActiveSort("newest");
-                  scrollToProducts();
-                }}
-              >
-                <div className="flex items-center">
-                  {activeSort === "newest" && (
-                    <Check className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                  )}
-                  <span className={activeSort === "newest" ? "ml-0" : "ml-6"}>
-                    Más Recientes
-                  </span>
-                </div>
-              </button>
-            </div>
+                <button
+                  type="submit"
+                  className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                >
+                  Aplicar
+                </button>
+              </form>
+            )}
           </div>
         </div>
-      </motion.div>
+      </div>
     </>
   );
 }

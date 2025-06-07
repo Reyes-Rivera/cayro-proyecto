@@ -21,7 +21,7 @@ import { useAuth } from "@/context/AuthContextType";
 import { getCompanyInfoApi } from "@/api/company";
 import { getCategories } from "@/api/products"; // Import the categories API
 import { motion, AnimatePresence } from "framer-motion";
-import { useCart } from "@/context/CartConrexr";
+import { useCart } from "@/context/CartContext";
 
 // Define a type for category
 interface Category {

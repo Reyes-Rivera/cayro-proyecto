@@ -64,8 +64,8 @@ export default function Breadcrumbs() {
       if (
         location.pathname.includes("/producto")
       ) {
-        setBreadcrumbs([]);
-        localStorage.removeItem("breadcrumbs");
+        setBreadcrumbs(["/productos"]);
+        localStorage.setItem("breadcrumbs", JSON.stringify(["/productos"]));
       }
       setBreadcrumbs((prev) => {
         const currentPathIndex = prev.indexOf(location.pathname);

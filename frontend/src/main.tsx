@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { AuthProvider } from "./context/AuthContextType.tsx";
-import { CartProvider } from "./context/CartConrexr.tsx";
+import { CartProvider } from "./context/CartContext.tsx";
 import { setupGlobalErrorHandlers } from "./utils/global-error-handler"; // 👈 importa función global
 import { ErrorBoundary } from "./components/ErrorBoundary.tsx"; // 👈 importa el componente
 

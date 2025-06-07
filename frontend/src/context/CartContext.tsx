@@ -15,6 +15,8 @@ interface CartContextType {
   clearCart: () => Promise<void>;
   itemCount: number;
   subtotal: number;
+  shipping: number;
+  total: number;
   loading: boolean;
   error: string | null;
 }
@@ -308,11 +310,31 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Calculate shipping based on quantity ranges
+  const calculateShipping = (itemCount: number) => {
+    if (itemCount === 0) return 0;
+
+    // Escalated shipping based on quantity
+    if (itemCount >= 1 && itemCount <= 5) return 200;
+    if (itemCount >= 6 && itemCount <= 10) return 250;
+    if (itemCount >= 11 && itemCount <= 15) return 300;
+    if (itemCount >= 16 && itemCount <= 20) return 350;
+    if (itemCount >= 21 && itemCount <= 25) return 400;
+
+    // For quantities above 25, add $50 for every 5 additional items
+    const baseShipping = 400;
+    const additionalItems = itemCount - 25;
+    const additionalGroups = Math.ceil(additionalItems / 5);
+    return baseShipping + additionalGroups * 50;
+  };
+
   const itemCount = items.reduce((total, item) => total + item.quantity, 0);
   const subtotal = items.reduce(
-    (total, item) => total + item.variant.price * item.quantity,
+    (total, item) => total + (item.variant.price || 0) * item.quantity,
     0
   );
+  const shipping = calculateShipping(itemCount);
+  const total = subtotal + shipping;
 
   return (
     <CartContext.Provider
@@ -324,6 +346,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         clearCart,
         itemCount,
         subtotal,
+        shipping,
+        total,
         loading,
         error,
       }}
