@@ -1,12 +1,4 @@
-export interface Direction {
-  street: string
-  city: string
-  country: string
-  neighborhood: string
-  references: string
-  id: number
-  isDefault?: boolean
-}
+
 
 export interface UserInterface {
   name: string
@@ -23,15 +15,6 @@ export interface UserInterface {
   id?: string
 }
 
-export type FormErrors = {
-  street?: string
-  city?: string
-  country?: string
-  neighborhood?: string
-  references?: string
-}
-
-export type CheckoutStep = "shipping" | "payment" | "confirmation"
 
 export interface BillingDetails {
   name: string
@@ -53,4 +36,89 @@ export interface CheckoutFormProps {
   isProcessing: boolean
   setIsProcessing: (isProcessing: boolean) => void
   total: number
+}
+
+
+
+
+export interface Direction {
+  id: number
+  street: string
+  city: string
+  state: string
+  country: string
+  postalCode: string
+  colony: string
+  neighborhood: string // Alias para colony (para compatibilidad)
+  references: string
+  isDefault: boolean
+  userAddressId?: number
+}
+
+export interface AddressFormData {
+  street: string
+  city: string
+  state: string
+  country: string
+  postalCode: string
+  colony: string
+  references: string
+  isDefault: boolean
+}
+
+export interface FormErrors {
+  street?: string
+  city?: string
+  state?: string
+  country?: string
+  postalCode?: string
+  colony?: string
+  references?: string
+}
+
+
+
+export type CheckoutStep = "shipping" | "shipping-details" | "payment"
+
+export interface Direction {
+  id: number
+  street: string
+  city: string
+  state: string
+  country: string
+  postalCode: string
+  colony: string
+  neighborhood: string
+  references: string
+  isDefault: boolean
+  userAddressId?: number
+}
+
+export interface AddressFormData {
+  street: string
+  city: string
+  state: string
+  country: string
+  postalCode: string
+  colony: string
+  references: string
+  isDefault: boolean
+}
+
+export interface ShippingDetailsFormData {
+  references: string
+  betweenStreetOne: string
+  betweenStreetTwo: string
+}
+
+export interface FormErrors {
+  street?: string
+  city?: string
+  state?: string
+  country?: string
+  postalCode?: string
+  colony?: string
+  references?: string
+  betweenStreetOne?: string
+  betweenStreetTwo?: string
 }

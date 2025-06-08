@@ -32,6 +32,9 @@ import AdminDashboard from "@/pages/private/dashboard-admin/DashboardLayout";
 import ProductDetails from "@/pages/web/products/ProductDetails";
 import CheckoutPage from "@/pages/CheckOut/checkout-page";
 import { useAuth } from "@/context/AuthContextType";
+import CheckoutSuccess from "@/pages/CheckOut/CheckoutSuccess";
+import CheckoutFailure from "@/pages/CheckOut/CheckoutFailure";
+import CheckoutPending from "@/pages/CheckOut/CheckoutPending";
 const AppRoutes = () => {
   const { auth, user } = useAuth();
   useEffect(() => {
@@ -59,8 +62,10 @@ const AppRoutes = () => {
         <ScrollToTop />
         <Routes>
           <Route path="/carrito" element={<CartPage />} />
-          <Route path="/carrito" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/checkout/success" element={<CheckoutSuccess />} />
+        <Route path="/checkout/failure" element={<CheckoutFailure />} />
+        <Route path="/checkout/pending" element={<CheckoutPending />} />
           <Route path="/preguntas-frecuentes" element={<Faq />} />
           <Route path="/" element={<HomePage />} />
           <Route path="/aviso-privacidad" element={<Policies />} />

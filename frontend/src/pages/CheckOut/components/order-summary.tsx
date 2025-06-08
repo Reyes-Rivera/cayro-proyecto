@@ -1,13 +1,7 @@
 "use client";
 
 import type React from "react";
-import {
-  ChevronUp,
-  ChevronDown,
-  Truck,
-  ArrowRight,
-  Loader2,
-} from "lucide-react";
+import { ChevronUp, ChevronDown, Truck, ArrowRight } from "lucide-react";
 import type { CheckoutStep } from "@/types/checkout";
 
 interface OrderSummaryProps {
@@ -16,13 +10,11 @@ interface OrderSummaryProps {
   subtotal: number;
   shipping: number;
   total: number;
-  shippingMethod: "standard" | "express";
   expanded: boolean;
   toggleExpanded: () => void;
   currentStep: CheckoutStep;
   onContinue: () => void;
   isProcessing: boolean;
-  paymentMethod: "card" | "paypal";
 }
 
 export default function OrderSummary({
@@ -31,36 +23,25 @@ export default function OrderSummary({
   subtotal,
   shipping,
   total,
-  shippingMethod,
   expanded,
   toggleExpanded,
   currentStep,
   onContinue,
-  isProcessing,
-  paymentMethod,
 }: OrderSummaryProps) {
-  // Función para manejar errores de carga de imágenes
   const handleImageError = (
     e: React.SyntheticEvent<HTMLImageElement, Event>
   ) => {
     e.currentTarget.src = "/placeholder.svg?height=64&width=64";
   };
 
-  // Función para obtener la URL de la imagen del producto
   const getProductImageUrl = (item: any) => {
-    // Verificar si existe la propiedad variant con imageUrl
     if (item.variant && item.variant.images) {
       return item.variant.images[0].url;
-    }
-    // Verificar si existe la propiedad imageUrl directamente en el item
-    else if (item.images) {
+    } else if (item.images) {
       return item.images;
-    }
-    // Verificar si existe la propiedad product con image
-    else if (item.product && item.product.image) {
+    } else if (item.product && item.product.image) {
       return item.product.image;
     }
-    // Devolver imagen de placeholder como último recurso
     return "/placeholder.svg?height=64&width=64";
   };
 
@@ -83,7 +64,7 @@ export default function OrderSummary({
         </button>
       </div>
 
-      {/* Main Content - Collapsible on Mobile */}
+      {/* Main Content */}
       <div
         className={`transition-all duration-300 ease-in-out ${
           expanded
@@ -92,7 +73,6 @@ export default function OrderSummary({
         }`}
       >
         <div className="p-4 lg:p-6">
-          {/* Desktop Header */}
           <h2 className="hidden lg:block text-lg font-medium text-gray-900 dark:text-white mb-4">
             Resumen del pedido
           </h2>
@@ -157,13 +137,9 @@ export default function OrderSummary({
 
             <div className="flex justify-between text-sm">
               <span className="text-gray-500 dark:text-gray-400">Envío</span>
-              {shipping === 0 ? (
-                <span className="text-green-500">Gratis</span>
-              ) : (
-                <span className="text-gray-900 dark:text-white">
-                  ${shipping.toFixed(2)}
-                </span>
-              )}
+              <span className="text-gray-900 dark:text-white">
+                ${shipping.toFixed(2)}
+              </span>
             </div>
 
             <div className="border-t border-gray-100 dark:border-gray-800 pt-3 mt-3">
@@ -189,21 +165,14 @@ export default function OrderSummary({
                 Información de envío
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                {shippingMethod === "standard"
-                  ? "Envío estándar: 3-5 días hábiles"
-                  : "Envío express: 1-2 días hábiles"}
+                Envío calculado según cantidad de productos
               </p>
-              {subtotal > 100 && shippingMethod === "standard" && (
-                <p className="text-sm text-green-500 mt-1">
-                  ¡Envío gratis en compras mayores a $100!
-                </p>
-              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Mobile Footer - Always visible */}
+      {/* Mobile Footer */}
       <div className="lg:hidden p-4 border-t border-gray-100 dark:border-gray-800 flex justify-between items-center">
         <div>
           <div className="text-xs text-gray-500 dark:text-gray-400">Total</div>
@@ -211,30 +180,13 @@ export default function OrderSummary({
             ${total.toFixed(2)}
           </div>
         </div>
-        {currentStep === "shipping" ? (
+        {currentStep === "shipping" && (
           <button
             onClick={onContinue}
             className="py-2.5 px-4 bg-blue-600 dark:bg-blue-500 text-white font-medium rounded-full flex items-center justify-center gap-2 hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors disabled:opacity-70"
           >
             Continuar
             <ArrowRight className="ml-1 w-4 h-4" />
-          </button>
-        ) : (
-          <button
-            disabled={isProcessing || paymentMethod === "card"}
-            className="py-2.5 px-4 bg-blue-600 dark:bg-blue-500 text-white font-medium rounded-full flex items-center justify-center gap-2 hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors disabled:opacity-70"
-          >
-            {isProcessing ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                Procesando...
-              </>
-            ) : (
-              <>
-                Pagar
-                <ArrowRight className="ml-1 w-4 h-4" />
-              </>
-            )}
           </button>
         )}
       </div>

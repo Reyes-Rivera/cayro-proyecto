@@ -116,8 +116,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             localStorage.removeItem("cart");
           }
         } catch (err) {
-          setError("Failed to sync cart with server");
           console.error("Sync error:", err);
+          setError("Failed to sync cart with server");
 
           // Show error notification
           Swal.fire({
@@ -126,6 +126,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             icon: "error",
             confirmButtonText: "Entendido",
             confirmButtonColor: "#3B82F6",
+          }).catch((swalError) => {
+            console.error("Error showing sync error dialog:", swalError);
           });
         } finally {
           setLoading(false);
@@ -133,20 +135,27 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    syncWithBackend();
+    syncWithBackend().catch((error) => {
+      console.error("Error in syncWithBackend effect:", error);
+      setLoading(false);
+    });
   }, [user]);
 
   // Guardar en localStorage cuando cambian los items y no hay usuario
   useEffect(() => {
     if (!user && items.length > 0) {
-      localStorage.setItem("cart", JSON.stringify(items));
+      try {
+        localStorage.setItem("cart", JSON.stringify(items));
+      } catch (error) {
+        console.error("Error saving cart to localStorage:", error);
+      }
     }
   }, [items, user]);
 
   const addItem = async (product: any, variant: any, quantity = 1) => {
     if (variant.stock <= 0) {
       setError("Cannot add out-of-stock item to cart");
-      return;
+      return Promise.reject(new Error("Cannot add out-of-stock item to cart"));
     }
 
     try {
@@ -194,8 +203,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
       return Promise.resolve();
     } catch (err) {
-      setError("Failed to add item to cart");
       console.error("Add item error:", err);
+      setError("Failed to add item to cart");
       return Promise.reject(err);
     } finally {
       setLoading(false);
@@ -218,8 +227,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       );
       return Promise.resolve();
     } catch (err) {
-      setError("Failed to remove item from cart");
       console.error("Remove item error:", err);
+      setError("Failed to remove item from cart");
       return Promise.reject(err);
     } finally {
       setLoading(false);
@@ -253,8 +262,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
       return Promise.resolve();
     } catch (err) {
-      setError("Failed to update item quantity");
       console.error("Update quantity error:", err);
+      setError("Failed to update item quantity");
       return Promise.reject(err);
     } finally {
       setLoading(false);
@@ -285,12 +294,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         showConfirmButton: false,
         position: "top-end",
         toast: true,
+      }).catch((error) => {
+        console.error("Error showing clear cart success dialog:", error);
       });
 
       return Promise.resolve();
     } catch (err) {
-      setError("Failed to clear cart");
       console.error("Clear cart error:", err);
+      setError("Failed to clear cart");
 
       // Show error notification
       Swal.fire({
@@ -302,6 +313,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         showConfirmButton: false,
         position: "top-end",
         toast: true,
+      }).catch((swalError) => {
+        console.error("Error showing clear cart error dialog:", swalError);
       });
 
       return Promise.reject(err);
