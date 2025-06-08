@@ -18,16 +18,19 @@ import * as crypto from 'crypto';
 import axios from 'axios';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AppLogger } from 'src/utils/logger.service';
+
 type PasswordHistoryEntry = {
   password: string;
   createdAt: string;
 };
+
 @Injectable()
 export class EmployeesService {
   constructor(
     private prismaService: PrismaService,
     private readonly logger: AppLogger,
   ) {}
+
   async isPasswordCompromised(password: string): Promise<boolean> {
     const hashedPassword = crypto
       .createHash('sha1')
@@ -58,6 +61,7 @@ export class EmployeesService {
       );
     }
   }
+
   async create(createEmployeeDto: CreateEmployeeDto) {
     try {
       const employeeFound = await this.prismaService.employee.findFirst({
@@ -130,41 +134,82 @@ export class EmployeesService {
   }
 
   async findOne(id: number) {
-    return `This action returns a #${id} employee`;
+    try {
+      const employee = await this.prismaService.employee.findUnique({
+        where: { id },
+        include: {
+          employeeAddresses: {
+            include: {
+              address: true,
+            },
+          },
+        },
+      });
+
+      if (!employee) {
+        throw new NotFoundException(`Employee with ID ${id} not found`);
+      }
+
+      return employee;
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error(
+        `Error fetching employee with ID ${id}: \nStack: ${error.stack}`,
+      );
+      throw new HttpException(
+        'Error interno del servidor',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   async update(id: number, updateEmployeeDto: UpdateEmployeeDto) {
     try {
       const employeeFound = await this.prismaService.employee.findUnique({
-        where: { email: updateEmployeeDto.email },
+        where: { id },
       });
-      const userFound = await this.prismaService.user.findUnique({
-        where: { email: updateEmployeeDto.email },
-      });
-      if (userFound) {
-        if (
-          userFound.email === updateEmployeeDto.email &&
-          userFound.id !== id
-        ) {
-          throw new ConflictException('El correo se encuentra registrado.');
-        }
+
+      if (!employeeFound) {
+        throw new NotFoundException(`Employee with ID ${id} not found`);
       }
-      if (employeeFound) {
-        if (
-          employeeFound.email === updateEmployeeDto.email &&
-          employeeFound.id !== id
-        ) {
-          throw new ConflictException('El correo ya esta en uso.');
-        }
+
+      const emailConflict = await this.prismaService.employee.findFirst({
+        where: {
+          email: updateEmployeeDto.email,
+          NOT: { id },
+        },
+      });
+
+      const userConflict = await this.prismaService.user.findFirst({
+        where: {
+          email: updateEmployeeDto.email,
+        },
+      });
+
+      if (userConflict) {
+        throw new ConflictException(
+          'El correo se encuentra registrado como cliente.',
+        );
+      }
+
+      if (emailConflict) {
+        throw new ConflictException(
+          'El correo ya esta en uso por otro empleado.',
+        );
       }
 
       const res = await this.prismaService.employee.update({
-        where: { id: id },
+        where: { id },
         data: {
           ...updateEmployeeDto,
-          birthdate: new Date(employeeFound.birthdate),
+          birthdate: updateEmployeeDto.birthdate
+            ? new Date(updateEmployeeDto.birthdate)
+            : employeeFound.birthdate,
         },
       });
+
       const {
         password,
         passwordsHistory,
@@ -175,7 +220,6 @@ export class EmployeesService {
 
       return { ...rest };
     } catch (error) {
-      console.log(error);
       if (error instanceof HttpException) {
         throw error;
       }
@@ -191,8 +235,25 @@ export class EmployeesService {
 
   async remove(id: number) {
     try {
-      const res = await this.prismaService.employee.delete({ where: { id } });
-      if (!res) throw new NotFoundException('El empleado no existe.');
+      // First check if employee exists
+      const employee = await this.prismaService.employee.findUnique({
+        where: { id },
+      });
+
+      if (!employee) {
+        throw new NotFoundException('El empleado no existe.');
+      }
+
+      // Delete related addresses first
+      await this.prismaService.employeeAddress.deleteMany({
+        where: { employeeId: id },
+      });
+
+      // Then delete the employee
+      const res = await this.prismaService.employee.delete({
+        where: { id },
+      });
+
       return res;
     } catch (error) {
       if (error instanceof HttpException) throw error;
@@ -205,79 +266,299 @@ export class EmployeesService {
       );
     }
   }
-  async findOneAddress(id: number) {
-    return await this.prismaService.address.findFirst({
-      where: {
-        employees: {
-          some: { id: id },
-        },
-      },
-    });
-  }
 
-  async upsertEmployeeAddress(
-    employeeId: number,
-    addressData: {
-      street: string;
-      city: string;
-      state: string;
-      country: string;
-      postalCode: string;
-      colony: string;
-    },
-  ) {
+  async getEmployeeAddresses(employeeId: number) {
     try {
-      // 📌 Verifica si el empleado realmente existe en la base de datos
-      const employeeExists = await this.prismaService.employee.findUnique({
+      const employee = await this.prismaService.employee.findUnique({
         where: { id: employeeId },
-      });
-      console.log(employeeExists);
-      if (!employeeExists) {
-        throw new Error(`El empleado con ID ${employeeId} no existe.`);
-      }
-
-      // 📌 Busca si el empleado ya tiene una dirección
-      const existingAddress = await this.prismaService.address.findFirst({
-        where: {
-          employees: {
-            some: { id: employeeId },
+        include: {
+          employeeAddresses: {
+            include: {
+              address: true,
+            },
           },
         },
       });
 
-      if (existingAddress) {
-        // 📌 Si ya tiene una dirección, la actualizamos
-        const updatedAddress = await this.prismaService.address.update({
-          where: { id: existingAddress.id },
-          data: { ...addressData },
+      if (!employee) {
+        throw new NotFoundException(`Employee with ID ${employeeId} not found`);
+      }
+
+      return employee.employeeAddresses.map((ea) => ({
+        ...ea.address,
+        isDefault: ea.isDefault,
+      }));
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error(
+        `Error fetching addresses for employee ${employeeId}: \nStack: ${error.stack}`,
+      );
+      throw new HttpException(
+        'Error interno del servidor',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async getDefaultAddress(employeeId: number) {
+    try {
+      const defaultAddress = await this.prismaService.employeeAddress.findFirst(
+        {
+          where: {
+            employeeId,
+            isDefault: true,
+          },
+          include: {
+            address: true,
+          },
+        },
+      );
+
+      if (!defaultAddress) {
+        throw new NotFoundException(
+          'No default address found for this employee',
+        );
+      }
+
+      return {
+        ...defaultAddress.address,
+        isDefault: defaultAddress.isDefault,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error(
+        `Error fetching default address for employee ${employeeId}: \nStack: ${error.stack}`,
+      );
+      throw new HttpException(
+        'Error interno del servidor',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async addAddress(employeeId: number, addressData: UpdateAddressDto) {
+    try {
+      // Check if employee exists
+      const employee = await this.prismaService.employee.findUnique({
+        where: { id: employeeId },
+      });
+
+      if (!employee) {
+        throw new NotFoundException(`Employee with ID ${employeeId} not found`);
+      }
+
+      // Create new address and connect it to the employee
+      const newAddress = await this.prismaService.address.create({
+        data: {
+          ...addressData,
+          employeeAddresses: {
+            create: {
+              employeeId,
+              isDefault: false, // New addresses are not default by default
+            },
+          },
+        },
+      });
+
+      return newAddress;
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error(
+        `Error adding address for employee ${employeeId}: \nStack: ${error.stack}`,
+      );
+      throw new HttpException(
+        'Error interno del servidor',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async updateAddress(
+    employeeId: number,
+    addressId: number,
+    addressData: UpdateAddressDto,
+  ) {
+    try {
+      // Verify the address belongs to the employee
+      const employeeAddress =
+        await this.prismaService.employeeAddress.findFirst({
+          where: {
+            employeeId,
+            addressId,
+          },
         });
-        return {
-          message: 'Dirección del empleado actualizada exitosamente.',
-          updatedAddress,
-        };
-      } else {
-        // 📌 Si no tiene dirección, la creamos y conectamos al empleado
-        const newAddress = await this.prismaService.address.create({
-          data: {
-            ...addressData,
-            employees: {
-              connect: { id: employeeId }, // Se conecta con el empleado en la tabla intermedia
+
+      if (!employeeAddress) {
+        throw new NotFoundException(
+          'Address not found or does not belong to this employee',
+        );
+      }
+
+      // Update the address
+      const updatedAddress = await this.prismaService.address.update({
+        where: { id: addressId },
+        data: addressData,
+      });
+
+      return updatedAddress;
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error(
+        `Error updating address ${addressId} for employee ${employeeId}: \nStack: ${error.stack}`,
+      );
+      throw new HttpException(
+        'Error interno del servidor',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async setDefaultAddress(employeeId: number, addressId: number) {
+    try {
+      // First reset all addresses to non-default for this employee
+      await this.prismaService.employeeAddress.updateMany({
+        where: {
+          employeeId,
+          isDefault: true,
+        },
+        data: {
+          isDefault: false,
+        },
+      });
+
+      // Then set the specified address as default
+      const updatedAddress = await this.prismaService.employeeAddress.update({
+        where: {
+          employeeId_addressId: {
+            employeeId,
+            addressId,
+          },
+        },
+        data: {
+          isDefault: true,
+        },
+      });
+
+      return updatedAddress;
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error(
+        `Error setting default address ${addressId} for employee ${employeeId}: \nStack: ${error.stack}`,
+      );
+      throw new HttpException(
+        'Error interno del servidor',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async removeAddress(employeeId: number, addressId: number) {
+    try {
+      // First check if this is the last address
+      const employeeAddresses =
+        await this.prismaService.employeeAddress.findMany({
+          where: { employeeId },
+        });
+
+      if (employeeAddresses.length <= 1) {
+        throw new ConflictException(
+          'Cannot delete the only address of an employee',
+        );
+      }
+
+      // Get the address to check if it's default
+      const addressToDelete =
+        await this.prismaService.employeeAddress.findUnique({
+          where: {
+            employeeId_addressId: {
+              employeeId,
+              addressId,
             },
           },
         });
-        return {
-          message: 'Nueva dirección del empleado creada exitosamente.',
-          newAddress,
-        };
+
+      if (!addressToDelete) {
+        throw new NotFoundException('Address not found for this employee');
       }
+
+      // If it's the default address, we need to set another one as default
+      if (addressToDelete.isDefault) {
+        // Find another address to set as default
+        const anotherAddress =
+          await this.prismaService.employeeAddress.findFirst({
+            where: {
+              employeeId,
+              NOT: { addressId },
+            },
+          });
+
+        if (anotherAddress) {
+          await this.prismaService.employeeAddress.update({
+            where: {
+              employeeId_addressId: {
+                employeeId: anotherAddress.employeeId,
+                addressId: anotherAddress.addressId,
+              },
+            },
+            data: {
+              isDefault: true,
+            },
+          });
+        }
+      }
+
+      // Delete the address relationship
+      await this.prismaService.employeeAddress.delete({
+        where: {
+          employeeId_addressId: {
+            employeeId,
+            addressId,
+          },
+        },
+      });
+
+      // Check if the address is used by any other employee or user
+      const otherEmployeeConnections =
+        await this.prismaService.employeeAddress.count({
+          where: { addressId },
+        });
+
+      const userConnections = await this.prismaService.userAddress.count({
+        where: { addressId },
+      });
+
+      // If the address is not used by anyone else, delete it
+      if (otherEmployeeConnections === 0 && userConnections === 0) {
+        await this.prismaService.address.delete({
+          where: { id: addressId },
+        });
+      }
+
+      return { message: 'Address removed successfully' };
     } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
       this.logger.error(
-        `Error al actualizar/crear la dirección: \nStack: ${error.stack}`,
+        `Error removing address ${addressId} for employee ${employeeId}: \nStack: ${error.stack}`,
       );
-      console.error('Error al actualizar/crear la dirección:', error);
-      throw new Error('No se pudo procesar la dirección.');
+      throw new HttpException(
+        'Error interno del servidor',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
+
   async updatePassword(id: number, updatePasswordDto: PasswordUpdate) {
     try {
       const userFound = await this.prismaService.employee.findUnique({

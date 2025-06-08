@@ -22,6 +22,7 @@ import { QuestionsModule } from './faqs/questions/questions.module';
 import { SecurityquestionModule } from './securityquestion/securityquestion.module';
 import { CartModule } from './cart/cart.module';
 import { StripeModule } from './stripe/stripe.module';
+import { MercadoPagoModule } from './mercado-pago/mercado-pago.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -48,6 +49,7 @@ import { StripeModule } from './stripe/stripe.module';
     SecurityquestionModule,
     CartModule,
     StripeModule,
+    MercadoPagoModule,
   ],
   controllers: [],
   providers: [AppService],

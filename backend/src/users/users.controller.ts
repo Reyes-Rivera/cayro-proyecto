@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Put,
+  HttpStatus,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { AnswerQuestion, CreateUserDto } from './dto/create-user.dto';
@@ -18,128 +19,169 @@ import { Role } from 'src/auth/roles/role.enum';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  
   @Post()
-  create(@Body() createUserDto: CreateUserDto) {
+  async create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }
 
+ 
   @Post('resend-code')
   async reSendCode(@Body() body: { email: string }) {
-    const { email } = body;
-    return this.usersService.sendCode(email);
+    return this.usersService.sendCode(body.email);
   }
 
+ 
+  
+ 
   @Post('verify-code')
   async verifyCode(@Body() body: { email: string; code: string }) {
-    const { email, code } = body;
-    return this.usersService.verifyCode(email, code);
+    return this.usersService.verifyCode(body.email, body.code);
   }
-  // @Auth([Role.USER])
+
+  @Auth([Role.USER])
   @Patch('change-password/:id')
   async changePassword(
     @Param('id') id: number,
     @Body() updatePass: PasswordUpdate,
   ) {
-    return this.usersService.updatePassword(Number(id), updatePass);
+    return this.usersService.updatePassword(id, updatePass);
   }
+
 
   @Post('recover-password')
   async recoverPassword(@Body() body: { email: string }) {
-    const { email } = body;
-    return this.usersService.recoverPassword(email);
+    return this.usersService.recoverPassword(body.email);
   }
 
   @Post('reset-password/:token')
   async restorePassword(
-    @Param('token') token: any,
+    @Param('token') token: string,
     @Body() body: { password: string },
   ) {
-    const { password } = body;
-    return this.usersService.restorePassword(password, token);
+    return this.usersService.restorePassword(body.password, token);
   }
 
+  @Auth([Role.ADMIN])
+ 
   @Post('lock')
   async lockUser(@Body() body: { days: number; email: string }) {
-    const { email, days } = body;
-    const res = await this.usersService.blockUser(days, email);
-    return res;
+    return this.usersService.blockUser(body.days, body.email);
   }
-
-
-
   @Post('verifyUserExist')
-  findOne(@Body() body: { email: string }) {
+  async findOne(@Body() body: { email: string }) {
     return this.usersService.findOne(body.email);
   }
 
+  @Auth([Role.ADMIN])
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+  async update(@Param('id') id: number, @Body() updateUserDto: UpdateUserDto) {
+    return this.usersService.update(id, updateUserDto);
   }
 
+  @Auth([Role.USER])
   @Patch('update-answer/:id')
-  updateAnswer(@Param('id') id: string, @Body() updateAnswer: AnswerQuestion) {
-    return this.usersService.updateAnswerQuestion(+id, updateAnswer);
+  async updateAnswer(
+    @Param('id') id: number,
+    @Body() updateAnswer: AnswerQuestion,
+  ) {
+    return this.usersService.updateAnswerQuestion(id, updateAnswer);
   }
+
 
   @Post('compare-answer')
-  compareAnswer(@Body() updateAnswer: AnswerQuestion) {
+  async compareAnswer(@Body() updateAnswer: AnswerQuestion) {
     return this.usersService.compareAnswer(updateAnswer);
   }
 
+  @Auth([Role.ADMIN])
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+  async remove(@Param('id') id: number) {
+    return this.usersService.remove(id);
   }
 
-  @Put('address/:userId')
+  // User Address Endpoints
   @Auth([Role.USER])
+  @Put('/address/:userId')
   async upsertUserAddress(
     @Param('userId') userId: number,
     @Body()
-    addressData: {
+    body: {
       street: string;
       city: string;
       state: string;
       country: string;
       postalCode: string;
       colony: string;
+      isDefault?: boolean;
     },
   ) {
-    return this.usersService.upsertUserAddress(+userId, addressData);
+    return this.usersService.upsertUserAddress(
+      +userId,
+      {
+        street: body.street,
+        city: body.city,
+        state: body.state,
+        country: body.country,
+        postalCode: body.postalCode,
+        colony: body.colony,
+      },
+      body.isDefault,
+    );
   }
 
-  @Put('address/:userId/:addressId')
   @Auth([Role.USER])
+  @Put('user/:userId/address/:addressId')
   async updateUserAddress(
     @Param('userId') userId: number,
     @Param('addressId') addressId: number,
     @Body()
-    addressData: {
-      street: string;
-      city: string;
-      state: string;
-      country: string;
-      postalCode: string;
-      colony: string;
+    body: {
+      street?: string;
+      city?: string;
+      state?: string;
+      country?: string;
+      postalCode?: string;
+      colony?: string;
+      isDefault?: boolean;
     },
   ) {
     return this.usersService.updateUserAddress(
-      +userId,
-      +addressId,
-      addressData,
+      userId,
+      addressId,
+      {
+        street: body.street,
+        city: body.city,
+        state: body.state,
+        country: body.country,
+        postalCode: body.postalCode,
+        colony: body.colony,
+      },
+      body.isDefault,
     );
   }
-  @Get('addresses/:id')
-  findAddresses(@Param('id') id: string) {
-    return this.usersService.findAddresses(+id);
+
+  // @Auth([Role.USER])
+  @Get(':userId/addresses')
+  async getUserAddresses(@Param('userId') userId: number) {
+    return this.usersService.findAddresses(+userId);
   }
 
-  @Delete('address/:id/:addressId')
-  removeAddressUser(
-    @Param('id') id: string,
+  @Auth([Role.USER])
+  @Delete('user/:userId/address/:addressId')
+  async removeUserAddress(
+    @Param('userId') userId: number,
     @Param('addressId') addressId: number,
   ) {
-    return this.usersService.unlinkUserAddress(+id, +addressId);
+    return this.usersService.unlinkUserAddress(userId, addressId);
+  }
+
+  @Auth([Role.USER])
+  @Patch('user/:userId/address/:addressId/set-default')
+  async setDefaultUserAddress(
+    @Param('userId') userId: number,
+    @Param('addressId') addressId: number,
+  ) {
+    return this.usersService.setDefaultAddress(userId, addressId);
   }
 }

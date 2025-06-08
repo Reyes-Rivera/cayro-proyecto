@@ -10,7 +10,7 @@ import rateLimit from 'express-rate-limit';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors({
-    origin: ['https://darkred-vulture-762056.hostingersite.com', 'http://localhost:5173'],
+    origin: ['https://darkred-vulture-762056.hostingersite.com', 'http://localhost:5173',"https://39a8-2806-10a6-14-3fa2-357b-b384-15e1-73e9.ngrok-free.app"],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
