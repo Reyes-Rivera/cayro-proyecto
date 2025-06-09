@@ -56,9 +56,7 @@ export class MercadoPagoService {
       const { cart, user, shippingDetails } = data;
       const frontendUrl = process.env.FRONTEND_URL?.replace(/\/$/, '');
       const backendUrl = process.env.BACKEND_URL?.replace(/\/$/, '');
-
       const items = [];
-
       for (const item of cart) {
         const variant = await this.prismaService.productVariant.findFirst({
           where: { id: item.variantId },
@@ -113,7 +111,7 @@ export class MercadoPagoService {
         },
         binary_mode: false,
         metadata: {
-          shippingDetails,
+          shipping_details: JSON.stringify(shippingDetails),
           user_id: user.id,
           cart: cart.map((item) => ({
             productId: item.productId,
@@ -155,10 +153,6 @@ export class MercadoPagoService {
 
   async processWebhook(webhookData: any) {
     try {
-      console.log('Webhook recibido:', JSON.stringify(webhookData, null, 2));
-
-
-      // Detectar el tipo de evento
       const type =
         webhookData.type ||
         webhookData.topic ||
@@ -197,6 +191,17 @@ export class MercadoPagoService {
       }
 
       const userId = Number(metadata.user_id);
+
+      let shippingDetails;
+      try {
+        shippingDetails = JSON.parse(metadata.shipping_details || '{}');
+      } catch (err) {
+        shippingDetails = {};
+      }
+
+      const references = shippingDetails.references || '';
+      const betweenStreetOne = shippingDetails.betweenStreetOne || '';
+      const betweenStreetTwo = shippingDetails.betweenStreetTwo || '';
 
       const userCart = await this.prismaService.cart.findUnique({
         where: { userId },
@@ -257,8 +262,19 @@ export class MercadoPagoService {
           totalPrice,
         });
       }
-
       const shippingCost = this.calculateShippingCost(userCart.items);
+      const existingSale = await this.prismaService.sale.findUnique({
+        where: {
+          saleReference: payment.external_reference || `MP_${paymentId}`,
+        },
+      });
+
+      if (existingSale) {
+        throw new HttpException(
+          'Ya existe una venta con esta referencia',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
 
       const sale = await this.prismaService.$transaction(async (prisma) => {
         const newSale = await prisma.sale.create({
@@ -269,10 +285,13 @@ export class MercadoPagoService {
             subtotalAmount: new Prisma.Decimal(totalAmount),
             shippingCost: new Prisma.Decimal(shippingCost),
             totalAmount: new Prisma.Decimal(totalAmount + shippingCost),
-            references: payment.external_reference || `MP_${paymentId}`,
+            references: references,
+            betweenStreetOne: betweenStreetOne,
+            betweenStreetTwo: betweenStreetTwo,
             saleDetails: {
               create: saleDetailsData,
             },
+            saleReference: payment.external_reference || `MP_${paymentId}`,
           },
           include: {
             saleDetails: {
