@@ -19,21 +19,16 @@ import { Role } from 'src/auth/roles/role.enum';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  
   @Post()
   async create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }
 
- 
   @Post('resend-code')
   async reSendCode(@Body() body: { email: string }) {
     return this.usersService.sendCode(body.email);
   }
 
- 
-  
- 
   @Post('verify-code')
   async verifyCode(@Body() body: { email: string; code: string }) {
     return this.usersService.verifyCode(body.email, body.code);
@@ -47,7 +42,6 @@ export class UsersController {
   ) {
     return this.usersService.updatePassword(id, updatePass);
   }
-
 
   @Post('recover-password')
   async recoverPassword(@Body() body: { email: string }) {
@@ -63,7 +57,6 @@ export class UsersController {
   }
 
   @Auth([Role.ADMIN])
- 
   @Post('lock')
   async lockUser(@Body() body: { days: number; email: string }) {
     return this.usersService.blockUser(body.days, body.email);
@@ -87,7 +80,6 @@ export class UsersController {
   ) {
     return this.usersService.updateAnswerQuestion(id, updateAnswer);
   }
-
 
   @Post('compare-answer')
   async compareAnswer(@Body() updateAnswer: AnswerQuestion) {
@@ -183,5 +175,16 @@ export class UsersController {
     @Param('addressId') addressId: number,
   ) {
     return this.usersService.setDefaultAddress(userId, addressId);
+  }
+
+  @Post('generate-smartwatch-code/:id')
+  async generateSmartWatchCode(@Param('id') id: number) {
+    const code = await this.usersService.generateSmartWatchCode(+id);
+    return { code };
+  }
+  @Post('get-smartwatch-code/:id')
+  async getSmartWatchCode(@Param('id') id: number) {
+    const code = await this.usersService.getSmartWatchCode(+id);
+    return { code };
   }
 }

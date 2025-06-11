@@ -122,3 +122,9 @@ export const compareAnswer = async (data: object) =>
 // Admin functions
 export const lockUser = async (days: number, email: string) =>
   axios.post(`/users/lock`, { days, email });
+
+export const generateSmartWatchCode = async (id: number) =>
+  axios.post(`/users/generate-smartwatch-code/${id}`);
+
+export const getSmartWatchCode = async (id: number) =>
+  axios.post(`/users/get-smartwatch-code/${id}`);

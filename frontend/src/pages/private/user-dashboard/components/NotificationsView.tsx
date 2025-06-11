@@ -12,8 +12,17 @@ import {
   Check,
   X,
   Shield,
+  Watch,
+  Copy,
+  Smartphone,
+  Loader2,
+  Zap,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { generateSmartWatchCode, getSmartWatchCode } from "@/api/users";
+import { useAuth } from "@/context/AuthContextType";
 
 type Notification = {
   id: string;
@@ -27,6 +36,17 @@ type Notification = {
 export default function NotificationsView() {
   const [pageLoading, setPageLoading] = useState(true);
   const [animateContent, setAnimateContent] = useState(false);
+
+  // Smartwatch linking states
+  const [smartwatchCode, setSmartwatchCode] = useState("");
+  const [isCodeCopied, setIsCodeCopied] = useState(false);
+  const [isGeneratingCode, setIsGeneratingCode] = useState(false);
+  const [isLoadingCode, setIsLoadingCode] = useState(false);
+  const [codeGenerated, setCodeGenerated] = useState(false);
+  const [showCode, setShowCode] = useState(false);
+
+  const { user } = useAuth();
+
   const [notifications, setNotifications] = useState<Notification[]>([
     {
       id: "1",
@@ -65,6 +85,89 @@ export default function NotificationsView() {
       read: true,
     },
   ]);
+
+  // Check if user already has a smartwatch code
+  const checkExistingCode = async () => {
+    if (!user?.id) return;
+
+    try {
+      setIsLoadingCode(true);
+      const response = await getSmartWatchCode(Number(user.id));
+
+      if (response.data && response.data.code) {
+        setSmartwatchCode(response.data.code);
+        setCodeGenerated(true);
+      } else {
+        // No code exists, show generate button
+        setCodeGenerated(false);
+        setSmartwatchCode("");
+      }
+    } catch (error: any) {
+      console.error("Error checking existing code:", error);
+      // If error (like 404), assume no code exists
+      setCodeGenerated(false);
+      setSmartwatchCode("");
+    } finally {
+      setIsLoadingCode(false);
+    }
+  };
+
+  // Generate new smartwatch code
+  const handleGenerateCode = async () => {
+    if (!user?.id) {
+      alert("Error: Usuario no encontrado");
+      return;
+    }
+
+    try {
+      setIsGeneratingCode(true);
+      const response = await generateSmartWatchCode(Number(user.id));
+
+      if (response.data && response.data.code) {
+        setSmartwatchCode(response.data.code);
+        setCodeGenerated(true);
+        setIsCodeCopied(false);
+        setShowCode(true); // Show code automatically when generated
+      } else {
+        alert("Error al generar el código");
+      }
+    } catch (error: any) {
+      console.error("Error generating code:", error);
+      alert(error.response?.data?.message || "Error al generar el código");
+    } finally {
+      setIsGeneratingCode(false);
+    }
+  };
+
+  // Copy code to clipboard
+  const copyCodeToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(smartwatchCode);
+      setIsCodeCopied(true);
+      setTimeout(() => setIsCodeCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy code: ", err);
+      alert("Error al copiar el código");
+    }
+  };
+
+  // Toggle code visibility
+  const toggleCodeVisibility = () => {
+    setShowCode(!showCode);
+  };
+
+  // Format code for display (hidden or visible)
+  const getDisplayCode = () => {
+    if (!smartwatchCode) return "";
+    return showCode ? smartwatchCode : "••••••••";
+  };
+
+  // Check for existing code when component mounts and user is available
+  useEffect(() => {
+    if (user?.id && !pageLoading) {
+      checkExistingCode();
+    }
+  }, [user?.id, pageLoading]);
 
   // Simulate page loading
   useEffect(() => {
@@ -121,15 +224,15 @@ export default function NotificationsView() {
   const getNotificationColor = (type: string) => {
     switch (type) {
       case "order":
-        return "bg-blue-100 text-blue-600";
+        return "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400";
       case "shipping":
-        return "bg-green-100 text-green-600";
+        return "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400";
       case "promotion":
-        return "bg-purple-100 text-purple-600";
+        return "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400";
       case "system":
-        return "bg-gray-100 text-gray-600";
+        return "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400";
       default:
-        return "bg-gray-100 text-gray-600";
+        return "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400";
     }
   };
 
@@ -176,7 +279,7 @@ export default function NotificationsView() {
       )}
 
       {!pageLoading && (
-        <div className="p-6 md:p-8">
+        <div className="p-6 md:p-8 space-y-8">
           {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -232,6 +335,180 @@ export default function NotificationsView() {
                   <span>Borrar todo</span>
                 </Button>
               )}
+            </div>
+          </motion.div>
+
+          {/* Smartwatch Linking Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={
+              animateContent ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }
+            }
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border-l-4 border-blue-500 dark:border-blue-400 border-t border-r border-b overflow-hidden"
+          >
+            <div className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+                  <Watch className="w-5 h-5" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        Vincular Smartwatch
+                      </h3>
+                      <p className="text-gray-600 dark:text-gray-300 mt-1">
+                        Conecta tu smartwatch para sincronizar datos de salud y
+                        fitness
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
+                      <Smartphone className="w-4 h-4" />
+                      <span>Dispositivo</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
+                    <div className="space-y-3">
+                      <h4 className="font-medium text-gray-900 dark:text-white">
+                        Instrucciones:
+                      </h4>
+                      <ol className="text-sm text-gray-600 dark:text-gray-300 space-y-1 list-decimal list-inside">
+                        <li>Genera tu código de vinculación único</li>
+                        <li>Abre la aplicación de tu smartwatch</li>
+                        <li>Ve a configuración {">"} Vincular dispositivo</li>
+                        <li>Ingresa el código generado</li>
+                        <li>Confirma la conexión en ambos dispositivos</li>
+                      </ol>
+                    </div>
+
+                    <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 border border-blue-200 dark:border-blue-700">
+                      <div className="text-center space-y-4">
+                        <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-100 dark:bg-blue-900/50 rounded-full">
+                          <Watch className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                        </div>
+
+                        {isLoadingCode ? (
+                          <div className="space-y-4">
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              Verificando código existente...
+                            </p>
+                            <div className="bg-white dark:bg-gray-700 rounded-lg p-8 border-2 border-dashed border-blue-200 dark:border-blue-700">
+                              <div className="flex items-center justify-center">
+                                <Loader2 className="w-6 h-6 animate-spin text-blue-600 dark:text-blue-400" />
+                              </div>
+                            </div>
+                          </div>
+                        ) : !codeGenerated ? (
+                          <div className="space-y-4">
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              Genera tu código único de vinculación
+                            </p>
+                            <div className="bg-white dark:bg-gray-700 rounded-lg p-8 border-2 border-dashed border-blue-200 dark:border-blue-700">
+                              <div className="text-gray-400 dark:text-gray-500 text-center">
+                                <Watch className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                                <p className="text-sm">Código no generado</p>
+                              </div>
+                            </div>
+                            <Button
+                              onClick={handleGenerateCode}
+                              disabled={isGeneratingCode}
+                              className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white"
+                            >
+                              {isGeneratingCode ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                  Generando...
+                                </>
+                              ) : (
+                                <>
+                                  <Zap className="w-4 h-4 mr-2" />
+                                  Generar Código
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="space-y-4">
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              Código de vinculación
+                            </p>
+                            <div className="bg-white dark:bg-gray-700 rounded-lg p-4 border-2 border-dashed border-blue-200 dark:border-blue-700">
+                              <div className="flex items-center justify-center gap-2">
+                                <div className="text-2xl font-mono font-bold text-blue-600 dark:text-blue-400 tracking-wider text-center flex-1">
+                                  {getDisplayCode()}
+                                </div>
+                                <button
+                                  onClick={toggleCodeVisibility}
+                                  className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                                  aria-label={
+                                    showCode
+                                      ? "Ocultar código"
+                                      : "Mostrar código"
+                                  }
+                                >
+                                  {showCode ? (
+                                    <EyeOff className="w-4 h-4" />
+                                  ) : (
+                                    <Eye className="w-4 h-4" />
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button
+                                onClick={copyCodeToClipboard}
+                                disabled={!smartwatchCode}
+                                variant="outline"
+                                className="flex-1 border-blue-200 dark:border-blue-700 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30"
+                              >
+                                {isCodeCopied ? (
+                                  <>
+                                    <Check className="w-4 h-4 mr-2" />
+                                    Copiado
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy className="w-4 h-4 mr-2" />
+                                    Copiar
+                                  </>
+                                )}
+                              </Button>
+                              <Button
+                                onClick={toggleCodeVisibility}
+                                variant="outline"
+                                size="sm"
+                                className="border-blue-200 dark:border-blue-700 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30"
+                                aria-label={
+                                  showCode ? "Ocultar código" : "Mostrar código"
+                                }
+                              >
+                                {showCode ? (
+                                  <EyeOff className="w-4 h-4" />
+                                ) : (
+                                  <Eye className="w-4 h-4" />
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center mt-4 text-sm text-gray-500 dark:text-gray-400">
+                    <Clock className="w-4 h-4 mr-1" />
+                    <span>
+                      {isLoadingCode
+                        ? "Verificando estado..."
+                        : codeGenerated
+                        ? "Código único generado"
+                        : "Listo para generar código de vinculación"}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </motion.div>
 

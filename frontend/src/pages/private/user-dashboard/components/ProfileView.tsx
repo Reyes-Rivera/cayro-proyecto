@@ -85,7 +85,6 @@ export default function ProfileView() {
     }
     setIsEditable(!isEditable);
   };
-
   const onSubmit = async (data: ProfileFormData) => {
     if (!isEditable) return;
 

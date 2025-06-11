@@ -25,6 +25,78 @@ type PasswordHistoryEntry = {
 @Injectable()
 export class UsersService {
   private codes = new Map<string, { code: string; expires: number }>();
+  private generateRandomCode(): string {
+    return Math.floor(100000 + Math.random() * 900000).toString(); // 6 dígitos
+  }
+
+  async generateSmartWatchCode(userId: number): Promise<string> {
+    try {
+      let code: string;
+      let attempts = 0;
+      const maxAttempts = 5;
+      let existingUser;
+      do {
+        if (attempts >= maxAttempts) {
+          throw new ConflictException(
+            'No se pudo generar un código único. Intenta nuevamente.',
+          );
+        }
+
+        code = this.generateRandomCode();
+
+        existingUser = await this.prismaService.user.findUnique({
+          where: { smartWatchCode: code },
+        });
+
+        attempts++;
+      } while (existingUser);
+
+      // Asignar el código al usuario
+      await this.prismaService.user.update({
+        where: { id: userId },
+        data: { smartWatchCode: code },
+      });
+
+      return code;
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error({
+        message: 'Error al generar código para SmartWatch',
+        error: error.message,
+        stack: error.stack,
+        userId,
+      });
+      throw new InternalServerErrorException('Error interno del servidor');
+    }
+  }
+
+  async getSmartWatchCode(userId: number): Promise<string> {
+    try {
+      const user = await this.prismaService.user.findUnique({
+        where: { id: userId },
+      })
+      if (!user) {
+        throw new NotFoundException('El usuario no existe');
+      }
+
+      return user.smartWatchCode;
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error({
+        message: 'Error al obtener código de SmartWatch',
+        error: error.message,
+        stack: error.stack,
+        userId,
+      });
+      throw new InternalServerErrorException('Error interno del servidor');
+      
+    }
+  }
+  
 
   constructor(
     private jwtSvc: JwtService,

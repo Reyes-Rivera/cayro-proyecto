@@ -151,62 +151,161 @@ export class MercadoPagoService {
     }
   }
 
-  async processWebhook(webhookData: any) {
-    try {
-      const type =
-        webhookData.type ||
-        webhookData.topic ||
-        webhookData.action?.split('.')[0];
+async processWebhook(webhookData: any) {
+  try {
+    const type =
+      webhookData.type ||
+      webhookData.topic ||
+      webhookData.action?.split('.')[0];
 
-      if (!type || type !== 'payment') {
-        console.log('Webhook type not handled:', type);
-        return { status: 'ignored', type };
+    if (!type || type !== 'payment') {
+      console.log('Webhook type not handled:', type);
+      return { status: 'ignored', type };
+    }
+
+    const paymentId =
+      webhookData.data?.id ||
+      (typeof webhookData.resource === 'string' && /^\d+$/.test(webhookData.resource)
+        ? webhookData.resource
+        : null);
+
+    if (!paymentId) {
+      throw new HttpException(
+        'paymentId no encontrado en el webhook',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const payment = await this.getPaymentDetails(paymentId);
+
+    if (payment.status !== 'approved') {
+      return { paymentId, status: payment.status, processed: false };
+    }
+
+    const metadata = payment.metadata;
+    if (!metadata?.user_id) {
+      throw new Error('user_id no encontrado en metadata del pago');
+    }
+
+    const userId = Number(metadata.user_id);
+    let shippingDetails;
+    try {
+      shippingDetails = JSON.parse(metadata.shipping_details || '{}');
+    } catch (err) {
+      shippingDetails = {};
+    }
+
+    const { references = '', betweenStreetOne = '', betweenStreetTwo = '' } = shippingDetails;
+
+    const userCart = await this.prismaService.cart.findUnique({
+      where: { userId },
+      include: {
+        items: {
+          include: {
+            productVariant: {
+              include: {
+                product: true,
+                color: true,
+                size: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!userCart || userCart.items.length === 0) {
+      throw new Error('Carrito del usuario no encontrado o vacío');
+    }
+
+    const userAddress = await this.prismaService.userAddress.findFirst({
+      where: { userId, isDefault: true },
+      include: { address: true },
+    });
+
+    if (!userAddress || !userAddress.address) {
+      throw new Error('No se encontró dirección por defecto del usuario');
+    }
+
+    const address = userAddress.address;
+
+    const employee = await this.prismaService.employee.findFirst({
+      where: { active: true },
+      orderBy: { id: 'asc' },
+    });
+
+    if (!employee) {
+      throw new Error('No hay empleados activos registrados');
+    }
+
+    let totalAmount = 0;
+    const saleDetailsData = [];
+
+    // 🔍 Validación de stock
+    for (const cartItem of userCart.items) {
+      const variant = await this.prismaService.productVariant.findUnique({
+        where: { id: cartItem.productVariant.id },
+      });
+
+      if (!variant) {
+        throw new Error(`Variante con ID ${cartItem.productVariant.id} no encontrada`);
       }
 
-      // Extraer el ID del pago
-      const paymentId =
-        webhookData.data?.id ||
-        (typeof webhookData.resource === 'string' &&
-        /^\d+$/.test(webhookData.resource)
-          ? webhookData.resource
-          : null);
+      const quantity = cartItem.quantity;
+      const unitPrice = variant.price;
+      const totalPrice = unitPrice * quantity;
 
-      if (!paymentId) {
-        console.warn('paymentId no encontrado en el webhook:', webhookData);
+      if (variant.stock < quantity) {
         throw new HttpException(
-          'paymentId no encontrado en el webhook',
+          `Stock insuficiente para la variante ID ${variant.id}. Disponible: ${variant.stock}, solicitado: ${quantity}`,
           HttpStatus.BAD_REQUEST,
         );
       }
 
-      const payment = await this.getPaymentDetails(paymentId);
+      totalAmount += totalPrice;
 
-      if (payment.status !== 'approved') {
-        return { paymentId, status: payment.status, processed: false };
-      }
+      saleDetailsData.push({
+        productVariantId: variant.id,
+        quantity,
+        unitPrice,
+        totalPrice,
+      });
+    }
 
-      const metadata = payment.metadata;
-      if (!metadata?.user_id) {
-        throw new Error('user_id no encontrado en metadata del pago');
-      }
+    const shippingCost = this.calculateShippingCost(userCart.items);
 
-      const userId = Number(metadata.user_id);
+    const existingSale = await this.prismaService.sale.findUnique({
+      where: {
+        saleReference: payment.external_reference || `MP_${paymentId}`,
+      },
+    });
 
-      let shippingDetails;
-      try {
-        shippingDetails = JSON.parse(metadata.shipping_details || '{}');
-      } catch (err) {
-        shippingDetails = {};
-      }
+    if (existingSale) {
+      throw new HttpException(
+        'Ya existe una venta con esta referencia',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
 
-      const references = shippingDetails.references || '';
-      const betweenStreetOne = shippingDetails.betweenStreetOne || '';
-      const betweenStreetTwo = shippingDetails.betweenStreetTwo || '';
-
-      const userCart = await this.prismaService.cart.findUnique({
-        where: { userId },
+    const sale = await this.prismaService.$transaction(async (prisma) => {
+      const newSale = await prisma.sale.create({
+        data: {
+          userId,
+          addressId: address.id,
+          employeeId: employee.id,
+          subtotalAmount: new Prisma.Decimal(totalAmount),
+          shippingCost: new Prisma.Decimal(shippingCost),
+          totalAmount: new Prisma.Decimal(totalAmount + shippingCost),
+          references,
+          betweenStreetOne,
+          betweenStreetTwo,
+          saleReference: payment.external_reference || `MP_${paymentId}`,
+          saleDetails: {
+            create: saleDetailsData,
+          },
+        },
         include: {
-          items: {
+          saleDetails: {
             include: {
               productVariant: {
                 include: {
@@ -217,125 +316,53 @@ export class MercadoPagoService {
               },
             },
           },
+          user: true,
+          address: true,
+          employee: true,
         },
       });
 
-      if (!userCart || userCart.items.length === 0) {
-        throw new Error('Carrito del usuario no encontrado o vacío');
-      }
-
-      const userAddress = await this.prismaService.userAddress.findFirst({
-        where: { userId, isDefault: true },
-        include: { address: true },
-      });
-
-      if (!userAddress || !userAddress.address) {
-        throw new Error('No se encontró dirección por defecto del usuario');
-      }
-
-      const address = userAddress.address;
-
-      const employee = await this.prismaService.employee.findFirst({
-        where: { active: true },
-        orderBy: { id: 'asc' },
-      });
-
-      if (!employee) {
-        throw new Error('No hay empleados activos registrados');
-      }
-
-      let totalAmount = 0;
-      const saleDetailsData = [];
-
-      for (const cartItem of userCart.items) {
-        const variant = cartItem.productVariant;
-        const unitPrice = variant.price;
-        const quantity = cartItem.quantity;
-        const totalPrice = unitPrice * quantity;
-
-        totalAmount += totalPrice;
-
-        saleDetailsData.push({
-          productVariantId: variant.id,
-          quantity,
-          unitPrice,
-          totalPrice,
-        });
-      }
-      const shippingCost = this.calculateShippingCost(userCart.items);
-      const existingSale = await this.prismaService.sale.findUnique({
-        where: {
-          saleReference: payment.external_reference || `MP_${paymentId}`,
-        },
-      });
-
-      if (existingSale) {
-        throw new HttpException(
-          'Ya existe una venta con esta referencia',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-
-      const sale = await this.prismaService.$transaction(async (prisma) => {
-        const newSale = await prisma.sale.create({
+      // 🔻 Descontar del inventario
+      for (const detail of saleDetailsData) {
+        await prisma.productVariant.update({
+          where: { id: detail.productVariantId },
           data: {
-            userId,
-            addressId: address.id,
-            employeeId: employee.id,
-            subtotalAmount: new Prisma.Decimal(totalAmount),
-            shippingCost: new Prisma.Decimal(shippingCost),
-            totalAmount: new Prisma.Decimal(totalAmount + shippingCost),
-            references: references,
-            betweenStreetOne: betweenStreetOne,
-            betweenStreetTwo: betweenStreetTwo,
-            saleDetails: {
-              create: saleDetailsData,
+            stock: {
+              decrement: detail.quantity,
             },
-            saleReference: payment.external_reference || `MP_${paymentId}`,
-          },
-          include: {
-            saleDetails: {
-              include: {
-                productVariant: {
-                  include: {
-                    product: true,
-                    color: true,
-                    size: true,
-                  },
-                },
-              },
-            },
-            user: true,
-            address: true,
-            employee: true,
           },
         });
+      }
 
-        await prisma.cartItem.deleteMany({ where: { cartId: userCart.id } });
-
-        return newSale;
+      // 🧹 Limpiar carrito
+      await prisma.cartItem.deleteMany({
+        where: { cartId: userCart.id },
       });
 
-      return {
-        paymentId,
-        status: payment.status,
-        saleId: sale.id,
-        totalAmount: sale.totalAmount,
-        processed: true,
-        message: 'Venta creada exitosamente',
-      };
-    } catch (error) {
-      console.error('Error general en el webhook:', error);
-      throw new HttpException(
-        {
-          message: 'Error al procesar el webhook de MercadoPago',
-          error: error.message,
-          paymentId: webhookData?.data?.id,
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+      return newSale;
+    });
+
+    return {
+      paymentId,
+      status: payment.status,
+      saleId: sale.id,
+      totalAmount: sale.totalAmount,
+      processed: true,
+      message: 'Venta creada exitosamente',
+    };
+  } catch (error) {
+    console.error('Error general en el webhook:', error);
+    throw new HttpException(
+      {
+        message: 'Error al procesar el webhook de MercadoPago',
+        error: error.message,
+        paymentId: webhookData?.data?.id,
+      },
+      HttpStatus.INTERNAL_SERVER_ERROR,
+    );
   }
+}
+
 
   getEnvironmentInfo() {
     const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
