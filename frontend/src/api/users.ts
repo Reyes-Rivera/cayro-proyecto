@@ -128,3 +128,7 @@ export const generateSmartWatchCode = async (id: number) =>
 
 export const getSmartWatchCode = async (id: number) =>
   axios.post(`/users/get-smartwatch-code/${id}`);
+
+// User Notifications
+export const getNotifications = async (userId: number) =>
+  axios.get(`/notifications/${userId}`);

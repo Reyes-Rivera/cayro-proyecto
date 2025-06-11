@@ -123,6 +123,8 @@ enum GenderUser {
 
 enum SaleStatus {
   PENDING
+  PROCESSING
+  PACKED
   SHIPPED
   DELIVERED
   CANCELLED

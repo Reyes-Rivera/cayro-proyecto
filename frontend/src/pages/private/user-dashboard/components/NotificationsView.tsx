@@ -19,10 +19,32 @@ import {
   Zap,
   Eye,
   EyeOff,
+  Package,
+  PackageCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { generateSmartWatchCode, getSmartWatchCode } from "@/api/users";
+import {
+  generateSmartWatchCode,
+  getSmartWatchCode,
+  getNotifications,
+} from "@/api/users";
 import { useAuth } from "@/context/AuthContextType";
+
+type NotificationItem = {
+  productName: string;
+  color: string;
+  size: string;
+  quantity: number;
+};
+
+type ApiNotification = {
+  saleId: number;
+  createdAt: string;
+  totalAmount: string;
+  status: "PENDING" | "PROCESSING" | "PACKED" | "SHIPPED";
+  message: string;
+  items: NotificationItem[];
+};
 
 type Notification = {
   id: string;
@@ -31,11 +53,16 @@ type Notification = {
   date: string;
   type: "order" | "shipping" | "promotion" | "system";
   read: boolean;
+  saleId?: number;
+  totalAmount?: string;
+  items?: NotificationItem[];
+  status?: string;
 };
 
 export default function NotificationsView() {
   const [pageLoading, setPageLoading] = useState(true);
   const [animateContent, setAnimateContent] = useState(false);
+  const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
 
   // Smartwatch linking states
   const [smartwatchCode, setSmartwatchCode] = useState("");
@@ -47,44 +74,88 @@ export default function NotificationsView() {
 
   const { user } = useAuth();
 
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: "1",
-      title: "Tu pedido ha sido enviado",
-      message:
-        "El pedido #ORD-12345 ha sido enviado y llegará en 3-5 días hábiles.",
-      date: "2025-03-15T10:30:00",
-      type: "shipping",
-      read: false,
-    },
-    {
-      id: "2",
-      title: "Oferta especial",
-      message:
-        "¡20% de descuento en toda nuestra colección de verano! Válido hasta el 31 de marzo.",
-      date: "2025-03-14T15:45:00",
-      type: "promotion",
-      read: false,
-    },
-    {
-      id: "3",
-      title: "Pedido confirmado",
-      message:
-        "Tu pedido #ORD-12346 ha sido confirmado y está siendo procesado.",
-      date: "2025-03-12T09:15:00",
-      type: "order",
-      read: true,
-    },
-    {
-      id: "4",
-      title: "Actualización de sistema",
-      message:
-        "Hemos actualizado nuestra política de privacidad. Por favor revisa los cambios.",
-      date: "2025-03-10T14:20:00",
-      type: "system",
-      read: true,
-    },
-  ]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  // Transform API notification to UI notification
+  const transformApiNotification = (
+    apiNotification: ApiNotification
+  ): Notification => {
+    const getNotificationType = (status: string) => {
+      switch (status) {
+        case "PENDING":
+        case "PROCESSING":
+          return "order";
+        case "PACKED":
+        case "SHIPPED":
+          return "shipping";
+        default:
+          return "order";
+      }
+    };
+
+    const getNotificationTitle = (status: string, saleId: number) => {
+      switch (status) {
+        case "PENDING":
+          return `Pedido #${saleId} recibido`;
+        case "PROCESSING":
+          return `Pedido #${saleId} en revisión`;
+        case "PACKED":
+          return `Pedido #${saleId} empacado`;
+        case "SHIPPED":
+          return `Pedido #${saleId} enviado`;
+        default:
+          return `Pedido #${saleId}`;
+      }
+    };
+
+    return {
+      id: apiNotification.saleId.toString(),
+      title: getNotificationTitle(
+        apiNotification.status,
+        apiNotification.saleId
+      ),
+      message: apiNotification.message,
+      date: apiNotification.createdAt,
+      type: getNotificationType(apiNotification.status),
+      read: false, // All notifications start as unread
+      saleId: apiNotification.saleId,
+      totalAmount: apiNotification.totalAmount,
+      items: apiNotification.items,
+      status: apiNotification.status,
+    };
+  };
+
+  // Load notifications from API
+  const loadNotifications = async () => {
+    if (!user?.id) return;
+
+    try {
+      setIsLoadingNotifications(true);
+      const response = await getNotifications(Number(user.id));
+
+      if (response.data && Array.isArray(response.data)) {
+        const transformedNotifications = response.data.map(
+          transformApiNotification
+        );
+        setNotifications(transformedNotifications);
+      } else {
+        setNotifications([]);
+      }
+    } catch (error: any) {
+      console.error("Error loading notifications:", error);
+      // If no notifications found (404), set empty array
+      if (error.response?.status === 404) {
+        setNotifications([]);
+      } else {
+        console.error(
+          "Error fetching notifications:",
+          error.response?.data?.message || "Error desconocido"
+        );
+      }
+    } finally {
+      setIsLoadingNotifications(false);
+    }
+  };
 
   // Check if user already has a smartwatch code
   const checkExistingCode = async () => {
@@ -162,10 +233,11 @@ export default function NotificationsView() {
     return showCode ? smartwatchCode : "••••••••";
   };
 
-  // Check for existing code when component mounts and user is available
+  // Load data when component mounts and user is available
   useEffect(() => {
     if (user?.id && !pageLoading) {
       checkExistingCode();
+      loadNotifications();
     }
   }, [user?.id, pageLoading]);
 
@@ -190,11 +262,7 @@ export default function NotificationsView() {
     );
   };
 
-  const markAllAsRead = () => {
-    setNotifications(
-      notifications.map((notification) => ({ ...notification, read: true }))
-    );
-  };
+ 
 
   const deleteNotification = (id: string) => {
     setNotifications(
@@ -206,7 +274,22 @@ export default function NotificationsView() {
     setNotifications([]);
   };
 
-  const getNotificationIcon = (type: string) => {
+  const getNotificationIcon = (type: string, status?: string) => {
+    if (status) {
+      switch (status) {
+        case "PENDING":
+          return <Clock className="w-5 h-5" />;
+        case "PROCESSING":
+          return <Package className="w-5 h-5" />;
+        case "PACKED":
+          return <PackageCheck className="w-5 h-5" />;
+        case "SHIPPED":
+          return <Truck className="w-5 h-5" />;
+        default:
+          return <ShoppingBag className="w-5 h-5" />;
+      }
+    }
+
     switch (type) {
       case "order":
         return <ShoppingBag className="w-5 h-5" />;
@@ -221,7 +304,22 @@ export default function NotificationsView() {
     }
   };
 
-  const getNotificationColor = (type: string) => {
+  const getNotificationColor = (type: string, status?: string) => {
+    if (status) {
+      switch (status) {
+        case "PENDING":
+          return "bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400";
+        case "PROCESSING":
+          return "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400";
+        case "PACKED":
+          return "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400";
+        case "SHIPPED":
+          return "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400";
+        default:
+          return "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400";
+      }
+    }
+
     switch (type) {
       case "order":
         return "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400";
@@ -259,6 +357,13 @@ export default function NotificationsView() {
         date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
       );
     }
+  };
+
+  const formatCurrency = (amount: string) => {
+    return new Intl.NumberFormat("es-MX", {
+      style: "currency",
+      currency: "MXN",
+    }).format(Number.parseFloat(amount));
   };
 
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -316,15 +421,20 @@ export default function NotificationsView() {
             </div>
 
             <div className="flex gap-3">
-              {unreadCount > 0 && (
-                <Button
-                  onClick={markAllAsRead}
-                  className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
-                >
-                  <Check className="w-4 h-4" />
-                  <span>Marcar todo como leído</span>
-                </Button>
-              )}
+              <Button
+                onClick={loadNotifications}
+                disabled={isLoadingNotifications}
+                variant="outline"
+                className="gap-2"
+              >
+                {isLoadingNotifications ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Bell className="w-4 h-4" />
+                )}
+                <span>Actualizar</span>
+              </Button>
+          
               {notifications.length > 0 && (
                 <Button
                   onClick={clearAllNotifications}
@@ -513,7 +623,23 @@ export default function NotificationsView() {
           </motion.div>
 
           {/* Notifications list */}
-          {notifications.length > 0 ? (
+          {isLoadingNotifications ? (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={
+                animateContent ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }
+              }
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-blue-100 dark:border-gray-700 overflow-hidden p-8 text-center"
+            >
+              <div className="flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-600 dark:text-blue-400 mr-3" />
+                <span className="text-gray-600 dark:text-gray-300">
+                  Cargando notificaciones...
+                </span>
+              </div>
+            </motion.div>
+          ) : notifications.length > 0 ? (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={
@@ -542,22 +668,64 @@ export default function NotificationsView() {
                     <div className="flex items-start gap-4">
                       <div
                         className={`p-3 rounded-lg ${getNotificationColor(
-                          notification.type
+                          notification.type,
+                          notification.status
                         )}`}
                       >
-                        {getNotificationIcon(notification.type)}
+                        {getNotificationIcon(
+                          notification.type,
+                          notification.status
+                        )}
                       </div>
                       <div className="flex-1">
                         <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                              {notification.title}
-                            </h3>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                {notification.title}
+                              </h3>
+                              {notification.totalAmount && (
+                                <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-sm font-medium px-2 py-1 rounded-full">
+                                  {formatCurrency(notification.totalAmount)}
+                                </span>
+                              )}
+                            </div>
                             <p className="text-gray-600 dark:text-gray-300 mt-1">
                               {notification.message}
                             </p>
+
+                            {notification.items &&
+                              notification.items.length > 0 && (
+                                <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Productos ({notification.items.length}):
+                                  </p>
+                                  <div className="space-y-1">
+                                    {notification.items
+                                      .slice(0, 3)
+                                      .map((item, idx) => (
+                                        <div
+                                          key={idx}
+                                          className="text-sm text-gray-600 dark:text-gray-400 flex justify-between"
+                                        >
+                                          <span>
+                                            {item.productName} - {item.color} (
+                                            {item.size})
+                                          </span>
+                                          <span>x{item.quantity}</span>
+                                        </div>
+                                      ))}
+                                    {notification.items.length > 3 && (
+                                      <p className="text-sm text-gray-500 dark:text-gray-500 italic">
+                                        +{notification.items.length - 3}{" "}
+                                        productos más...
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 ml-4">
                             {!notification.read && (
                               <button
                                 onClick={() => markAsRead(notification.id)}

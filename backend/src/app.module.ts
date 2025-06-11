@@ -23,6 +23,7 @@ import { SecurityquestionModule } from './securityquestion/securityquestion.modu
 import { CartModule } from './cart/cart.module';
 import { StripeModule } from './stripe/stripe.module';
 import { MercadoPagoModule } from './mercado-pago/mercado-pago.module';
+import { NotificationModule } from './notification/notification.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -50,6 +51,7 @@ import { MercadoPagoModule } from './mercado-pago/mercado-pago.module';
     CartModule,
     StripeModule,
     MercadoPagoModule,
+    NotificationModule,
   ],
   controllers: [],
   providers: [AppService],
