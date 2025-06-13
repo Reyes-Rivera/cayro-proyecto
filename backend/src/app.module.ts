@@ -24,6 +24,7 @@ import { CartModule } from './cart/cart.module';
 import { StripeModule } from './stripe/stripe.module';
 import { MercadoPagoModule } from './mercado-pago/mercado-pago.module';
 import { NotificationModule } from './notification/notification.module';
+import { SalesModule } from './sales/sales.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -52,6 +53,7 @@ import { NotificationModule } from './notification/notification.module';
     StripeModule,
     MercadoPagoModule,
     NotificationModule,
+    SalesModule,
   ],
   controllers: [],
   providers: [AppService],

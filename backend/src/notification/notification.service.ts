@@ -73,4 +73,28 @@ export class NotificationsService {
         return 'Tu pedido está en proceso.';
     }
   }
+  async verifySmartWatchCode(code: string) {
+    try {
+      const user = await this.prisma.user.findFirst({
+        where: { smartWatchCode: code },
+      });
+
+      if (!user) {
+        throw new NotFoundException('Código de reloj no válido.');
+      }
+
+      return {
+        userId: user.id,
+        name: user.name,
+        email: user.email,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new Error('Error al verificar el código del reloj inteligente.');
+    }
+  }
+
+
 }
