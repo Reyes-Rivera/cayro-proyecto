@@ -7,6 +7,7 @@ import {
 import { CreateSaleDto } from './dto/create-sale.dto';
 import { UpdateSaleDto } from './dto/update-sale.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { SaleStatus } from '@prisma/client';
 
 @Injectable()
 export class SalesService {
@@ -33,7 +34,7 @@ export class SalesService {
   async confirmSale(id: number, userId: number) {
     try {
       const sale = await this.prismaService.sale.update({
-        where: { id, userId },
+        where: { id },
         data: {
           status: 'DELIVERED',
         },
@@ -47,6 +48,35 @@ export class SalesService {
         message: 'Venta confirmada con éxito',
       };
     } catch (error) {
+      console.log(error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Error al confirmar la venta',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+    async updateStatus(id: number, userId: number,state:SaleStatus) {
+    try {
+      const sale = await this.prismaService.sale.update({
+        where: { id, userId },
+        data: {
+          status: state,
+        },
+      });
+      if (!sale) {
+        throw new NotFoundException(
+          'La venta seleccionada no se encuentra registrada.',
+        );
+      }
+      return {
+        message: 'Estado de la venta confirmado con éxito',
+      };
+    } catch (error) {
+      console.log(error);
       if (error instanceof HttpException) {
         throw error;
       }

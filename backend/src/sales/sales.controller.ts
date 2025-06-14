@@ -8,8 +8,9 @@ import {
   Delete,
 } from '@nestjs/common';
 import { SalesService } from './sales.service';
-import { CreateSaleDto } from './dto/create-sale.dto';
+import { ChangeStatusDto, CreateSaleDto } from './dto/create-sale.dto';
 import { UpdateSaleDto } from './dto/update-sale.dto';
+import { SaleStatus } from '@prisma/client';
 
 @Controller('sales')
 export class SalesController {
@@ -39,12 +40,16 @@ export class SalesController {
   remove(@Param('id') id: string) {
     return this.salesService.remove(+id);
   }
-
+  @Post('change-status')
+  changeStatus(@Body() body: ChangeStatusDto) {
+    return this.salesService.updateStatus(body.id, body.userId, body.status);
+  }
   @Patch(':id/:idUser')
   confirmSaleOrder(
     @Param('id') id: number,
     @Param('id') idUser: number,
   ) {
+    console.log(id, idUser);
     return this.salesService.confirmSale(+id, +idUser);
   }
 }
