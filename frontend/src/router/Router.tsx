@@ -35,6 +35,7 @@ import { useAuth } from "@/context/AuthContextType";
 import CheckoutSuccess from "@/pages/CheckOut/CheckoutSuccess";
 import CheckoutFailure from "@/pages/CheckOut/CheckoutFailure";
 import CheckoutPending from "@/pages/CheckOut/CheckoutPending";
+import PersonalizePage from "@/pages/web/personalized-product/PersonalizePage";
 const AppRoutes = () => {
   const { auth, user } = useAuth();
   useEffect(() => {
@@ -74,6 +75,7 @@ const AppRoutes = () => {
           <Route path="/deslinde-legal" element={<LegalBoundary />} />
           <Route path="/contacto" element={<ContactPage />} />
           <Route path="/registro" element={<SignUpPage />} />
+          <Route path="/personalizar" element={<PersonalizePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/productos" element={<ProductsSection />} />
           <Route path="/producto/:name" element={<ProductDetails />} />

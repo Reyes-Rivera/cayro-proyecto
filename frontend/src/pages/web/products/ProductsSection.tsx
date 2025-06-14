@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { AlertTriangle } from "lucide-react";
-import { motion } from "framer-motion";
+import { AlertTriangle, Palette, Grid3X3, List, SortAsc } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { NavLink } from "react-router-dom";
 
 // Interfaces
 import type {
@@ -13,7 +14,7 @@ import type {
   Size,
   Color,
   Sleeve,
-} from "../../../types/products";
+} from "@/types/products";
 import ProductFilters from "./components/ProductFilters";
 import ActiveFilters from "./components/ActiveFilters";
 import ProductGrid from "./components/ProductGrid";
@@ -67,6 +68,10 @@ export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [hoveredProduct, setHoveredProduct] = useState<number | null>(null);
 
+  // UI State
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
+
   // Price range filter
   const [priceRange, setPriceRange] = useState<{
     min: number | null;
@@ -84,6 +89,18 @@ export default function ProductsPage() {
 
     const params = new URLSearchParams(window.location.search);
 
+    // Categoría - Fix the logic here
+    const categoryParam = params.get("categoria");
+    if (categoryParam && categories.length > 0) {
+      const matchedCategory = categories.find(
+        (category) =>
+          category.name.toLowerCase() === categoryParam.toLowerCase()
+      );
+      if (matchedCategory) {
+        setActiveCategoryId(matchedCategory.id);
+      }
+    }
+
     // Género
     const genderParam = params.get("genero");
     if (genderParam && !isNaN(Number(genderParam))) {
@@ -94,18 +111,6 @@ export default function ProductsPage() {
     const sizeParam = params.get("talla");
     if (sizeParam && !isNaN(Number(sizeParam))) {
       setActiveSizeId(Number(sizeParam));
-    }
-
-    // Categoría
-    const categoryParam = params.get("categoria");
-    if (categoryParam && categories.length > 0) {
-      const matchedCategory = categories.find(
-        (category) =>
-          category.name.toLowerCase() === categoryParam.toLowerCase()
-      );
-      if (matchedCategory) {
-        setActiveCategoryId(matchedCategory.id);
-      }
     }
 
     // Color
@@ -232,7 +237,6 @@ export default function ProductsPage() {
         setColors(colorsData);
 
         try {
-          // Nota: getSleeve está en singular en la API
           const sleevesResponse = await getSleeve();
           sleevesData = Array.isArray(sleevesResponse.data)
             ? sleevesResponse.data
@@ -244,11 +248,7 @@ export default function ProductsPage() {
         }
         setSleeves(sleevesData);
 
-        // Marcar que los filtros se han cargado
         setFiltersLoaded(true);
-
-        // No llamamos a fetchProductsWithFilters aquí, ya que se llamará automáticamente
-        // después de aplicar los filtros desde la URL
       } catch (err) {
         console.error("Error loading data:", err);
         setError(
@@ -262,35 +262,35 @@ export default function ProductsPage() {
   }, []);
 
   useEffect(() => {
-    if (filtersLoaded && initialLoadRef.current) {
+    if (filtersLoaded && initialLoadRef.current && categories.length > 0) {
       applyFiltersFromURL();
       initialLoadRef.current = false;
     }
-    scrollToTop();
-  }, [filtersLoaded]);
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
+  }, [filtersLoaded, categories]);
+
+  const scrollToProducts = () => {
+    const productsSection = document.getElementById("products-grid");
+    if (productsSection) {
+      productsSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   };
+
   // Función para obtener productos con filtros
   const fetchProductsWithFilters = async () => {
     setIsLoading(true);
-    setError(null); // Resetear el error al inicio
+    setError(null);
 
     try {
-      // Build query parameters
       const params = new URLSearchParams();
 
-      // Add pagination
       params.append("page", currentPage.toString());
       params.append("limit", productsPerPage.toString());
 
-      // Add filters
       if (searchTerm) params.append("search", searchTerm);
-      if (activeCategoryId !== null)
+      if (activeCategoryId !== null) {
         params.append("category", activeCategoryId.toString());
+        console.log("Filtering by category ID:", activeCategoryId); // Debug log
+      }
       if (activeColorId !== null)
         params.append("colors", activeColorId.toString());
       if (activeSizeId !== null)
@@ -302,13 +302,11 @@ export default function ProductsPage() {
       if (activeSleeveId !== null)
         params.append("sleeves", activeSleeveId.toString());
 
-      // Add price range filters
       if (priceRange.min !== null)
         params.append("priceMin", priceRange.min.toString());
       if (priceRange.max !== null)
         params.append("priceMax", priceRange.max.toString());
 
-      // Add sorting
       if (activeSort === "price-low") {
         params.append("sort", "price");
         params.append("order", "asc");
@@ -320,46 +318,39 @@ export default function ProductsPage() {
         params.append("order", "desc");
       }
 
-      // Build the URL with query parameters as a string
       const queryString = params.toString();
+      console.log("API Query:", queryString); // Debug log
 
-      // Obtener productos de la API
       const response = await getProducts(queryString);
 
-      // Verificar si la respuesta tiene el formato esperado
       if (response && response.data) {
         let productsData: Product[] = [];
         let totalPagesCount = 1;
 
-        // Manejar diferentes formatos de respuesta
         if (response.data.data && Array.isArray(response.data.data)) {
-          // Formato: { data: Product[], total: number, page: number, ... }
           const apiResponse = response.data as ApiResponse;
           productsData = apiResponse.data;
           totalPagesCount =
             apiResponse.totalPages ||
             Math.ceil(apiResponse.total / productsPerPage);
         } else if (Array.isArray(response.data)) {
-          // Formato: Product[]
           productsData = response.data;
           totalPagesCount = Math.ceil(productsData.length / productsPerPage);
         } else if (
           typeof response.data === "object" &&
           Object.keys(response.data).length === 0
         ) {
-          // Respuesta vacía pero válida
-
           productsData = [];
           totalPagesCount = 1;
         } else {
           productsData = [];
           totalPagesCount = 1;
         }
-        scrollToTop();
+        scrollToProducts();
         setProducts(productsData);
         setTotalPages(totalPagesCount);
       } else {
-        scrollToTop();
+        scrollToProducts();
         setProducts([]);
         setTotalPages(1);
       }
@@ -379,13 +370,9 @@ export default function ProductsPage() {
     }
   };
 
-  // Obtener productos cuando cambian los filtros
   useEffect(() => {
-    // Solo ejecutar si los filtros están cargados
     if (filtersLoaded) {
       fetchProductsWithFilters();
-
-      // Actualizar la URL con los filtros actuales
       updateURLWithFilters();
     }
   }, [
@@ -403,12 +390,9 @@ export default function ProductsPage() {
     priceRange.max,
   ]);
 
-  // Función para limpiar todos los filtros
   const clearAllFilters = () => {
-    // Primero establecemos el estado de carga
     setIsLoading(true);
 
-    // Limpiamos todos los filtros
     setActiveCategoryId(null);
     setActiveGenderId(null);
     setActiveColorId(null);
@@ -420,12 +404,9 @@ export default function ProductsPage() {
     setPriceRange({ min: null, max: null });
     setCurrentPage(1);
 
-    // Limpiar los parámetros de URL
     window.history.pushState({}, "", window.location.pathname);
 
-    // Hacemos una pausa breve para asegurar que los estados se actualicen
     setTimeout(() => {
-      // Llamamos directamente a fetchProductsWithFilters con un nuevo objeto URLSearchParams
       const fetchWithoutFilters = async () => {
         try {
           const params = new URLSearchParams();
@@ -455,7 +436,7 @@ export default function ProductsPage() {
             setTotalPages(totalPagesCount);
             setCurrentPage(1);
             setError(null);
-            scrollToTop();
+            scrollToProducts();
           } else {
             console.error(
               "La API no devolvió datos válidos al limpiar filtros:",
@@ -473,7 +454,6 @@ export default function ProductsPage() {
         } finally {
           setIsLoading(false);
 
-          // Scroll a la sección de productos
           const productsSection = document.getElementById("products-grid");
           if (productsSection) {
             productsSection.scrollIntoView({ behavior: "smooth" });
@@ -485,14 +465,11 @@ export default function ProductsPage() {
     }, 100);
   };
 
-  // Función para actualizar la URL cuando cambian los filtros
   const updateURLWithFilters = () => {
-    // Evitar actualizar la URL durante la carga inicial
     if (!filtersLoaded || initialLoadRef.current) return;
 
     const params = new URLSearchParams();
 
-    // Añadir parámetros según los filtros activos
     if (searchTerm) params.set("search", searchTerm);
     if (activeCategoryId !== null) {
       const category = categories.find((c) => c.id === activeCategoryId);
@@ -511,32 +488,26 @@ export default function ProductsPage() {
     if (activeSort !== "default") params.set("orden", activeSort);
     if (currentPage > 1) params.set("page", currentPage.toString());
 
-    // Actualizar la URL sin recargar la página
     const newUrl = `${window.location.pathname}${
       params.toString() ? `?${params.toString()}` : ""
     }`;
     window.history.pushState({}, "", newUrl);
   };
 
-  // Añadir un efecto para escuchar los cambios en la URL (navegación del historial)
   useEffect(() => {
-    // Función para manejar eventos popstate (cuando el usuario navega con los botones del navegador)
     const handlePopState = () => {
       if (!filtersLoaded) return;
       applyFiltersFromURL();
     };
 
-    // Agregar el event listener
     window.addEventListener("popstate", handlePopState);
 
-    // Limpiar el event listener al desmontar
     return () => {
-      scrollToTop();
+      scrollToProducts();
       window.removeEventListener("popstate", handlePopState);
     };
   }, [filtersLoaded, categories, genders, sizes, colors, sleeves, brands]);
 
-  // Verificar si hay filtros activos
   const hasActiveFilters =
     activeCategoryId !== null ||
     activeGenderId !== null ||
@@ -550,46 +521,180 @@ export default function ProductsPage() {
     activeSort !== "default" ||
     currentPage > 1;
 
+  const getSortLabel = (sort: SortOption) => {
+    switch (sort) {
+      case "price-low":
+        return "Precio: Menor a Mayor";
+      case "price-high":
+        return "Precio: Mayor a Menor";
+      case "newest":
+        return "Más Recientes";
+      default:
+        return "Ordenar por";
+    }
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      scrollToProducts();
+    }
+  };
+
   return (
-    <div className="min-h-screen  dark:bg-gray-900">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
+      {/* Hero Section - Same style as Home */}
+      <section className="relative min-h-[50vh] md:min-h-[60vh] bg-white dark:bg-gray-900 flex items-center overflow-hidden">
+        {/* Background elements - simplified */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-20 -right-20 w-64 h-64 md:w-96 md:h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-blue-50/50 dark:from-blue-900/10 to-transparent"></div>
+
+          {/* Dots pattern */}
+          <div className="absolute top-0 left-0 w-full h-full">
+            <div className="absolute top-20 left-20 w-2 h-2 bg-blue-500/30 rounded-full"></div>
+            <div className="absolute top-40 left-40 w-3 h-3 bg-blue-500/20 rounded-full"></div>
+            <div className="absolute top-60 left-60 w-2 h-2 bg-blue-500/30 rounded-full"></div>
+            <div className="absolute top-20 right-40 w-3 h-3 bg-blue-500/20 rounded-full"></div>
+            <div className="absolute top-60 right-60 w-2 h-2 bg-blue-500/30 rounded-full"></div>
+          </div>
+        </div>
+
+        <div className="container mx-auto px-4 py-12 md:py-16 lg:py-24 relative z-10">
+          <div className="max-w-4xl mx-auto text-center">
+            {/* Breadcrumb */}
+            <div className="flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-6 md:mb-8">
+              <NavLink to="/" className="hover:text-blue-600 transition-colors">
+                Inicio
+              </NavLink>
+              <span>/</span>
+              <span className="text-blue-600 dark:text-blue-400 font-medium">
+                Productos
+              </span>
+            </div>
+
+            {/* Main Title with same style as Home */}
+            <h1 className="text-3xl md:text-4xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-4 md:mb-6 leading-tight px-4">
+              Encuentra tu{" "}
+              <span className="relative inline-block">
+                <span className="relative z-10 text-blue-600 dark:text-blue-400">
+                  estilo
+                </span>
+                <span className="absolute bottom-1 md:bottom-2 left-0 w-full h-2 md:h-3 bg-blue-600/20 dark:bg-blue-400/20 -z-10 rounded"></span>
+              </span>{" "}
+              perfecto
+            </h1>
+
+            {/* Subtitle */}
+            <p className="text-base md:text-lg lg:text-xl text-gray-600 dark:text-gray-400 mb-6 md:mb-8 max-w-2xl mx-auto px-4">
+              Explora nuestra colección completa de ropa premium diseñada para
+              cada ocasión y personalidad.
+            </p>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center items-center mb-8 md:mb-12 px-4">
+              <NavLink
+                to="/personalizar"
+                className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 md:px-8 rounded-full transition-all flex items-center justify-center shadow-lg shadow-blue-600/20 transform hover:scale-105 duration-300 text-sm md:text-base"
+              >
+                <Palette className="w-4 h-4 md:w-5 md:h-5 mr-2 md:mr-3" />
+                Personalizar Productos
+              </NavLink>
+
+              <button
+                onClick={() => {
+                  const productsSection =
+                    document.getElementById("products-grid");
+                  if (productsSection) {
+                    productsSection.scrollIntoView({ behavior: "smooth" });
+                  }
+                }}
+                className="w-full sm:w-auto border border-gray-300 dark:border-gray-700 hover:border-blue-600 dark:hover:border-blue-500 text-gray-900 dark:text-white font-medium py-3 px-6 md:px-8 rounded-full transition-all transform hover:scale-105 duration-300 hover:bg-white/50 dark:hover:bg-gray-800/50 backdrop-blur-sm text-sm md:text-base"
+              >
+                Ver Catálogo
+              </button>
+            </div>
+
+            {/* Quick Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 max-w-3xl mx-auto px-4">
+              <div className="text-center">
+                <div className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-1">
+                  500+
+                </div>
+                <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                  Productos
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-1">
+                  50+
+                </div>
+                <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                  Marcas
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-1">
+                  24/7
+                </div>
+                <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                  Soporte
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-1">
+                  100%
+                </div>
+                <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                  Garantía
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Main Products Section */}
       <section
-        className="w-full py-16 md:py-24 bg-gray-50 dark:bg-gray-900 relative z-10"
+        className="w-full py-6 md:py-8 bg-gradient-to-br from-slate-50 via-blue-50/20 to-indigo-50/10 dark:from-gray-900 dark:via-blue-950/20 dark:to-indigo-950/10"
         id="products-grid"
       >
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          {/* Active Filters Chips */}
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Active Filters */}
           {hasActiveFilters && (
-            <ActiveFilters
-              activeCategoryId={activeCategoryId}
-              setActiveCategoryId={setActiveCategoryId}
-              activeBrandId={activeBrandId}
-              setActiveBrandId={setActiveBrandId}
-              activeColorId={activeColorId}
-              setActiveColorId={setActiveColorId}
-              activeSizeId={activeSizeId}
-              setActiveSizeId={setActiveSizeId}
-              activeGenderId={activeGenderId}
-              setActiveGenderId={setActiveGenderId}
-              activeSleeveId={activeSleeveId}
-              setActiveSleeveId={setActiveSleeveId}
-              activeSort={activeSort}
-              setActiveSort={setActiveSort}
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              priceRange={priceRange}
-              setPriceRange={setPriceRange}
-              clearAllFilters={clearAllFilters}
-              categories={categories}
-              brands={brands}
-              colors={colors}
-              sizes={sizes}
-              genders={genders}
-              sleeves={sleeves}
-            />
+            <div className="mb-4 md:mb-6">
+              <ActiveFilters
+                activeCategoryId={activeCategoryId}
+                setActiveCategoryId={setActiveCategoryId}
+                activeBrandId={activeBrandId}
+                setActiveBrandId={setActiveBrandId}
+                activeColorId={activeColorId}
+                setActiveColorId={setActiveColorId}
+                activeSizeId={activeSizeId}
+                setActiveSizeId={setActiveSizeId}
+                activeGenderId={activeGenderId}
+                setActiveGenderId={setActiveGenderId}
+                activeSleeveId={activeSleeveId}
+                setActiveSleeveId={setActiveSleeveId}
+                activeSort={activeSort}
+                setActiveSort={setActiveSort}
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                priceRange={priceRange}
+                setPriceRange={setPriceRange}
+                clearAllFilters={clearAllFilters}
+                categories={categories}
+                brands={brands}
+                colors={colors}
+                sizes={sizes}
+                genders={genders}
+                sleeves={sleeves}
+              />
+            </div>
           )}
 
-          <div className="flex flex-col md:flex-row gap-8 md:gap-12 mt-8">
-            {/* Desktop Filters */}
+          <div className="flex flex-col md:flex-row gap-6 md:gap-8 lg:gap-12">
+            {/* Enhanced Filters Sidebar */}
             <ProductFilters
               categories={categories}
               brands={brands}
@@ -621,60 +726,140 @@ export default function ProductsPage() {
 
             {/* Main Content */}
             <div className="flex-1">
-              {/* Loading State */}
+              {/* Toolbar */}
+              <div className="flex items-center justify-between mb-6 md:mb-8 p-3 md:p-4 bg-white dark:bg-gray-900 rounded-xl md:rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
+                <div className="flex items-center gap-2 md:gap-4">
+                  <span className="text-xs md:text-sm text-gray-600 dark:text-gray-400 font-medium">
+                    {products.length} productos encontrados
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 md:gap-3">
+                  {/* View Mode Toggle */}
+                  <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+                    <button
+                      onClick={() => setViewMode("grid")}
+                      className={`p-1.5 md:p-2 rounded-md transition-all ${
+                        viewMode === "grid"
+                          ? "bg-white dark:bg-gray-700 text-blue-600 shadow-sm"
+                          : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                      }`}
+                    >
+                      <Grid3X3 className="w-3 h-3 md:w-4 md:h-4" />
+                    </button>
+                    <button
+                      onClick={() => setViewMode("list")}
+                      className={`p-1.5 md:p-2 rounded-md transition-all ${
+                        viewMode === "list"
+                          ? "bg-white dark:bg-gray-700 text-blue-600 shadow-sm"
+                          : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                      }`}
+                    >
+                      <List className="w-3 h-3 md:w-4 md:h-4" />
+                    </button>
+                  </div>
+
+                  {/* Sort Dropdown */}
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowSortDropdown(!showSortDropdown)}
+                      className="flex items-center gap-1 md:gap-2 px-2 md:px-4 py-1.5 md:py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-all"
+                    >
+                      <SortAsc className="w-3 h-3 md:w-4 md:h-4" />
+                      <span className="text-xs md:text-sm font-medium hidden sm:inline">
+                        {getSortLabel(activeSort)}
+                      </span>
+                      <span className="text-xs md:text-sm font-medium sm:hidden">
+                        Ordenar
+                      </span>
+                    </button>
+
+                    <AnimatePresence>
+                      {showSortDropdown && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute right-0 top-full mt-2 w-48 md:w-56 bg-white dark:bg-gray-900 rounded-xl shadow-xl border border-gray-100 dark:border-gray-800 z-50"
+                        >
+                          <div className="p-2">
+                            {[
+                              { value: "default", label: "Relevancia" },
+                              {
+                                value: "price-low",
+                                label: "Precio: Menor a Mayor",
+                              },
+                              {
+                                value: "price-high",
+                                label: "Precio: Mayor a Menor",
+                              },
+                              { value: "newest", label: "Más Recientes" },
+                            ].map((option) => (
+                              <button
+                                key={option.value}
+                                onClick={() => {
+                                  setActiveSort(option.value as SortOption);
+                                  setShowSortDropdown(false);
+                                }}
+                                className={`w-full text-left px-3 py-2 rounded-lg text-xs md:text-sm transition-all ${
+                                  activeSort === option.value
+                                    ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                                }`}
+                              >
+                                {option.label}
+                              </button>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
+              </div>
+
               {isLoading ? (
                 <Loader />
               ) : error ? (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5 }}
-                  className="bg-white dark:bg-gray-800/50 p-8 md:p-16 text-center rounded-2xl border border-gray-100 dark:border-gray-700 shadow-lg"
-                >
+                <div className="bg-white dark:bg-gray-800/50 p-6 md:p-8 lg:p-16 text-center rounded-xl md:rounded-2xl border border-gray-100 dark:border-gray-700 shadow-lg backdrop-blur-sm mx-2 md:mx-0">
                   <div className="flex flex-col items-center justify-center">
-                    <AlertTriangle
-                      className="h-12 w-12 md:h-16 md:w-16 text-red-500 mb-6 md:mb-8"
-                      strokeWidth={1.5}
-                    />
-                    <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center mb-4 md:mb-6">
+                      <AlertTriangle
+                        className="h-8 w-8 md:h-10 md:w-10 text-red-500"
+                        strokeWidth={1.5}
+                      />
+                    </div>
+                    <h3 className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white mb-3 md:mb-4 px-4">
                       Error al cargar productos
                     </h3>
-                    <p className="text-gray-500 dark:text-gray-400 mb-8 md:mb-10 max-w-md mx-auto">
+                    <p className="text-gray-500 dark:text-gray-400 mb-6 md:mb-8 lg:mb-10 max-w-md mx-auto text-sm md:text-base px-4">
                       {error}
                     </p>
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                    <button
                       onClick={() => window.location.reload()}
-                      className="px-8 py-3 md:px-10 md:py-4 bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors rounded-lg shadow-lg shadow-blue-600/20"
+                      className="px-6 py-2.5 md:px-8 md:py-3 lg:px-10 lg:py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium hover:from-blue-700 hover:to-indigo-700 transition-all rounded-full shadow-lg text-sm md:text-base"
                     >
                       Intentar de nuevo
-                    </motion.button>
+                    </button>
                   </div>
-                </motion.div>
+                </div>
               ) : (
                 <>
-                  {/* Product Grid */}
                   <ProductGrid
                     products={products}
                     hoveredProduct={hoveredProduct}
                     setHoveredProduct={setHoveredProduct}
                     noProductsFound={products.length === 0}
                     clearAllFilters={clearAllFilters}
+                    viewMode={viewMode}
                   />
 
-                  {/* Pagination */}
                   {totalPages > 1 && (
                     <Pagination
                       currentPage={currentPage}
                       totalPages={totalPages}
-                      setCurrentPage={(page) => {
-                        setCurrentPage(page);
-                        // Actualizar URL con la página
-                        const url = new URL(window.location.href);
-                        url.searchParams.set("page", page.toString());
-                        window.history.pushState({}, "", url.toString());
-                      }}
+                      setCurrentPage={handlePageChange}
                     />
                   )}
                 </>

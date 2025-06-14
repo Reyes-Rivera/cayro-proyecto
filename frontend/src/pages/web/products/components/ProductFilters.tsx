@@ -3,7 +3,8 @@
 import type React from "react";
 
 import { useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, Filter, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
 import type {
   Brand,
   Category,
@@ -11,7 +12,7 @@ import type {
   Gender,
   Size,
   Sleeve,
-} from "../../../../types/products";
+} from "@/types/products";
 import MobileFilters from "./MoobileFilters";
 import QuickSearch from "./SearchBar";
 
@@ -88,12 +89,11 @@ export default function ProductFilters({
     }));
   };
 
-  // Función para hacer scroll hacia arriba
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
+  const scrollToProducts = () => {
+    const productsSection = document.getElementById("products-grid");
+    if (productsSection) {
+      productsSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   };
 
   const handlePriceSubmit = (e: React.FormEvent) => {
@@ -107,7 +107,6 @@ export default function ProductFilters({
       max: max ? Number(max) : null,
     });
 
-    // Update URL
     const url = new URL(window.location.href);
     if (min) {
       url.searchParams.set("priceMin", min);
@@ -121,13 +120,11 @@ export default function ProductFilters({
     }
     window.history.pushState({}, "", url.toString());
 
-    // Scroll to top after applying price filter
-    scrollToTop();
+    scrollToProducts();
   };
 
   return (
     <>
-      {/* Mobile Filters Component */}
       <MobileFilters
         categories={categories}
         brands={brands}
@@ -157,56 +154,102 @@ export default function ProductFilters({
         setSearchTerm={setSearchTerm}
       />
 
-      {/* Desktop Filters - Enhanced Card Design */}
-      <div className="hidden md:block w-64 flex-shrink-0">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-lg p-6 sticky top-6">
-          {/* Header with gradient background */}
-          <div className="bg-blue-600 -m-6 mb-6 p-6 rounded-t-2xl">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-white">Filtros</h3>
-              {hasActiveFilters && (
-                <button
-                  onClick={clearAllFilters}
-                  className="text-blue-100 hover:text-white text-sm font-medium bg-white/20 px-3 py-1 rounded-full transition-colors"
-                >
-                  Limpiar Todo
-                </button>
-              )}
+      {/* Enhanced Desktop Filters */}
+      <div className="hidden md:block w-80 flex-shrink-0">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6 }}
+          className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-xl p-8 sticky top-6 backdrop-blur-sm"
+        >
+          {/* Enhanced Header */}
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 -m-8 mb-8 p-8 rounded-t-3xl relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-400/20 to-indigo-500/20"></div>
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-white/20 rounded-full">
+                    <Filter className="w-5 h-5 text-white" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white">Filtros</h3>
+                </div>
+                {hasActiveFilters && (
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={clearAllFilters}
+                    className="text-blue-100 hover:text-white text-sm font-semibold bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full transition-all backdrop-blur-sm"
+                  >
+                    Limpiar Todo
+                  </motion.button>
+                )}
+              </div>
+              <p className="text-blue-100 text-sm">
+                Encuentra exactamente lo que buscas
+              </p>
             </div>
+
+            {/* Decorative elements */}
+            <div className="absolute top-4 right-4 w-8 h-8 bg-white/10 rounded-full"></div>
+            <div className="absolute bottom-6 right-8 w-4 h-4 bg-white/20 rounded-full"></div>
           </div>
 
-          {/* Búsqueda */}
-          <div className="mb-6">
-            <h4 className="font-semibold text-gray-900 dark:text-white mb-3 text-sm">
+          {/* Search Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="mb-8"
+          >
+            <h4 className="font-bold text-gray-900 dark:text-white mb-4 text-lg flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-blue-600" />
               Búsqueda
             </h4>
             <QuickSearch
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
             />
-          </div>
+          </motion.div>
 
-          {/* Category */}
-          <div className="mb-6">
+          {/* Category Filter */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="mb-8"
+          >
             <button
               onClick={() => toggleSection("category")}
-              className="flex items-center justify-between w-full text-left font-semibold text-gray-900 dark:text-white mb-4 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              className="flex items-center justify-between w-full text-left font-bold text-gray-900 dark:text-white mb-6 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-lg"
             >
-              Categoría
-              {expandedSections.category ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
+              <span className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                Categoría
+              </span>
+              <motion.div
+                animate={{ rotate: expandedSections.category ? 180 : 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ChevronDown className="h-5 w-5" />
+              </motion.div>
             </button>
 
-            {expandedSections.category && (
-              <div className="space-y-3">
+            <motion.div
+              initial={false}
+              animate={{
+                height: expandedSections.category ? "auto" : 0,
+                opacity: expandedSections.category ? 1 : 0,
+              }}
+              transition={{ duration: 0.3 }}
+              className="overflow-hidden"
+            >
+              <div className="space-y-4">
                 {Array.isArray(categories) &&
                   categories.map((category) => (
-                    <label
+                    <motion.label
                       key={category.id}
-                      className="flex items-center group cursor-pointer"
+                      className="flex items-center group cursor-pointer p-3 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
+                      whileHover={{ x: 4 }}
                     >
                       <input
                         type="radio"
@@ -220,16 +263,19 @@ export default function ProductFilters({
                             category.name.toLowerCase()
                           );
                           window.history.pushState({}, "", url.toString());
-                          scrollToTop();
+                          scrollToProducts();
                         }}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
+                        className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded-full"
                       />
-                      <span className="ml-3 text-sm text-gray-700 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                      <span className="ml-4 text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors font-medium">
                         {category.name}
                       </span>
-                    </label>
+                    </motion.label>
                   ))}
-                <label className="flex items-center group cursor-pointer">
+                <motion.label
+                  className="flex items-center group cursor-pointer p-3 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
+                  whileHover={{ x: 4 }}
+                >
                   <input
                     type="radio"
                     name="category"
@@ -239,37 +285,54 @@ export default function ProductFilters({
                       const url = new URL(window.location.href);
                       url.searchParams.delete("categoria");
                       window.history.pushState({}, "", url.toString());
-                      scrollToTop();
+                      scrollToProducts();
                     }}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
+                    className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded-full"
                   />
-                  <span className="ml-3 text-sm text-gray-700 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  <span className="ml-4 text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors font-medium">
                     Todas las Categorías
                   </span>
-                </label>
+                </motion.label>
               </div>
-            )}
-          </div>
+            </motion.div>
+          </motion.div>
 
-          {/* Color */}
-          <div className="mb-6">
+          {/* Color Filter */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="mb-8"
+          >
             <button
               onClick={() => toggleSection("color")}
-              className="flex items-center justify-between w-full text-left font-semibold text-gray-900 dark:text-white mb-4 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              className="flex items-center justify-between w-full text-left font-bold text-gray-900 dark:text-white mb-6 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-lg"
             >
-              Color
-              {expandedSections.color ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
+              <span className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                Color
+              </span>
+              <motion.div
+                animate={{ rotate: expandedSections.color ? 180 : 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ChevronDown className="h-5 w-5" />
+              </motion.div>
             </button>
 
-            {expandedSections.color && (
-              <div className="grid grid-cols-6 gap-2">
+            <motion.div
+              initial={false}
+              animate={{
+                height: expandedSections.color ? "auto" : 0,
+                opacity: expandedSections.color ? 1 : 0,
+              }}
+              transition={{ duration: 0.3 }}
+              className="overflow-hidden"
+            >
+              <div className="grid grid-cols-6 gap-3">
                 {Array.isArray(colors) &&
                   colors.map((color) => (
-                    <button
+                    <motion.button
                       key={color.id}
                       onClick={() => {
                         setActiveColorId(
@@ -282,42 +345,62 @@ export default function ProductFilters({
                           url.searchParams.set("color", color.id.toString());
                         }
                         window.history.pushState({}, "", url.toString());
-                        scrollToTop();
+                        scrollToProducts();
                       }}
-                      className={`w-8 h-8 rounded-full border-2 transition-all duration-200 hover:scale-110 ${
+                      className={`w-10 h-10 rounded-full border-3 transition-all duration-300 hover:scale-110 shadow-lg ${
                         activeColorId === color.id
-                          ? "border-blue-600 ring-2 ring-blue-600 ring-offset-2"
-                          : "border-gray-300 hover:border-gray-400"
+                          ? "border-blue-600 ring-4 ring-blue-600/30 scale-110"
+                          : "border-gray-300 dark:border-gray-600 hover:border-gray-400"
                       }`}
                       style={{ backgroundColor: color.hexValue }}
                       title={color.name}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
                     />
                   ))}
               </div>
-            )}
-          </div>
+            </motion.div>
+          </motion.div>
 
-          {/* Gender */}
-          <div className="mb-6">
+          {/* Gender Filter */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="mb-8"
+          >
             <button
               onClick={() => toggleSection("gender")}
-              className="flex items-center justify-between w-full text-left font-semibold text-gray-900 dark:text-white mb-4 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              className="flex items-center justify-between w-full text-left font-bold text-gray-900 dark:text-white mb-6 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-lg"
             >
-              Género
-              {expandedSections.gender ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
+              <span className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                Género
+              </span>
+              <motion.div
+                animate={{ rotate: expandedSections.gender ? 180 : 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ChevronDown className="h-5 w-5" />
+              </motion.div>
             </button>
 
-            {expandedSections.gender && (
-              <div className="space-y-3">
+            <motion.div
+              initial={false}
+              animate={{
+                height: expandedSections.gender ? "auto" : 0,
+                opacity: expandedSections.gender ? 1 : 0,
+              }}
+              transition={{ duration: 0.3 }}
+              className="overflow-hidden"
+            >
+              <div className="space-y-4">
                 {Array.isArray(genders) &&
                   genders.map((gender) => (
-                    <label
+                    <motion.label
                       key={gender.id}
-                      className="flex items-center group cursor-pointer"
+                      className="flex items-center group cursor-pointer p-3 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
+                      whileHover={{ x: 4 }}
                     >
                       <input
                         type="radio"
@@ -328,16 +411,19 @@ export default function ProductFilters({
                           const url = new URL(window.location.href);
                           url.searchParams.set("genero", gender.id.toString());
                           window.history.pushState({}, "", url.toString());
-                          scrollToTop();
+                          scrollToProducts();
                         }}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
+                        className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded-full"
                       />
-                      <span className="ml-3 text-sm text-gray-700 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                      <span className="ml-4 text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors font-medium">
                         {gender.name}
                       </span>
-                    </label>
+                    </motion.label>
                   ))}
-                <label className="flex items-center group cursor-pointer">
+                <motion.label
+                  className="flex items-center group cursor-pointer p-3 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
+                  whileHover={{ x: 4 }}
+                >
                   <input
                     type="radio"
                     name="gender"
@@ -347,200 +433,154 @@ export default function ProductFilters({
                       const url = new URL(window.location.href);
                       url.searchParams.delete("genero");
                       window.history.pushState({}, "", url.toString());
-                      scrollToTop();
+                      scrollToProducts();
                     }}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
+                    className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded-full"
                   />
-                  <span className="ml-3 text-sm text-gray-700 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  <span className="ml-4 text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors font-medium">
                     Todos los Géneros
                   </span>
-                </label>
+                </motion.label>
               </div>
-            )}
-          </div>
+            </motion.div>
+          </motion.div>
 
-          {/* Collar Type */}
-          <div className="mb-6">
-            <button
-              onClick={() => toggleSection("collarType")}
-              className="flex items-center justify-between w-full text-left font-semibold text-gray-900 dark:text-white mb-4 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-            >
-              Tipo de Cuello
-              {expandedSections.collarType ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
-            </button>
-
-            {expandedSections.collarType && (
-              <div className="space-y-3">
-                {Array.isArray(sleeves) &&
-                  sleeves.map(
-                    (sleeve) =>
-                      sleeve.id !== 4 && (
-                        <label
-                          key={sleeve.id}
-                          className="flex items-center group cursor-pointer"
-                        >
-                          <input
-                            type="radio"
-                            name="sleeve"
-                            checked={activeSleeveId === sleeve.id}
-                            onChange={() => {
-                              setActiveSleeveId(sleeve.id);
-                              const url = new URL(window.location.href);
-                              url.searchParams.set(
-                                "manga",
-                                sleeve.id.toString()
-                              );
-                              window.history.pushState({}, "", url.toString());
-                              scrollToTop();
-                            }}
-                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
-                          />
-                          <span className="ml-3 text-sm text-gray-700 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                            {sleeve.name}
-                          </span>
-                        </label>
-                      )
-                  )}
-                <label className="flex items-center group cursor-pointer">
-                  <input
-                    type="radio"
-                    name="sleeve"
-                    checked={activeSleeveId === null}
-                    onChange={() => {
-                      setActiveSleeveId(null);
-                      const url = new URL(window.location.href);
-                      url.searchParams.delete("manga");
-                      window.history.pushState({}, "", url.toString());
-                      scrollToTop();
-                    }}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
-                  />
-                  <span className="ml-3 text-sm text-gray-700 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                    Todos los Tipos
-                  </span>
-                </label>
-              </div>
-            )}
-          </div>
-
-          {/* Size */}
-          <div className="mb-6">
+          {/* Size Filter */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+            className="mb-8"
+          >
             <button
               onClick={() => toggleSection("size")}
-              className="flex items-center justify-between w-full text-left font-semibold text-gray-900 dark:text-white mb-4 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              className="flex items-center justify-between w-full text-left font-bold text-gray-900 dark:text-white mb-6 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-lg"
             >
-              Tallas
-              {expandedSections.size ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
+              <span className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                Tallas
+              </span>
+              <motion.div
+                animate={{ rotate: expandedSections.size ? 180 : 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ChevronDown className="h-5 w-5" />
+              </motion.div>
             </button>
 
-            {expandedSections.size && (
-              <div className="space-y-3">
+            <motion.div
+              initial={false}
+              animate={{
+                height: expandedSections.size ? "auto" : 0,
+                opacity: expandedSections.size ? 1 : 0,
+              }}
+              transition={{ duration: 0.3 }}
+              className="overflow-hidden"
+            >
+              <div className="grid grid-cols-3 gap-3">
                 {Array.isArray(sizes) &&
                   sizes.map((size) => (
-                    <label
+                    <motion.button
                       key={size.id}
-                      className="flex items-center group cursor-pointer"
-                    >
-                      <input
-                        type="radio"
-                        name="size"
-                        checked={activeSizeId === size.id}
-                        onChange={() => {
-                          setActiveSizeId(size.id);
-                          const url = new URL(window.location.href);
+                      onClick={() => {
+                        setActiveSizeId(
+                          activeSizeId === size.id ? null : size.id
+                        );
+                        const url = new URL(window.location.href);
+                        if (activeSizeId === size.id) {
+                          url.searchParams.delete("talla");
+                        } else {
                           url.searchParams.set("talla", size.id.toString());
-                          window.history.pushState({}, "", url.toString());
-                          scrollToTop();
-                        }}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
-                      />
-                      <span className="ml-3 text-sm text-gray-700 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                        {size.name}
-                      </span>
-                    </label>
+                        }
+                        window.history.pushState({}, "", url.toString());
+                        scrollToProducts();
+                      }}
+                      className={`py-3 px-4 text-sm font-semibold transition-all rounded-xl border-2 ${
+                        activeSizeId === size.id
+                          ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-600 shadow-lg shadow-blue-600/25"
+                          : "bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300"
+                      }`}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      {size.name}
+                    </motion.button>
                   ))}
-                <label className="flex items-center group cursor-pointer">
-                  <input
-                    type="radio"
-                    name="size"
-                    checked={activeSizeId === null}
-                    onChange={() => {
-                      setActiveSizeId(null);
-                      const url = new URL(window.location.href);
-                      url.searchParams.delete("talla");
-                      window.history.pushState({}, "", url.toString());
-                      scrollToTop();
-                    }}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
-                  />
-                  <span className="ml-3 text-sm text-gray-700 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                    Todas las Tallas
-                  </span>
-                </label>
               </div>
-            )}
-          </div>
+            </motion.div>
+          </motion.div>
 
-          {/* Price Range */}
-          <div className="mb-6">
+          {/* Price Range Filter */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+            className="mb-8"
+          >
             <button
               onClick={() => toggleSection("priceRange")}
-              className="flex items-center justify-between w-full text-left font-semibold text-gray-900 dark:text-white mb-4 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              className="flex items-center justify-between w-full text-left font-bold text-gray-900 dark:text-white mb-6 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-lg"
             >
-              Rango de Precio
-              {expandedSections.priceRange ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
+              <span className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                Rango de Precio
+              </span>
+              <motion.div
+                animate={{ rotate: expandedSections.priceRange ? 180 : 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ChevronDown className="h-5 w-5" />
+              </motion.div>
             </button>
 
-            {expandedSections.priceRange && (
-              <form onSubmit={handlePriceSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
+            <motion.div
+              initial={false}
+              animate={{
+                height: expandedSections.priceRange ? "auto" : 0,
+                opacity: expandedSections.priceRange ? 1 : 0,
+              }}
+              transition={{ duration: 0.3 }}
+              className="overflow-hidden"
+            >
+              <form onSubmit={handlePriceSubmit} className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 dark:text-white mb-1">
-                      Mín
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      Mínimo
                     </label>
                     <input
                       type="number"
                       name="minPrice"
                       placeholder="$0"
                       defaultValue={priceRange.min || ""}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-all"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 dark:text-white mb-1">
-                      Máx
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      Máximo
                     </label>
                     <input
                       type="number"
                       name="maxPrice"
                       placeholder="$1000"
                       defaultValue={priceRange.max || ""}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-all"
                     />
                   </div>
                 </div>
-                <button
+                <motion.button
                   type="submit"
-                  className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-600/25"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  Aplicar
-                </button>
+                  Aplicar Filtro
+                </motion.button>
               </form>
-            )}
-          </div>
-        </div>
+            </motion.div>
+          </motion.div>
+        </motion.div>
       </div>
     </>
   );

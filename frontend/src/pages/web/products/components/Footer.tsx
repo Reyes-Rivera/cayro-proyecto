@@ -14,47 +14,38 @@ export default function Pagination({
   totalPages,
   setCurrentPage,
 }: PaginationProps) {
-  // Función para generar el array de páginas a mostrar
   const getPageNumbers = () => {
     const pageNumbers = [];
-    const maxPagesToShow = 5; // Número máximo de páginas a mostrar
+    const maxPagesToShow = 5;
 
     if (totalPages <= maxPagesToShow) {
-      // Si hay menos páginas que el máximo, mostrar todas
       for (let i = 1; i <= totalPages; i++) {
         pageNumbers.push(i);
       }
     } else {
-      // Siempre mostrar la primera página
       pageNumbers.push(1);
 
-      // Calcular el rango de páginas a mostrar alrededor de la página actual
       let startPage = Math.max(2, currentPage - 1);
       let endPage = Math.min(totalPages - 1, currentPage + 1);
 
-      // Ajustar si estamos cerca del inicio o del final
       if (currentPage <= 3) {
         endPage = 4;
       } else if (currentPage >= totalPages - 2) {
         startPage = totalPages - 3;
       }
 
-      // Añadir elipsis si es necesario
       if (startPage > 2) {
         pageNumbers.push("...");
       }
 
-      // Añadir páginas intermedias
       for (let i = startPage; i <= endPage; i++) {
         pageNumbers.push(i);
       }
 
-      // Añadir elipsis si es necesario
       if (endPage < totalPages - 1) {
         pageNumbers.push("...");
       }
 
-      // Siempre mostrar la última página
       pageNumbers.push(totalPages);
     }
 
@@ -65,43 +56,42 @@ export default function Pagination({
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
 
-      // Scroll to products section
       const productsSection = document.getElementById("products-grid");
       if (productsSection) {
-        window.scrollTo({
-          top: 0,
-          behavior: "smooth",
-        });
-        productsSection.scrollIntoView({ behavior: "smooth" });
+        productsSection.scrollIntoView({ behavior: "smooth", block: "start" });
       }
-    
     }
   };
 
   return (
-    <div className="flex justify-center mt-16">
-      <div className="flex items-center space-x-2">
-        {/* Botón anterior */}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
+      className="flex justify-center mt-20"
+    >
+      <div className="flex items-center space-x-2 bg-white dark:bg-gray-900 rounded-2xl p-2 shadow-xl border border-gray-100 dark:border-gray-800">
+        {/* Previous Button */}
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => handlePageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className={`p-2 rounded-lg ${
+          className={`p-3 rounded-xl transition-all ${
             currentPage === 1
               ? "text-gray-400 dark:text-gray-600 cursor-not-allowed"
-              : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+              : "text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400"
           }`}
           aria-label="Página anterior"
         >
           <ChevronLeft className="w-5 h-5" />
         </motion.button>
 
-        {/* Números de página */}
+        {/* Page Numbers */}
         {getPageNumbers().map((page, index) => (
           <div key={index}>
             {page === "..." ? (
-              <span className="px-2 text-gray-500 dark:text-gray-400">...</span>
+              <span className="px-3 text-gray-500 dark:text-gray-400">...</span>
             ) : (
               <motion.button
                 whileHover={{ scale: 1.1 }}
@@ -109,10 +99,10 @@ export default function Pagination({
                 onClick={() =>
                   typeof page === "number" && handlePageChange(page)
                 }
-                className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                className={`w-12 h-12 rounded-xl flex items-center justify-center font-semibold transition-all ${
                   currentPage === page
-                    ? "bg-blue-600 text-white font-medium shadow-md"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/25"
+                    : "text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400"
                 }`}
               >
                 {page}
@@ -121,22 +111,22 @@ export default function Pagination({
           </div>
         ))}
 
-        {/* Botón siguiente */}
+        {/* Next Button */}
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => handlePageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className={`p-2 rounded-lg ${
+          className={`p-3 rounded-xl transition-all ${
             currentPage === totalPages
               ? "text-gray-400 dark:text-gray-600 cursor-not-allowed"
-              : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+              : "text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400"
           }`}
           aria-label="Página siguiente"
         >
           <ChevronRight className="w-5 h-5" />
         </motion.button>
       </div>
-    </div>
+    </motion.div>
   );
 }

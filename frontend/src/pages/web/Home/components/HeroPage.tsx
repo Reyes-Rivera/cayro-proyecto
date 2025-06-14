@@ -13,11 +13,11 @@ import {
 import { NavLink } from "react-router-dom";
 
 // Importaciones de imágenes
-import Playeras from "../assets/playeras.jpg.jpg";
+import Playeras from "../assets/playeras.jpg";
 import Camisas from "../assets/camisas.jpg";
-import Polos from "../assets/polos.jpg.jpg";
-import Pantalones from "../assets/pantalones.jpg.jpg";
-import Deportivos from "../assets/deportivos.jpg.jpg";
+import Polos from "../assets/polos.jpg";
+import Pantalones from "../assets/pantalones.jpg";
+import Deportivos from "../assets/deportivos.jpg";
 
 interface Category {
   title: string;

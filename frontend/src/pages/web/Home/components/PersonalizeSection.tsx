@@ -3,7 +3,7 @@
 import { Sparkles, Shirt, ArrowRight } from "lucide-react";
 import { memo, useEffect, useRef, useState } from "react";
 import { NavLink } from "react-router-dom";
-
+import img from "../assets/personalizar.jpg";
 const PersonalizeSection = () => {
   const [isVisible, setIsVisible] = useState(false);
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -172,7 +172,7 @@ const PersonalizeSection = () => {
             <div className="relative">
               <div className="absolute inset-0 border-2 border-blue-600 rounded-lg transform translate-x-4 translate-y-4 z-0"></div>
               <img
-                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-Q49vZR0UMyJ1pUOf2YISmDj6wcaP2f.png"
+                src={img}
                 alt="Personalización de ropa"
                 width={600}
                 height={600}

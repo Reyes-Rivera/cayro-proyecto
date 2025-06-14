@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, memo } from "react";
 import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
-import type { Product } from "../../../../types/products";
+import type { Product } from "@/types/products";
 import { getProducts } from "@/api/products";
 import ProductCard from "../../products/components/ProductCard";
 
@@ -12,36 +12,20 @@ const FeaturedProductsCarousel = () => {
   const [error, setError] = useState<string | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [hoveredProduct, setHoveredProduct] = useState<number | null>(null);
-  const [isVisible, setIsVisible] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
 
-  // Intersection Observer setup
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.1 }
-    );
+  
 
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
 
-    return () => observer.disconnect();
-  }, []);
 
   // Number of products to display at once based on screen size
   const getItemsToShow = () => {
     if (typeof window !== "undefined") {
-      if (window.innerWidth < 640) return 1; // Mobile
-      if (window.innerWidth < 1024) return 2; // Tablet
-      if (window.innerWidth < 1280) return 3; // Small desktop
-      return 4; // Large desktop
+      if (window.innerWidth < 640) return 2; // Mobile - 2 products
+      if (window.innerWidth < 1024) return 3; // Tablet - 3 products
+      if (window.innerWidth < 1280) return 4; // Small desktop - 4 products
+      return 4; // Large desktop - 4 products
     }
     return 4; // Default for SSR
   };
@@ -70,19 +54,51 @@ const FeaturedProductsCarousel = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       setIsLoading(true);
+      setError(null);
       try {
-        const response = await getProducts("");
-        if (response.data) {
-          // Filter products to only include those with variants
-          const validProducts = response.data.filter(
-            (product: any) =>
-              product.variants && product.variants.length > 0 && product.active
-          );
+        const params = new URLSearchParams();
+        params.append("page", "1");
+        params.append("limit", "12");
+
+        const response = await getProducts(params.toString());
+
+        if (response && response.data) {
+          let productsData: Product[] = [];
+
+          // Handle different API response formats
+          if (response.data.data && Array.isArray(response.data.data)) {
+            // Paginated response format
+            productsData = response.data.data;
+          } else if (Array.isArray(response.data)) {
+            // Direct array format
+            productsData = response.data;
+          } else {
+            console.warn("Unexpected API response format:", response.data);
+            productsData = [];
+          }
+
+          // Filter products to only include those with variants and images
+          const validProducts = productsData.filter((product: Product) => {
+            return (
+              product.variants &&
+              product.variants.length > 0 &&
+              product.variants.some(
+                (variant) =>
+                  variant.images &&
+                  variant.images.length > 0 &&
+                  variant.stock > 0
+              )
+            );
+          });
+
           setProducts(validProducts.slice(0, 8)); // Get first 8 valid products
+        } else {
+          setProducts([]);
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error fetching products:", err);
         setError("No se pudieron cargar los productos destacados.");
+        setProducts([]);
       } finally {
         setIsLoading(false);
       }
@@ -94,18 +110,18 @@ const FeaturedProductsCarousel = () => {
   // Navigation functions
   const nextSlide = () => {
     if (products.length <= itemsToShow) return;
-    setCurrentIndex((prevIndex) =>
-      prevIndex + itemsToShow >= products.length ? 0 : prevIndex + 1
-    );
+    setCurrentIndex((prevIndex) => {
+      const maxIndex = Math.max(0, products.length - itemsToShow);
+      return prevIndex >= maxIndex ? 0 : prevIndex + 1;
+    });
   };
 
   const prevSlide = () => {
     if (products.length <= itemsToShow) return;
-    setCurrentIndex((prevIndex) =>
-      prevIndex === 0
-        ? Math.max(0, products.length - itemsToShow)
-        : prevIndex - 1
-    );
+    setCurrentIndex((prevIndex) => {
+      const maxIndex = Math.max(0, products.length - itemsToShow);
+      return prevIndex === 0 ? maxIndex : prevIndex - 1;
+    });
   };
 
   // Auto-advance carousel - with pause on hover
@@ -115,7 +131,7 @@ const FeaturedProductsCarousel = () => {
 
     const interval = setInterval(() => {
       nextSlide();
-    }, 6000); // Increased interval time
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [currentIndex, products.length, itemsToShow, hoveredProduct]);
@@ -123,31 +139,31 @@ const FeaturedProductsCarousel = () => {
   // Loading skeleton
   if (isLoading) {
     return (
-      <section className="py-16 bg-gray-50 dark:bg-gray-800">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-12">
+      <section className="py-12 md:py-16 bg-gradient-to-br from-gray-50 via-blue-50/20 to-indigo-50/10 dark:from-gray-900 dark:via-blue-950/20 dark:to-indigo-950/10">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="text-center mb-8 md:mb-12">
             <span className="inline-flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-4 py-1.5 text-sm font-medium text-blue-800 dark:text-blue-300 mb-4">
               <Sparkles className="w-4 h-4 mr-2" />
               PRODUCTOS DESTACADOS
             </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white">
               Nuestra Selección Especial
             </h2>
-            <div className="h-1 w-24 bg-blue-600 mx-auto mt-6"></div>
+            <div className="h-1 w-24 bg-blue-600 mx-auto mt-4 md:mt-6"></div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
             {Array(4)
               .fill(0)
               .map((_, index) => (
                 <div
                   key={index}
-                  className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+                  className="bg-white dark:bg-gray-800 rounded-xl md:rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
                 >
                   <div className="aspect-[3/4] bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
-                  <div className="p-4">
-                    <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-2"></div>
-                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-1/2"></div>
+                  <div className="p-3 md:p-4">
+                    <div className="h-4 md:h-5 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-2"></div>
+                    <div className="h-3 md:h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-1/2"></div>
                   </div>
                 </div>
               ))}
@@ -160,10 +176,20 @@ const FeaturedProductsCarousel = () => {
   // Error state
   if (error) {
     return (
-      <section className="py-16 bg-gray-50 dark:bg-gray-800">
-        <div className="container mx-auto px-6">
+      <section className="py-12 md:py-16 bg-gradient-to-br from-gray-50 via-blue-50/20 to-indigo-50/10 dark:from-gray-900 dark:via-blue-950/20 dark:to-indigo-950/10">
+        <div className="container mx-auto px-4 sm:px-6">
           <div className="text-center">
-            <p className="text-red-500 dark:text-red-400">{error}</p>
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6">
+              <p className="text-red-600 dark:text-red-400 font-medium">
+                {error}
+              </p>
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Intentar de nuevo
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -178,32 +204,24 @@ const FeaturedProductsCarousel = () => {
   return (
     <section
       ref={sectionRef}
-      className="py-16 bg-gray-50 dark:bg-gray-800 relative overflow-hidden"
+      className="py-12 md:py-16 bg-gradient-to-br from-gray-50 via-blue-50/20 to-indigo-50/10 dark:from-gray-900 dark:via-blue-950/20 dark:to-indigo-950/10 relative overflow-hidden"
     >
-      {/* Background decoration - simplified */}
+      {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 right-0 w-1/3 h-1/3 bg-gradient-to-b from-blue-500/5 to-transparent rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 left-0 w-1/3 h-1/3 bg-gradient-to-t from-blue-500/5 to-transparent rounded-full blur-3xl"></div>
       </div>
 
-      <div className="container mx-auto px-6 relative z-10">
-        <div
-          className={`text-center mb-12 transition-all duration-700 ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-          }`}
-        >
+      <div className="container mx-auto px-4 sm:px-6 relative z-10">
+        <div className="text-center mb-8 md:mb-12 opacity-100 translate-y-0">
           <span className="inline-flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-4 py-1.5 text-sm font-medium text-blue-800 dark:text-blue-300 mb-4">
             <Sparkles className="w-4 h-4 mr-2" />
             PRODUCTOS DESTACADOS
           </span>
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
+          <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white">
             Nuestra Selección Especial
           </h2>
-          <div
-            className={`h-1 bg-blue-600 mx-auto mt-6 transition-all duration-700 ${
-              isVisible ? "w-24" : "w-0"
-            }`}
-          ></div>
+          <div className="h-1 bg-blue-600 mx-auto mt-4 md:mt-6 w-24"></div>
         </div>
 
         <div className="relative">
@@ -212,17 +230,17 @@ const FeaturedProductsCarousel = () => {
             <>
               <button
                 onClick={prevSlide}
-                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-10 bg-white dark:bg-gray-800 text-gray-800 dark:text-white p-3 rounded-full shadow-lg hover:bg-blue-600 hover:text-white transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 md:-translate-x-0"
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-6 z-10 bg-white dark:bg-gray-800 text-gray-800 dark:text-white p-2 md:p-3 rounded-full shadow-lg hover:bg-blue-600 hover:text-white transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
                 aria-label="Anterior"
               >
-                <ChevronLeft className="w-6 h-6" />
+                <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
               </button>
               <button
                 onClick={nextSlide}
-                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-10 bg-white dark:bg-gray-800 text-gray-800 dark:text-white p-3 rounded-full shadow-lg hover:bg-blue-600 hover:text-white transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 md:translate-x-0"
+                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-6 z-10 bg-white dark:bg-gray-800 text-gray-800 dark:text-white p-2 md:p-3 rounded-full shadow-lg hover:bg-blue-600 hover:text-white transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
                 aria-label="Siguiente"
               >
-                <ChevronRight className="w-6 h-6" />
+                <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
               </button>
             </>
           )}
@@ -233,40 +251,47 @@ const FeaturedProductsCarousel = () => {
               className="flex transition-transform duration-500 ease-in-out"
               style={{
                 transform: `translateX(-${
-                  currentIndex * (100 / itemsToShow)
+                  (currentIndex * 100) / itemsToShow
                 }%)`,
               }}
             >
               {products.map((product) => (
                 <div
                   key={product.id}
-                  className="flex-none w-full sm:w-1/2 lg:w-1/3 xl:w-1/4 px-3"
+                  className={`flex-none px-2 md:px-3 ${
+                    itemsToShow === 2
+                      ? "w-1/2"
+                      : itemsToShow === 3
+                      ? "w-1/3"
+                      : "w-1/4"
+                  }`}
                   onMouseEnter={() => setHoveredProduct(product.id)}
                   onMouseLeave={() => setHoveredProduct(null)}
                 >
                   <ProductCard
                     product={product}
                     isHovered={hoveredProduct === product.id}
-                    onHover={() => {}}
-                    onLeave={() => {}}
+                    onHover={() => setHoveredProduct(product.id)}
+                    onLeave={() => setHoveredProduct(null)}
+                    viewMode="grid"
                   />
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Carousel indicators - simplified */}
+          {/* Carousel indicators */}
           {products.length > itemsToShow && (
-            <div className="flex justify-center mt-8 gap-2">
+            <div className="flex justify-center mt-6 md:mt-8 gap-2">
               {Array.from({
-                length: Math.ceil((products.length - itemsToShow + 1) / 1),
+                length: Math.max(1, products.length - itemsToShow + 1),
               }).map((_, index) => (
                 <button
                   key={index}
                   onClick={() => setCurrentIndex(index)}
-                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                  className={`w-2 h-2 md:w-2.5 md:h-2.5 rounded-full transition-all duration-300 ${
                     currentIndex === index
-                      ? "bg-blue-600 w-6"
+                      ? "bg-blue-600 w-4 md:w-6"
                       : "bg-gray-300 dark:bg-gray-600"
                   }`}
                   aria-label={`Ir a slide ${index + 1}`}
