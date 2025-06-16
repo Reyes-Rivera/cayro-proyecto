@@ -1,10 +1,18 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { AlertTriangle, Palette, Grid3X3, List, SortAsc } from "lucide-react";
+import {
+  AlertTriangle,
+  Palette,
+  Grid3X3,
+  List,
+  SortAsc,
+  Sparkles,
+  Shirt,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { NavLink } from "react-router-dom";
-
+import Breadcrumbs from "@/components/web-components/Breadcrumbs";
+import img from "./assets/products.jpg";
 // Interfaces
 import type {
   Product,
@@ -81,7 +89,11 @@ export default function ProductsPage() {
     max: null,
   });
 
+  // Refs for animations
+
   const productsPerPage = 12;
+
+ 
 
   // Función para aplicar filtros desde la URL
   const applyFiltersFromURL = () => {
@@ -275,6 +287,10 @@ export default function ProductsPage() {
     }
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   // Función para obtener productos con filtros
   const fetchProductsWithFilters = async () => {
     setIsLoading(true);
@@ -346,11 +362,24 @@ export default function ProductsPage() {
           productsData = [];
           totalPagesCount = 1;
         }
-        scrollToProducts();
+
+        // Solo hacer scroll si hay filtros activos (query parameters en la URL) y no es la carga inicial
+        const urlParams = new URLSearchParams(window.location.search);
+        const hasQueryParams = urlParams.toString().length > 0;
+
+        if (!initialLoadRef.current && hasQueryParams) {
+          setTimeout(() => scrollToProducts(), 100);
+        }
+
         setProducts(productsData);
         setTotalPages(totalPagesCount);
       } else {
-        scrollToProducts();
+        const urlParams = new URLSearchParams(window.location.search);
+        const hasQueryParams = urlParams.toString().length > 0;
+
+        if (!initialLoadRef.current && hasQueryParams) {
+          setTimeout(() => scrollToProducts(), 100);
+        }
         setProducts([]);
         setTotalPages(1);
       }
@@ -436,7 +465,8 @@ export default function ProductsPage() {
             setTotalPages(totalPagesCount);
             setCurrentPage(1);
             setError(null);
-            scrollToProducts();
+            // Scroll to top when all filters are cleared
+            scrollToTop();
           } else {
             console.error(
               "La API no devolvió datos válidos al limpiar filtros:",
@@ -453,11 +483,6 @@ export default function ProductsPage() {
           );
         } finally {
           setIsLoading(false);
-
-          const productsSection = document.getElementById("products-grid");
-          if (productsSection) {
-            productsSection.scrollIntoView({ behavior: "smooth" });
-          }
         }
       };
 
@@ -503,7 +528,6 @@ export default function ProductsPage() {
     window.addEventListener("popstate", handlePopState);
 
     return () => {
-      scrollToProducts();
       window.removeEventListener("popstate", handlePopState);
     };
   }, [filtersLoaded, categories, genders, sizes, colors, sleeves, brands]);
@@ -537,15 +561,15 @@ export default function ProductsPage() {
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
-      scrollToProducts();
+      setTimeout(() => scrollToProducts(), 100);
     }
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
-      {/* Hero Section - Same style as Home */}
+    <div className="min-h-screen bg-white dark:bg-gray-900 overflow-x-hidden">
+      {/* Hero Section - Simplified design */}
       <section className="relative min-h-[50vh] md:min-h-[60vh] bg-white dark:bg-gray-900 flex items-center overflow-hidden">
-        {/* Background elements - simplified */}
+        {/* Background elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-20 -right-20 w-64 h-64 md:w-96 md:h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-blue-50/50 dark:from-blue-900/10 to-transparent"></div>
@@ -560,94 +584,83 @@ export default function ProductsPage() {
           </div>
         </div>
 
-        <div className="container mx-auto px-4 py-12 md:py-16 lg:py-24 relative z-10">
-          <div className="max-w-4xl mx-auto text-center">
-            {/* Breadcrumb */}
-            <div className="flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-6 md:mb-8">
-              <NavLink to="/" className="hover:text-blue-600 transition-colors">
-                Inicio
-              </NavLink>
-              <span>/</span>
-              <span className="text-blue-600 dark:text-blue-400 font-medium">
-                Productos
-              </span>
-            </div>
-
-            {/* Main Title with same style as Home */}
-            <h1 className="text-3xl md:text-4xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-4 md:mb-6 leading-tight px-4">
-              Encuentra tu{" "}
-              <span className="relative inline-block">
-                <span className="relative z-10 text-blue-600 dark:text-blue-400">
-                  estilo
-                </span>
-                <span className="absolute bottom-1 md:bottom-2 left-0 w-full h-2 md:h-3 bg-blue-600/20 dark:bg-blue-400/20 -z-10 rounded"></span>
-              </span>{" "}
-              perfecto
-            </h1>
-
-            {/* Subtitle */}
-            <p className="text-base md:text-lg lg:text-xl text-gray-600 dark:text-gray-400 mb-6 md:mb-8 max-w-2xl mx-auto px-4">
-              Explora nuestra colección completa de ropa premium diseñada para
-              cada ocasión y personalidad.
-            </p>
-
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center items-center mb-8 md:mb-12 px-4">
-              <NavLink
-                to="/personalizar"
-                className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 md:px-8 rounded-full transition-all flex items-center justify-center shadow-lg shadow-blue-600/20 transform hover:scale-105 duration-300 text-sm md:text-base"
-              >
-                <Palette className="w-4 h-4 md:w-5 md:h-5 mr-2 md:mr-3" />
-                Personalizar Productos
-              </NavLink>
-
-              <button
-                onClick={() => {
-                  const productsSection =
-                    document.getElementById("products-grid");
-                  if (productsSection) {
-                    productsSection.scrollIntoView({ behavior: "smooth" });
-                  }
-                }}
-                className="w-full sm:w-auto border border-gray-300 dark:border-gray-700 hover:border-blue-600 dark:hover:border-blue-500 text-gray-900 dark:text-white font-medium py-3 px-6 md:px-8 rounded-full transition-all transform hover:scale-105 duration-300 hover:bg-white/50 dark:hover:bg-gray-800/50 backdrop-blur-sm text-sm md:text-base"
-              >
-                Ver Catálogo
-              </button>
-            </div>
-
-            {/* Quick Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 max-w-3xl mx-auto px-4">
-              <div className="text-center">
-                <div className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-1">
-                  500+
+        <div className="container mx-auto px-0 py-12 md:py-16 lg:py-24 relative z-10">
+          <div
+            className="px-4  mx-auto transition-all duration-700 ease-out"
+          
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+              {/* Left Content */}
+              <div className="text-center lg:text-left">
+                {/* Badge Component */}
+                <div className="flex items-center justify-center lg:justify-start mb-6 md:mb-8">
+                  <div className="inline-flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-4 py-1.5">
+                    <Shirt className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
+                    <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                      DESCUBRE NUESTRO CATÁLOGO
+                    </span>
+                  </div>
                 </div>
-                <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
-                  Productos
+
+                {/* Main Title */}
+                <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 dark:text-white mb-4 md:mb-6 leading-tight">
+                  Encuentra tu{" "}
+                  <span className="relative inline-block">
+                    <span className="relative z-10 text-blue-600 dark:text-blue-400">
+                      estilo
+                    </span>
+                    <span className="absolute bottom-1 md:bottom-2 left-0 w-full h-2 md:h-3 bg-blue-600/20 dark:bg-blue-400/20 -z-10 rounded"></span>
+                  </span>{" "}
+                  perfecto
+                </h1>
+
+                {/* Subtitle */}
+                <p className="text-base md:text-lg lg:text-xl text-gray-600 dark:text-gray-400 mb-6 md:mb-8">
+                  Explora nuestra colección completa de ropa premium diseñada
+                  para cada ocasión y personalidad.
+                </p>
+
+                {/* Features */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto lg:mx-0">
+                  <div className="flex items-center justify-center lg:justify-start gap-3 p-4 bg-white/50 dark:bg-gray-800/50 rounded-xl backdrop-blur-sm border border-gray-100 dark:border-gray-700">
+                    <Sparkles className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                      200+ Productos
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-center lg:justify-start gap-3 p-4 bg-white/50 dark:bg-gray-800/50 rounded-xl backdrop-blur-sm border border-gray-100 dark:border-gray-700">
+                    <Palette className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                      15+ Categorías
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-center lg:justify-start gap-3 p-4 bg-white/50 dark:bg-gray-800/50 rounded-xl backdrop-blur-sm border border-gray-100 dark:border-gray-700">
+                    <Sparkles className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                      Calidad Premium
+                    </span>
+                  </div>
+                </div>
+
+                {/* Breadcrumbs at bottom */}
+                <div className="mt-8">
+                  <Breadcrumbs />
                 </div>
               </div>
-              <div className="text-center">
-                <div className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-1">
-                  50+
+
+              {/* Right Image */}
+              <div className="relative">
+                <div className="relative rounded-2xl overflow-hidden shadow-2xl">
+                  <img
+                    src={img}
+                    alt="Catálogo de productos"
+                    className="w-full h-[400px] md:h-[500px] object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                 </div>
-                <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
-                  Marcas
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-1">
-                  24/7
-                </div>
-                <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
-                  Soporte
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-1">
-                  100%
-                </div>
-                <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
-                  Garantía
-                </div>
+                {/* Floating elements */}
+                <div className="absolute -top-4 -right-4 w-20 h-20 bg-blue-500/20 rounded-full blur-xl"></div>
+                <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-purple-500/20 rounded-full blur-xl"></div>
               </div>
             </div>
           </div>

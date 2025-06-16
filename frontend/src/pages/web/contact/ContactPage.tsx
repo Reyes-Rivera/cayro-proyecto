@@ -7,10 +7,7 @@ import {
   Phone,
   Mail,
   MapPin,
-  Send,
   MessageSquare,
-  User,
-  AtSign,
   Clock,
   CheckCircle,
   ArrowRight,
@@ -20,7 +17,7 @@ import type { CompanyProfile } from "@/types/CompanyInfo";
 import { getCompanyInfoApi } from "@/api/company";
 import Breadcrumbs from "@/components/web-components/Breadcrumbs";
 import Loader from "@/components/web-components/Loader";
-
+import img from "./assets/contact.png";
 // Types
 interface AnimatedSectionProps {
   children: React.ReactNode;
@@ -111,8 +108,6 @@ export default function ContactPage() {
     }
   };
 
-
-
   const [info, setInfo] = useState<CompanyProfile>();
   useEffect(() => {
     const getInfo = async () => {
@@ -132,7 +127,7 @@ export default function ContactPage() {
     <>
       {isPageLoading && <Loader />}
       <div className="min-h-screen mt-5 bg-white dark:bg-gray-900 overflow-x-hidden">
-        {/* Hero Section - Two column layout with content left, images right */}
+        {/* Hero Section - Two column layout with content left, image right */}
         <div className="relative min-h-screen bg-white dark:bg-gray-900 flex items-center">
           {/* Background decoration - Enhanced with about page style */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -274,7 +269,7 @@ export default function ContactPage() {
                 <Breadcrumbs />
               </motion.div>
 
-              {/* Right column - Contact Form Preview */}
+              {/* Right column - Image */}
               <motion.div
                 initial={{ opacity: 0, x: 30 }}
                 animate={
@@ -283,86 +278,27 @@ export default function ContactPage() {
                 transition={{ duration: 0.8, delay: 0.3 }}
                 className="relative"
               >
-                {/* Main featured form */}
                 <motion.div
                   initial={{ y: 20, opacity: 0 }}
                   animate={
                     animateHero ? { y: 0, opacity: 1 } : { y: 20, opacity: 0 }
                   }
                   transition={{ duration: 0.6, delay: 0.4 }}
-                  className="relative z-20 rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-blue-600 to-blue-700"
+                  className="relative z-20 rounded-2xl overflow-hidden shadow-2xl"
                 >
-                  <div className="p-8">
-                    <div className="flex items-center mb-6">
-                      <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
-                      <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
-                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                      <div className="ml-auto">
-                        <MessageSquare className="w-5 h-5 text-white" />
-                      </div>
-                    </div>
-
-                    <h3 className="text-xl font-bold text-white mb-4">
-                      Envíanos un mensaje
-                    </h3>
-
-                    <div className="space-y-4">
-                      <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
-                        <div className="flex items-center text-white/60 text-sm mb-1">
-                          <User className="w-4 h-4 mr-2" />
-                          <span>Nombre</span>
-                        </div>
-                        <div className="h-2 w-3/4 bg-white/20 rounded-full"></div>
-                      </div>
-
-                      <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
-                        <div className="flex items-center text-white/60 text-sm mb-1">
-                          <AtSign className="w-4 h-4 mr-2" />
-                          <span>Email</span>
-                        </div>
-                        <div className="h-2 w-4/5 bg-white/20 rounded-full"></div>
-                      </div>
-
-                      <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
-                        <div className="flex items-center text-white/60 text-sm mb-1">
-                          <MessageSquare className="w-4 h-4 mr-2" />
-                          <span>Mensaje</span>
-                        </div>
-                        <div className="h-2 w-1/2 bg-white/20 rounded-full mb-2"></div>
-                        <div className="h-2 w-3/4 bg-white/20 rounded-full mb-2"></div>
-                        <div className="h-2 w-2/3 bg-white/20 rounded-full"></div>
-                      </div>
-
-                      <div className="bg-white text-blue-600 text-center py-2 rounded-lg font-medium flex items-center justify-center">
-                        <Send className="w-4 h-4 mr-2" />
-                        Enviar mensaje
-                      </div>
-                    </div>
-                  </div>
+                  <img
+                    src={img}
+                    alt="Contacto y atención al cliente"
+                    className="w-full h-[400px] md:h-[500px] object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                 </motion.div>
 
-                {/* Decorative elements - Enhanced with about page style */}
+                {/* Decorative elements */}
                 <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-100 dark:bg-blue-900/20 rounded-full filter blur-3xl opacity-50 z-0"></div>
                 <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-blue-100 dark:bg-blue-900/20 rounded-full filter blur-3xl opacity-50 z-0"></div>
 
-                {/* Floating badge */}
-                <motion.div
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={
-                    animateHero
-                      ? { scale: 1, opacity: 1 }
-                      : { scale: 0.8, opacity: 0 }
-                  }
-                  transition={{ duration: 0.5, delay: 0.8 }}
-                  className="absolute top-4 -right-4 bg-white dark:bg-gray-800 shadow-lg rounded-full px-4 py-2 z-30"
-                >
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-yellow-500" />
-                    <span className="font-bold text-gray-900 dark:text-white text-sm">
-                      Respuesta Rápida
-                    </span>
-                  </div>
-                </motion.div>
+              
               </motion.div>
             </div>
           </div>
