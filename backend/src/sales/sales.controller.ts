@@ -6,20 +6,14 @@ import {
   Patch,
   Param,
   Delete,
+  NotFoundException,
 } from '@nestjs/common';
 import { SalesService } from './sales.service';
 import { ChangeStatusDto, CreateSaleDto } from './dto/create-sale.dto';
-import { UpdateSaleDto } from './dto/update-sale.dto';
-import { SaleStatus } from '@prisma/client';
 
 @Controller('sales')
 export class SalesController {
   constructor(private readonly salesService: SalesService) {}
-
-  @Post()
-  create(@Body() createSaleDto: CreateSaleDto) {
-    return this.salesService.create(createSaleDto);
-  }
 
   @Get()
   findAll() {
@@ -28,27 +22,31 @@ export class SalesController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.salesService.findOne(+id);
+    try {
+      const res = this.salesService.findOne(+id);
+      if (!res) throw new NotFoundException('No se encontró la venta.');
+      return res;
+    } catch (error) {
+      throw new Error(error);
+    }
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateSaleDto: UpdateSaleDto) {
-    return this.salesService.update(+id, updateSaleDto);
+  @Get('user-purchases/:id')
+  getUserPurchases(@Param('id') id: string) {
+    return this.salesService.getUserPurchases(+id);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.salesService.remove(+id);
+  @Get('/orders')
+  getOrdes() {
+    return this.salesService.getOrders();
   }
+
   @Post('change-status')
   changeStatus(@Body() body: ChangeStatusDto) {
     return this.salesService.updateStatus(body.id, body.userId, body.status);
   }
   @Patch(':id/:idUser')
-  confirmSaleOrder(
-    @Param('id') id: number,
-    @Param('id') idUser: number,
-  ) {
+  confirmSaleOrder(@Param('id') id: number, @Param('id') idUser: number) {
     console.log(id, idUser);
     return this.salesService.confirmSale(+id, +idUser);
   }

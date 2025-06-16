@@ -4,33 +4,121 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateSaleDto } from './dto/create-sale.dto';
-import { UpdateSaleDto } from './dto/update-sale.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { SaleStatus } from '@prisma/client';
+import { Sale, SaleStatus } from '@prisma/client';
 
 @Injectable()
 export class SalesService {
   constructor(private prismaService: PrismaService) {}
-  create(createSaleDto: CreateSaleDto) {
-    return 'This action adds a new sale';
+
+  findAll(): Promise<Sale[]> {
+    try {
+      return this.prismaService.sale.findMany({
+        include: {
+          user: {
+            select: {
+              name: true,
+              surname: true,
+              email: true,
+              phone: true,
+              userAddresses: {
+                where: { isDefault: true },
+                include: {
+                  address: true,
+                },
+              },
+            },
+          },
+          saleDetails: {
+            select: {
+              quantity: true,
+              unitPrice: true,
+              totalPrice: true,
+              productVariant: {
+                select: {
+                  barcode: true,
+                  price: true,
+                  product: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                  color: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                  size: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+
+      throw new HttpException(
+        'Error interno en el servidor',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
-  findAll() {
-    return `This action returns all sales`;
+  findOne(id: number): Promise<Sale> {
+    return this.prismaService.sale.findUnique({
+      where: { id },
+      include: {
+        user: {
+          select: {
+            name: true,
+            surname: true,
+            email: true,
+            phone: true,
+            userAddresses: {
+              where: { isDefault: true },
+              include: {
+                address: true,
+              },
+            },
+          },
+        },
+        saleDetails: {
+          select: {
+            quantity: true,
+            unitPrice: true,
+            totalPrice: true,
+            productVariant: {
+              select: {
+                barcode: true,
+                price: true,
+                product: {
+                  select: {
+                    name: true,
+                  },
+                },
+                color: {
+                  select: {
+                    name: true,
+                  },
+                },
+                size: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} sale`;
-  }
-
-  update(id: number, updateSaleDto: UpdateSaleDto) {
-    return `This action updates a #${id} sale`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} sale`;
-  }
   async confirmSale(id: number, userId: number) {
     try {
       const sale = await this.prismaService.sale.update({
@@ -59,7 +147,7 @@ export class SalesService {
     }
   }
 
-    async updateStatus(id: number, userId: number,state:SaleStatus) {
+  async updateStatus(id: number, userId: number, state: SaleStatus) {
     try {
       const sale = await this.prismaService.sale.update({
         where: { id, userId },
@@ -82,6 +170,124 @@ export class SalesService {
       }
       throw new HttpException(
         'Error al confirmar la venta',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async getUserPurchases(userId: number) {
+    try {
+      return this.prismaService.sale.findMany({
+        where: { userId },
+        include: {
+          user: {
+            select: {
+              name: true,
+              surname: true,
+              email: true,
+              phone: true,
+              userAddresses: {
+                where: { isDefault: true },
+                include: {
+                  address: true,
+                },
+              },
+            },
+          },
+          saleDetails: {
+            select: {
+              quantity: true,
+              unitPrice: true,
+              totalPrice: true,
+              productVariant: {
+                select: {
+                  barcode: true,
+                  price: true,
+                  product: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                  color: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                  size: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      throw new HttpException(
+        'Error interno en el servidor',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async getOrders() {
+    try {
+      return this.prismaService.sale.findMany({
+        where: { status:{
+          notIn: [SaleStatus.DELIVERED, SaleStatus.CANCELLED,],
+        } },
+        include: {
+          user: {
+            select: {
+              name: true,
+              surname: true,
+              email: true,
+              phone: true,
+              userAddresses: {
+                where: { isDefault: true },
+                include: {
+                  address: true,
+                },
+              },
+            },
+          },
+          saleDetails: {
+            select: {
+              quantity: true,
+              unitPrice: true,
+              totalPrice: true,
+              productVariant: {
+                select: {
+                  barcode: true,
+                  price: true,
+                  product: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                  color: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                  size: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      throw new HttpException(
+        'Error interno en el servidor',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

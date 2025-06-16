@@ -2,7 +2,7 @@ import { Loader as LoaderIcon } from 'lucide-react';
 
 const Loader = () => {
   return (
-    <div className="fixed inset-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center gap-4">
+    <div className=" h-screen  bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center gap-4">
       <div className="relative flex items-center justify-center w-20 h-20">
         {/* Spinner con efecto de pulso */}
         <div className="absolute w-full h-full border-4 border-blue-100 dark:border-gray-700 border-t-blue-600 dark:border-t-blue-500 rounded-full animate-spin"></div>
