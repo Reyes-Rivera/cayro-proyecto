@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import Loader from "@/components/web-components/Loader";
 
 type OrderStatus = "completed" | "processing" | "shipped" | "cancelled";
 
@@ -171,17 +172,7 @@ export default function OrderHistoryView() {
   return (
     <div className="relative">
       {/* Loading Screen */}
-      {pageLoading && (
-        <div className="flex flex-col items-center justify-center py-20">
-          <div className="relative">
-            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 dark:border-blue-800 dark:border-t-blue-400 rounded-full animate-spin mb-4"></div>
-            <ShoppingBag className="w-6 h-6 text-blue-600 dark:text-blue-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
-          </div>
-          <p className="text-blue-600 dark:text-blue-400 mt-4 font-medium">
-            Cargando pedidos...
-          </p>
-        </div>
-      )}
+      {pageLoading && <Loader />}
 
       {!pageLoading && (
         <div className="p-6 md:p-8">
@@ -339,9 +330,7 @@ export default function OrderHistoryView() {
                                   className="flex items-center gap-4 p-4 bg-blue-50 dark:bg-gray-800 rounded-lg border border-blue-100 dark:border-gray-700"
                                 >
                                   <img
-                                    src={
-                                      item.image
-                                    }
+                                    src={item.image}
                                     alt={item.name}
                                     className="w-16 h-16 object-cover rounded-md border border-gray-200 dark:border-gray-700"
                                   />

@@ -22,6 +22,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
+import Loader from "@/components/web-components/Loader";
 
 interface ProfileFormData {
   name: string;
@@ -124,17 +125,7 @@ export default function ProfileView() {
   return (
     <div className="relative">
       {/* Loading Screen */}
-      {pageLoading && (
-        <div className="flex flex-col items-center justify-center py-20">
-          <div className="relative">
-            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 dark:border-blue-800 dark:border-t-blue-400 rounded-full animate-spin mb-4"></div>
-            <User className="w-6 h-6 text-blue-600 dark:text-blue-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
-          </div>
-          <p className="text-blue-600 dark:text-blue-400 mt-4 font-medium">
-            Cargando perfil...
-          </p>
-        </div>
-      )}
+      {pageLoading && <Loader />}
 
       {!pageLoading && (
         <div className="p-6 md:p-8">

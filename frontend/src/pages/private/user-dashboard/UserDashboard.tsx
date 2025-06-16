@@ -7,7 +7,6 @@ import {
   LogOut,
   MapPin,
   ShoppingBag,
-  CreditCard,
   Bell,
   Calendar,
   Menu,
@@ -24,16 +23,10 @@ import ProfileView from "./components/ProfileView";
 import SecurityView from "./components/SecurityView";
 import AddressView from "./components/AddressView";
 import OrderHistoryView from "./components/OrderHistoryView";
-import PaymentMethodsView from "./components/PaymentMethodsView";
 import NotificationsView from "./components/NotificationsView";
+import Loader from "@/components/web-components/Loader";
 
-type TabKey =
-  | "profile"
-  | "security"
-  | "orders"
-  | "addresses"
-  | "payment"
-  | "notifications";
+type TabKey = "profile" | "security" | "orders" | "addresses" | "notifications";
 
 const CombinedDashboard = () => {
   const [activeTab, setActiveTab] = useState<TabKey>("profile");
@@ -84,7 +77,6 @@ const CombinedDashboard = () => {
     security: <SecurityView />,
     orders: <OrderHistoryView />,
     addresses: <AddressView />,
-    payment: <PaymentMethodsView />,
     notifications: <NotificationsView />,
   };
 
@@ -127,11 +119,6 @@ const CombinedDashboard = () => {
       label: "Mis Direcciones",
     },
     {
-      key: "payment",
-      icon: <CreditCard className="w-5 h-5" />,
-      label: "Métodos de Pago",
-    },
-    {
       key: "notifications",
       icon: <Bell className="w-5 h-5" />,
       label: "Notificaciones",
@@ -140,21 +127,9 @@ const CombinedDashboard = () => {
 
   return (
     <main className="min-h-screen bg-white dark:bg-gray-900 pt-24 pb-8 px-4 md:px-8 lg:px-12 overflow-x-hidden">
-      
-
       <div className="container mx-auto max-w-7xl relative z-10">
         {/* Loading Screen */}
-        {pageLoading && (
-          <div className="flex flex-col items-center justify-center py-20">
-            <div className="relative">
-              <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 dark:border-blue-800 dark:border-t-blue-400 rounded-full animate-spin mb-4"></div>
-              <User className="w-6 h-6 text-blue-600 dark:text-blue-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
-            </div>
-            <p className="text-blue-600 dark:text-blue-400 mt-4 font-medium">
-              Cargando dashboard...
-            </p>
-          </div>
-        )}
+        {pageLoading && <Loader />}
 
         {!pageLoading && (
           <>
