@@ -285,6 +285,7 @@ export class SalesService {
         },
       });
     } catch (error) {
+      console.log(error);
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         'Error interno en el servidor',

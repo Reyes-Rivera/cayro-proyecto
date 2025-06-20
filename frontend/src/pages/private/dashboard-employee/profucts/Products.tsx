@@ -34,7 +34,7 @@ const Products: React.FC = () => {
         setTotalPages(data.totalPages || 1);
         setCurrentFilters(params); // Store current filters
       }
-    } catch (error) {
+    } catch (error:any) {
       console.error("Error al cargar productos:", error);
       if (error.response?.status === 404) {
         // Handle 404 specifically - set products to empty array

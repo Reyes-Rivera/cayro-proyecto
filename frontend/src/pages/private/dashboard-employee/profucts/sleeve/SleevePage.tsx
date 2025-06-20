@@ -355,13 +355,13 @@ const SleevePage = () => {
 
   return (
     <motion.div
-      className="p-2 sm:p-4 md:p-6 space-y-4 sm:space-y-6 md:space-y-8 bg-gray-50 dark:bg-gray-900 w-full"
+      className="p-2 sm:p-4 md:p-6  bg-gray-50 dark:bg-gray-900 w-full"
       initial="hidden"
       animate="visible"
       variants={containerVariants}
     >
       {/* Encabezado de Página */}
-      <motion.div variants={itemVariants} className="relative overflow-hidden">
+      <motion.div variants={itemVariants} className="relative overflow-hidden mb-8">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-blue-600 to-blue-800 opacity-10 dark:opacity-20 rounded-xl sm:rounded-2xl md:rounded-3xl"></div>
         <div className="relative bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl md:rounded-3xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700">
           <div className="p-4 sm:p-6 md:p-8">

@@ -24,8 +24,10 @@ import {
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import Loader from "@/components/web-components/Loader";
+import Swal from "sweetalert2";
+import { useAuth } from "@/context/AuthContextType";
 
 type FormData = {
   name: string;
@@ -56,6 +58,8 @@ export default function SignUpPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [pageLoading, setPageLoading] = useState(true);
   const [animateContent, setAnimateContent] = useState(false);
+
+  const { SignUp, error } = useAuth();
 
   const {
     register,
@@ -91,7 +95,7 @@ export default function SignUpPage() {
     setPasswordChecks(checks);
     setPasswordStrength(Object.values(checks).filter(Boolean).length * 20);
   }, [password]);
-
+  const navigate = useNavigate();
   const containsSequentialPatterns = (password: string): boolean => {
     const commonPatterns = [
       "1234",
@@ -190,25 +194,112 @@ export default function SignUpPage() {
             data.birthdate.toString()
           )
         ) {
-          alert(
-            "La contraseña no debe contener partes de tu nombre, apellido o fecha de nacimiento."
-          );
+          Swal.fire({
+            icon: "error",
+            title: "Contraseña inválida",
+            toast: true,
+            text: "La contraseña no debe contener partes de tu nombre, apellido o fecha de nacimiento.",
+            position: "top-end",
+            timer: 4000,
+            showConfirmButton: false,
+            animation: true,
+            background: "#FEF2F2",
+            color: "#DC2626",
+            iconColor: "#EF4444",
+          });
           return;
         }
         try {
           setIsLoading(true);
-          // Simulate API call
-          await new Promise((resolve) => setTimeout(resolve, 2000));
-          console.log("Form submitted:", data);
-          alert("Registro exitoso! Serás redirigido para verificar tu correo.");
-          setIsLoading(false);
+
+          const result = await SignUp(
+            data.name,
+            data.surname,
+            data.email,
+            data.phone,
+            data.birthdate,
+            data.password,
+            data.gender
+          );
+
+          if (
+            result &&
+            typeof result === "object" &&
+            "success" in result &&
+            result.success
+          ) {
+            Swal.fire({
+              icon: "success",
+              title: "¡Cuenta creada!",
+              toast: true,
+              text: "Serás redirigido en breve.",
+              position: "top-end",
+              timer: 3000,
+              showConfirmButton: false,
+              animation: true,
+              background: "#F0FDF4",
+              color: "#166534",
+              iconColor: "#22C55E",
+            });
+
+            // Optional: Redirect to verification page after success
+            setTimeout(() => {
+              navigate('/codigo-verificacion'); // Uncomment if using react-router
+            }, 3000);
+          } else {
+            // Handle signup failure
+            const errorMessage =
+              result && typeof result === "object" && "message" in result
+                ? (result.message as string)
+                : "Error en el registro. Por favor intenta nuevamente.";
+
+            Swal.fire({
+              icon: "error",
+              title: "Error en el registro",
+              toast: true,
+              text: errorMessage,
+              position: "top-end",
+              timer: 4000,
+              showConfirmButton: false,
+              animation: true,
+              background: "#FEF2F2",
+              color: "#DC2626",
+              iconColor: "#EF4444",
+            });
+          }
         } catch (error: any) {
           console.error("Error during registration:", error);
-          alert("Error en el registro. Por favor intenta nuevamente.");
+
+          Swal.fire({
+            icon: "error",
+            title: "Error inesperado",
+            toast: true,
+            text: "Ocurrió un error inesperado. Por favor intenta nuevamente.",
+            position: "top-end",
+            timer: 4000,
+            showConfirmButton: false,
+            animation: true,
+            background: "#FEF2F2",
+            color: "#DC2626",
+            iconColor: "#EF4444",
+          });
+        } finally {
           setIsLoading(false);
         }
       } else {
-        alert("La contraseña no cumple con todos los requisitos de seguridad.");
+        Swal.fire({
+          icon: "warning",
+          title: "Contraseña insegura",
+          toast: true,
+          text: "La contraseña no cumple con todos los requisitos de seguridad.",
+          position: "top-end",
+          timer: 4000,
+          showConfirmButton: false,
+          animation: true,
+          background: "#FFFBEB",
+          color: "#D97706",
+          iconColor: "#F59E0B",
+        });
       }
     }
 
@@ -217,12 +308,29 @@ export default function SignUpPage() {
     }
   });
 
+  // Handle auth context errors
+  useEffect(() => {
+    if (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        toast: true,
+        text: error,
+        position: "top-end",
+        timer: 4000,
+        showConfirmButton: false,
+        animation: true,
+        background: "#FEF2F2",
+        color: "#DC2626",
+        iconColor: "#EF4444",
+      });
+    }
+  }, [error]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 relative overflow-hidden mt-10">
       {/* Loading Screen */}
-      {pageLoading && (
-       <Loader />
-      )}
+      {pageLoading && <Loader />}
 
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -350,7 +458,7 @@ export default function SignUpPage() {
               >
                 <div className="relative">
                   <img
-                    src={backgroundImage}
+                    src={backgroundImage || "/placeholder.svg"}
                     width={600}
                     height={400}
                     alt="Cayro Uniformes"

@@ -127,7 +127,6 @@ export default function LoginPage() {
 
     try {
       const res = await login(data.identifier, data.password);
-      console.log(res);
       Swal.fire({
         icon: "success",
         title: "¡Verificación Exitosa!",
@@ -151,7 +150,6 @@ export default function LoginPage() {
         navigate("/codigo-verificacion");
         return;
       }
-      console.log(res);
       setIsLoading(false);
       if (res?.role === "ADMIN") {
         navigate("/perfil-admin");

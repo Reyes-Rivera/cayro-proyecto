@@ -458,8 +458,7 @@ export default function NotificationsView() {
                         Vincular Smartwatch
                       </h3>
                       <p className="text-gray-600 dark:text-gray-300 mt-1">
-                        Conecta tu smartwatch para sincronizar datos de salud y
-                        fitness
+                        Conecta tu smartwatch para sincronizar tus notificaciones
                       </p>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
@@ -476,7 +475,7 @@ export default function NotificationsView() {
                       <ol className="text-sm text-gray-600 dark:text-gray-300 space-y-1 list-decimal list-inside">
                         <li>Genera tu código de vinculación único</li>
                         <li>Abre la aplicación de tu smartwatch</li>
-                        <li>Ve a configuración {">"} Vincular dispositivo</li>
+                        <li>Selecciona el boton de continuar</li>
                         <li>Ingresa el código generado</li>
                         <li>Confirma la conexión en ambos dispositivos</li>
                       </ol>
