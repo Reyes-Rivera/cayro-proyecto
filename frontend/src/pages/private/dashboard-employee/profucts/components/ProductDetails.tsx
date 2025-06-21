@@ -1,4 +1,3 @@
-/* eslint-disable no-constant-binary-expression */
 "use client";
 import {
   getBrands,
@@ -59,6 +58,18 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, onBack }) => {
     sizes?.find((s) => s.id === sizeId)?.name || "Desconocido";
   const getColorName = (colorId: number) =>
     colors?.find((c) => c.id === colorId)?.name || "Desconocido";
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+
+  // Calculate pagination
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentVariants = product.variants.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
+  const totalPages = Math.ceil(product.variants.length / itemsPerPage);
 
   useEffect(() => {
     const getData = async () => {
@@ -150,9 +161,36 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, onBack }) => {
         </div>
 
         <div className="p-6 pt-10">
-          <p className="text-gray-700 dark:text-gray-300 mb-8 leading-relaxed">
-            {product.description}
-          </p>
+          <div className="text-gray-700 dark:text-gray-300 mb-8 leading-relaxed">
+            {(() => {
+              const description = product.description || "";
+
+              // Check if description contains bullet points
+              if (description.includes("•")) {
+                // Split by bullet points and clean up
+                const items = description
+                  .split("•")
+                  .map((item) => item.trim())
+                  .filter((item) => item.length > 0);
+
+                return (
+                  <ul className="space-y-2">
+                    {items.map((item, index) => (
+                      <li key={index} className="flex items-start">
+                        <span className="text-blue-600 dark:text-blue-400 mr-2 mt-1">
+                          •
+                        </span>
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                );
+              }
+
+              // Fallback to regular paragraph if no bullet points
+              return <p>{description}</p>;
+            })()}
+          </div>
 
           {/* Estadísticas rápidas */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -328,7 +366,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, onBack }) => {
                 </tr>
               </thead>
               <tbody>
-                {product.variants.map((variant, index) => (
+                {currentVariants.map((variant, index) => (
                   <tr
                     key={variant.id}
                     className={`${
@@ -340,7 +378,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, onBack }) => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="w-16 h-16 rounded-md overflow-hidden border border-gray-200 dark:border-gray-700">
                         <img
-                          src={variant.images[0]?.url}
+                          src={variant.images[0]?.url || "/placeholder.svg"}
                           alt={`${getColorName(variant.colorId)} ${getSizeName(
                             variant.sizeId
                           )}`}
@@ -404,7 +442,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, onBack }) => {
             </table>
           </div>
 
-          {product.variants.length === 0 && (
+          {product.variants.length === 0 ? (
             <div className="text-center py-12 text-gray-500 dark:text-gray-400">
               <Package className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-3" />
               <p className="text-lg font-medium text-gray-700 dark:text-gray-300">
@@ -414,16 +452,85 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, onBack }) => {
                 Añade variantes para comenzar a vender este producto
               </p>
             </div>
-          )}
+          ) : (
+            <>
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                    <span>
+                      Mostrando {indexOfFirstItem + 1} a{" "}
+                      {Math.min(indexOfLastItem, product.variants.length)} de{" "}
+                      {product.variants.length} variantes
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.max(prev - 1, 1))
+                      }
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-700"
+                    >
+                      Anterior
+                    </button>
 
-          <div className="bg-gray-50 dark:bg-gray-800/50 p-4 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center mt-4">
-            <span className="text-sm text-gray-500 dark:text-gray-400">
-              Mostrando {product.variants.length} variantes
-            </span>
-            <button className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium">
-              Administrar variantes
-            </button>
-          </div>
+                    {/* Page Numbers */}
+                    <div className="flex space-x-1">
+                      {Array.from(
+                        { length: Math.min(totalPages, 5) },
+                        (_, i) => {
+                          let pageNum;
+                          if (totalPages <= 5) {
+                            pageNum = i + 1;
+                          } else if (currentPage <= 3) {
+                            pageNum = i + 1;
+                          } else if (currentPage >= totalPages - 2) {
+                            pageNum = totalPages - 4 + i;
+                          } else {
+                            pageNum = currentPage - 2 + i;
+                          }
+
+                          return (
+                            <button
+                              key={pageNum}
+                              onClick={() => setCurrentPage(pageNum)}
+                              className={`px-3 py-1 text-sm font-medium rounded-md ${
+                                currentPage === pageNum
+                                  ? "bg-blue-600 text-white"
+                                  : "text-gray-500 bg-white border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-700"
+                              }`}
+                            >
+                              {pageNum}
+                            </button>
+                          );
+                        }
+                      )}
+                    </div>
+
+                    <button
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                      }
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-700"
+                    >
+                      Siguiente
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div className="bg-gray-50 dark:bg-gray-800/50 p-4 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  Total: {product.variants.length} variantes
+                </span>
+                <button className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium">
+                  Administrar variantes
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
 

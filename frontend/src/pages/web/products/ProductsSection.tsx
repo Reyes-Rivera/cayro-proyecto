@@ -93,15 +93,17 @@ export default function ProductsPage() {
 
   const productsPerPage = 12;
 
- 
-
-  // Función para aplicar filtros desde la URL
+  // Función para aplicar filtros desde la URL - Fix the reset logic
   const applyFiltersFromURL = () => {
     if (!filtersLoaded) return;
 
     const params = new URLSearchParams(window.location.search);
+    const hasAnyParams = params.toString().length > 0;
 
-    // Categoría - Fix the logic here
+    // Only reset filters if there are no URL parameters at all
+    // Otherwise, apply the filters from URL or keep existing ones
+
+    // Categoría
     const categoryParam = params.get("categoria");
     if (categoryParam && categories.length > 0) {
       const matchedCategory = categories.find(
@@ -111,36 +113,49 @@ export default function ProductsPage() {
       if (matchedCategory) {
         setActiveCategoryId(matchedCategory.id);
       }
+    } else if (!hasAnyParams) {
+      // Only reset if no params at all
+      setActiveCategoryId(null);
     }
 
     // Género
     const genderParam = params.get("genero");
     if (genderParam && !isNaN(Number(genderParam))) {
       setActiveGenderId(Number(genderParam));
+    } else if (!hasAnyParams) {
+      setActiveGenderId(null);
     }
 
     // Talla
     const sizeParam = params.get("talla");
     if (sizeParam && !isNaN(Number(sizeParam))) {
       setActiveSizeId(Number(sizeParam));
+    } else if (!hasAnyParams) {
+      setActiveSizeId(null);
     }
 
     // Color
     const colorParam = params.get("color");
     if (colorParam && !isNaN(Number(colorParam))) {
       setActiveColorId(Number(colorParam));
+    } else if (!hasAnyParams) {
+      setActiveColorId(null);
     }
 
     // Manga
     const sleeveParam = params.get("manga");
     if (sleeveParam && !isNaN(Number(sleeveParam))) {
       setActiveSleeveId(Number(sleeveParam));
+    } else if (!hasAnyParams) {
+      setActiveSleeveId(null);
     }
 
     // Marca
     const brandParam = params.get("marca");
     if (brandParam && !isNaN(Number(brandParam))) {
       setActiveBrandId(Number(brandParam));
+    } else if (!hasAnyParams) {
+      setActiveBrandId(null);
     }
 
     // Precio
@@ -151,12 +166,16 @@ export default function ProductsPage() {
         min: minPriceParam ? Number(minPriceParam) : null,
         max: maxPriceParam ? Number(maxPriceParam) : null,
       });
+    } else if (!hasAnyParams) {
+      setPriceRange({ min: null, max: null });
     }
 
     // Búsqueda
     const searchParam = params.get("search");
     if (searchParam) {
       setSearchTerm(searchParam);
+    } else if (!hasAnyParams) {
+      setSearchTerm("");
     }
 
     // Ordenamiento
@@ -166,12 +185,16 @@ export default function ProductsPage() {
       ["price-low", "price-high", "newest"].includes(sortParam)
     ) {
       setActiveSort(sortParam as SortOption);
+    } else if (!hasAnyParams) {
+      setActiveSort("default");
     }
 
     // Página
     const pageParam = params.get("page");
     if (pageParam && !isNaN(Number(pageParam))) {
       setCurrentPage(Number(pageParam));
+    } else if (!hasAnyParams) {
+      setCurrentPage(1);
     }
   };
 
@@ -273,12 +296,28 @@ export default function ProductsPage() {
     fetchData();
   }, []);
 
+  // Reemplaza el useEffect que maneja la carga inicial y aplicación de filtros desde URL
   useEffect(() => {
     if (filtersLoaded && initialLoadRef.current && categories.length > 0) {
+      // Aplicar filtros desde URL si existen
       applyFiltersFromURL();
       initialLoadRef.current = false;
     }
   }, [filtersLoaded, categories]);
+
+  // Handle URL changes when navigating back from other pages
+  useEffect(() => {
+    const handleURLChange = () => {
+      if (filtersLoaded && !initialLoadRef.current) {
+        applyFiltersFromURL();
+      }
+    };
+
+    // Check if URL has changed on component mount (when coming back from another page)
+    if (filtersLoaded && !initialLoadRef.current) {
+      handleURLChange();
+    }
+  }, [filtersLoaded]);
 
   const scrollToProducts = () => {
     const productsSection = document.getElementById("products-grid");
@@ -400,7 +439,23 @@ export default function ProductsPage() {
   };
 
   useEffect(() => {
-    if (filtersLoaded) {
+    const handlePopState = () => {
+      if (!filtersLoaded) return;
+
+      // Apply filters from URL when user navigates back/forward
+      applyFiltersFromURL();
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [filtersLoaded, categories, genders, sizes, colors, sleeves, brands]);
+
+  // Modifica el useEffect principal para manejar mejor la carga inicial con filtros
+  useEffect(() => {
+    if (filtersLoaded && !initialLoadRef.current) {
       fetchProductsWithFilters();
       updateURLWithFilters();
     }
@@ -519,19 +574,6 @@ export default function ProductsPage() {
     window.history.pushState({}, "", newUrl);
   };
 
-  useEffect(() => {
-    const handlePopState = () => {
-      if (!filtersLoaded) return;
-      applyFiltersFromURL();
-    };
-
-    window.addEventListener("popstate", handlePopState);
-
-    return () => {
-      window.removeEventListener("popstate", handlePopState);
-    };
-  }, [filtersLoaded, categories, genders, sizes, colors, sleeves, brands]);
-
   const hasActiveFilters =
     activeCategoryId !== null ||
     activeGenderId !== null ||
@@ -585,10 +627,7 @@ export default function ProductsPage() {
         </div>
 
         <div className="container mx-auto px-0 py-12 md:py-16 lg:py-24 relative z-10">
-          <div
-            className="px-4  mx-auto transition-all duration-700 ease-out"
-          
-          >
+          <div className="px-4  mx-auto transition-all duration-700 ease-out">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
               {/* Left Content */}
               <div className="text-center lg:text-left">
@@ -652,7 +691,7 @@ export default function ProductsPage() {
               <div className="relative">
                 <div className="relative rounded-2xl overflow-hidden shadow-2xl">
                   <img
-                    src={img}
+                    src={img || "/placeholder.svg"}
                     alt="Catálogo de productos"
                     className="w-full h-[400px] md:h-[500px] object-cover"
                   />

@@ -244,7 +244,6 @@ export class EmployeesService {
         throw new NotFoundException('El empleado no existe.');
       }
 
-      // Delete related addresses first
       await this.prismaService.employeeAddress.deleteMany({
         where: { employeeId: id },
       });
@@ -491,9 +490,7 @@ export class EmployeesService {
         throw new NotFoundException('Address not found for this employee');
       }
 
-      // If it's the default address, we need to set another one as default
       if (addressToDelete.isDefault) {
-        // Find another address to set as default
         const anotherAddress =
           await this.prismaService.employeeAddress.findFirst({
             where: {
@@ -517,7 +514,6 @@ export class EmployeesService {
         }
       }
 
-      // Delete the address relationship
       await this.prismaService.employeeAddress.delete({
         where: {
           employeeId_addressId: {
@@ -527,7 +523,6 @@ export class EmployeesService {
         },
       });
 
-      // Check if the address is used by any other employee or user
       const otherEmployeeConnections =
         await this.prismaService.employeeAddress.count({
           where: { addressId },
@@ -537,7 +532,6 @@ export class EmployeesService {
         where: { addressId },
       });
 
-      // If the address is not used by anyone else, delete it
       if (otherEmployeeConnections === 0 && userConnections === 0) {
         await this.prismaService.address.delete({
           where: { id: addressId },

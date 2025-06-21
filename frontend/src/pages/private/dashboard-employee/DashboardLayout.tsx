@@ -161,7 +161,7 @@ const EmployeeDashboard = () => {
         </div>
       </div>
     ),
-    orders:<Orders />,
+    orders: <Orders />,
     analytics: (
       <div className="px-6 space-y-6">
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700 relative">
@@ -284,9 +284,9 @@ const EmployeeDashboard = () => {
   };
 
   return (
-    <div className="flex flex-col sm:flex-row min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
+    <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
       {/* Sidebar - Desktop */}
-      <div className="hidden sm:block w-64 h-[calc(100vh-2rem)] sticky top-4 overflow-hidden z-30 rounded-xl shadow-md">
+      <div className="hidden lg:block w-64 h-[calc(100vh-2rem)] sticky top-4 overflow-hidden z-30 rounded-xl shadow-md flex-shrink-0">
         <Sidebar
           activeTab={activeTab}
           setActiveTab={handleTabChange}
@@ -296,7 +296,7 @@ const EmployeeDashboard = () => {
       </div>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-h-[calc(100vh-2rem)] bg-gray-50 dark:bg-gray-900 sm:ml-4">
+      <div className="flex-1 flex flex-col min-h-[calc(100vh-2rem)] bg-gray-50 dark:bg-gray-900 lg:ml-4 min-w-0">
         {/* Mobile header with logo on left and burger menu on right */}
         <motion.div
           ref={headerRef}

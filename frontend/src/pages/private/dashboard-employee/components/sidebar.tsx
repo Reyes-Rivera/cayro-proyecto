@@ -322,7 +322,7 @@ export default function Sidebar({
                         : "text-gray-500 dark:text-gray-400"
                     }`}
                   />
-                  Mangas
+                  Cuello
                 </button>
                 <button
                   onClick={() => handleTabChange("brands")}
@@ -485,9 +485,7 @@ export default function Sidebar({
                 )}
               </button>
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Empleado
-            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Empleado</p>
           </div>
         </div>
 
