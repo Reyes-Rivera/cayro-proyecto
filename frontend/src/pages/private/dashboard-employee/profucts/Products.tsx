@@ -1,11 +1,13 @@
 import React from "react";
 import { useState, useEffect } from "react";
-import type { Product } from "./data/sampleData";
+import type { CreateProductDto, Product } from "./data/sampleData";
 import {
   getProducts,
   activateProduct,
   deactivateProduct,
   getProductById,
+  createProduct,
+  updateProduct,
 } from "@/api/products";
 import "sweetalert2/dist/sweetalert2.min.css";
 import Swal from "sweetalert2";
@@ -34,7 +36,7 @@ const Products: React.FC = () => {
         setTotalPages(data.totalPages || 1);
         setCurrentFilters(params); // Store current filters
       }
-    } catch (error:any) {
+    } catch (error: any) {
       console.error("Error al cargar productos:", error);
       if (error.response?.status === 404) {
         // Handle 404 specifically - set products to empty array
@@ -60,7 +62,7 @@ const Products: React.FC = () => {
     loadProducts(currentFilters || "page=1&limit=10");
   }, []);
 
-  const handleAddProduct = async (newProduct: Product) => {
+  const handleAddProduct = async (newProduct: CreateProductDto) => {
     setIsLoading(true);
     try {
       await loadProducts(currentFilters);
@@ -73,6 +75,7 @@ const Products: React.FC = () => {
         icon: "success",
         confirmButtonColor: "#2563eb",
       });
+      createProduct(newProduct);
     } catch (error) {
       console.error("Error adding product:", error);
       Swal.fire({
@@ -86,10 +89,11 @@ const Products: React.FC = () => {
     }
   };
 
-  const handleEditProduct = async (updatedProduct: Product) => {
+  const handleEditProduct = async (updatedProduct: CreateProductDto,id:number) => {
     if (selectedProduct) {
       setIsLoading(true);
       try {
+        await updateProduct(updatedProduct,id);
         await loadProducts(currentFilters);
         setSelectedProduct(null);
         setIsEditing(false);

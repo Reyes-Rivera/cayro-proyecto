@@ -46,8 +46,6 @@ import {
   Upload,
 } from "lucide-react";
 import {
-  createProduct,
-  updateProduct,
   getBrands,
   getCategories,
   getColors,
@@ -75,9 +73,9 @@ interface ColorSizeConfig {
 }
 
 interface ProductFormProps {
-  onAdd: (newProduct: Product) => Promise<void>;
+  onAdd: (newProduct: CreateProductDto) => Promise<void>;
   product?: Product;
-  onEdit: (updatedProduct: Product) => Promise<void>;
+  onEdit: (updatedProduct: CreateProductDto,id: number) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -615,7 +613,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                 id: img.id,
                 productVariantId: img.productVariantId,
                 url: img.url,
-                angle:img.angle
+                angle: img.angle,
               })),
           };
 
@@ -636,29 +634,23 @@ const ProductForm: React.FC<ProductFormProps> = ({
         sleeveId: +data.sleeveId,
         categoryId: +data.categoryId,
       };
-      const response = product
-        ? await updateProduct(payload, product.id)
-        : await createProduct(payload);
+      product ? await onEdit(payload, product.id) : await onAdd(payload);
 
-      if (response) {
-        reset();
-        product ? await onEdit(response.data) : await onAdd(response.data);
-        setIsLoading(false);
-
-        Swal.fire({
-          icon: "success",
-          title: `¡Producto ${product ? "actualizado" : "agregado"}!`,
-          text: `El producto se ha ${
-            product ? "actualizado" : "agregado"
-          } correctamente.`,
-          toast: true,
-          position: "top-end",
-          timer: 3000,
-          showConfirmButton: false,
-          timerProgressBar: true,
-        });
-        window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
-      }
+      reset();
+      Swal.fire({
+        icon: "success",
+        title: `¡Producto ${product ? "actualizado" : "agregado"}!`,
+        text: `El producto se ha ${
+          product ? "actualizado" : "agregado"
+        } correctamente.`,
+        toast: true,
+        position: "top-end",
+        timer: 3000,
+        showConfirmButton: false,
+        timerProgressBar: true,
+      });
+      window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+      setIsLoading(false);
     } catch (error: any) {
       console.log(error);
       setIsLoading(false);
@@ -1534,9 +1526,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                           >
                             <div className="relative mb-2">
                               <img
-                                src={
-                                  getMainImage(config.colorId) 
-                                }
+                                src={getMainImage(config.colorId)}
                                 alt={color?.name}
                                 className="w-12 h-12 rounded-lg object-cover border-2 border-white dark:border-gray-600 shadow-sm"
                               />
@@ -1583,9 +1573,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                       <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center">
                           <img
-                            src={
-                              getMainImage(selectedColorId) 
-                            }
+                            src={getMainImage(selectedColorId)}
                             alt={getSelectedColorName()}
                             className="w-8 h-8 rounded-lg object-cover mr-3 border-2 border-white dark:border-gray-600 shadow-sm"
                           />
