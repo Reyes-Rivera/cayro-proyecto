@@ -53,7 +53,8 @@ import {
   getSizes,
   getSleeve,
 } from "@/api/products";
-
+const apikEY = import.meta.env.VITE_REACT_APP_CLOUDINARY_API_KEY;
+// const apiSecret = import.meta.env.VITE_REACT_APP_CLOUDINARY_API_SECRET;
 // Definir los tipos de ángulos disponibles
 type ImageAngle = "front" | "side" | "back";
 
@@ -440,7 +441,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
       const formData = new FormData();
       formData.append("public_id", publicId);
-      formData.append("api_key", "your_api_key"); // Necesitarás configurar esto
+      formData.append("api_key", apikEY); // Necesitarás configurar esto
       formData.append(
         "timestamp",
         Math.round(new Date().getTime() / 1000).toString()

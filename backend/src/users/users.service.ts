@@ -16,6 +16,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Role } from 'src/auth/roles/role.enum';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AppLogger } from 'src/utils/logger.service';
+import { createPasswordRecoveryEmail } from 'src/utils/email';
 
 type PasswordHistoryEntry = {
   password: string;
@@ -76,7 +77,7 @@ export class UsersService {
     try {
       const user = await this.prismaService.user.findUnique({
         where: { id: userId },
-      })
+      });
       if (!user) {
         throw new NotFoundException('El usuario no existe');
       }
@@ -93,10 +94,8 @@ export class UsersService {
         userId,
       });
       throw new InternalServerErrorException('Error interno del servidor');
-      
     }
   }
-  
 
   constructor(
     private jwtSvc: JwtService,
@@ -199,37 +198,315 @@ export class UsersService {
 
       const currentYear = new Date().getFullYear();
       const html = `
-        <!DOCTYPE html>
-        <html lang="es">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Verificación de Cuenta</title>
-        </head>
-        <body style="font-family: Arial, sans-serif; line-height: 1.6;">
-            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-                <div style="text-align: center; margin-bottom: 20px;">
-                    <img src="${companyInfo.logoUrl}" alt="Logo" style="max-width: 150px;">
-                </div>
-                <div style="background-color: #f9f9f9; padding: 20px; border-radius: 5px;">
-                    <h1 style="color: #333;">${dataConfig?.title || 'Verificación de cuenta'}</h1>
-                    <p>${dataConfig?.greeting || 'Estimado usuario,'}</p>
-                    <p>${dataConfig?.maininstruction || 'Utilice el siguiente código para verificar su cuenta:'}</p>
-                    <div style="background-color: #e9e9e9; padding: 10px; text-align: center; margin: 20px 0; font-size: 24px; font-weight: bold;">
-                        ${verificationCode}
-                    </div>
-                    <p>${dataConfig?.secondaryinstruction || 'Este código es válido por un tiempo limitado.'}</p>
-                    <p>${dataConfig?.expirationtime || `Expira en ${timeToken} minutos.`}</p>
-                    <p>${dataConfig?.finalMessage || 'Si no solicitó este código, por favor ignore este mensaje.'}</p>
-                    <p style="margin-top: 30px;">${dataConfig?.signature || 'Atentamente, el equipo de soporte'}</p>
-                </div>
-                <div style="margin-top: 20px; padding: 10px; background-color: #333; color: #fff; text-align: center;">
-                    <p>© ${currentYear} ${companyInfo.title || 'Cayro Uniformes'}. Todos los derechos reservados.</p>
-                </div>
-            </div>
-        </body>
-        </html>
-      `;
+      <!DOCTYPE html>
+      <html lang="es">
+      <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Verificación de Cuenta</title>
+          <style>
+              @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+              
+              * {
+                  margin: 0;
+                  padding: 0;
+                  box-sizing: border-box;
+              }
+              
+              body {
+                  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                  line-height: 1.6;
+                  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                  min-height: 100vh;
+                  padding: 20px 0;
+              }
+              
+              .email-container {
+                  max-width: 600px;
+                  margin: 0 auto;
+                  background: #ffffff;
+                  border-radius: 16px;
+                  overflow: hidden;
+                  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+              }
+              
+              .header {
+                  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                  padding: 40px 30px;
+                  text-align: center;
+                  position: relative;
+              }
+              
+              .header::before {
+                  content: '';
+                  position: absolute;
+                  top: 0;
+                  left: 0;
+                  right: 0;
+                  bottom: 0;
+                  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+              }
+              
+              .logo-container {
+                  position: relative;
+                  z-index: 1;
+                  margin-bottom: 20px;
+              }
+              
+              .logo {
+                  max-width: 120px;
+                  height: auto;
+                  filter: brightness(0) invert(1);
+              }
+              
+              .header-title {
+                  color: #ffffff;
+                  font-size: 28px;
+                  font-weight: 700;
+                  margin: 0;
+                  position: relative;
+                  z-index: 1;
+              }
+              
+              .content {
+                  padding: 50px 40px;
+                  background: #ffffff;
+              }
+              
+              .verification-card {
+                  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+                  border-radius: 12px;
+                  padding: 30px;
+                  text-align: center;
+                  margin: 30px 0;
+                  border: 1px solid #e2e8f0;
+              }
+              
+              .verification-icon {
+                  width: 60px;
+                  height: 60px;
+                  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                  border-radius: 50%;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  margin: 0 auto 20px;
+                  box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+              }
+              
+              .verification-code {
+                  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                  color: #ffffff;
+                  padding: 20px 30px;
+                  border-radius: 12px;
+                  font-size: 32px;
+                  font-weight: 700;
+                  letter-spacing: 8px;
+                  margin: 25px 0;
+                  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+                  position: relative;
+                  overflow: hidden;
+              }
+              
+              .verification-code::before {
+                  content: '';
+                  position: absolute;
+                  top: 0;
+                  left: -100%;
+                  width: 100%;
+                  height: 100%;
+                  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+                  animation: shimmer 2s infinite;
+              }
+              
+              @keyframes shimmer {
+                  0% { left: -100%; }
+                  100% { left: 100%; }
+              }
+              
+              .main-text {
+                  color: #334155;
+                  font-size: 18px;
+                  font-weight: 500;
+                  margin-bottom: 15px;
+              }
+              
+              .secondary-text {
+                  color: #64748b;
+                  font-size: 16px;
+                  margin-bottom: 12px;
+              }
+              
+              .warning-box {
+                  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+                  border: 1px solid #f59e0b;
+                  border-radius: 8px;
+                  padding: 20px;
+                  margin: 25px 0;
+                  display: flex;
+                  align-items: flex-start;
+                  gap: 12px;
+              }
+              
+              .warning-icon {
+                  width: 20px;
+                  height: 20px;
+                  background: #f59e0b;
+                  border-radius: 50%;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  flex-shrink: 0;
+                  margin-top: 2px;
+              }
+              
+              .timer-container {
+                  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+                  border: 1px solid #f87171;
+                  border-radius: 8px;
+                  padding: 15px 20px;
+                  margin: 20px 0;
+                  text-align: center;
+              }
+              
+              .timer-text {
+                  color: #dc2626;
+                  font-weight: 600;
+                  font-size: 14px;
+              }
+              
+              .signature {
+                  margin-top: 40px;
+                  padding-top: 30px;
+                  border-top: 2px solid #e2e8f0;
+                  color: #475569;
+                  font-weight: 500;
+              }
+              
+              .footer {
+                  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+                  padding: 30px;
+                  text-align: center;
+                  color: #cbd5e1;
+              }
+              
+              .copyright {
+                  font-size: 14px;
+                  opacity: 0.8;
+              }
+              
+              /* Responsive Design */
+              @media (max-width: 640px) {
+                  .email-container {
+                      margin: 10px;
+                      border-radius: 12px;
+                  }
+                  
+                  .header {
+                      padding: 30px 20px;
+                  }
+                  
+                  .header-title {
+                      font-size: 24px;
+                  }
+                  
+                  .content {
+                      padding: 30px 20px;
+                  }
+                  
+                  .verification-card {
+                      padding: 20px;
+                  }
+                  
+                  .verification-code {
+                      font-size: 24px;
+                      letter-spacing: 4px;
+                      padding: 15px 20px;
+                  }
+                  
+                  .main-text {
+                      font-size: 16px;
+                  }
+                  
+                  .footer {
+                      padding: 20px;
+                  }
+              }
+          </style>
+      </head>
+      <body>
+          <div class="email-container">
+              <!-- Header -->
+              <div class="header">
+                  <div class="logo-container">
+                      <img src="${companyInfo.logoUrl}" alt="Logo" class="logo">
+                  </div>
+                  <h1 class="header-title">${dataConfig?.title || 'Verificación de Cuenta'}</h1>
+              </div>
+              
+              <!-- Main Content -->
+              <div class="content">
+                  <p class="main-text">${dataConfig?.greeting || 'Estimado usuario,'}</p>
+                  
+                  <p class="secondary-text">${dataConfig?.maininstruction || 'Utilice el siguiente código para verificar su cuenta:'}</p>
+                  
+                  <!-- Verification Card -->
+                  <div class="verification-card">
+                      <div class="verification-icon">
+                          <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
+                              <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+                              <path d="M9 12l2 2 4-4" stroke="white" stroke-width="2" fill="none"/>
+                          </svg>
+                      </div>
+                      
+                      <div class="verification-code">
+                          ${verificationCode}
+                      </div>
+                      
+                      <p style="color: #64748b; font-size: 14px; margin: 0;">
+                          Código de verificación
+                      </p>
+                  </div>
+                  
+                  <!-- Timer Warning -->
+                  <div class="timer-container">
+                      <div class="timer-text">
+                          ⏰ ${dataConfig?.expirationtime || `Este código expira en ${timeToken} minutos`}
+                      </div>
+                  </div>
+                  
+                  <p class="secondary-text">${dataConfig?.secondaryinstruction || 'Este código es válido por un tiempo limitado.'}</p>
+                  
+                  <!-- Warning Box -->
+                  <div class="warning-box">
+                      <div class="warning-icon">
+                          <svg width="12" height="12" fill="white" viewBox="0 0 24 24">
+                              <path d="M12 2L2 22h20L12 2zm0 6v6m0 2v2"/>
+                          </svg>
+                      </div>
+                      <div>
+                          <p style="color: #92400e; font-size: 14px; margin: 0;">
+                              <strong>Importante:</strong> ${dataConfig?.finalMessage || 'Si no solicitó este código, por favor ignore este mensaje.'}
+                          </p>
+                      </div>
+                  </div>
+                  
+                  <!-- Signature -->
+                  <div class="signature">
+                      <p>${dataConfig?.signature || 'Atentamente, el equipo de soporte'}</p>
+                  </div>
+              </div>
+              
+              <!-- Footer -->
+              <div class="footer">
+                  <div class="copyright">
+                      © ${currentYear} ${companyInfo.title || 'Cayro Uniformes'}. Todos los derechos reservados.
+                  </div>
+              </div>
+          </div>
+      </body>
+      </html>
+    `;
 
       await this.sendEmail(email, 'Código de verificación', html);
       this.logger.log({
@@ -515,7 +792,7 @@ export class UsersService {
 
       const dataConfig = configInfo.emailResetPass?.[0];
       const companyInfo = await this.prismaService.companyProfile.findFirst();
-
+      console.log(companyInfo);
       if (!companyInfo) {
         this.logger.error({
           message: 'Información de la compañía no encontrada',
@@ -532,59 +809,8 @@ export class UsersService {
       });
 
       const currentYear = new Date().getFullYear();
-      const html = `
-          <!DOCTYPE html>
-          <html lang="es">
-          <head>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>Recupera tu contraseña de tu cuenta en Cayro</title>
-          </head>
-          <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
-              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
-                  <tr>
-                      <td align="center">
-                          <img src=${companyInfo.logoUrl} alt="Cayro Uniformes" style="display: block; width: 150px; max-width: 100%; height: auto;">
-                      </td>
-                  </tr>
-                  <tr>
-                      <td style="padding: 0px 30px;">
-                          <h1 style="color: #333333; font-size: 24px; margin-bottom: 20px; text-align: center;">
-                          ${dataConfig?.title || 'Recuperación de Contraseña'} 
-                          </h1>
-                          <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                              ${dataConfig?.greeting || 'Hola,'}
-                          </p>
-                          <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                          ${dataConfig?.maininstruction || 'Para recuperar tu contraseña, haz clic en el enlace siguiente:'}
-                          </p>
-
-                          <div style="background-color: #f0f0f0; border-radius: 4px; padding: 20px; text-align: center; margin-bottom: 20px;">
-                              <a href="http://localhost:5173/restaurar-password/${token}" style="font-size: 32px; font-weight: bold; color: #0099FF;">Recuperar contraseña</a>
-                          </div>
-                          <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                          ${dataConfig?.secondaryinstruction || 'Si no solicitaste esta acción, ignora este mensaje.'}
-                          </p>
-                          <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                          ${dataConfig?.expirationtime || 'Este enlace expira en 10 minutos.'}
-                          </p>
-                          <p style="color: #666666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                          ${dataConfig?.finalMessage || 'Gracias, Cayro Uniformes'}
-                          </p>
-                      </td>
-                  </tr>
-                  <tr>
-                      <td style="background-color: #27272A; padding: 20px 30px;">
-                          <p style="color: #ffffff; font-size: 14px; line-height: 1.5; margin: 0; text-align: center;">
-                              © ${currentYear} Cayro Uniformes. Todos los derechos reservados.
-                          </p>
-                      </td>
-                  </tr>
-              </table>
-          </body>
-          </html>
-        `;
-
+    
+      const html =createPasswordRecoveryEmail(token,companyInfo,dataConfig,currentYear)
       await this.sendEmail(email, 'Recuperar contraseña', html);
       await this.prismaService.userActivity.create({
         data: {

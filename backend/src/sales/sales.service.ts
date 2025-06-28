@@ -164,7 +164,6 @@ export class SalesService {
         message: 'Estado de la venta confirmado con éxito',
       };
     } catch (error) {
-      console.log(error);
       if (error instanceof HttpException) {
         throw error;
       }
@@ -180,6 +179,7 @@ export class SalesService {
       return this.prismaService.sale.findMany({
         where: { userId },
         include: {
+          
           user: {
             select: {
               name: true,
@@ -190,6 +190,7 @@ export class SalesService {
                 where: { isDefault: true },
                 include: {
                   address: true,
+                  
                 },
               },
             },
@@ -208,6 +209,7 @@ export class SalesService {
                       name: true,
                     },
                   },
+                  images: true,
                   color: {
                     select: {
                       name: true,
