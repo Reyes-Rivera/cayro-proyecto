@@ -53,8 +53,10 @@ import {
   getSizes,
   getSleeve,
 } from "@/api/products";
-const apikEY = import.meta.env.VITE_REACT_APP_CLOUDINARY_API_KEY;
-// const apiSecret = import.meta.env.VITE_REACT_APP_CLOUDINARY_API_SECRET;
+
+// Import the delete image API function
+import { deleteImg } from "@/api/products";
+
 // Definir los tipos de ángulos disponibles
 type ImageAngle = "front" | "side" | "back";
 
@@ -76,7 +78,7 @@ interface ColorSizeConfig {
 interface ProductFormProps {
   onAdd: (newProduct: CreateProductDto) => Promise<void>;
   product?: Product;
-  onEdit: (updatedProduct: CreateProductDto,id: number) => Promise<void>;
+  onEdit: (updatedProduct: CreateProductDto, id: number) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -119,6 +121,11 @@ const ProductForm: React.FC<ProductFormProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadingAngle, setUploadingAngle] = useState<ImageAngle | null>(null);
+
+  // Estado para rastrear las variantes originales (para detectar eliminaciones)
+  const [originalVariantIds, setOriginalVariantIds] = useState<Set<number>>(
+    new Set()
+  );
 
   // Pagination for variants table
   const [currentPage, setCurrentPage] = useState(1);
@@ -181,8 +188,15 @@ const ProductForm: React.FC<ProductFormProps> = ({
   useEffect(() => {
     if (product) {
       console.log(product);
+
+      // Rastrear IDs de variantes originales
+      const originalIds = new Set<number>();
+
       const initialColorConfigs: ColorSizeConfig[] = product.variants.reduce(
         (acc, variant) => {
+          // Agregar ID de variante original
+          originalIds.add(variant.id);
+
           const existingConfig = acc.find(
             (config) => config.colorId === variant.colorId
           );
@@ -236,6 +250,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
         [] as ColorSizeConfig[]
       );
 
+      setOriginalVariantIds(originalIds);
       setColorConfigs(initialColorConfigs);
     }
   }, [product]);
@@ -432,31 +447,11 @@ const ProductForm: React.FC<ProductFormProps> = ({
     }
   };
 
+  // Updated function to use the provided API
   const deleteImageFromCloudinary = async (imageUrl: string) => {
     try {
-      // Extraer el public_id de la URL de Cloudinary
-      const urlParts = imageUrl.split("/");
-      const publicIdWithExtension = urlParts[urlParts.length - 1];
-      const publicId = publicIdWithExtension.split(".")[0];
-
-      const formData = new FormData();
-      formData.append("public_id", publicId);
-      formData.append("api_key", apikEY); // Necesitarás configurar esto
-      formData.append(
-        "timestamp",
-        Math.round(new Date().getTime() / 1000).toString()
-      );
-
-      // Nota: Para eliminar imágenes de Cloudinary necesitas hacer la llamada desde el backend
-      // por seguridad, ya que requiere tu API secret
-      console.log(`Imagen marcada para eliminación: ${publicId}`);
-
-      // Aquí deberías hacer una llamada a tu backend para eliminar la imagen
-      // await fetch('/api/delete-cloudinary-image', {
-      //   method: 'POST',
-      //   body: JSON.stringify({ publicId }),
-      //   headers: { 'Content-Type': 'application/json' }
-      // })
+      await deleteImg(imageUrl);
+      console.log(`Imagen eliminada exitosamente: ${imageUrl}`);
     } catch (error) {
       console.error("Error al eliminar imagen de Cloudinary:", error);
     }
@@ -494,9 +489,24 @@ const ProductForm: React.FC<ProductFormProps> = ({
     }
 
     setUploadingAngle(angle);
+
+    // Get the current image for this angle to delete it if it's a new image
+    const config = colorConfigs.find((c) => c.colorId === colorId);
+    const existingImage = config?.images.find((img) => img.angle === angle);
+
     const imageUrl = await uploadImageToCloudinary(file);
 
     if (imageUrl) {
+      // Delete the previous image if it was newly uploaded and not a placeholder
+      if (
+        existingImage &&
+        existingImage.isNew &&
+        existingImage.url !==
+          "https://res.cloudinary.com/dhhv8l6ti/image/upload/v1741550306/a58jbqkjh7csdrlw3qfd.jpg"
+      ) {
+        await deleteImageFromCloudinary(existingImage.url);
+      }
+
       setColorConfigs((prev) =>
         prev.map((config) => {
           if (config.colorId === colorId) {
@@ -505,18 +515,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
             );
             const newImages = [...config.images];
 
-            // Si existe una imagen para este ángulo y es nueva, eliminarla de Cloudinary
             if (existingImageIndex >= 0) {
-              const existingImage = newImages[existingImageIndex];
-              if (
-                existingImage.isNew &&
-                existingImage.url !==
-                  "https://res.cloudinary.com/dhhv8l6ti/image/upload/v1741550306/a58jbqkjh7csdrlw3qfd.jpg"
-              ) {
-                deleteImageFromCloudinary(existingImage.url);
-              }
-
-              // Actualizar imagen existente
+              // Update existing image
               newImages[existingImageIndex] = {
                 id: 0,
                 productVariantId: 0,
@@ -525,7 +525,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                 isNew: true,
               };
             } else {
-              // Agregar nueva imagen
+              // Add new image
               newImages.push({
                 id: 0,
                 productVariantId: 0,
@@ -542,6 +542,39 @@ const ProductForm: React.FC<ProductFormProps> = ({
       );
     }
     setUploadingAngle(null);
+  };
+
+  // Enhanced cancel function to clean up new images
+  const handleCancel = async () => {
+    // Show confirmation dialog
+    const result = await Swal.fire({
+      title: "¿Estás seguro?",
+      text: "Se perderán todos los cambios no guardados y las imágenes subidas.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Sí, cancelar",
+      cancelButtonText: "No, continuar editando",
+    });
+
+    if (result.isConfirmed) {
+      // Delete all new images from Cloudinary before canceling
+      for (const config of colorConfigs) {
+        for (const image of config.images) {
+          if (
+            image.isNew &&
+            image.url !==
+              "https://res.cloudinary.com/dhhv8l6ti/image/upload/v1741550306/a58jbqkjh7csdrlw3qfd.jpg"
+          ) {
+            await deleteImageFromCloudinary(image.url);
+          }
+        }
+      }
+
+      // Call the original onCancel function
+      onCancel();
+    }
   };
 
   // Función para obtener la imagen de un ángulo específico
@@ -635,6 +668,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
         sleeveId: +data.sleeveId,
         categoryId: +data.categoryId,
       };
+
       product ? await onEdit(payload, product.id) : await onAdd(payload);
 
       reset();
@@ -759,7 +793,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               type="button"
-              onClick={onCancel}
+              onClick={handleCancel}
               className="bg-white/20 hover:bg-white/30 transition-colors text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -1527,7 +1561,10 @@ const ProductForm: React.FC<ProductFormProps> = ({
                           >
                             <div className="relative mb-2">
                               <img
-                                src={getMainImage(config.colorId)}
+                                src={
+                                  getMainImage(config.colorId) ||
+                                  "/placeholder.svg"
+                                }
                                 alt={color?.name}
                                 className="w-12 h-12 rounded-lg object-cover border-2 border-white dark:border-gray-600 shadow-sm"
                               />
@@ -1574,7 +1611,10 @@ const ProductForm: React.FC<ProductFormProps> = ({
                       <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center">
                           <img
-                            src={getMainImage(selectedColorId)}
+                            src={
+                              getMainImage(selectedColorId) ||
+                              "/placeholder.svg"
+                            }
                             alt={getSelectedColorName()}
                             className="w-8 h-8 rounded-lg object-cover mr-3 border-2 border-white dark:border-gray-600 shadow-sm"
                           />
@@ -1946,7 +1986,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 type="button"
-                onClick={onCancel}
+                onClick={handleCancel}
                 className="px-5 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium flex items-center transition-colors"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />

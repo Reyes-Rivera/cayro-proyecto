@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import NavBarUser from "../components/web-components/NavBarUser";
 import SignUpPage from "@/pages/web/auth/SignUp";
 import LoginPage from "@/pages/web/auth/Login";
@@ -38,12 +38,13 @@ import CheckoutPending from "@/pages/CheckOut/CheckoutPending";
 import PersonalizePage from "@/pages/web/personalized-product/PersonalizePage";
 const AppRoutes = () => {
   const { auth, user } = useAuth();
+  const navigate = useNavigate();
   useEffect(() => {
     if(user?.role === "EMPLOYEE"){
-      window.location.href = "/perfil-empleado";
+      navigate("/perfil-empleado");
     }
     if(user?.role === "ADMIN"){
-      window.location.href = "/perfil-admin";
+      navigate("/perfil-admin");
     }
     const getInfoPage = async () => {
       const res = getCompanyInfoApi();

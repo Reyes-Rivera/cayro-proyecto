@@ -8,10 +8,14 @@ import {
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-
+import axios from 'axios';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 @Injectable()
 export class ProductService {
-  constructor(private prismaService: PrismaService) {}
+  constructor(
+    private readonly cloudinaryService: CloudinaryService,
+    private prismaService: PrismaService,
+  ) {}
   async create(createProductDto: CreateProductDto) {
     const { variants, ...productData } = createProductDto;
     try {
@@ -277,6 +281,33 @@ export class ProductService {
     return product;
   }
 
+  private extractPublicIdFromUrl(url: string): string {
+    try {
+      const uploadIndex = url.indexOf('/upload/');
+      if (uploadIndex === -1) throw new Error('Invalid Cloudinary URL');
+
+      const path = url.substring(uploadIndex + '/upload/'.length);
+      const parts = path.split('/');
+      const fileName = parts[parts.length - 1];
+
+      return fileName.replace(/\.[^/.]+$/, ''); // Remover extensión
+    } catch (e) {
+      throw new Error('Invalid Cloudinary URL format');
+    }
+  }
+
+  // Función para eliminar imagen de Cloudinary
+  private async deleteImageFromCloudinary(imageUrl: string): Promise<void> {
+    try {
+      const publicId = this.extractPublicIdFromUrl(imageUrl);
+      await this.cloudinaryService.deleteImage(publicId);
+      console.log(`Imagen eliminada de Cloudinary exitosamente: ${imageUrl}`);
+    } catch (error) {
+      console.error('Error al eliminar imagen de Cloudinary:', error.message);
+      // No lanzar error para no interrumpir el flujo principal
+    }
+  }
+
   async update(id: number, updateProductDto: UpdateProductDto) {
     try {
       // 1. Verificar si el producto existe
@@ -305,7 +336,47 @@ export class ProductService {
         data: productData,
       });
 
-      // 4. Manejo de variantes
+      // 4. Identificar variantes a eliminar
+      const existingVariantIds = existingProduct.variants.map((v) => v.id);
+      const incomingVariantIds = incomingVariants
+        .filter((v) => v.id)
+        .map((v) => v.id);
+
+      const variantsToDelete = existingVariantIds.filter(
+        (existingId) => !incomingVariantIds.includes(existingId),
+      );
+
+      // 5. Eliminar variantes que ya no existen
+      for (const variantIdToDelete of variantsToDelete) {
+        const variantToDelete = existingProduct.variants.find(
+          (v) => v.id === variantIdToDelete,
+        );
+
+        if (variantToDelete) {
+          // Eliminar imágenes de Cloudinary
+          for (const image of variantToDelete.images) {
+            // Solo eliminar si no es la imagen placeholder
+            if (
+              image.url !==
+              'https://res.cloudinary.com/dhhv8l6ti/image/upload/v1741550306/a58jbqkjh7csdrlw3qfd.jpg'
+            ) {
+              await this.deleteImageFromCloudinary(image.url);
+            }
+          }
+
+          // Eliminar imágenes de la base de datos
+          await this.prismaService.image.deleteMany({
+            where: { productVariantId: variantIdToDelete },
+          });
+
+          // Eliminar la variante
+          await this.prismaService.productVariant.delete({
+            where: { id: variantIdToDelete },
+          });
+        }
+      }
+
+      // 6. Manejo de variantes existentes y nuevas
       for (const variantDto of incomingVariants) {
         const {
           id: variantId,
@@ -315,6 +386,7 @@ export class ProductService {
 
         if (variantId) {
           // Actualizar variante existente
+
           // Verificar si el barcode ya existe en OTRAS variantes
           if (variantData.barcode) {
             const existingVariantWithSameBarcode =
@@ -339,18 +411,43 @@ export class ProductService {
             data: variantData,
           });
 
-          // Manejo de imágenes - Eliminar las existentes y crear las nuevas
+          // Obtener imágenes existentes de esta variante
+          const existingImages = await this.prismaService.image.findMany({
+            where: { productVariantId: variantId },
+          });
+
+          // Identificar imágenes a eliminar (las que existían pero ya no están en incomingImages)
+          const incomingImageUrls = incomingImages.map((img) => img.url);
+          const imagesToDelete = existingImages.filter(
+            (existingImg) => !incomingImageUrls.includes(existingImg.url),
+          );
+
+          // Eliminar imágenes que ya no existen
+          for (const imageToDelete of imagesToDelete) {
+            // Solo eliminar de Cloudinary si no es placeholder
+            if (
+              imageToDelete.url !==
+              'https://res.cloudinary.com/dhhv8l6ti/image/upload/v1741550306/a58jbqkjh7csdrlw3qfd.jpg'
+            ) {
+              await this.deleteImageFromCloudinary(imageToDelete.url);
+            }
+          }
+
+          // Eliminar imágenes de la base de datos
           await this.prismaService.image.deleteMany({
             where: { productVariantId: variantId },
           });
 
-          await this.prismaService.image.createMany({
-            data: incomingImages.map((image) => ({
-              url: image.url,
-              angle: image.angle || 'front',
-              productVariantId: variantId,
-            })),
-          });
+          // Crear las nuevas imágenes
+          if (incomingImages.length > 0) {
+            await this.prismaService.image.createMany({
+              data: incomingImages.map((image) => ({
+                url: image.url,
+                angle: image.angle || 'front',
+                productVariantId: variantId,
+              })),
+            });
+          }
         } else {
           // Crear nueva variante
           if (variantData.barcode) {
@@ -383,7 +480,7 @@ export class ProductService {
         }
       }
 
-      // 5. Obtener y devolver el producto actualizado
+      // 7. Obtener y devolver el producto actualizado
       const finalProduct = await this.prismaService.product.findUnique({
         where: { id },
         include: {
@@ -404,16 +501,13 @@ export class ProductService {
       return finalProduct;
     } catch (error) {
       console.error('Error al actualizar el producto:', error);
-
       if (error instanceof HttpException) throw error;
-
       if (error.code === 'P2002') {
         throw new HttpException(
           `El código de barras ya está en uso.`,
           HttpStatus.BAD_REQUEST,
         );
       }
-
       throw new HttpException(
         'Error interno en el servidor.',
         HttpStatus.INTERNAL_SERVER_ERROR,

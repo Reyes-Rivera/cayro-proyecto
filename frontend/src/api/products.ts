@@ -89,3 +89,5 @@ export const getProductByName = ( name: string) =>
 
 export const getProductById = ( id: number) =>
   axios.get(`/product/${id}`);
+
+export const deleteImg = (url : string) => axios.delete(`/cloudinary?url=${url}`);
