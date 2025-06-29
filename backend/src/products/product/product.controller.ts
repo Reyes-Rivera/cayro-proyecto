@@ -8,6 +8,7 @@ import {
   Delete,
   NotFoundException,
   Query,
+  Put,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -69,7 +70,13 @@ export class ProductController {
       console.log(error);
     }
   }
-
+  @Put('bulk-price-update')
+  async updatePricesBulk(@Body() updatePricesDto: any) {
+    return this.productService.updatePricesBulk(
+      updatePricesDto.filters,
+      updatePricesDto.updateData,
+    );
+  }
   @Get(':id')
   async findById(@Param('id') id: number) {
     try {

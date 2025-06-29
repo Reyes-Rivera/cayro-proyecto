@@ -1,4 +1,7 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
+"use client";
+
+import type React from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import {
   ChevronDown,
   ChevronUp,
@@ -17,6 +20,7 @@ import {
   Edit,
   Trash,
   Eye,
+  DollarSign,
 } from "lucide-react";
 import type {
   Brand,
@@ -26,15 +30,18 @@ import type {
   Product,
 } from "../data/sampleData";
 import FilterPanel from "./FilterPanel";
+import PriceUpdateModal from "./PriceUpdateModal";
 import Swal from "sweetalert2";
 import {
   getBrands,
   getCategories,
   getGenders,
   getSleeve,
+  updatePricesBulk,
+  getProducts,
 } from "@/api/products";
 
-type FilterKey = "categories" | "brands" | "genders" | "neckTypes";
+type TableFilterKey = "categories" | "brands" | "genders" | "neckTypes";
 
 interface ProductListProps {
   products: Product[];
@@ -47,6 +54,24 @@ interface ProductListProps {
   onDeactivate: (id: number) => void;
   onFilterChange: (filterParams: string) => void;
   isTableLoading?: boolean;
+}
+
+// ✅ Filtros específicos para la tabla (separados del modal)
+interface TableFilters {
+  categories: number[];
+  brands: number[];
+  genders: number[];
+  neckTypes: number[];
+  active: boolean | null;
+}
+
+// ✅ Filtros específicos para el modal de precios (separados de la tabla)
+interface PriceModalFilters {
+  categoryIds?: number[];
+  brandIds?: number[];
+  genderIds?: number[];
+  colorIds?: number[];
+  sizeIds?: number[];
 }
 
 // Opciones de ordenación
@@ -79,41 +104,84 @@ const ProductList: React.FC<ProductListProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [showPriceModal, setShowPriceModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [isLoading, setIsLoading] = useState(true);
   const filterPanelRef = useRef<HTMLDivElement>(null);
   const sortPanelRef = useRef<HTMLDivElement>(null);
 
-  const initialFilters = {
-    categories: [] as number[],
-    brands: [] as number[],
-    genders: [] as number[],
-    neckTypes: [] as number[],
-    active: null as boolean | null,
+  // ✅ Filtros específicos para la tabla (independientes del modal)
+  const initialTableFilters: TableFilters = {
+    categories: [],
+    brands: [],
+    genders: [],
+    neckTypes: [],
+    active: null,
   };
 
-  const [filters, setFilters] = useState(initialFilters);
+  const [tableFilters, setTableFilters] =
+    useState<TableFilters>(initialTableFilters);
   const [sortBy, setSortBy] = useState<SortOption>(sortOptions[0]);
   const [showSortOptions, setShowSortOptions] = useState(false);
-  const [brands, setBrands] = useState<Brand[]>();
-  const [genders, setGenders] = useState<Gender[]>();
-  const [category, setCategory] = useState<Category[]>();
-  const [neckType, setNeckType] = useState<NeckType[]>();
 
-  const getBrandName = (brandId: number) =>
-    brands?.find((b) => b.id === brandId)?.name || "Desconocido";
-  const getGenderName = (genderId: number) =>
-    genders?.find((g) => g.id === genderId)?.name || "Desconocido";
-  const getNeckTypeName = (neckTypeId: number | null) =>
-    neckTypeId ? neckType?.find((n) => n.id === neckTypeId)?.name : "N/A";
-  const getCategoryName = (categoryId: number) =>
-    category?.find((c) => c.id === categoryId)?.name || "Desconocido";
+  // ✅ Estados para datos de la tabla (independientes del modal)
+  const [tableBrands, setTableBrands] = useState<Brand[]>();
+  const [tableGenders, setTableGenders] = useState<Gender[]>();
+  const [tableCategories, setTableCategories] = useState<Category[]>();
+  const [tableNeckTypes, setTableNeckTypes] = useState<NeckType[]>();
 
-  // Function to handle search
-  const handleSearch = () => {
-    const filterParams = buildFilterParams(
-      filters,
+  // ✅ Funciones helper para la tabla (independientes del modal)
+  const getTableBrandName = (brandId: number) =>
+    tableBrands?.find((b) => b.id === brandId)?.name || "Desconocido";
+  const getTableGenderName = (genderId: number) =>
+    tableGenders?.find((g) => g.id === genderId)?.name || "Desconocido";
+  const getTableNeckTypeName = (neckTypeId: number | null) =>
+    neckTypeId ? tableNeckTypes?.find((n) => n.id === neckTypeId)?.name : "N/A";
+  const getTableCategoryName = (categoryId: number) =>
+    tableCategories?.find((c) => c.id === categoryId)?.name || "Desconocido";
+
+  // ✅ Función para manejar actualización de precios (recibe filtros del modal)
+  const handlePriceUpdate = async (
+    priceFilters: PriceModalFilters,
+    updateData: any
+  ) => {
+    try {
+      console.log("🎯 Filtros del modal de precios:", priceFilters);
+      console.log("📊 Datos de actualización:", updateData);
+
+      await updatePricesBulk(priceFilters, updateData);
+
+      // ✅ Recargar productos usando los filtros de la TABLA (no del modal)
+      const currentTableFilters = buildTableFilterParams(
+        tableFilters,
+        searchTerm,
+        currentPage,
+        itemsPerPage
+      );
+      await getProducts(currentTableFilters);
+
+      Swal.fire({
+        title: "¡Éxito!",
+        text: "Los precios se han actualizado correctamente.",
+        icon: "success",
+        confirmButtonColor: "#2563eb",
+      });
+    } catch (error) {
+      console.error("Error updating prices:", error);
+      Swal.fire({
+        title: "Error",
+        text: "No se pudieron actualizar los precios. Inténtalo de nuevo.",
+        icon: "error",
+        confirmButtonColor: "#2563eb",
+      });
+    }
+  };
+
+  // ✅ Función para manejar búsqueda en la tabla
+  const handleTableSearch = () => {
+    const filterParams = buildTableFilterParams(
+      tableFilters,
       searchTerm,
       currentPage,
       itemsPerPage
@@ -121,9 +189,9 @@ const ProductList: React.FC<ProductListProps> = ({
     onFilterChange(filterParams);
   };
 
-  // Function to handle filter changes
-  const handleFilterChange = (type: FilterKey, id: number) => {
-    setFilters((prev) => {
+  // ✅ Función para manejar cambios de filtros de la tabla
+  const handleTableFilterChange = (type: TableFilterKey, id: number) => {
+    setTableFilters((prev) => {
       const currentFilter = prev[type] as number[];
       return {
         ...prev,
@@ -134,55 +202,69 @@ const ProductList: React.FC<ProductListProps> = ({
     });
   };
 
-  // Function to handle active filter change
-  const handleActiveFilterChange = (value: boolean | null) => {
-    setFilters((prev) => ({
+  // ✅ Función para manejar cambio de filtro activo en la tabla
+  const handleTableActiveFilterChange = (value: boolean | null) => {
+    setTableFilters((prev) => ({
       ...prev,
       active: prev.active === value ? null : value,
     }));
   };
 
-  // Function to clear all filters
-  const clearAllFilters = () => {
-    setFilters(initialFilters);
+  // ✅ Función para limpiar filtros de la tabla
+  const clearAllTableFilters = () => {
+    setTableFilters(initialTableFilters);
     setSearchTerm("");
     setCurrentPage(1);
-    const filterParams = buildFilterParams(initialFilters, "", 1, itemsPerPage);
+    const filterParams = buildTableFilterParams(
+      initialTableFilters,
+      "",
+      1,
+      itemsPerPage
+    );
     onFilterChange(filterParams);
   };
 
-  // Function to build filter parameters
-  const buildFilterParams = (
-    filters: typeof initialFilters,
+  // ✅ Función para construir parámetros de filtros de la tabla
+  const buildTableFilterParams = (
+    filters: TableFilters,
     search: string,
     page: number,
     limit: number
   ) => {
     const params = new URLSearchParams();
+
     params.append("page", page.toString());
     params.append("limit", limit.toString());
+
     if (search) params.append("search", search);
+
     if (filters.categories.length > 0)
       params.append("category", filters.categories[0].toString());
+
     if (filters.genders.length > 0)
       params.append("genders", filters.genders.join(","));
+
     if (filters.neckTypes.length > 0)
       params.append("sleeves", filters.neckTypes.join(","));
+
     if (filters.active !== null)
       params.append("active", filters.active.toString());
+
     if (filters.brands.length > 0)
       params.append("brand", filters.brands[0].toString());
+
     if (sortBy) {
       params.append("sortBy", sortBy.value);
       params.append("sortDirection", sortBy.direction);
     }
+
     return params.toString();
   };
 
-  // Apply filters only when the Apply button is clicked
-  const applyFilters = () => {
-    const filterParams = buildFilterParams(
-      filters,
+  // ✅ Aplicar filtros de la tabla
+  const applyTableFilters = () => {
+    const filterParams = buildTableFilterParams(
+      tableFilters,
       searchTerm,
       currentPage,
       itemsPerPage
@@ -191,17 +273,17 @@ const ProductList: React.FC<ProductListProps> = ({
     setShowFilters(false);
   };
 
-  // Check if there are active filters
-  const hasActiveFilters = useMemo(() => {
+  // ✅ Verificar si hay filtros activos en la tabla
+  const hasActiveTableFilters = useMemo(() => {
     return (
-      filters.categories.length > 0 ||
-      filters.brands.length > 0 ||
-      filters.genders.length > 0 ||
-      filters.neckTypes.length > 0 ||
-      filters.active !== null ||
+      tableFilters.categories.length > 0 ||
+      tableFilters.brands.length > 0 ||
+      tableFilters.genders.length > 0 ||
+      tableFilters.neckTypes.length > 0 ||
+      tableFilters.active !== null ||
       searchTerm !== ""
     );
-  }, [filters, searchTerm]);
+  }, [tableFilters, searchTerm]);
 
   // Effect to close filter and sort panels when clicking outside
   useEffect(() => {
@@ -231,27 +313,30 @@ const ProductList: React.FC<ProductListProps> = ({
     };
   }, []);
 
-  // Effect to load initial data
+  // ✅ Effect para cargar datos de la tabla
   useEffect(() => {
-    const getData = async () => {
+    const getTableData = async () => {
       setIsLoading(true);
       const brandsData = await getBrands();
       const genderData = await getGenders();
       const categoryData = await getCategories();
       const sleeveData = await getSleeve();
-      if (brandsData) setBrands(brandsData.data);
-      if (genderData) setGenders(genderData.data);
-      if (categoryData) setCategory(categoryData.data);
-      if (sleeveData) setNeckType(sleeveData.data);
+
+      if (brandsData) setTableBrands(brandsData.data);
+      if (genderData) setTableGenders(genderData.data);
+      if (categoryData) setTableCategories(categoryData.data);
+      if (sleeveData) setTableNeckTypes(sleeveData.data);
+
       setIsLoading(false);
     };
-    getData();
+
+    getTableData();
   }, []);
 
   return (
-    <div className="space-y-6">
+    <div >
       {/* Header section */}
-      <div className="bg-blue-500 rounded-xl shadow-xl overflow-hidden relative">
+      <div className="bg-blue-500 mb-6 rounded-xl shadow-xl overflow-hidden relative">
         <div className="p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex items-center">
@@ -270,13 +355,22 @@ const ProductList: React.FC<ProductListProps> = ({
                 </p>
               </div>
             </div>
-            <button
-              className="w-full sm:w-auto bg-white/20 hover:bg-white/30 transition-colors text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center justify-center"
-              onClick={onAdd}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Nuevo Producto
-            </button>
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              <button
+                className="w-full sm:w-auto bg-white/20 hover:bg-white/30 transition-colors text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center justify-center"
+                onClick={() => setShowPriceModal(true)}
+              >
+                <DollarSign className="w-4 h-4 mr-2" />
+                Actualizar Precios
+              </button>
+              <button
+                className="w-full sm:w-auto bg-white/20 hover:bg-white/30 transition-colors text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center justify-center"
+                onClick={onAdd}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Nuevo Producto
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -290,13 +384,13 @@ const ProductList: React.FC<ProductListProps> = ({
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   type="text"
-                  placeholder="Buscar productos..."
+                  placeholder="Buscar productos en la tabla..."
                   className="pl-12 pr-4 py-3 w-full border border-gray-300 dark:border-gray-600 rounded-l-lg  focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyPress={(e) => {
                     if (e.key === "Enter") {
-                      handleSearch();
+                      handleTableSearch();
                     }
                   }}
                 />
@@ -305,8 +399,8 @@ const ProductList: React.FC<ProductListProps> = ({
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                     onClick={() => {
                       setSearchTerm("");
-                      const filterParams = buildFilterParams(
-                        filters,
+                      const filterParams = buildTableFilterParams(
+                        tableFilters,
                         "",
                         currentPage,
                         itemsPerPage
@@ -319,9 +413,9 @@ const ProductList: React.FC<ProductListProps> = ({
                 )}
               </div>
               <button
-                onClick={handleSearch}
+                onClick={handleTableSearch}
                 className="px-4 py-3 bg-blue-500 text-white rounded-r-lg hover:bg-blue-600 transition-colors"
-                aria-label="Buscar"
+                aria-label="Buscar en tabla"
               >
                 <Search className="w-5 h-5" />
               </button>
@@ -335,26 +429,26 @@ const ProductList: React.FC<ProductListProps> = ({
               <button
                 data-filter-button="true"
                 className={`w-full sm:w-auto flex items-center justify-center gap-1 px-4 py-3 border rounded-lg transition-colors ${
-                  showFilters || hasActiveFilters
+                  showFilters || hasActiveTableFilters
                     ? "bg-gray-100 border-gray-300 text-gray-700 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
                     : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
                 }`}
                 onClick={() => setShowFilters(!showFilters)}
               >
                 <Filter className="w-4 h-4" />
-                <span>Filtrar</span>
+                <span>Filtrar Tabla</span>
                 {showFilters ? (
                   <ChevronUp className="w-4 h-4 ml-1" />
                 ) : (
                   <ChevronDown className="w-4 h-4 ml-1" />
                 )}
-                {hasActiveFilters && (
+                {hasActiveTableFilters && (
                   <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-xs text-white">
-                    {filters.categories.length +
-                      filters.brands.length +
-                      filters.genders.length +
-                      filters.neckTypes.length +
-                      (filters.active !== null ? 1 : 0) +
+                    {tableFilters.categories.length +
+                      tableFilters.brands.length +
+                      tableFilters.genders.length +
+                      tableFilters.neckTypes.length +
+                      (tableFilters.active !== null ? 1 : 0) +
                       (searchTerm ? 1 : 0)}
                   </span>
                 )}
@@ -365,33 +459,41 @@ const ProductList: React.FC<ProductListProps> = ({
                   ref={filterPanelRef}
                   className="absolute right-0 mt-2 w-72 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-20"
                 >
+                  <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                    <h4 className="font-medium text-gray-900 dark:text-white">
+                      🔍 Filtros de la Tabla
+                    </h4>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Estos filtros solo afectan la visualización de la tabla
+                    </p>
+                  </div>
                   <FilterPanel
-                    filters={filters}
-                    brands={brands}
-                    categories={category}
-                    genders={genders}
-                    neckTypes={neckType}
+                    filters={tableFilters}
+                    brands={tableBrands}
+                    categories={tableCategories}
+                    genders={tableGenders}
+                    neckTypes={tableNeckTypes}
                     isLoading={isLoading}
-                    onFilterChange={handleFilterChange}
-                    onActiveFilterChange={handleActiveFilterChange}
-                    clearAllFilters={clearAllFilters}
-                    hasActiveFilters={hasActiveFilters}
+                    onFilterChange={handleTableFilterChange}
+                    onActiveFilterChange={handleTableActiveFilterChange}
+                    clearAllFilters={clearAllTableFilters}
+                    hasActiveFilters={hasActiveTableFilters}
                   />
                   <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-2">
                     <button
                       onClick={() => {
-                        clearAllFilters();
+                        clearAllTableFilters();
                         setShowFilters(false);
                       }}
                       className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
                     >
-                      Cancelar
+                      Limpiar
                     </button>
                     <button
-                      onClick={applyFilters}
+                      onClick={applyTableFilters}
                       className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm font-medium transition-colors"
                     >
-                      Aplicar Filtros
+                      Aplicar a Tabla
                     </button>
                   </div>
                 </div>
@@ -432,8 +534,8 @@ const ProductList: React.FC<ProductListProps> = ({
                         onClick={() => {
                           setSortBy(option);
                           setShowSortOptions(false);
-                          const filterParams = buildFilterParams(
-                            filters,
+                          const filterParams = buildTableFilterParams(
+                            tableFilters,
                             searchTerm,
                             currentPage,
                             itemsPerPage
@@ -451,22 +553,22 @@ const ProductList: React.FC<ProductListProps> = ({
           </div>
         </div>
 
-        {/* Active filters chips */}
-        {hasActiveFilters && (
-          <div className="flex flex-wrap gap-2 items-center mb-6">
-            <span className="text-sm text-gray-500 dark:text-gray-400">
-              Filtros activos:
+        {/* Active table filters chips */}
+        {hasActiveTableFilters && (
+          <div className="flex flex-wrap gap-2 items-center mb-6 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+            <span className="text-sm text-blue-700 dark:text-blue-300 font-medium">
+              🔍 Filtros activos en la tabla:
             </span>
 
             {searchTerm && (
-              <div className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs rounded-full px-3 py-1 flex items-center">
+              <div className="bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 text-xs rounded-full px-3 py-1 flex items-center">
                 <span>Búsqueda: {searchTerm}</span>
                 <button
-                  className="ml-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+                  className="ml-2 text-blue-600 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-100 transition-colors"
                   onClick={() => {
                     setSearchTerm("");
-                    const filterParams = buildFilterParams(
-                      filters,
+                    const filterParams = buildTableFilterParams(
+                      tableFilters,
                       "",
                       currentPage,
                       itemsPerPage
@@ -480,22 +582,24 @@ const ProductList: React.FC<ProductListProps> = ({
               </div>
             )}
 
-            {filters.active !== null && (
+            {tableFilters.active !== null && (
               <div
                 className={`text-xs rounded-full px-3 py-1 flex items-center ${
-                  filters.active
-                    ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-                    : "bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400"
+                  tableFilters.active
+                    ? "bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200"
+                    : "bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-200"
                 }`}
               >
-                <span>Estado: {filters.active ? "Activo" : "Inactivo"}</span>
+                <span>
+                  Estado: {tableFilters.active ? "Activo" : "Inactivo"}
+                </span>
                 <button
                   className={`ml-2 ${
-                    filters.active
-                      ? "text-green-500 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300"
-                      : "text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                    tableFilters.active
+                      ? "text-green-600 dark:text-green-300 hover:text-green-800 dark:hover:text-green-100"
+                      : "text-red-600 dark:text-red-300 hover:text-red-800 dark:hover:text-red-100"
                   } transition-colors`}
-                  onClick={() => handleActiveFilterChange(null)}
+                  onClick={() => handleTableActiveFilterChange(null)}
                   aria-label="Eliminar filtro de estado"
                 >
                   <X className="w-3 h-3" />
@@ -503,15 +607,17 @@ const ProductList: React.FC<ProductListProps> = ({
               </div>
             )}
 
-            {filters.categories.map((categoryId) => (
+            {tableFilters.categories.map((categoryId) => (
               <div
                 key={`cat-${categoryId}`}
-                className="bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 text-xs rounded-full px-3 py-1 flex items-center"
+                className="bg-purple-100 dark:bg-purple-800 text-purple-800 dark:text-purple-200 text-xs rounded-full px-3 py-1 flex items-center"
               >
-                <span>Categoría: {getCategoryName(categoryId)}</span>
+                <span>Categoría: {getTableCategoryName(categoryId)}</span>
                 <button
-                  className="ml-2 text-purple-500 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
-                  onClick={() => handleFilterChange("categories", categoryId)}
+                  className="ml-2 text-purple-600 dark:text-purple-300 hover:text-purple-800 dark:hover:text-purple-100 transition-colors"
+                  onClick={() =>
+                    handleTableFilterChange("categories", categoryId)
+                  }
                   aria-label="Eliminar filtro de categoría"
                 >
                   <X className="w-3 h-3" />
@@ -519,15 +625,15 @@ const ProductList: React.FC<ProductListProps> = ({
               </div>
             ))}
 
-            {filters.brands.map((brandId) => (
+            {tableFilters.brands.map((brandId) => (
               <div
                 key={`brand-${brandId}`}
-                className="bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 text-xs rounded-full px-3 py-1 flex items-center"
+                className="bg-teal-100 dark:bg-teal-800 text-teal-800 dark:text-teal-200 text-xs rounded-full px-3 py-1 flex items-center"
               >
-                <span>Marca: {getBrandName(brandId)}</span>
+                <span>Marca: {getTableBrandName(brandId)}</span>
                 <button
-                  className="ml-2 text-teal-500 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 transition-colors"
-                  onClick={() => handleFilterChange("brands", brandId)}
+                  className="ml-2 text-teal-600 dark:text-teal-300 hover:text-teal-800 dark:hover:text-teal-100 transition-colors"
+                  onClick={() => handleTableFilterChange("brands", brandId)}
                   aria-label="Eliminar filtro de marca"
                 >
                   <X className="w-3 h-3" />
@@ -535,15 +641,15 @@ const ProductList: React.FC<ProductListProps> = ({
               </div>
             ))}
 
-            {filters.genders.map((genderId) => (
+            {tableFilters.genders.map((genderId) => (
               <div
                 key={`gender-${genderId}`}
-                className="bg-pink-50 dark:bg-pink-900/30 text-pink-700 dark:text-pink-400 text-xs rounded-full px-3 py-1 flex items-center"
+                className="bg-pink-100 dark:bg-pink-800 text-pink-800 dark:text-pink-200 text-xs rounded-full px-3 py-1 flex items-center"
               >
-                <span>Género: {getGenderName(genderId)}</span>
+                <span>Género: {getTableGenderName(genderId)}</span>
                 <button
-                  className="ml-2 text-pink-500 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300 transition-colors"
-                  onClick={() => handleFilterChange("genders", genderId)}
+                  className="ml-2 text-pink-600 dark:text-pink-300 hover:text-pink-800 dark:hover:text-pink-100 transition-colors"
+                  onClick={() => handleTableFilterChange("genders", genderId)}
                   aria-label="Eliminar filtro de género"
                 >
                   <X className="w-3 h-3" />
@@ -551,15 +657,17 @@ const ProductList: React.FC<ProductListProps> = ({
               </div>
             ))}
 
-            {filters.neckTypes.map((neckTypeId) => (
+            {tableFilters.neckTypes.map((neckTypeId) => (
               <div
                 key={`neck-${neckTypeId}`}
-                className="bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs rounded-full px-3 py-1 flex items-center"
+                className="bg-amber-100 dark:bg-amber-800 text-amber-800 dark:text-amber-200 text-xs rounded-full px-3 py-1 flex items-center"
               >
-                <span>Cuello: {getNeckTypeName(neckTypeId)}</span>
+                <span>Cuello: {getTableNeckTypeName(neckTypeId)}</span>
                 <button
-                  className="ml-2 text-amber-500 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors"
-                  onClick={() => handleFilterChange("neckTypes", neckTypeId)}
+                  className="ml-2 text-amber-600 dark:text-amber-300 hover:text-amber-800 dark:hover:text-amber-100 transition-colors"
+                  onClick={() =>
+                    handleTableFilterChange("neckTypes", neckTypeId)
+                  }
                   aria-label="Eliminar filtro de tipo de cuello"
                 >
                   <X className="w-3 h-3" />
@@ -568,10 +676,10 @@ const ProductList: React.FC<ProductListProps> = ({
             ))}
 
             <button
-              className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 underline ml-auto transition-colors"
-              onClick={clearAllFilters}
+              className="text-xs text-blue-600 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-100 underline ml-auto transition-colors"
+              onClick={clearAllTableFilters}
             >
-              Limpiar todos
+              Limpiar todos los filtros de tabla
             </button>
           </div>
         )}
@@ -612,21 +720,25 @@ const ProductList: React.FC<ProductListProps> = ({
                         {product.id}
                       </span>
                     </div>
+
                     <div className="col-span-3">
                       <h3 className="font-medium text-gray-900 dark:text-white">
                         {product.name}
                       </h3>
                     </div>
+
                     <div className="col-span-2">
                       <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-400 border border-purple-200 dark:border-purple-800/30">
-                        {getCategoryName(product.categoryId)}
+                        {getTableCategoryName(product.categoryId)}
                       </span>
                     </div>
+
                     <div className="col-span-2">
                       <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-400 border border-teal-200 dark:border-teal-800/30">
-                        {getBrandName(product.brandId)}
+                        {getTableBrandName(product.brandId)}
                       </span>
                     </div>
+
                     <div className="col-span-2">
                       {product.active ? (
                         <div className="flex items-center">
@@ -647,6 +759,7 @@ const ProductList: React.FC<ProductListProps> = ({
                         </div>
                       )}
                     </div>
+
                     <div className="col-span-2 flex items-center justify-end space-x-2">
                       <button
                         onClick={() => onView(product.id)}
@@ -745,10 +858,10 @@ const ProductList: React.FC<ProductListProps> = ({
 
                     <div className="flex flex-wrap gap-2">
                       <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-400 border border-purple-200 dark:border-purple-800/30">
-                        {getCategoryName(product.categoryId)}
+                        {getTableCategoryName(product.categoryId)}
                       </span>
                       <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-400 border border-teal-200 dark:border-teal-800/30">
-                        {getBrandName(product.brandId)}
+                        {getTableBrandName(product.brandId)}
                       </span>
                     </div>
 
@@ -830,13 +943,13 @@ const ProductList: React.FC<ProductListProps> = ({
                 No se encontraron productos
               </p>
               <p className="text-sm mb-4 text-gray-500 dark:text-gray-400">
-                {hasActiveFilters
+                {hasActiveTableFilters
                   ? "No hay productos que coincidan con los filtros aplicados"
                   : "Añade productos para comenzar a gestionar tu inventario"}
               </p>
-              {hasActiveFilters ? (
+              {hasActiveTableFilters ? (
                 <button
-                  onClick={clearAllFilters}
+                  onClick={clearAllTableFilters}
                   className="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg font-medium flex items-center transition-colors"
                 >
                   <XCircle className="w-4 h-4 mr-2" />
@@ -867,8 +980,8 @@ const ProductList: React.FC<ProductListProps> = ({
                   const newItemsPerPage = Number(e.target.value);
                   setItemsPerPage(newItemsPerPage);
                   setCurrentPage(1);
-                  const filterParams = buildFilterParams(
-                    filters,
+                  const filterParams = buildTableFilterParams(
+                    tableFilters,
                     searchTerm,
                     1,
                     newItemsPerPage
@@ -900,8 +1013,8 @@ const ProductList: React.FC<ProductListProps> = ({
                 onClick={() => {
                   const newPage = Math.max(currentPage - 1, 1);
                   setCurrentPage(newPage);
-                  const filterParams = buildFilterParams(
-                    filters,
+                  const filterParams = buildTableFilterParams(
+                    tableFilters,
                     searchTerm,
                     newPage,
                     itemsPerPage
@@ -922,8 +1035,8 @@ const ProductList: React.FC<ProductListProps> = ({
                     const page = Number.parseInt(e.target.value);
                     if (!isNaN(page) && page > 0 && page <= totalPages) {
                       setCurrentPage(page);
-                      const filterParams = buildFilterParams(
-                        filters,
+                      const filterParams = buildTableFilterParams(
+                        tableFilters,
                         searchTerm,
                         page,
                         itemsPerPage
@@ -947,8 +1060,8 @@ const ProductList: React.FC<ProductListProps> = ({
                 onClick={() => {
                   const newPage = Math.min(currentPage + 1, totalPages);
                   setCurrentPage(newPage);
-                  const filterParams = buildFilterParams(
-                    filters,
+                  const filterParams = buildTableFilterParams(
+                    tableFilters,
                     searchTerm,
                     newPage,
                     itemsPerPage
@@ -963,6 +1076,13 @@ const ProductList: React.FC<ProductListProps> = ({
           </div>
         </div>
       </div>
+
+      {/* ✅ Price Update Modal - Completamente separado de los filtros de la tabla */}
+      <PriceUpdateModal
+        isOpen={showPriceModal}
+        onClose={() => setShowPriceModal(false)}
+        onUpdate={handlePriceUpdate}
+      />
     </div>
   );
 };

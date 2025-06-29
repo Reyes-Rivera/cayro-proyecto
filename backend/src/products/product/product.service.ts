@@ -514,7 +514,176 @@ export class ProductService {
       );
     }
   }
+  async updatePricesBulk(filters: any, updateData: any) {
+    try {
+      // Construir la consulta WHERE basada en los filtros SELECCIONADOS
+      const whereConditions: any = {};
+      const productWhere: any = {};
 
+      // ✅ Solo se aplican los filtros que tienen valores
+      if (filters.categoryIds && filters.categoryIds.length > 0) {
+        productWhere.categoryId = { in: filters.categoryIds };
+        console.log(`Filtrando por categorías: ${filters.categoryIds}`);
+      }
+
+      if (filters.brandIds && filters.brandIds.length > 0) {
+        productWhere.brandId = { in: filters.brandIds };
+        console.log(`Filtrando por marcas: ${filters.brandIds}`);
+      }
+
+      if (filters.genderIds && filters.genderIds.length > 0) {
+        productWhere.genderId = { in: filters.genderIds };
+        console.log(`Filtrando por géneros: ${filters.genderIds}`);
+      }
+
+      // Filtros para las variantes
+      if (filters.colorIds && filters.colorIds.length > 0) {
+        whereConditions.colorId = { in: filters.colorIds };
+        console.log(`Filtrando por colores: ${filters.colorIds}`);
+      }
+
+      if (filters.sizeIds && filters.sizeIds.length > 0) {
+        whereConditions.sizeId = { in: filters.sizeIds };
+        console.log(`Filtrando por tallas: ${filters.sizeIds}`);
+      }
+
+      // Si hay filtros de producto, agregarlos a la consulta de variantes
+      if (Object.keys(productWhere).length > 0) {
+        whereConditions.product = productWhere;
+      }
+
+      console.log(
+        'Consulta final WHERE:',
+        JSON.stringify(whereConditions, null, 2),
+      );
+
+      // Obtener las variantes que coinciden con los filtros
+      const variants = await this.prismaService.productVariant.findMany({
+        where: whereConditions,
+        select: {
+          id: true,
+          price: true,
+          product: {
+            select: {
+              name: true,
+              category: { select: { name: true } },
+              brand: { select: { name: true } },
+              gender: { select: { name: true } },
+            },
+          },
+          color: { select: { name: true } },
+          size: { select: { name: true } },
+        },
+      });
+
+      console.log(
+        `Se encontraron ${variants.length} variantes que coinciden con los filtros`,
+      );
+
+      if (variants.length === 0) {
+        throw new HttpException(
+          'No se encontraron productos que coincidan con los filtros.',
+          HttpStatus.NOT_FOUND,
+        );
+      }
+
+      // ✅ LÓGICA COMPLETA DE ACTUALIZACIÓN DE PRECIOS
+      const updatePromises = variants.map(async (variant) => {
+        let newPrice: number;
+        const currentPrice = variant.price;
+
+        console.log(
+          `Procesando variante ${variant.id} - Precio actual: $${currentPrice}`,
+        );
+
+        switch (updateData.operation) {
+          case 'increase':
+            if (updateData.updateType === 'percentage') {
+              newPrice = currentPrice * (1 + updateData.value / 100);
+              console.log(
+                `Aumentando ${updateData.value}%: $${currentPrice} -> $${newPrice.toFixed(2)}`,
+              );
+            } else {
+              // updateType === "amount"
+              newPrice = currentPrice + updateData.value;
+              console.log(
+                `Aumentando $${updateData.value}: $${currentPrice} -> $${newPrice.toFixed(2)}`,
+              );
+            }
+            break;
+
+          case 'decrease':
+            if (updateData.updateType === 'percentage') {
+              newPrice = currentPrice * (1 - updateData.value / 100);
+              console.log(
+                `Disminuyendo ${updateData.value}%: $${currentPrice} -> $${newPrice.toFixed(2)}`,
+              );
+            } else {
+              // updateType === "amount"
+              newPrice = currentPrice - updateData.value;
+              console.log(
+                `Disminuyendo $${updateData.value}: $${currentPrice} -> $${newPrice.toFixed(2)}`,
+              );
+            }
+            break;
+
+          case 'set':
+            newPrice = updateData.value;
+            console.log(
+              `Estableciendo precio fijo: $${currentPrice} -> $${newPrice.toFixed(2)}`,
+            );
+            break;
+
+          default:
+            throw new HttpException(
+              'Operación no válida. Use: increase, decrease, o set',
+              HttpStatus.BAD_REQUEST,
+            );
+        }
+
+        // Asegurar que el precio no sea negativo
+        newPrice = Math.max(0, Math.round(newPrice * 100) / 100); // Redondear a 2 decimales
+
+        // Actualizar la variante en la base de datos
+        return this.prismaService.productVariant.update({
+          where: { id: variant.id },
+          data: { price: newPrice },
+        });
+      });
+
+      // Ejecutar todas las actualizaciones
+      const updatedVariants = await Promise.all(updatePromises);
+
+      console.log(
+        `✅ Se actualizaron ${updatedVariants.length} variantes exitosamente`,
+      );
+
+      return {
+        success: true,
+        message: `Se actualizaron ${variants.length} variantes de productos exitosamente.`,
+        updatedCount: variants.length,
+        operation: updateData.operation,
+        updateType: updateData.updateType,
+        value: updateData.value,
+        details: variants.map((v) => ({
+          productName: v.product.name,
+          category: v.product.category.name,
+          brand: v.product.brand.name,
+          gender: v.product.gender.name,
+          color: v.color.name,
+          size: v.size.name,
+          oldPrice: v.price,
+        })),
+      };
+    } catch (error) {
+      console.error('❌ Error al actualizar precios masivamente:', error);
+      if (error instanceof HttpException) throw error;
+      throw new HttpException(
+        'Error interno en el servidor al actualizar precios.',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
   async remove(id: number) {
     return await this.prismaService.product.update({
       where: { id },

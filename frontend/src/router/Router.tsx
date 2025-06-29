@@ -51,7 +51,7 @@ const AppRoutes = () => {
       document.title = (await res).data[0]?.title;
     };
     getInfoPage();
-  }, []);
+  }, [user]);
   return (
     <>
       {(!auth ||
