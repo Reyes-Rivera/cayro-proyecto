@@ -13,7 +13,7 @@ import BrandPage from "./profucts/brand/BrandPage";
 import ColorPage from "./profucts/colors/ColorPage";
 import Sidebar from "./components/sidebar";
 import type { JSX } from "react/jsx-runtime";
-import { ProfileSection } from "./profile/ProfileSection";
+import { ProfileSection } from "../components/ProfileSection";
 import { AddressSection } from "../components/AddressSection";
 import { PasswordSection } from "../components/PasswordSection";
 import { getCompanyInfoApi } from "@/api/company";

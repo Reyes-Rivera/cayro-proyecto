@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom"; // Agregar esta importación
+
 import {
   Package,
   LogOut,
@@ -25,6 +27,7 @@ import {
   ShieldCheck,
   LayoutDashboard,
 } from "lucide-react";
+
 import { useAuth } from "@/context/AuthContextType";
 import { getCompanyInfoApi } from "@/api/company";
 import { motion } from "framer-motion";
@@ -47,10 +50,12 @@ export default function Sidebar({
   toggleTheme,
 }: SidebarProps) {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate(); // Agregar el hook de navegación
   const [showProducts, setShowProducts] = useState(false);
   const [showReports, setShowReports] = useState(false);
   const [showUserSettings, setShowUserSettings] = useState(false);
   const [logo, setLogo] = useState<string>("");
+  const [isSigningOut, setIsSigningOut] = useState(false); // Agregar estado para la animación
 
   // Get first letter of user name for avatar
   const getUserInitial = () => {
@@ -64,20 +69,45 @@ export default function Sidebar({
     setActiveTab(tab);
     // Hacer scroll hasta arriba cuando se cambia de pestaña
     window.scrollTo({ top: 0, behavior: "smooth" });
+
     // Close user settings dropdown when selecting profile, address, or security
     if (tab === "profile" || tab === "address" || tab === "security") {
       setShowUserSettings(false);
     }
+
     if (isMobile && onClose) {
       onClose();
     }
   };
 
+  // Handle sign out with animation and redirect to login
+  const handleSignOut = async () => {
+    setIsSigningOut(true);
+
+    // Pequeño delay para mostrar la animación
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    // Ejecutar signOut para limpiar el estado de autenticación
+    if (signOut) {
+      await signOut();
+    }
+
+    // Redirigir al login
+    navigate("/login");
+  };
+
   useEffect(() => {
     const getInfo = async () => {
-      const res = await getCompanyInfoApi();
-      setLogo(res.data[0].logoUrl);
+      try {
+        const res = await getCompanyInfoApi();
+        if (res.data && res.data.length > 0) {
+          setLogo(res.data[0].logoUrl);
+        }
+      } catch (error) {
+        console.error("Error fetching company info:", error);
+      }
     };
+
     getInfo();
   }, []);
 
@@ -129,6 +159,7 @@ export default function Sidebar({
             )}
           </div>
         </div>
+
         <div className="absolute -bottom-3 left-0 right-0 flex justify-center">
           <div className="bg-white dark:bg-gray-700 px-3 py-1.5 rounded-full shadow-md border border-gray-100 dark:border-gray-600 flex items-center">
             <LayoutDashboard className="w-3.5 h-3.5 text-blue-500 mr-1.5" />
@@ -239,6 +270,7 @@ export default function Sidebar({
                   />
                   Todos los productos
                 </button>
+
                 <button
                   onClick={() => handleTabChange("categories")}
                   className={`w-full flex items-center px-3 py-2 text-sm relative rounded-lg transition-colors ${
@@ -256,6 +288,7 @@ export default function Sidebar({
                   />
                   Categorías
                 </button>
+
                 <button
                   onClick={() => handleTabChange("colors")}
                   className={`w-full flex items-center px-3 py-2 text-sm relative rounded-lg transition-colors ${
@@ -273,6 +306,7 @@ export default function Sidebar({
                   />
                   Colores
                 </button>
+
                 <button
                   onClick={() => handleTabChange("sizes")}
                   className={`w-full flex items-center px-3 py-2 text-sm relative rounded-lg transition-colors ${
@@ -290,6 +324,7 @@ export default function Sidebar({
                   />
                   Tallas
                 </button>
+
                 <button
                   onClick={() => handleTabChange("gender")}
                   className={`w-full flex items-center px-3 py-2 text-sm relative rounded-lg transition-colors ${
@@ -307,6 +342,7 @@ export default function Sidebar({
                   />
                   Género
                 </button>
+
                 <button
                   onClick={() => handleTabChange("sleeves")}
                   className={`w-full flex items-center px-3 py-2 text-sm relative rounded-lg transition-colors ${
@@ -324,6 +360,7 @@ export default function Sidebar({
                   />
                   Cuello
                 </button>
+
                 <button
                   onClick={() => handleTabChange("brands")}
                   className={`w-full flex items-center px-3 py-2 text-sm relative rounded-lg transition-colors ${
@@ -421,6 +458,7 @@ export default function Sidebar({
                   />
                   Ventas
                 </button>
+
                 <button
                   onClick={() => handleTabChange("analytics")}
                   className={`w-full flex items-center px-3 py-2 text-sm relative rounded-lg transition-colors ${
@@ -438,6 +476,7 @@ export default function Sidebar({
                   />
                   Analíticas
                 </button>
+
                 <button
                   onClick={() => handleTabChange("finances")}
                   className={`w-full flex items-center px-3 py-2 text-sm relative rounded-lg transition-colors ${
@@ -467,15 +506,17 @@ export default function Sidebar({
           <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-medium shadow-md">
             {getUserInitial()}
           </div>
+
           <div className="ml-3 flex-1">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-gray-900 dark:text-white">
                 {user?.name || "Usuario"}
               </p>
+
               {/* Theme toggle icon */}
               <button
                 onClick={toggleTheme}
-                className="p-1.5 rounded-md text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 bg-gray-100 dark:bg-gray-700"
+                className="p-1.5 rounded-md text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 bg-gray-100 dark:bg-gray-700 transition-colors duration-300"
                 aria-label="Toggle theme"
               >
                 {isDarkMode ? (
@@ -492,32 +533,73 @@ export default function Sidebar({
         <div className="grid grid-cols-2 gap-2 mb-3">
           <button
             onClick={() => setShowUserSettings(!showUserSettings)}
-            className="flex items-center justify-center px-3 py-2 text-sm rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 transition-colors"
+            className="flex items-center justify-center px-3 py-2 text-sm rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 transition-colors duration-300"
           >
             <Users className="w-4 h-4 mr-2" />
             Ajustes
           </button>
+
+          {/* Botón de Salir con animación y redirección al login */}
           <button
-            onClick={() => signOut?.()}
-            className="flex items-center justify-center px-3 py-2 text-sm rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 transition-colors"
+            onClick={handleSignOut}
+            disabled={isSigningOut}
+            className={`flex items-center justify-center px-3 py-2 text-sm rounded-lg border transition-all duration-300 ${
+              isSigningOut
+                ? "bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 cursor-not-allowed"
+                : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 bg-gray-100 dark:bg-gray-700 border-gray-200 dark:border-gray-600"
+            }`}
           >
-            <LogOut className="w-4 h-4 mr-2" />
-            Salir
+            {isSigningOut ? (
+              <>
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{
+                    duration: 1,
+                    repeat: Number.POSITIVE_INFINITY,
+                    ease: "linear",
+                  }}
+                  className="w-4 h-4 mr-2"
+                >
+                  <LogOut className="w-4 h-4" />
+                </motion.div>
+                <motion.span
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-xs font-medium"
+                >
+                  Saliendo...
+                </motion.span>
+              </>
+            ) : (
+              <>
+                <LogOut className="w-4 h-4 mr-2" />
+                Salir
+              </>
+            )}
           </button>
         </div>
+
         {showUserSettings && (
-          <div className="mt-3 space-y-1 border border-gray-200 dark:border-gray-600 rounded-lg p-3 bg-white dark:bg-gray-800 shadow-sm">
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="mt-3 space-y-1 border border-gray-200 dark:border-gray-600 rounded-lg p-3 bg-white dark:bg-gray-800 shadow-sm"
+          >
             <div className="flex justify-between items-center mb-2 px-2">
               <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
                 Ajustes de usuario
               </span>
+
               <button
                 onClick={() => setShowUserSettings(false)}
-                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 transition-colors"
               >
                 <ChevronDown className="w-4 h-4 transform rotate-180" />
               </button>
             </div>
+
             <button
               onClick={() => handleTabChange("profile")}
               className={`w-full flex items-center px-3 py-2 text-sm relative rounded-lg transition-colors ${
@@ -535,6 +617,7 @@ export default function Sidebar({
               />
               Perfil
             </button>
+
             <button
               onClick={() => handleTabChange("address")}
               className={`w-full flex items-center px-3 py-2 text-sm relative rounded-lg transition-colors ${
@@ -552,6 +635,7 @@ export default function Sidebar({
               />
               Dirección
             </button>
+
             <button
               onClick={() => handleTabChange("security")}
               className={`w-full flex items-center px-3 py-2 text-sm relative rounded-lg transition-colors ${
@@ -569,7 +653,7 @@ export default function Sidebar({
               />
               Seguridad
             </button>
-          </div>
+          </motion.div>
         )}
       </div>
     </div>

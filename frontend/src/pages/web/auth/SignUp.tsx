@@ -1,4 +1,5 @@
 "use client";
+
 import backgroundImage from "@/pages/web/Home/assets/hero.jpg";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -51,14 +52,13 @@ export default function SignUpPage() {
     special: false,
     noSequential: false,
   });
-
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [pageLoading, setPageLoading] = useState(true);
   const [animateContent, setAnimateContent] = useState(false);
-
+  const [acceptTerms, setAcceptTerms] = useState(false); // Estado para términos y condiciones
   const { SignUp, error } = useAuth();
 
   const {
@@ -92,10 +92,13 @@ export default function SignUpPage() {
       special: /[!@#$%^&*(),.?":{}|]/.test(password),
       noSequential: !containsSequentialPatterns(password),
     };
+
     setPasswordChecks(checks);
     setPasswordStrength(Object.values(checks).filter(Boolean).length * 20);
   }, [password]);
+
   const navigate = useNavigate();
+
   const containsSequentialPatterns = (password: string): boolean => {
     const commonPatterns = [
       "1234",
@@ -105,10 +108,8 @@ export default function SignUpPage() {
       "1111",
       "aaaa",
     ];
-
     const sequentialPatternRegex =
       /(01234|12345|23456|34567|45678|56789|67890|abcd|bcde|cdef|defg|efgh|fghi)/;
-
     return (
       commonPatterns.some((pattern) => password.includes(pattern)) ||
       sequentialPatternRegex.test(password)
@@ -167,7 +168,6 @@ export default function SignUpPage() {
     ) {
       age--;
     }
-
     return age >= 18;
   };
 
@@ -185,6 +185,24 @@ export default function SignUpPage() {
 
   const onSubmit = handleSubmit(async (data: FormData) => {
     if (currentStep === 2) {
+      // Validar que se hayan aceptado los términos y condiciones
+      if (!acceptTerms) {
+        Swal.fire({
+          icon: "warning",
+          title: "Términos y condiciones",
+          toast: true,
+          text: "Debes aceptar los términos y condiciones, aviso de privacidad y deslinde legal para continuar.",
+          position: "top-end",
+          timer: 4000,
+          showConfirmButton: false,
+          animation: true,
+          background: "#FFFBEB",
+          color: "#D97706",
+          iconColor: "#F59E0B",
+        });
+        return;
+      }
+
       if (Object.values(passwordChecks).every(Boolean)) {
         if (
           !validatePasswordContent(
@@ -209,9 +227,9 @@ export default function SignUpPage() {
           });
           return;
         }
+
         try {
           setIsLoading(true);
-
           const result = await SignUp(
             data.name,
             data.surname,
@@ -241,10 +259,9 @@ export default function SignUpPage() {
               color: "#166534",
               iconColor: "#22C55E",
             });
-
             // Optional: Redirect to verification page after success
             setTimeout(() => {
-              navigate('/codigo-verificacion'); // Uncomment if using react-router
+              navigate("/codigo-verificacion"); // Uncomment if using react-router
             }, 3000);
           } else {
             // Handle signup failure
@@ -252,7 +269,6 @@ export default function SignUpPage() {
               result && typeof result === "object" && "message" in result
                 ? (result.message as string)
                 : "Error en el registro. Por favor intenta nuevamente.";
-
             Swal.fire({
               icon: "error",
               title: "Error en el registro",
@@ -269,7 +285,6 @@ export default function SignUpPage() {
           }
         } catch (error: any) {
           console.error("Error during registration:", error);
-
           Swal.fire({
             icon: "error",
             title: "Error inesperado",
@@ -429,6 +444,7 @@ export default function SignUpPage() {
                     Seguridad garantizada
                   </span>
                 </div>
+
                 <div className="flex items-center gap-2">
                   <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
                     <Award className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -437,6 +453,7 @@ export default function SignUpPage() {
                     Calidad premium
                   </span>
                 </div>
+
                 <div className="flex items-center gap-2">
                   <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
                     <Truck className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -569,6 +586,7 @@ export default function SignUpPage() {
                 >
                   Crear cuenta
                 </motion.h2>
+
                 <motion.div
                   initial={{ width: 0 }}
                   animate={animateContent ? { width: "6rem" } : { width: 0 }}
@@ -971,7 +989,6 @@ export default function SignUpPage() {
                             </span>
                           </p>
                         )}
-
                         {!Object.values(passwordChecks).every(Boolean) &&
                           password && (
                             <div className="mt-2 bg-gray-50 dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -996,7 +1013,6 @@ export default function SignUpPage() {
                                   style={{ width: `${passwordStrength}%` }}
                                 ></div>
                               </div>
-
                               <ul className="mt-2 grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
                                 {Object.entries(passwordChecks).map(
                                   ([key, isValid]) => {
@@ -1008,7 +1024,6 @@ export default function SignUpPage() {
                                       special: "Al menos un carácter especial",
                                       noSequential: "Sin secuencias obvias",
                                     };
-
                                     return (
                                       <li
                                         key={key}
@@ -1090,6 +1105,76 @@ export default function SignUpPage() {
                             </span>
                           </p>
                         )}
+                      </div>
+
+                      {/* Términos y Condiciones */}
+                      <div className="space-y-3 mt-6">
+                        <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                          <div className="flex items-start space-x-3">
+                            <div className="flex-shrink-0 pt-0.5">
+                              <input
+                                id="acceptTerms"
+                                type="checkbox"
+                                checked={acceptTerms}
+                                onChange={(e) =>
+                                  setAcceptTerms(e.target.checked)
+                                }
+                                className="w-4 h-4 text-blue-600 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:focus:ring-blue-600 focus:ring-2"
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <label
+                                htmlFor="acceptTerms"
+                                className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer"
+                              >
+                                Acepto los{" "}
+                                <NavLink
+                                  to="/terminos"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium underline transition-colors"
+                                >
+                                  Términos y Condiciones
+                                </NavLink>
+                                , el{" "}
+                                <NavLink
+                                  to="/aviso-privacidad"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium underline transition-colors"
+                                >
+                                  Aviso de Privacidad
+                                </NavLink>{" "}
+                                y el{" "}
+                                <NavLink
+                                  to="/deslinde-legal"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium underline transition-colors"
+                                >
+                                  Deslinde Legal
+                                </NavLink>
+                                .
+                              </label>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Es necesario aceptar estos documentos para crear
+                                tu cuenta.
+                              </p>
+                            </div>
+                          </div>
+                          {!acceptTerms && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: "auto" }}
+                              className="mt-2 flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400"
+                            >
+                              <AlertCircle className="h-3 w-3 flex-shrink-0" />
+                              <span>
+                                Debes aceptar los términos para continuar
+                              </span>
+                            </motion.div>
+                          )}
+                        </div>
                       </div>
                     </motion.div>
                   )}

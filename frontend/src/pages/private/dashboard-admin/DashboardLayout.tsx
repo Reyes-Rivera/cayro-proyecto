@@ -11,7 +11,7 @@ import { CompanyView } from "./Company-view";
 import EmployeePage from "./employees/EmployeePage";
 import { LegalSection } from "./legal/LegalSection";
 import type { JSX } from "react";
-import { ProfileSection } from "../dashboard-employee/profile/ProfileSection";
+import { ProfileSection } from "../components/ProfileSection";
 import { AddressSection } from "../components/AddressSection";
 import { PasswordSection } from "../components/PasswordSection";
 import AdminPanel from "./panel/AdminPanel";
