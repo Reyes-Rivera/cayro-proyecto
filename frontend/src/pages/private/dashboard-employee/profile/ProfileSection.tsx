@@ -19,8 +19,6 @@ import {
   Shield,
   ChevronRight,
   Clock,
-  Lock,
-  Key,
   CalendarDays,
   UserCircle,
 } from "lucide-react";
@@ -744,7 +742,9 @@ export function ProfileSection() {
                               Cargo
                             </p>
                             <p className="font-medium text-gray-900 dark:text-white">
-                              Empleado
+                              {
+                                user?.role === "ADMIN" ? "Administrador" : "Empleado"
+                              }
                             </p>
                           </div>
                         </div>
@@ -856,50 +856,7 @@ export function ProfileSection() {
                   </div>
                 </div>
 
-                {/* Security card */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-                  <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
-                      <Lock className="w-5 h-5 mr-2 text-blue-500" />
-                      Seguridad
-                    </h3>
-                    <a
-                      href="/seguridad"
-                      className="text-blue-500 hover:text-blue-600 text-sm font-medium flex items-center"
-                    >
-                      Configurar
-                      <ChevronRight className="w-4 h-4 ml-1" />
-                    </a>
-                  </div>
-
-                  <div className="p-5">
-                    <div className="flex items-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
-                      <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mr-4 shadow-sm">
-                        <Key className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex justify-between items-center">
-                          <p className="font-medium text-gray-900 dark:text-white">
-                            Contraseña
-                          </p>
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
-                            Segura
-                          </span>
-                        </div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          Última actualización: hace 30 días
-                        </p>
-                        <a
-                          href="/seguridad"
-                          className="inline-flex items-center text-sm font-medium text-blue-500 hover:text-blue-600 mt-2"
-                        >
-                          Cambiar contraseña
-                          <ChevronRight className="w-4 h-4 ml-1" />
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                
               </div>
             </div>
           </div>

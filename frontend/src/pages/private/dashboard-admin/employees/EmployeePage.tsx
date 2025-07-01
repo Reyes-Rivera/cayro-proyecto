@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
-import { motion, AnimatePresence } from "framer-motion";
-import { User, Sparkles } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
+import { User, Sparkles, Users } from "lucide-react";
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
+
 import {
   addEmployee,
   deleteEmployee,
@@ -14,7 +15,6 @@ import {
   updateEmployee,
 } from "@/api/users";
 import { useNavigate } from "react-router-dom";
-
 import type {
   Employee,
   EmployeeFormData,
@@ -23,7 +23,6 @@ import type {
 } from "./types/employee";
 import { sortOptions } from "./constants/employee-constants";
 import { containsSequentialPatterns } from "./utils/password-utils";
-
 import EmployeeTable from "./components/employee-table";
 import EmployeeForm from "./components/employee-form";
 import PasswordUpdateForm from "./components/password-update-form";
@@ -71,6 +70,7 @@ const EmployeePage = () => {
   const passwordFormMethods = useForm<PasswordFormData>();
 
   const navigate = useNavigate();
+
   const newPassword = employeeFormMethods.watch("password", "");
   const passwordUpdateValue = passwordFormMethods.watch("password", "");
 
@@ -79,7 +79,6 @@ const EmployeePage = () => {
     const currentPassword = showPasswordUpdateForm
       ? passwordUpdateValue
       : newPassword;
-
     if (!currentPassword) {
       setPasswordChecks({
         length: false,
@@ -95,7 +94,6 @@ const EmployeePage = () => {
     }
 
     const invalidCharsRegex = /[<>'"`]/;
-
     const checks = {
       length: currentPassword.length >= 8,
       uppercase: /[A-Z]/.test(currentPassword),
@@ -161,6 +159,7 @@ const EmployeePage = () => {
         birthdate: data.birthdate,
         gender: data.gender,
         role: data.role,
+        active: data.active, // Incluir el campo active
       };
 
       if (editId !== null) {
@@ -200,8 +199,10 @@ const EmployeePage = () => {
           birthdate: data.birthdate,
           gender: data.gender,
           role: data.role,
-          password:data.password
+          password: data.password,
+          active: data.active, // Incluir el campo active
         };
+
         setIsLoading(true);
         const newItem = await addEmployee(submitDataAdd);
         if (newItem) {
@@ -216,7 +217,6 @@ const EmployeePage = () => {
             timer: 3000,
             timerProgressBar: true,
           });
-
           setItems((prev) => [...prev, { id: prev.length + 1, ...submitData }]);
           setIsLoading(false);
           employeeFormMethods.reset();
@@ -336,6 +336,7 @@ const EmployeePage = () => {
     employeeFormMethods.setValue("confirmPassword", ""); // Empty confirm password field
     employeeFormMethods.setValue("gender", employee.gender);
     employeeFormMethods.setValue("role", employee.role);
+    employeeFormMethods.setValue("active", employee.active); // Incluir el campo active
     setEditId(employee.id);
     setShowForm(true);
     setShowDetails(false);
@@ -351,12 +352,6 @@ const EmployeePage = () => {
       cancelButtonColor: "#6B7280",
       confirmButtonText: "Sí, eliminar",
       cancelButtonText: "Cancelar",
-      background: document.documentElement.classList.contains("dark")
-        ? "#1F2937"
-        : "#FFFFFF",
-      color: document.documentElement.classList.contains("dark")
-        ? "#F3F4F6"
-        : "#111827",
     });
 
     if (result.isConfirmed) {
@@ -375,7 +370,6 @@ const EmployeePage = () => {
             timer: 3000,
             timerProgressBar: true,
           });
-
           // If we're viewing the details of the deleted employee, go back to the table
           if (
             showDetails &&
@@ -413,7 +407,6 @@ const EmployeePage = () => {
     try {
       const res = await getEmployees();
       setItems(res.data || []);
-
       // If we're viewing details, update the selected employee with fresh data
       if (showDetails && selectedEmployee) {
         const updatedEmployee = res.data.find(
@@ -423,7 +416,6 @@ const EmployeePage = () => {
           setSelectedEmployee(updatedEmployee);
         }
       }
-
       setTimeout(() => {
         setIsRefreshing(false);
       }, 600); // Small delay to show animation
@@ -445,17 +437,14 @@ const EmployeePage = () => {
     .sort((a, b) => {
       const aValue = a[sortBy.value as keyof Employee];
       const bValue = b[sortBy.value as keyof Employee];
-
       if (sortBy.value === "name" || sortBy.value === "surname") {
         return sortBy.direction === "asc"
           ? String(aValue).localeCompare(String(bValue))
           : String(bValue).localeCompare(String(aValue));
       }
-
       if (typeof aValue === "number" && typeof bValue === "number") {
         return sortBy.direction === "asc" ? aValue - bValue : bValue - aValue;
       }
-
       return 0;
     });
 
@@ -505,6 +494,7 @@ const EmployeePage = () => {
         setIsInitialLoading(false);
       }
     };
+
     fetchItems();
   }, [navigate]);
 
@@ -512,30 +502,6 @@ const EmployeePage = () => {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
-
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.05,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        type: "spring",
-        stiffness: 100,
-        damping: 15,
-      },
-    },
-  };
 
   // Close sort dropdown when clicking outside
   useEffect(() => {
@@ -553,51 +519,48 @@ const EmployeePage = () => {
   }, [showSortOptions]);
 
   return (
-    <motion.div
-      className="p-2 sm:p-4 md:p-6 space-y-4 sm:space-y-6 md:space-y-8 bg-gray-50 dark:bg-gray-900 w-full"
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
-    >
-      {/* Page Header */}
-      <motion.div variants={itemVariants} className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-blue-600 to-blue-800 opacity-10 dark:opacity-20 rounded-xl sm:rounded-2xl md:rounded-3xl"></div>
-        <div className="relative bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl md:rounded-3xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700">
-          <div className="p-4 sm:p-6 md:p-8">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6">
-              <div className="flex items-start gap-3 sm:gap-5">
-                <div className="bg-gradient-to-br from-blue-500 to-blue-700 p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-lg text-white">
-                  <User className="w-6 h-6 sm:w-8 sm:h-8" />
-                </div>
-                <div>
-                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-                    Gestión de Empleados
-                  </h1>
-                  <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mt-1 sm:mt-2 max-w-2xl">
-                    Administra los empleados de tu empresa. Los empleados son
-                    esenciales para el funcionamiento de tu negocio.
-                  </p>
-                </div>
-              </div>
-              {!showForm && !showDetails && (
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={openAddForm}
-                  className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-medium rounded-lg sm:rounded-xl shadow-lg transition-all duration-300 w-full md:w-auto"
-                >
-                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
-                  <span>Nuevo Empleado</span>
-                </motion.button>
-              )}
-            </div>
-          </div>
-
-          {/* Decorative elements */}
-          <div className="absolute top-0 right-0 w-24 sm:w-32 h-24 sm:h-32 bg-gradient-to-br from-blue-500/10 to-blue-700/10 rounded-full -mr-12 sm:-mr-16 -mt-12 sm:-mt-16 dark:from-blue-500/20 dark:to-blue-700/20"></div>
-          <div className="absolute bottom-0 left-0 w-16 sm:w-24 h-16 sm:h-24 bg-gradient-to-tr from-blue-400/10 to-blue-600/10 rounded-full -ml-8 sm:-ml-12 -mb-8 sm:-mb-12 dark:from-blue-400/20 dark:to-blue-600/20"></div>
+    <div className="px-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
+      {/* Header section */}
+      <div className="bg-blue-500 rounded-xl shadow-xl overflow-hidden relative mb-6">
+        {/* Background elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-20 -right-20 w-64 h-64 md:w-96 md:h-96 bg-white/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-blue-600/20 to-transparent"></div>
         </div>
-      </motion.div>
+
+        <div className="p-4 sm:p-6 relative z-10">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex items-center">
+              <div className="bg-white/20 p-2.5 sm:p-3 rounded-full mr-3 sm:mr-4">
+                <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold text-white">
+                  Gestión de Empleados
+                </h2>
+                <p className="mt-1 text-white/80 flex items-center text-sm sm:text-base">
+                  <User className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1.5 inline" />
+                  {filteredAndSortedItems.length}{" "}
+                  {filteredAndSortedItems.length === 1
+                    ? "empleado"
+                    : "empleados"}{" "}
+                  registrados
+                </p>
+              </div>
+            </div>
+
+            {!showForm && !showDetails && (
+              <button
+                className="w-full sm:w-auto bg-white/20 hover:bg-white/30 transition-colors text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center justify-center"
+                onClick={openAddForm}
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                Nuevo Empleado
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* Main content: Table, Form, or Details */}
       <AnimatePresence mode="wait">
@@ -682,7 +645,7 @@ const EmployeePage = () => {
           />
         )}
       </AnimatePresence>
-    </motion.div>
+    </div>
   );
 };
 

@@ -2,30 +2,33 @@
 
 import type React from "react";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useForm, type SubmitHandler } from "react-hook-form";
+import Swal from "sweetalert2";
+import "sweetalert2/dist/sweetalert2.min.css";
 import {
+  Edit,
+  Loader2,
+  Trash,
+  Plus,
+  Search,
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight,
+  XCircle,
+  ArrowUpDown,
+  ChevronDown,
+  ChevronUp,
+  X,
   FileText,
   Shield,
   Lock,
-  PlusCircle,
-  Edit,
-  Trash2,
-  Search,
-  ChevronDown,
   Calendar,
   Clock,
   CheckCircle,
-  XCircle,
   Eye,
-  Filter,
-  ArrowUpDown,
-  RefreshCw,
-  AlertCircle,
-  X,
 } from "lucide-react";
-import Swal from "sweetalert2";
-import ViewDocumentDialog from "./ViewDocumentDialog";
 
 // Import API functions
 import {
@@ -62,7 +65,7 @@ export enum DocumentTypeInter {
   boundary = "LEGAL_DISCLAIMER",
 }
 
-export class RegulatoryDocument {
+interface RegulatoryDocument {
   id?: number;
   title?: string;
   content?: string;
@@ -73,159 +76,91 @@ export class RegulatoryDocument {
   previousVersionId?: string;
   status?: Status;
   type?: DocumentTypeInter;
-  documentElement: any;
 }
 
-export function LegalSection() {
-  const [activeTab, setActiveTab] = useState<"terms" | "legal" | "policies">(
-    "terms"
-  );
-  const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
-  const [formData, setFormData] = useState<{
-    id?: number;
-    title: string;
-    content: string;
-    effectiveDate: string;
-    type: DocumentTypeInter;
-  }>({
-    title: "",
-    content: "",
-    effectiveDate: "",
+interface FormData {
+  title: string;
+  content: string;
+  effectiveDate: string;
+  type: DocumentTypeInter;
+}
+
+// Opciones de ordenación
+type SortOption = {
+  label: string;
+  value: string;
+  direction: "asc" | "desc";
+};
+
+const sortOptions: SortOption[] = [
+  { label: "Más recientes", value: "id", direction: "desc" },
+  { label: "Más antiguos", value: "id", direction: "asc" },
+  { label: "Título (A-Z)", value: "title", direction: "asc" },
+  { label: "Título (Z-A)", value: "title", direction: "desc" },
+];
+
+type Tabs = "terms" | "legal" | "policies";
+
+const tabConfig: {
+  key: Tabs;
+  label: string;
+  icon: React.ReactNode;
+  type: DocumentTypeInter;
+}[] = [
+  {
+    key: "terms",
+    label: "Términos y Condiciones",
+    icon: <FileText size={18} />,
     type: DocumentTypeInter.terms,
-  });
-  const [viewingDocument, setViewingDocument] =
-    useState<RegulatoryDocument | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterActive, setFilterActive] = useState<boolean | null>(null);
-  const [showSortOptions, setShowSortOptions] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [formErrors, setFormErrors] = useState<{
-    title?: string;
-    content?: string;
-    effectiveDate?: string;
-  }>({});
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isTypeSelectOpen, setIsTypeSelectOpen] = useState(false);
+  },
+  {
+    key: "legal",
+    label: "Deslinde Legal",
+    icon: <Shield size={18} />,
+    type: DocumentTypeInter.boundary,
+  },
+  {
+    key: "policies",
+    label: "Políticas",
+    icon: <Lock size={18} />,
+    type: DocumentTypeInter.policy,
+  },
+];
 
-  // Refs
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const typeSelectRef = useRef<HTMLDivElement>(null);
-  const dialogRef = useRef<HTMLDivElement>(null);
-
-  // Data from database
+export const LegalSection = () => {
+  const [activeTab, setActiveTab] = useState<Tabs>("terms");
   const [policies, setPolicies] = useState<RegulatoryDocument[]>([]);
   const [terms, setTerms] = useState<RegulatoryDocument[]>([]);
   const [boundary, setBoundary] = useState<RegulatoryDocument[]>([]);
+  const [editId, setEditId] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewingDocument, setViewingDocument] =
+    useState<RegulatoryDocument | null>(null);
+  const [filterActive, setFilterActive] = useState<boolean | null>(null);
 
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.05,
-      },
-    },
-  };
+  // Estado para ordenación
+  const [sortBy, setSortBy] = useState<SortOption>(sortOptions[0]);
+  const [showSortOptions, setShowSortOptions] = useState(false);
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        type: "spring",
-        stiffness: 100,
-        damping: 15,
-      },
-    },
-  };
+  // Paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
 
-  // Handle clicks outside dropdowns
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsDropdownOpen(false);
-      }
-      if (
-        typeSelectRef.current &&
-        !typeSelectRef.current.contains(event.target as Node)
-      ) {
-        setIsTypeSelectOpen(false);
-      }
-    };
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+    reset,
+    watch,
+  } = useForm<FormData>();
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  // Handle escape key for dialog
-  useEffect(() => {
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        if (isFormDialogOpen) {
-          setIsFormDialogOpen(false);
-        }
-      }
-    };
-
-    if (isFormDialogOpen) {
-      document.addEventListener("keydown", handleEscape);
-      document.body.style.overflow = "hidden";
-    }
-
-    return () => {
-      document.removeEventListener("keydown", handleEscape);
-      document.body.style.overflow = "";
-    };
-  }, [isFormDialogOpen]);
-
-  // Load data on init
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  // Function to load data from API
-  const fetchData = async () => {
-    setIsLoading(true);
-    try {
-      const [policiesRes, termsRes, boundaryRes] = await Promise.all([
-        policiesApi(),
-        termsApi(),
-        boundaryApi(),
-      ]);
-
-      setPolicies(policiesRes.data || []);
-      setTerms(termsRes.data || []);
-      setBoundary(boundaryRes.data || []);
-    } catch (error) {
-      console.error("Error loading documents:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "Could not load documents. Please try again.",
-        confirmButtonColor: "#2563EB",
-      });
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  };
-
-  // Function to refresh data
-  const refreshData = () => {
-    setIsRefreshing(true);
-    fetchData();
-  };
-
-  // Map data based on active tab
+  // Obtener datos activos según la pestaña
   const getActiveData = () => {
     switch (activeTab) {
       case "policies":
@@ -239,144 +174,40 @@ export function LegalSection() {
     }
   };
 
-  // Get document type based on active tab
+  // Obtener tipo de documento según la pestaña
   const getDocumentType = () => {
-    switch (activeTab) {
-      case "policies":
-        return DocumentTypeInter.policy;
-      case "terms":
-        return DocumentTypeInter.terms;
-      case "legal":
-        return DocumentTypeInter.boundary;
-      default:
-        return DocumentTypeInter.terms;
-    }
+    const config = tabConfig.find((tab) => tab.key === activeTab);
+    return config?.type || DocumentTypeInter.terms;
   };
 
-  // Filter data
-  const filteredData = getActiveData().filter(
-    (item) =>
-      item.title?.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (filterActive === null || item.isCurrentVersion === filterActive)
-  );
-
-  const handleTabChange = (tab: "terms" | "legal" | "policies") => {
-    setActiveTab(tab);
-    setFormData((prev) => ({
-      ...prev,
-      type:
-        tab === "policies"
-          ? DocumentTypeInter.policy
-          : tab === "terms"
-          ? DocumentTypeInter.terms
-          : DocumentTypeInter.boundary,
-    }));
-  };
-
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-
-    // Clear error when user types
-    if (formErrors[name as keyof typeof formErrors]) {
-      setFormErrors((prev) => ({ ...prev, [name]: undefined }));
-    }
-  };
-
-  const handleEdit = (document: RegulatoryDocument) => {
-    setFormData({
-      id: document.id,
-      title: document.title || "",
-      content: document.content || "",
-      effectiveDate: document.effectiveDate
-        ? new Date(document.effectiveDate).toISOString().split("T")[0]
-        : "",
-      type: document.type || getDocumentType(),
-    });
-    setIsFormDialogOpen(true);
-  };
-
-  const handleCancel = () => {
-    setFormData({
-      title: "",
-      content: "",
-      effectiveDate: "",
-      type: getDocumentType(),
-    });
-    setFormErrors({});
-    setIsFormDialogOpen(false);
-  };
-
-  const validateForm = () => {
-    const errors: {
-      title?: string;
-      content?: string;
-      effectiveDate?: string;
-    } = {};
-
-    if (!formData.title || formData.title.length < 4) {
-      errors.title = "El título debe tener al menos 4 caracteres";
-    }
-
-    if (!formData.content || formData.content.length < 4) {
-      errors.content = "El contenido debe tener al menos 4 caracteres";
-    }
-
-    if (!formData.effectiveDate) {
-      errors.effectiveDate = "La fecha de vigencia es obligatoria";
-    } else {
-      const currentDate = new Date();
-      const effectiveDate = new Date(formData.effectiveDate);
-      const diffInDays = Math.floor(
-        (effectiveDate.getTime() - currentDate.getTime()) /
-          (1000 * 60 * 60 * 24)
-      );
-
-      if (diffInDays <= 6) {
-        errors.effectiveDate =
-          "La fecha debe ser al menos 6 días mayor a la actual";
-      }
-    }
-
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleSave = async () => {
-    if (!validateForm()) {
-      return;
-    }
-
+  const onSubmit: SubmitHandler<FormData> = async (data) => {
     try {
-      const documentData = {
-        title: formData.title,
-        content: formData.content,
-        effectiveDate: new Date(formData.effectiveDate).toISOString(),
-      };
+      if (editId !== null) {
+        setIsLoading(true);
+        const documentData = {
+          title: data.title,
+          content: data.content,
+          effectiveDate: new Date(data.effectiveDate).toISOString(),
+        };
 
-      if (formData.id) {
-        // Update existing document
         let response;
-
-        switch (formData.type) {
+        switch (data.type) {
           case DocumentTypeInter.policy:
-            response = await updatePolicysApi(documentData, formData.id);
+            response = await updatePolicysApi(documentData, editId);
             break;
           case DocumentTypeInter.terms:
-            response = await updateTermsApi(documentData, formData.id);
+            response = await updateTermsApi(documentData, editId);
             break;
           case DocumentTypeInter.boundary:
-            response = await updateBoundaryApi(documentData, formData.id);
+            response = await updateBoundaryApi(documentData, editId);
             break;
         }
 
         if (response) {
           Swal.fire({
             icon: "success",
-            title: "Actualizado",
-            text: "El documento ha sido actualizado correctamente",
+            title: "Documento actualizado",
+            text: "El documento ha sido actualizado exitosamente.",
             confirmButtonColor: "#2563EB",
             toast: true,
             position: "top-end",
@@ -384,13 +215,26 @@ export function LegalSection() {
             timer: 3000,
             timerProgressBar: true,
           });
-          fetchData();
-        }
-      } else {
-        // Create new document
-        let response;
 
-        switch (formData.type) {
+          await fetchData();
+          setIsLoading(false);
+          setEditId(null);
+          reset();
+          setShowModal(false);
+          return;
+        }
+        setIsLoading(false);
+        setEditId(null);
+      } else {
+        setIsLoading(true);
+        const documentData = {
+          title: data.title,
+          content: data.content,
+          effectiveDate: new Date(data.effectiveDate).toISOString(),
+        };
+
+        let response;
+        switch (data.type) {
           case DocumentTypeInter.policy:
             response = await createPolicysApi(documentData);
             break;
@@ -405,8 +249,8 @@ export function LegalSection() {
         if (response) {
           Swal.fire({
             icon: "success",
-            title: "Creado",
-            text: "El documento ha sido creado correctamente",
+            title: "Documento agregado",
+            text: "El documento ha sido agregado exitosamente.",
             confirmButtonColor: "#2563EB",
             toast: true,
             position: "top-end",
@@ -414,99 +258,109 @@ export function LegalSection() {
             timer: 3000,
             timerProgressBar: true,
           });
-          fetchData();
+
+          await fetchData();
+          setIsLoading(false);
+          reset();
+          setShowModal(false);
+          return;
         }
       }
-
-      handleCancel();
-    } catch (error) {
-      console.error("Error saving document:", error);
+    } catch (error: any) {
+      setIsLoading(false);
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "No se pudo guardar el documento. Por favor, intente nuevamente.",
+        text: error.response?.data?.message || "Ha ocurrido un error",
         confirmButtonColor: "#2563EB",
       });
     }
   };
 
-  const handleDelete = async (document: RegulatoryDocument) => {
-    if (!document.id) return;
+  const handleEdit = (document: RegulatoryDocument) => {
+    setValue("title", document.title || "");
+    setValue("content", document.content || "");
+    setValue(
+      "effectiveDate",
+      document.effectiveDate
+        ? new Date(document.effectiveDate).toISOString().split("T")[0]
+        : ""
+    );
+    setValue("type", document.type || getDocumentType());
+    setEditId(document.id || null);
+    setShowModal(true);
+  };
 
-    Swal.fire({
+  const handleDelete = async (doc: RegulatoryDocument) => {
+    const result = await Swal.fire({
       title: "¿Estás seguro?",
-      text: "Esta acción no se puede revertir",
+      text: `Eliminarás el documento "${doc.title}". Esta acción no se puede deshacer.`,
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#EF4444",
       cancelButtonColor: "#6B7280",
       confirmButtonText: "Sí, eliminar",
       cancelButtonText: "Cancelar",
-      background: document.documentElement.classList.contains("dark")
-        ? "#1F2937"
-        : "#FFFFFF",
-      color: document.documentElement.classList.contains("dark")
-        ? "#F3F4F6"
-        : "#111827",
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        try {
-          let response;
-
-          switch (document.type) {
-            case DocumentTypeInter.policy:
-              response = await deletePolicysApi(Number(document.id));
-              break;
-            case DocumentTypeInter.terms:
-              response = await deleteTermsApi(Number(document.id));
-              break;
-            case DocumentTypeInter.boundary:
-              response = await deleteBoundaryApi(Number(document.id));
-              break;
-          }
-
-          if (response) {
-            Swal.fire({
-              title: "Eliminado",
-              text: "El documento ha sido eliminado.",
-              icon: "success",
-              confirmButtonColor: "#2563EB",
-              toast: true,
-              position: "top-end",
-              showConfirmButton: false,
-              timer: 3000,
-              timerProgressBar: true,
-            });
-            fetchData();
-          }
-        } catch (error) {
-          console.error("Error deleting document:", error);
-          Swal.fire({
-            icon: "error",
-            title: "Error",
-            text: "No se pudo eliminar el documento. Por favor, intente nuevamente.",
-            confirmButtonColor: "#2563EB",
-          });
-        }
-      }
     });
+
+    if (result.isConfirmed) {
+      try {
+        let response;
+        switch (doc.type) {
+          case DocumentTypeInter.policy:
+            response = await deletePolicysApi(Number(doc.id));
+            break;
+          case DocumentTypeInter.terms:
+            response = await deleteTermsApi(Number(doc.id));
+            break;
+          case DocumentTypeInter.boundary:
+            response = await deleteBoundaryApi(Number(doc.id));
+            break;
+        }
+
+        if (response) {
+          await fetchData();
+          Swal.fire({
+            title: "Eliminado",
+            text: "El documento ha sido eliminado.",
+            icon: "success",
+            confirmButtonColor: "#2563EB",
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+          });
+        } else {
+          throw new Error("No se pudo eliminar el documento.");
+        }
+      } catch (error: any) {
+        Swal.fire({
+          title: "Error",
+          text:
+            error.response?.data?.message ||
+            "Ha ocurrido un error al eliminar el documento",
+          icon: "error",
+          confirmButtonColor: "#EF4444",
+        });
+      }
+    }
   };
 
   const handleActivate = async (document: RegulatoryDocument) => {
-    if (!document.id || document.isCurrentVersion) return;
+    if (document.isCurrentVersion) return;
 
     try {
       let response;
-
       switch (document.type) {
         case DocumentTypeInter.policy:
-          response = await activePolicyApi(document.id);
+          response = await activePolicyApi(Number(document.id));
           break;
         case DocumentTypeInter.terms:
-          response = await activeTermsApi(document.id);
+          response = await activeTermsApi(Number(document.id));
           break;
         case DocumentTypeInter.boundary:
-          response = await activeBoundaryApi(document.id);
+          response = await activeBoundaryApi(Number(document.id));
           break;
       }
 
@@ -514,7 +368,7 @@ export function LegalSection() {
         Swal.fire({
           icon: "success",
           title: "Activado",
-          text: "El documento ha sido activado correctamente",
+          text: "Documento activado correctamente.",
           confirmButtonColor: "#2563EB",
           toast: true,
           position: "top-end",
@@ -522,14 +376,14 @@ export function LegalSection() {
           timer: 3000,
           timerProgressBar: true,
         });
-        fetchData();
+        await fetchData();
       }
     } catch (error) {
-      console.error("Error activating document:", error);
+      console.log(error);
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "No se pudo activar el documento. Por favor, intente nuevamente.",
+        text: "Algo salió mal, por favor intenta más tarde.",
         confirmButtonColor: "#2563EB",
       });
     }
@@ -537,7 +391,90 @@ export function LegalSection() {
 
   const handleView = (document: RegulatoryDocument) => {
     setViewingDocument(document);
-    setIsDialogOpen(true);
+    setShowViewModal(true);
+  };
+
+  const refreshData = async () => {
+    setIsRefreshing(true);
+    await fetchData();
+    setTimeout(() => {
+      setIsRefreshing(false);
+    }, 600);
+  };
+
+  const fetchData = async () => {
+    setIsInitialLoading(true);
+    try {
+      const [policiesRes, termsRes, boundaryRes] = await Promise.all([
+        policiesApi(),
+        termsApi(),
+        boundaryApi(),
+      ]);
+
+      setPolicies(policiesRes.data || []);
+      setTerms(termsRes.data || []);
+      setBoundary(boundaryRes.data || []);
+    } catch (error) {
+      console.error("Error loading documents:", error);
+    } finally {
+      setIsInitialLoading(false);
+      setIsRefreshing(false);
+    }
+  };
+
+  // Filtrar y ordenar documentos
+  const filteredAndSortedItems = getActiveData()
+    .filter((item) => {
+      const matchesSearch =
+        item.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.content?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesFilter =
+        filterActive === null || item.isCurrentVersion === filterActive;
+      return matchesSearch && matchesFilter;
+    })
+    .sort((a, b) => {
+      if (sortBy.value === "title") {
+        return sortBy.direction === "asc"
+          ? (a.title || "").localeCompare(b.title || "")
+          : (b.title || "").localeCompare(a.title || "");
+      }
+      if (sortBy.value === "id") {
+        return sortBy.direction === "asc"
+          ? (a.id || 0) - (b.id || 0)
+          : (b.id || 0) - (a.id || 0);
+      }
+      return 0;
+    });
+
+  // Cálculo de paginación
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredAndSortedItems.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
+  const totalPages = Math.ceil(filteredAndSortedItems.length / itemsPerPage);
+
+  // Cambiar de página
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+
+  // Limpiar búsqueda y filtros
+  const clearFilters = () => {
+    setSearchTerm("");
+    setFilterActive(null);
+    setCurrentPage(1);
+  };
+
+  // Cerrar modal
+  const closeModal = () => {
+    setShowModal(false);
+    setEditId(null);
+    reset();
+  };
+
+  const closeViewModal = () => {
+    setShowViewModal(false);
+    setViewingDocument(null);
   };
 
   const formatDate = (date: Date | string | undefined) => {
@@ -562,627 +499,845 @@ export function LegalSection() {
     }
   };
 
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // Resetear a la primera página cuando cambia el término de búsqueda o filtro
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterActive, activeTab]);
+
+  // Cerrar el dropdown de ordenación cuando se hace clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (showSortOptions && !target.closest('[data-sort-dropdown="true"]')) {
+        setShowSortOptions(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showSortOptions]);
+
+  const handleTabChange = (tab: Tabs) => {
+    setActiveTab(tab);
+    setCurrentPage(1);
+  };
+
   return (
-    <motion.div
-      className="p-2 sm:p-4 md:p-6 space-y-4 sm:space-y-6 md:space-y-8 bg-gray-50 dark:bg-gray-900 w-full"
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
-    >
-      {/* Page Header */}
-      <motion.div variants={itemVariants} className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-blue-600 to-blue-800 opacity-10 dark:opacity-20 rounded-xl sm:rounded-2xl md:rounded-3xl"></div>
-        <div className="relative bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl md:rounded-3xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700">
-          <div className="p-4 sm:p-6 md:p-8">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6">
-              <div className="flex items-start gap-3 sm:gap-5">
-                <div className="bg-gradient-to-br from-blue-500 to-blue-700 p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-lg text-white">
-                  <FileText className="w-6 h-6 sm:w-8 sm:h-8" />
-                </div>
-                <div>
-                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-                    Documentos Legales
-                  </h1>
-                  <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mt-1 sm:mt-2 max-w-2xl">
-                    Administre los documentos legales de su organización.
-                    Mantenga actualizados los términos, políticas y deslindes.
-                  </p>
-                </div>
-              </div>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => {
-                  setFormData({
-                    title: "",
-                    content: "",
-                    effectiveDate: "",
-                    type: getDocumentType(),
-                  });
-                  setIsFormDialogOpen(true);
-                }}
-                className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-medium rounded-lg sm:rounded-xl shadow-lg transition-all duration-300 w-full md:w-auto"
-              >
-                <PlusCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span>Nuevo Documento</span>
-              </motion.button>
-            </div>
-          </div>
-
-          {/* Decorative elements */}
-          <div className="absolute top-0 right-0 w-24 sm:w-32 h-24 sm:h-32 bg-gradient-to-br from-blue-500/10 to-blue-700/10 rounded-full -mr-12 sm:-mr-16 -mt-12 sm:-mt-16 dark:from-blue-500/20 dark:to-blue-700/20"></div>
-          <div className="absolute bottom-0 left-0 w-16 sm:w-24 h-16 sm:h-24 bg-gradient-to-tr from-blue-400/10 to-blue-600/10 rounded-full -ml-8 sm:-ml-12 -mb-8 sm:-mb-12 dark:from-blue-400/20 dark:to-blue-600/20"></div>
+    <div className="px-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
+      {/* Header section */}
+      <div className="bg-blue-500 rounded-xl shadow-xl overflow-hidden relative mb-6">
+        {/* Background elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-20 -right-20 w-64 h-64 md:w-96 md:h-96 bg-white/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-blue-600/20 to-transparent"></div>
         </div>
-      </motion.div>
 
-      {/* Search bar and filters */}
-      <motion.div
-        variants={itemVariants}
-        className="bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700"
-      >
-        <div className="p-4 sm:p-6 border-b border-gray-100 dark:border-gray-700 flex flex-col md:flex-row gap-4 items-center justify-between bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-750">
-          <div className="relative flex-grow max-w-md w-full">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
+        <div className="p-4 sm:p-6 relative z-10">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex items-center">
+              <div className="bg-white/20 p-2.5 sm:p-3 rounded-full mr-3 sm:mr-4">
+                <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold text-white">
+                  Documentos Legales
+                </h2>
+                <p className="mt-1 text-white/80 flex items-center text-sm sm:text-base">
+                  <Shield className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1.5 inline" />
+                  {filteredAndSortedItems.length}{" "}
+                  {filteredAndSortedItems.length === 1
+                    ? "documento"
+                    : "documentos"}{" "}
+                  disponibles
+                </p>
+              </div>
             </div>
-            <input
-              type="text"
-              placeholder="Buscar documentos..."
-              className="pl-10 pr-10 py-2 sm:py-3 w-full border border-gray-200 dark:border-gray-600 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            {searchTerm && (
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                onClick={() => setSearchTerm("")}
+
+            <button
+              className="w-full sm:w-auto bg-white/20 hover:bg-white/30 transition-colors text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center justify-center"
+              onClick={() => {
+                setValue("type", getDocumentType());
+                setShowModal(true);
+              }}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Nuevo Documento
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content Section */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+        {/* Toolbar */}
+        <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
+          {/* Search bar with button */}
+          <div className="relative flex-grow max-w-full md:max-w-md">
+            <div className="flex">
+              <div className="relative flex-grow">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder="Buscar documentos..."
+                  className="pl-12 pr-4 py-3 w-full border border-gray-300 dark:border-gray-600 rounded-l-lg focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                />
+                {searchTerm && (
+                  <button
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    onClick={() => setSearchTerm("")}
+                  >
+                    <XCircle className="w-5 h-5" />
+                  </button>
+                )}
+              </div>
+              <button
+                onClick={() => {}} // La búsqueda es en tiempo real
+                className="px-4 py-3 bg-blue-500 text-white rounded-r-lg hover:bg-blue-600 transition-colors"
+                aria-label="Buscar"
               >
-                <XCircle className="w-5 h-5" />
-              </motion.button>
-            )}
+                <Search className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3 w-full md:w-auto">
-            {/* Sort dropdown */}
+          {/* Filter and sort buttons */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            {/* Status filter */}
+            <div className="relative">
+              <select
+                className="w-full sm:w-auto px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors appearance-none"
+                value={
+                  filterActive === null
+                    ? ""
+                    : filterActive
+                    ? "active"
+                    : "inactive"
+                }
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === "") setFilterActive(null);
+                  else if (value === "active") setFilterActive(true);
+                  else setFilterActive(false);
+                }}
+              >
+                <option value="">Todos los estados</option>
+                <option value="active">Activos</option>
+                <option value="inactive">Inactivos</option>
+              </select>
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                <ChevronDown className="w-4 h-4 text-gray-400" />
+              </div>
+            </div>
+
+            {/* Sort button */}
             <div className="relative" data-sort-dropdown="true">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg sm:rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-650 transition-colors shadow-sm text-sm"
+              <button
+                className="w-full sm:w-auto flex items-center justify-center gap-1 px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 onClick={() => setShowSortOptions(!showSortOptions)}
               >
                 <ArrowUpDown className="w-4 h-4" />
-                <span className="hidden xs:inline">Ordenar</span>
-                <ChevronDown className="w-4 h-4 ml-1" />
-              </motion.button>
+                <span>Ordenar</span>
+                {showSortOptions ? (
+                  <ChevronUp className="w-4 h-4 ml-1" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 ml-1" />
+                )}
+              </button>
+
+              <AnimatePresence>
+                {showSortOptions && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 z-40"
+                  >
+                    <div className="p-2">
+                      {sortOptions.map((option) => (
+                        <button
+                          key={`${option.value}-${option.direction}`}
+                          onClick={() => {
+                            setSortBy(option);
+                            setShowSortOptions(false);
+                          }}
+                          className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${
+                            sortBy.value === option.value &&
+                            sortBy.direction === option.direction
+                              ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                              : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
-            {/* Status filter */}
-            <div className="relative" ref={dropdownRef}>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg sm:rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-650 transition-colors shadow-sm text-sm"
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              >
-                <Filter className="w-4 h-4" />
-                <span className="hidden xs:inline">Estado</span>
-                <ChevronDown className="w-4 h-4 ml-1" />
-              </motion.button>
-
-              {isDropdownOpen && (
-                <div className="absolute z-10 mt-1 w-40 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 py-1">
-                  <button
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    onClick={() => {
-                      setFilterActive(null);
-                      setIsDropdownOpen(false);
-                    }}
-                  >
-                    Todos
-                  </button>
-                  <button
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    onClick={() => {
-                      setFilterActive(true);
-                      setIsDropdownOpen(false);
-                    }}
-                  >
-                    Activos
-                  </button>
-                  <button
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    onClick={() => {
-                      setFilterActive(false);
-                      setIsDropdownOpen(false);
-                    }}
-                  >
-                    Inactivos
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Refresh button */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+            <button
               onClick={refreshData}
-              className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-650 transition-colors shadow-sm"
+              className="p-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
               disabled={isRefreshing}
             >
               <RefreshCw
-                className={`w-4 h-4 sm:w-5 sm:h-5 ${
-                  isRefreshing ? "animate-spin" : ""
-                }`}
+                className={`w-5 h-5 ${isRefreshing ? "animate-spin" : ""}`}
               />
-              <span className="sr-only">Refrescar</span>
-            </motion.button>
+            </button>
           </div>
         </div>
 
+        {/* Active filters chips */}
+        {(searchTerm || filterActive !== null) && (
+          <div className="flex flex-wrap gap-2 items-center p-4 sm:p-6 pt-0">
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              Filtros activos:
+            </span>
+
+            {searchTerm && (
+              <div className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs rounded-full px-3 py-1 flex items-center">
+                <span>Búsqueda: {searchTerm}</span>
+                <button
+                  className="ml-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+                  onClick={() => setSearchTerm("")}
+                  aria-label="Eliminar filtro de búsqueda"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            )}
+
+            {filterActive !== null && (
+              <div className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs rounded-full px-3 py-1 flex items-center">
+                <span>Estado: {filterActive ? "Activos" : "Inactivos"}</span>
+                <button
+                  className="ml-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+                  onClick={() => setFilterActive(null)}
+                  aria-label="Eliminar filtro de estado"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Tabs */}
-        <div className="flex overflow-x-auto">
-          <button
-            onClick={() => handleTabChange("terms")}
-            className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-all ${
-              activeTab === "terms"
-                ? "bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400"
-                : "text-gray-600 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-            }`}
-          >
-            <FileText className="h-4 w-4" />
-            <span>Términos y Condiciones</span>
-          </button>
-          <button
-            onClick={() => handleTabChange("legal")}
-            className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-all ${
-              activeTab === "legal"
-                ? "bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400"
-                : "text-gray-600 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-            }`}
-          >
-            <Shield className="h-4 w-4" />
-            <span>Deslinde Legal</span>
-          </button>
-          <button
-            onClick={() => handleTabChange("policies")}
-            className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-all ${
-              activeTab === "policies"
-                ? "bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400"
-                : "text-gray-600 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-            }`}
-          >
-            <Lock className="h-4 w-4" />
-            <span>Políticas</span>
-          </button>
+        <div className="flex overflow-x-auto border-b border-gray-200 dark:border-gray-700">
+          {tabConfig.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => handleTabChange(tab.key)}
+              className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-all ${
+                activeTab === tab.key
+                  ? "bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400"
+                  : "text-gray-600 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+              }`}
+            >
+              <div
+                className={`p-2 rounded-full ${
+                  activeTab === tab.key
+                    ? "bg-blue-100 dark:bg-blue-900/30"
+                    : "bg-gray-100 dark:bg-gray-700"
+                }`}
+              >
+                {tab.icon}
+              </div>
+              <span className="hidden sm:inline">{tab.label}</span>
+            </button>
+          ))}
         </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto">
-          {isLoading ? (
-            <div className="flex justify-center items-center py-20">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        {/* Documents table */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden">
+          {isInitialLoading ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <div className="w-16 h-16 relative">
+                <div className="absolute inset-0 rounded-full border-4 border-blue-200 dark:border-blue-900/30 opacity-25"></div>
+                <div className="absolute inset-0 rounded-full border-4 border-t-blue-600 dark:border-t-blue-400 animate-spin"></div>
+              </div>
+              <p className="text-gray-600 dark:text-gray-300 mt-4">
+                Cargando documentos legales...
+              </p>
             </div>
-          ) : filteredData.length > 0 ? (
-            <div className="grid gap-3 sm:gap-4 p-3 sm:p-4 md:p-6">
-              <AnimatePresence>
-                {filteredData.map((document, index) => (
-                  <motion.div
-                    key={document.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="bg-white dark:bg-gray-700 rounded-lg sm:rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-300 p-3 sm:p-4"
-                  >
-                    <div className="flex flex-col gap-3">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
-                        <div className="flex items-center gap-2">
-                          <div className="bg-gradient-to-br from-blue-500 to-blue-700 text-white p-1.5 sm:p-2 rounded-lg shadow-md">
-                            <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                          </div>
-                          <span className="font-mono text-xs bg-gray-100 dark:bg-gray-700 px-1.5 sm:px-2 py-0.5 rounded-md border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400">
-                            #{document.id}
+          ) : (
+            <>
+              {/* Table header - visible only on tablet and above */}
+              <div className="bg-blue-50 dark:bg-gray-700 text-blue-700 dark:text-white py-4 px-6 hidden sm:block">
+                <div className="grid grid-cols-12 gap-4 items-center">
+                  <div className="col-span-1 font-medium">ID</div>
+                  <div className="col-span-3 font-medium">Título</div>
+                  <div className="col-span-2 font-medium">Tipo</div>
+                  <div className="col-span-2 font-medium">Fecha Vigencia</div>
+                  <div className="col-span-2 font-medium">Estado</div>
+                  <div className="col-span-2 text-right font-medium">
+                    Acciones
+                  </div>
+                </div>
+              </div>
+
+              <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                {currentItems.length > 0 ? (
+                  currentItems.map((item) => (
+                    <div
+                      key={item.id}
+                      className="px-4 sm:px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
+                    >
+                      {/* Desktop/Tablet View */}
+                      <div className="hidden sm:grid sm:grid-cols-12 sm:gap-4 sm:items-center">
+                        <div className="col-span-1">
+                          <span className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium text-sm">
+                            {item.id}
                           </span>
-                          {document.isCurrentVersion ? (
-                            <span className="text-xs sm:text-sm bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full flex items-center gap-1">
-                              <CheckCircle className="w-3 h-3" />
+                        </div>
+                        <div className="col-span-3">
+                          <div className="text-sm font-medium text-gray-900 dark:text-gray-100 line-clamp-2">
+                            {item.title}
+                          </div>
+                        </div>
+                        <div className="col-span-2">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
+                            {getDocumentTypeLabel(item.type!)}
+                          </span>
+                        </div>
+                        <div className="col-span-2">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              {formatDate(item.effectiveDate)}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="col-span-2">
+                          {item.isCurrentVersion ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                              <CheckCircle className="h-3 w-3 mr-1" />
                               Activo
                             </span>
                           ) : (
-                            <span className="text-xs sm:text-sm bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded-full flex items-center gap-1">
-                              <XCircle className="w-3 h-3" />
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400">
+                              <XCircle className="h-3 w-3 mr-1" />
+                              Inactivo
+                            </span>
+                          )}
+                        </div>
+                        <div className="col-span-2 flex items-center justify-end space-x-2">
+                          <button
+                            onClick={() => handleView(item)}
+                            className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                            title="Ver documento"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleActivate(item)}
+                            disabled={item.isCurrentVersion}
+                            className={`p-2 rounded-full transition-colors ${
+                              item.isCurrentVersion
+                                ? "bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                                : "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50"
+                            }`}
+                            title={
+                              item.isCurrentVersion
+                                ? "Ya está activo"
+                                : "Activar documento"
+                            }
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleEdit(item)}
+                            className="p-2 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors"
+                            title="Editar documento"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(item)}
+                            className="p-2 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+                            title="Eliminar documento"
+                          >
+                            <Trash className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Mobile View */}
+                      <div className="sm:hidden flex flex-col space-y-3">
+                        <div className="flex justify-between items-start">
+                          <div className="flex items-center space-x-2">
+                            <span className="flex items-center justify-center h-7 w-7 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium text-xs">
+                              {item.id}
+                            </span>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
+                              {getDocumentTypeLabel(item.type!)}
+                            </span>
+                          </div>
+                          {item.isCurrentVersion ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Activo
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400">
+                              <XCircle className="h-3 w-3 mr-1" />
                               Inactivo
                             </span>
                           )}
                         </div>
 
-                        <div className="flex items-center gap-2 justify-end">
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => handleView(document)}
-                            className="bg-blue-100 dark:bg-blue-900/30 p-1.5 sm:p-2 rounded-lg text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                        <div>
+                          <h3 className="font-medium text-gray-900 dark:text-white text-sm mb-1">
+                            {item.title}
+                          </h3>
+                          <div className="flex items-center gap-4 mt-2">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="w-3 h-3 text-gray-500 dark:text-gray-400" />
+                              <span className="text-xs text-gray-500 dark:text-gray-400">
+                                {formatDate(item.effectiveDate)}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Clock className="w-3 h-3 text-gray-500 dark:text-gray-400" />
+                              <span className="text-xs text-gray-500 dark:text-gray-400">
+                                v{item.version || 1}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-end space-x-2">
+                          <button
+                            onClick={() => handleView(item)}
+                            className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
                             title="Ver documento"
+                            aria-label="Ver documento"
                           >
-                            <Eye
-                              size={16}
-                              className="sm:w-[18px] sm:h-[18px]"
-                            />
-                          </motion.button>
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => handleActivate(document)}
-                            disabled={document.isCurrentVersion}
-                            className={`p-1.5 sm:p-2 rounded-lg transition-colors ${
-                              document.isCurrentVersion
+                            <Eye size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleActivate(item)}
+                            disabled={item.isCurrentVersion}
+                            className={`p-2 rounded-full transition-colors ${
+                              item.isCurrentVersion
                                 ? "bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
                                 : "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50"
                             }`}
                             title={
-                              document.isCurrentVersion
+                              item.isCurrentVersion
                                 ? "Ya está activo"
                                 : "Activar documento"
                             }
+                            aria-label="Activar documento"
                           >
-                            <CheckCircle
-                              size={16}
-                              className="sm:w-[18px] sm:h-[18px]"
-                            />
-                          </motion.button>
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => handleEdit(document)}
-                            className="bg-amber-100 dark:bg-amber-900/30 p-1.5 sm:p-2 rounded-lg text-amber-600 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors"
+                            <CheckCircle size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleEdit(item)}
+                            className="p-2 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors"
                             title="Editar documento"
+                            aria-label="Editar documento"
                           >
-                            <Edit
-                              size={16}
-                              className="sm:w-[18px] sm:h-[18px]"
-                            />
-                          </motion.button>
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => handleDelete(document)}
-                            className="bg-red-100 dark:bg-red-900/30 p-1.5 sm:p-2 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+                            <Edit size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(item)}
+                            className="p-2 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
                             title="Eliminar documento"
+                            aria-label="Eliminar documento"
                           >
-                            <Trash2
-                              size={16}
-                              className="sm:w-[18px] sm:h-[18px]"
-                            />
-                          </motion.button>
-                        </div>
-                      </div>
-
-                      <div className="mt-1">
-                        <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
-                          {document.title}
-                        </h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-300 mt-2 line-clamp-2">
-                          {document.content}
-                        </p>
-                        <div className="flex items-center gap-4 mt-3">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
-                              Vigencia: {formatDate(document.effectiveDate)}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
-                              Versión: {document.version || 1}
-                            </span>
-                          </div>
+                            <Trash size={16} />
+                          </button>
                         </div>
                       </div>
                     </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
-              className="flex flex-col items-center justify-center py-10 sm:py-16 px-4 sm:px-6 text-center"
-            >
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 sm:p-6 rounded-full mb-4">
-                <FileText className="w-8 h-8 sm:w-12 sm:h-12 text-blue-400 dark:text-blue-300" />
+                  ))
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 text-center px-4">
+                    <FileText className="h-12 w-12 text-gray-300 dark:text-gray-600 mb-3" />
+                    <p className="text-lg font-medium text-gray-700 dark:text-gray-300">
+                      {searchTerm || filterActive !== null
+                        ? "No se encontraron documentos"
+                        : "No hay documentos legales"}
+                    </p>
+                    <p className="text-sm mb-4 text-gray-500 dark:text-gray-400">
+                      {searchTerm || filterActive !== null
+                        ? "No hay documentos que coincidan con los filtros aplicados"
+                        : "Comienza creando un nuevo documento legal"}
+                    </p>
+
+                    <div className="mt-6">
+                      {searchTerm || filterActive !== null ? (
+                        <button
+                          onClick={clearFilters}
+                          className="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg font-medium flex items-center transition-colors"
+                        >
+                          <XCircle className="w-4 h-4 mr-2" />
+                          Limpiar filtros
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setValue("type", getDocumentType());
+                            setShowModal(true);
+                          }}
+                          className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                        >
+                          <Plus className="-ml-1 mr-2 h-5 w-5" />
+                          Nuevo Documento
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-2">
-                {searchTerm
-                  ? `No se encontraron resultados para "${searchTerm}"`
-                  : "No hay documentos disponibles"}
-              </h3>
-              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-4 sm:mb-6 max-w-md">
-                {searchTerm
-                  ? "Intenta con otro término de búsqueda o limpia los filtros para ver todos los documentos"
-                  : "Añade documentos legales para comenzar a gestionar la información regulatoria de tu organización"}
-              </p>
-              {searchTerm ? (
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setSearchTerm("")}
-                  className="px-4 sm:px-5 py-2 sm:py-2.5 bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 font-medium rounded-lg sm:rounded-xl border border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors shadow-sm flex items-center gap-2 text-sm"
-                >
-                  <XCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  Limpiar búsqueda
-                </motion.button>
-              ) : (
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => {
-                    setFormData({
-                      title: "",
-                      content: "",
-                      effectiveDate: "",
-                      type: getDocumentType(),
-                    });
-                    setIsFormDialogOpen(true);
-                  }}
-                  className="px-4 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-medium rounded-lg sm:rounded-xl shadow-md transition-colors flex items-center gap-2 text-sm"
-                >
-                  <PlusCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  Añadir Documento
-                </motion.button>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="bg-gray-50 dark:bg-gray-800/50 p-4 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      Mostrar
+                    </span>
+                    <select
+                      className="border border-gray-300 dark:border-gray-600 rounded-md text-sm p-1 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                      value={itemsPerPage}
+                      onChange={(e) => {
+                        setItemsPerPage(Number(e.target.value));
+                        setCurrentPage(1);
+                      }}
+                    >
+                      <option value={5}>5</option>
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                    </select>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      por página
+                    </span>
+                  </div>
+
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                    Mostrando {indexOfFirstItem + 1} a{" "}
+                    {Math.min(indexOfLastItem, filteredAndSortedItems.length)}{" "}
+                    de {filteredAndSortedItems.length} documentos
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <button
+                      className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      disabled={currentPage === 1}
+                      onClick={() => paginate(currentPage - 1)}
+                      aria-label="Página anterior"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+
+                    <div className="flex items-center">
+                      <input
+                        type="text"
+                        className="w-12 px-2 py-1 text-center border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                        value={currentPage}
+                        onChange={(e) => {
+                          const page = Number.parseInt(e.target.value);
+                          if (!isNaN(page) && page > 0 && page <= totalPages) {
+                            setCurrentPage(page);
+                          }
+                        }}
+                        aria-label="Número de página"
+                      />
+                      <span className="mx-1 text-gray-500 dark:text-gray-400">
+                        de
+                      </span>
+                      <span className="text-gray-700 dark:text-gray-300">
+                        {totalPages}
+                      </span>
+                    </div>
+
+                    <button
+                      className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      disabled={currentPage === totalPages}
+                      onClick={() => paginate(currentPage + 1)}
+                      aria-label="Página siguiente"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
               )}
-            </motion.div>
+            </>
           )}
         </div>
-      </motion.div>
+      </div>
 
-      {/* Form Modal */}
-      {isFormDialogOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center bg-black bg-opacity-50">
-          <div
-            ref={dialogRef}
-            className="relative max-w-2xl w-full mx-4 bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden"
-          >
-            <div className="bg-gradient-to-r from-blue-50 to-white dark:from-blue-900/20 dark:to-gray-800 p-6 border-b border-gray-200 dark:border-gray-700">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="bg-blue-100 dark:bg-blue-900/30 p-2.5 rounded-full shadow-sm">
-                    <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <h2 className="text-xl font-bold text-gray-800 dark:text-white">
-                    {formData.id ? "Editar Documento" : "Nuevo Documento"}
-                  </h2>
-                </div>
+      {/* Modal para crear/editar documento */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto mx-4">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                  {editId !== null ? "Editar Documento" : "Nuevo Documento"}
+                </h3>
                 <button
-                  onClick={handleCancel}
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  onClick={closeModal}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                 >
-                  <X className="h-5 w-5" />
+                  <X className="w-6 h-6" />
                 </button>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mt-2 ml-11">
-                {formData.id
-                  ? "Modifique los detalles del documento legal."
-                  : "Ingrese los detalles del nuevo documento legal."}
+
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                {editId !== null
+                  ? "Modifica los datos del documento legal seleccionado"
+                  : "Completa los datos para crear un nuevo documento legal"}
               </p>
-            </div>
 
-            <div className="p-6 space-y-5">
-              <div className="grid gap-2">
-                <label
-                  htmlFor="title"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
-                  Título
-                </label>
-                <div className="relative">
-                  <input
-                    id="title"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleInputChange}
-                    placeholder="Escribe el título del documento"
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:outline-none ${
-                      formErrors.title
-                        ? "border-red-500 dark:border-red-500 focus:ring-red-500 focus:border-red-500"
-                        : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
-                    } bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100`}
-                  />
-                  {formErrors.title && (
-                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                      <AlertCircle className="h-5 w-5 text-red-500" />
-                    </div>
-                  )}
+              <form onSubmit={handleSubmit(onSubmit)}>
+                <div className="space-y-4">
+                  {/* Título */}
+                  <div>
+                    <label
+                      htmlFor="title"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      Título *
+                    </label>
+                    <input
+                      {...register("title", {
+                        required: "El título es obligatorio",
+                        minLength: {
+                          value: 4,
+                          message: "El título debe tener al menos 4 caracteres",
+                        },
+                        maxLength: {
+                          value: 200,
+                          message:
+                            "El título no puede exceder los 200 caracteres",
+                        },
+                      })}
+                      type="text"
+                      placeholder="Ej: Política de Privacidad v2.0"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      disabled={isLoading}
+                    />
+                    {errors.title && (
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {errors.title.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Tipo de Documento */}
+                  <div>
+                    <label
+                      htmlFor="type"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      Tipo de Documento *
+                    </label>
+                    <select
+                      {...register("type", {
+                        required: "El tipo de documento es obligatorio",
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      disabled={isLoading}
+                    >
+                      <option value="">Seleccionar tipo</option>
+                      <option value={DocumentTypeInter.policy}>
+                        Aviso de Privacidad
+                      </option>
+                      <option value={DocumentTypeInter.terms}>
+                        Términos y Condiciones
+                      </option>
+                      <option value={DocumentTypeInter.boundary}>
+                        Deslinde Legal
+                      </option>
+                    </select>
+                    {errors.type && (
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {errors.type.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Fecha de Vigencia */}
+                  <div>
+                    <label
+                      htmlFor="effectiveDate"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      Fecha de Vigencia *
+                    </label>
+                    <input
+                      {...register("effectiveDate", {
+                        required: "La fecha de vigencia es obligatoria",
+                        validate: (value) => {
+                          const currentDate = new Date();
+                          const selectedDate = new Date(value);
+                          const diffInDays = Math.floor(
+                            (selectedDate.getTime() - currentDate.getTime()) /
+                              (1000 * 60 * 60 * 24)
+                          );
+                          return (
+                            diffInDays > 6 ||
+                            "La fecha debe ser al menos 6 días mayor a la actual."
+                          );
+                        },
+                      })}
+                      type="date"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      disabled={isLoading}
+                    />
+                    {errors.effectiveDate && (
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {errors.effectiveDate.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Contenido */}
+                  <div>
+                    <label
+                      htmlFor="content"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      Contenido del documento *
+                    </label>
+                    <textarea
+                      {...register("content", {
+                        required: "El contenido es obligatorio",
+                        minLength: {
+                          value: 10,
+                          message:
+                            "El contenido debe tener al menos 10 caracteres",
+                        },
+                      })}
+                      rows={6}
+                      placeholder="Ingrese el contenido completo del documento legal..."
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      disabled={isLoading}
+                    />
+                    {errors.content && (
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {errors.content.message}
+                      </p>
+                    )}
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Caracteres: {watch("content")?.length || 0}/5000
+                    </p>
+                  </div>
                 </div>
-                {formErrors.title && (
-                  <p className="text-sm text-red-500 flex items-center gap-1 mt-1">
-                    <AlertCircle className="h-3 w-3" />
-                    {formErrors.title}
-                  </p>
-                )}
-              </div>
 
-              <div className="grid gap-2">
-                <label
-                  htmlFor="type"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
-                  Tipo de Documento
-                </label>
-                <div className="relative" ref={typeSelectRef}>
+                <div className="flex justify-end space-x-3 mt-6">
                   <button
                     type="button"
-                    onClick={() => setIsTypeSelectOpen(!isTypeSelectOpen)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-left flex justify-between items-center"
+                    onClick={closeModal}
+                    disabled={isLoading}
+                    className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors disabled:opacity-50"
                   >
-                    <span>{getDocumentTypeLabel(formData.type)}</span>
-                    <ChevronDown
-                      className={`h-5 w-5 text-gray-400 transition-transform ${
-                        isTypeSelectOpen ? "rotate-180" : ""
-                      }`}
-                    />
+                    Cancelar
                   </button>
-
-                  {isTypeSelectOpen && (
-                    <div className="absolute z-20 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg">
-                      <ul className="py-1 max-h-60 overflow-auto">
-                        <li>
-                          <button
-                            type="button"
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                            onClick={() => {
-                              setFormData((prev) => ({
-                                ...prev,
-                                type: DocumentTypeInter.policy,
-                              }));
-                              setIsTypeSelectOpen(false);
-                            }}
-                          >
-                            Aviso de Privacidad
-                          </button>
-                        </li>
-                        <li>
-                          <button
-                            type="button"
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                            onClick={() => {
-                              setFormData((prev) => ({
-                                ...prev,
-                                type: DocumentTypeInter.terms,
-                              }));
-                              setIsTypeSelectOpen(false);
-                            }}
-                          >
-                            Términos y Condiciones
-                          </button>
-                        </li>
-                        <li>
-                          <button
-                            type="button"
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                            onClick={() => {
-                              setFormData((prev) => ({
-                                ...prev,
-                                type: DocumentTypeInter.boundary,
-                              }));
-                              setIsTypeSelectOpen(false);
-                            }}
-                          >
-                            Deslinde Legal
-                          </button>
-                        </li>
-                      </ul>
-                    </div>
-                  )}
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        Procesando...
+                      </>
+                    ) : editId !== null ? (
+                      "Actualizar Documento"
+                    ) : (
+                      "Crear Documento"
+                    )}
+                  </button>
                 </div>
-              </div>
-
-              <div className="grid gap-2">
-                <label
-                  htmlFor="effectiveDate"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
-                  Fecha de Vigencia
-                </label>
-                <div className="relative">
-                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                    <Calendar className="h-4 w-4 text-gray-400" />
-                  </div>
-                  <input
-                    id="effectiveDate"
-                    name="effectiveDate"
-                    type="date"
-                    value={formData.effectiveDate}
-                    onChange={handleInputChange}
-                    className={`pl-10 w-full px-3 py-2 border rounded-lg focus:ring-2 focus:outline-none ${
-                      formErrors.effectiveDate
-                        ? "border-red-500 dark:border-red-500 focus:ring-red-500 focus:border-red-500"
-                        : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
-                    } bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100`}
-                  />
-                  {formErrors.effectiveDate && (
-                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                      <AlertCircle className="h-5 w-5 text-red-500" />
-                    </div>
-                  )}
-                </div>
-                {formErrors.effectiveDate && (
-                  <p className="text-sm text-red-500 flex items-center gap-1 mt-1">
-                    <AlertCircle className="h-3 w-3" />
-                    {formErrors.effectiveDate}
-                  </p>
-                )}
-              </div>
-
-              <div className="grid gap-2">
-                <label
-                  htmlFor="content"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
-                  Contenido
-                </label>
-                <div className="relative">
-                  <textarea
-                    id="content"
-                    name="content"
-                    value={formData.content}
-                    onChange={handleInputChange}
-                    placeholder="Escribe el contenido del documento"
-                    rows={5}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:outline-none ${
-                      formErrors.content
-                        ? "border-red-500 dark:border-red-500 focus:ring-red-500 focus:border-red-500"
-                        : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
-                    } bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100`}
-                  />
-                  {formErrors.content && (
-                    <div className="absolute right-3 top-3">
-                      <AlertCircle className="h-5 w-5 text-red-500" />
-                    </div>
-                  )}
-                </div>
-                {formErrors.content && (
-                  <p className="text-sm text-red-500 flex items-center gap-1 mt-1">
-                    <AlertCircle className="h-3 w-3" />
-                    {formErrors.content}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleCancel}
-                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                >
-                  Cancelar
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleSave}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white rounded-lg shadow-sm transition-colors"
-                >
-                  {formData.id ? "Actualizar" : "Guardar"}
-                </motion.button>
-              </div>
+              </form>
             </div>
           </div>
         </div>
       )}
 
-      <ViewDocumentDialog
-        isOpen={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
-        document={viewingDocument}
-      />
-    </motion.div>
+      {/* Modal para ver documento */}
+      {showViewModal && viewingDocument && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto mx-4">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                  {viewingDocument.title}
+                </h3>
+                <button
+                  onClick={closeViewModal}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="flex flex-wrap gap-3 mb-6">
+                <div className="flex items-center gap-1 text-sm bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-3 py-1.5 rounded-full">
+                  <FileText className="h-3.5 w-3.5 mr-1" />
+                  {getDocumentTypeLabel(viewingDocument.type!)}
+                </div>
+                <div className="flex items-center gap-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-1.5 rounded-full">
+                  <Calendar className="h-3.5 w-3.5 mr-1" />
+                  Vigencia: {formatDate(viewingDocument.effectiveDate)}
+                </div>
+                <div className="flex items-center gap-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-1.5 rounded-full">
+                  <Clock className="h-3.5 w-3.5 mr-1" />
+                  Versión: {viewingDocument.version || 1}
+                </div>
+                {viewingDocument.isCurrentVersion ? (
+                  <div className="flex items-center gap-1 text-sm bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 px-3 py-1.5 rounded-full">
+                    <CheckCircle className="h-3 w-3 mr-1" />
+                    Activo
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-1.5 rounded-full">
+                    <XCircle className="h-3 w-3 mr-1" />
+                    Inactivo
+                  </div>
+                )}
+              </div>
+
+              <div className="max-h-[50vh] overflow-y-auto">
+                <div className="p-6 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
+                  <div className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
+                    {viewingDocument.content}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end mt-6">
+                <button
+                  onClick={closeViewModal}
+                  className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
-}
+};
+

@@ -34,7 +34,6 @@ const PasswordStrengthIndicator = ({
           {errors.password.message}
         </motion.p>
       )}
-
       {/* Password strength indicator - only show if password has content and not all requirements are met */}
       <AnimatePresence>
         {password && !Object.values(passwordChecks).every(Boolean) && (
@@ -59,6 +58,7 @@ const PasswordStrengthIndicator = ({
                   {getStrengthName(passwordStrength)}
                 </span>
               </div>
+
               <div className="w-full h-1.5 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
@@ -74,27 +74,12 @@ const PasswordStrengthIndicator = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 mt-2">
                 {[
                   { key: "length", label: "Mínimo 8 caracteres" },
-                  {
-                    key: "uppercase",
-                    label: "Al menos una mayúscula",
-                  },
-                  {
-                    key: "lowercase",
-                    label: "Al menos una minúscula",
-                  },
+                  { key: "uppercase", label: "Al menos una mayúscula" },
+                  { key: "lowercase", label: "Al menos una minúscula" },
                   { key: "number", label: "Al menos un número" },
-                  {
-                    key: "special",
-                    label: "Al menos un carácter especial",
-                  },
-                  {
-                    key: "noSequential",
-                    label: "Sin secuencias obvias",
-                  },
-                  {
-                    key: "noInvalidChars",
-                    label: "Sin caracteres < > ' \" `",
-                  },
+                  { key: "special", label: "Al menos un carácter especial" },
+                  { key: "noSequential", label: "Sin secuencias obvias" },
+                  { key: "noInvalidChars", label: "Sin caracteres < > ' \" `" },
                 ].map((item, index) => (
                   <motion.div
                     key={item.key}

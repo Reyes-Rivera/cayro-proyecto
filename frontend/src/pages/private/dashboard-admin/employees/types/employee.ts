@@ -8,6 +8,7 @@ export interface Employee {
   password?: string;
   gender: string;
   role: string;
+  active: boolean 
 }
 
 export interface EmployeeFormData {
@@ -20,6 +21,7 @@ export interface EmployeeFormData {
   confirmPassword: string;
   gender: string;
   role: string;
+  active: boolean 
 }
 
 export interface PasswordFormData {

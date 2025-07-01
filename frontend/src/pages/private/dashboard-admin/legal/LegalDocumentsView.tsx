@@ -14,7 +14,6 @@ import {
   Search,
   Calendar,
   AlertTriangle,
-  Filter,
   Eye,
   ChevronLeft,
   ChevronRight,
@@ -41,15 +40,6 @@ import {
   updateBoundaryApi,
 } from "@/api/boundary";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
 
 export enum Status {
   current = "CURRENT",
@@ -68,7 +58,6 @@ export class RegulatoryDocument {
   title?: string;
   content?: string;
   version?: number;
-
   effectiveDate?: Date;
   isDeleted?: boolean;
   isCurrentVersion?: boolean;
@@ -112,6 +101,7 @@ const LegalDocumentsView: React.FC = () => {
         const getPolicy = await policiesApi();
         const getTerms = await termsApi();
         const getBoundary = await boundaryApi();
+
         setPolicies(getPolicy.data);
         setTerms(getTerms.data);
         setBoundary(getBoundary.data);
@@ -155,6 +145,7 @@ const LegalDocumentsView: React.FC = () => {
             ...doc,
             isCurrentVersion: i === index, // Solo activa el documento en el índice actual
           }));
+
           setDataMap[activeTab](updatedData);
         }
       };
@@ -229,7 +220,6 @@ const LegalDocumentsView: React.FC = () => {
         if (currentData) {
           const updatedData = currentData.filter((_, i) => i !== index);
           setDataMap[activeTab](updatedData);
-
           Swal.fire("Eliminado", "El documento ha sido eliminado.", "success");
         }
       }
@@ -249,12 +239,14 @@ const LegalDocumentsView: React.FC = () => {
       isCurrentVersion: true,
       type: newDocument.type,
     };
+
     if (newDocument.type === DocumentTypeInter.terms) {
       const res = await createTermsApi({
         title: newDocument.title,
         content: newDocument.content,
         effectiveDate: new Date(newDocument.effectiveDate).toISOString(),
       });
+
       if (res) {
         setTerms((prev) =>
           prev
@@ -279,6 +271,7 @@ const LegalDocumentsView: React.FC = () => {
         content: newDocument.content,
         effectiveDate: new Date(newDocument.effectiveDate).toISOString(),
       });
+
       if (res) {
         setPolicies((prev) =>
           prev
@@ -303,6 +296,7 @@ const LegalDocumentsView: React.FC = () => {
         content: newDocument.content,
         effectiveDate: new Date(newDocument.effectiveDate).toISOString(),
       });
+
       if (res) {
         setBoundary((prev) =>
           prev
@@ -336,6 +330,7 @@ const LegalDocumentsView: React.FC = () => {
       isCurrentVersion: true,
       type: newDocument.type,
     };
+
     try {
       if (newDocument.type === DocumentTypeInter.terms) {
         const res = await updateTermsApi(
@@ -346,6 +341,7 @@ const LegalDocumentsView: React.FC = () => {
           },
           Number(newDocument.id)
         );
+
         if (res) {
           setTerms((prev) =>
             prev
@@ -458,8 +454,14 @@ const LegalDocumentsView: React.FC = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col items-center p-4 sm:p-6 dark:text-gray-100">
       <div className="w-full max-w-7xl space-y-6">
         {/* Header */}
-        <div className="bg-blue-600 text-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700">
-          <div className="p-6">
+        <div className="bg-blue-500 text-white rounded-xl shadow-xl overflow-hidden relative">
+          {/* Background elements */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute -top-20 -right-20 w-64 h-64 md:w-96 md:h-96 bg-white/10 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-blue-600/20 to-transparent"></div>
+          </div>
+
+          <div className="p-6 relative z-10">
             <div className="flex items-center gap-3">
               <div className="bg-white/20 p-3 rounded-lg">
                 <FileText className="w-6 h-6" />
@@ -477,47 +479,50 @@ const LegalDocumentsView: React.FC = () => {
           </div>
         </div>
 
-        {/* Table Header */}
+        {/* Main Content */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700">
-          {/* Encabezado de la tabla con gradiente */}
-          <div className="bg-white p-6 border-b">
+          {/* Toolbar */}
+          <div className="bg-white dark:bg-gray-800 p-6 border-b border-gray-200 dark:border-gray-700">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
-                <h1 className="text-2xl font-bold mb-2 flex items-center">
+                <h1 className="text-2xl font-bold mb-2 flex items-center text-gray-900 dark:text-white">
                   <FileText className="w-6 h-6 mr-2" />
                   Listado de Documentos
                 </h1>
-                <p className="text-blue-700">
+                <p className="text-blue-700 dark:text-blue-400">
                   {filteredData?.length || 0}{" "}
                   {filteredData?.length === 1 ? "documento" : "documentos"} en
                   el sistema
                 </p>
               </div>
-              <Button
+
+              <button
                 onClick={() => {
                   setSelectedDocument(null);
                   setIsDialogOpen(true);
                 }}
-                className="bg-white text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-lg font-medium flex items-center transition-colors shadow-md"
+                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium flex items-center transition-colors shadow-md"
               >
                 <PlusCircle size={18} className="mr-2" />
                 Nuevo Documento
-              </Button>
+              </button>
             </div>
           </div>
 
           {/* Search and Filter Bar */}
-          <div className="bg-white dark:bg-gray-700/50 p-4 border-b border-gray-200 dark:border-gray-700 flex flex-wrap gap-4 items-center justify-between">
+          <div className="bg-gray-50 dark:bg-gray-700/50 p-4 border-b border-gray-200 dark:border-gray-700 flex flex-wrap gap-4 items-center justify-between">
             <div className="relative w-full sm:w-auto flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <Search className="h-4 w-4" />
+              </div>
+              <input
                 placeholder="Buscar documentos..."
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="pl-10 w-full bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600"
+                className="pl-10 w-full py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-gray-900 dark:text-gray-100"
               />
               {searchTerm && (
                 <button
@@ -533,62 +538,59 @@ const LegalDocumentsView: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-3 w-full sm:w-auto">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="flex items-center gap-2 border-gray-200 dark:border-gray-700"
-                  >
-                    <Filter className="h-4 w-4" />
-                    <span>Estado</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem onClick={() => setFilterActive(null)}>
-                    Todos
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setFilterActive(true)}>
-                    Activos
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setFilterActive(false)}>
-                    Inactivos
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <div className="relative">
+                <select
+                  value={
+                    filterActive === null
+                      ? "all"
+                      : filterActive
+                      ? "active"
+                      : "inactive"
+                  }
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === "all") setFilterActive(null);
+                    else if (value === "active") setFilterActive(true);
+                    else setFilterActive(false);
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                >
+                  <option value="all">Todos</option>
+                  <option value="active">Activos</option>
+                  <option value="inactive">Inactivos</option>
+                </select>
+              </div>
 
               {filterActive !== null && (
-                <Badge
-                  variant="outline"
-                  className="flex items-center gap-1 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border-blue-200 dark:border-blue-800"
-                >
+                <div className="flex items-center gap-1 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200 dark:border-blue-800 px-3 py-1 rounded-full text-sm">
                   {filterActive ? "Activos" : "Inactivos"}
-                  <XCircle
-                    className="h-3 w-3 cursor-pointer"
+                  <button
+                    className="ml-1 hover:text-blue-900 dark:hover:text-blue-100"
                     onClick={() => setFilterActive(null)}
-                  />
-                </Badge>
+                  >
+                    <XCircle className="h-3 w-3" />
+                  </button>
+                </div>
               )}
             </div>
           </div>
-        </div>
 
-        {/* Tabs */}
-        <div className="bg-white dark:bg-gray-800 rounded-t-lg shadow-md">
-          <div className="flex overflow-x-auto">
+          {/* Tabs */}
+          <div className="flex overflow-x-auto border-b border-gray-200 dark:border-gray-700">
             {tabConfig.map((tab) => (
               <button
                 key={tab.label}
                 onClick={() => setActiveTab(tab.label)}
                 className={`flex items-center gap-2 px-4 sm:px-8 py-4 text-sm font-medium transition-all ${
                   activeTab === tab.label
-                    ? `bg-white dark:bg-gray-800 text-${tab.color}-600 dark:text-${tab.color}-400 border-b-4 border-${tab.color}-600 dark:border-${tab.color}-400 shadow-sm`
+                    ? "bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400"
                     : "text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700"
                 }`}
               >
                 <div
                   className={`p-2 rounded-full ${
                     activeTab === tab.label
-                      ? `bg-${tab.color}-100 dark:bg-${tab.color}-900/30`
+                      ? "bg-blue-100 dark:bg-blue-900/30"
                       : "bg-gray-100 dark:bg-gray-700"
                   }`}
                 >
@@ -598,31 +600,29 @@ const LegalDocumentsView: React.FC = () => {
               </button>
             ))}
           </div>
-        </div>
 
-        {/* Table */}
-        <div className="bg-white dark:bg-gray-800 rounded-b-lg shadow-md overflow-hidden">
+          {/* Table */}
           <div className="overflow-x-auto">
             {paginatedData && paginatedData.length > 0 ? (
               <table className="w-full border-collapse">
                 <thead>
-                  <tr className="bg-indigo-50 dark:bg-indigo-900/30">
-                    <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 dark:text-indigo-300 uppercase tracking-wider border-b border-indigo-100 dark:border-indigo-800">
+                  <tr className="bg-gray-50 dark:bg-gray-700/50">
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">
                       Título
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 dark:text-indigo-300 uppercase tracking-wider border-b border-indigo-100 dark:border-indigo-800">
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">
                       Contenido
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 dark:text-indigo-300 uppercase tracking-wider border-b border-indigo-100 dark:border-indigo-800">
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">
                       <div className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
                         Fecha de Vigencia
                       </div>
                     </th>
-                    <th className="px-6 py-4 text-center text-xs font-medium text-indigo-600 dark:text-indigo-300 uppercase tracking-wider border-b border-indigo-100 dark:border-indigo-800">
+                    <th className="px-6 py-4 text-center text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">
                       Estado
                     </th>
-                    <th className="px-6 py-4 text-right text-xs font-medium text-indigo-600 dark:text-indigo-300 uppercase tracking-wider border-b border-indigo-100 dark:border-indigo-800">
+                    <th className="px-6 py-4 text-right text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">
                       Acciones
                     </th>
                   </tr>
@@ -631,11 +631,7 @@ const LegalDocumentsView: React.FC = () => {
                   {paginatedData?.map((item, index) => (
                     <tr
                       key={index}
-                      className={`${
-                        index % 2 === 0
-                          ? "bg-white dark:bg-gray-800"
-                          : "bg-indigo-50/30 dark:bg-indigo-900/10"
-                      } hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors`}
+                      className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                     >
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-gray-200">
                         <div className="flex items-center gap-3">
@@ -684,7 +680,6 @@ const LegalDocumentsView: React.FC = () => {
                           >
                             <Eye size={18} />
                           </button>
-
                           <button
                             className={`${
                               item.isCurrentVersion
@@ -704,7 +699,6 @@ const LegalDocumentsView: React.FC = () => {
                           >
                             <CheckCircle size={18} />
                           </button>
-
                           <button
                             onClick={() => openEditDialog(item)}
                             className="bg-amber-100 p-2 rounded-lg text-amber-600 hover:bg-amber-200 transition-colors dark:bg-amber-900/30 dark:text-amber-400 dark:hover:bg-amber-900/50"
@@ -712,7 +706,6 @@ const LegalDocumentsView: React.FC = () => {
                           >
                             <Edit size={18} />
                           </button>
-
                           <button
                             onClick={() => deleteDocument(index)}
                             className="bg-red-100 p-2 rounded-lg text-red-600 hover:bg-red-200 transition-colors dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50"
@@ -737,8 +730,9 @@ const LegalDocumentsView: React.FC = () => {
                 <p className="text-gray-500 dark:text-gray-400 text-center max-w-md">
                   {searchTerm
                     ? `No se encontraron resultados para "${searchTerm}"`
-                    : "No hay documentos en esta categoría. Crea uno nuevo haciendo clic en el botón 'Añadir Documento'."}
+                    : "No hay documentos en esta categoría. Crea uno nuevo haciendo clic en el botón 'Nuevo Documento'."}
                 </p>
+
                 {searchTerm && (
                   <button
                     onClick={() => setSearchTerm("")}
@@ -752,7 +746,7 @@ const LegalDocumentsView: React.FC = () => {
             )}
           </div>
 
-          {/* Paginación */}
+          {/* Pagination */}
           {filteredData && filteredData.length > 0 && (
             <div className="bg-gray-50 dark:bg-gray-700 p-4 border-t border-gray-200 dark:border-gray-600 flex flex-col sm:flex-row justify-between items-center gap-4">
               <div className="flex items-center gap-2">

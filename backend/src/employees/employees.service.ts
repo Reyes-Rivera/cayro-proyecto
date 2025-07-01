@@ -172,7 +172,7 @@ export class EmployeesService {
       });
 
       if (!employeeFound) {
-        throw new NotFoundException(`Employee with ID ${id} not found`);
+        throw new NotFoundException(`Empleado no encontrado.`);
       }
 
       const emailConflict = await this.prismaService.employee.findFirst({
@@ -187,7 +187,6 @@ export class EmployeesService {
           email: updateEmployeeDto.email,
         },
       });
-
       if (userConflict) {
         throw new ConflictException(
           'El correo se encuentra registrado como cliente.',
