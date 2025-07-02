@@ -100,12 +100,12 @@ export default function ProfileView() {
         localStorage.setItem("emailToVerify", data.email);
         setEmailToVerify(data.email);
         setIsVerificationPending(true);
-
+        navigate("/codigo-verificacion");
         alert(
           "Perfil actualizado. Confirma que eres tú. Revisa tu correo electrónico."
         );
         await signOut();
-        navigate("/codigo-verificacion");
+
         window.scrollTo(0, 0);
         return;
       }
