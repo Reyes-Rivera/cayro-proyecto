@@ -40,7 +40,7 @@ export class UsersController {
     @Param('id') id: number,
     @Body() updatePass: PasswordUpdate,
   ) {
-    return this.usersService.updatePassword(id, updatePass);
+    return this.usersService.updatePassword(+id, updatePass);
   }
 
   @Post('recover-password')
