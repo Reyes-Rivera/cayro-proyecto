@@ -127,6 +127,32 @@ export default function LoginPage() {
 
     try {
       const res = await login(data.identifier, data.password);
+      console.log(res);
+
+      if (res?.role === "USER" && res.active === false) {
+        Swal.fire({
+          icon: "success",
+          title: "¡Verificación Exitosa!",
+          toast: true,
+          text: "Por favor verifica tu correo electrónico.",
+          position: "top-end",
+          timer: 3000,
+          showConfirmButton: false,
+          animation: true,
+          background: "#F0FDF4",
+          color: "#166534",
+          iconColor: "#22C55E", // Ícono verde
+        });
+        setIsLoading(true);
+
+        localStorage.setItem("emailToVerify", res.email);
+        localStorage.setItem("isVerificationPending", "true");
+        await resendCodeApi({ email: res.email });
+        setEmailToVerify(res.email);
+        setIsVerificationPending(true);
+        navigate("/codigo-verificacion");
+        return;
+      }
       Swal.fire({
         icon: "success",
         title: "¡Verificación Exitosa!",
@@ -140,16 +166,6 @@ export default function LoginPage() {
         color: "#166534",
         iconColor: "#22C55E", // Ícono verde
       });
-      if (res?.role === "USER" && res.active === false) {
-        setIsLoading(true);
-        localStorage.setItem("emailToVerify", res.email);
-        localStorage.setItem("isVerificationPending", "true");
-        await resendCodeApi({ email: res.email });
-        setEmailToVerify(res.email);
-        setIsVerificationPending(true);
-        navigate("/codigo-verificacion");
-        return;
-      }
       setIsLoading(false);
       if (res?.role === "ADMIN") {
         navigate("/perfil-admin");

@@ -33,6 +33,7 @@ type UserOrEmployee = {
   role: string;
   lockUntil: Date | null;
   loginAttempts: number;
+  active: boolean;
 };
 
 @Injectable()
@@ -661,7 +662,6 @@ export class AuthService {
       const user = await this.prismaService.user.findFirst({
         where: {
           OR: [{ email: loginDto.identifier }, { phone: loginDto.identifier }],
-          active: true,
         },
       });
 
@@ -793,6 +793,7 @@ export class AuthService {
           phone: userFound.phone,
           birthdate: userFound.birthdate,
           role: userFound.role,
+          active: userFound.active,
         },
         accessToken,
         refreshToken,
