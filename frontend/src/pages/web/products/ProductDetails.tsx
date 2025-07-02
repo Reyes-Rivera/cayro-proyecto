@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import type { Color, Product } from "../../../types/products";
 import { useCart } from "@/context/CartContext";
+import Loader from "@/components/web-components/Loader";
 
 export default function ProductDetail() {
   const params = useParams<{ name: string }>();
@@ -195,16 +196,7 @@ export default function ProductDetail() {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-white dark:bg-gray-900 pt-16 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-300 font-medium">
-            Cargando producto...
-          </p>
-        </div>
-      </div>
-    );
+    return <Loader />;
   }
 
   if (error || !product) {
@@ -359,7 +351,7 @@ export default function ProductDetail() {
                     onClick={() => setSelectedSizeId(size.id)}
                     className={`min-w-[60px] py-2 px-4 border rounded-md text-center ${
                       selectedSizeId === size.id
-                        ? "bg-indigo-600 text-white border-indigo-600"
+                        ? "bg-blue-600 text-white border-indigo-600"
                         : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
                     }`}
                   >
@@ -408,7 +400,7 @@ export default function ProductDetail() {
                   !selectedVariant ||
                   selectedVariant.stock <= 0
                 }
-                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-6 rounded-lg font-medium flex items-center justify-center gap-2 disabled:opacity-50 transition-all duration-200"
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-medium flex items-center justify-center gap-2 disabled:opacity-50 transition-all duration-200"
               >
                 {isAddingToCart ? (
                   <>
@@ -538,7 +530,9 @@ export default function ProductDetail() {
                   <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                     Género
                   </h3>
-                  <p className="text-gray-900 dark:text-white">Mujer</p>
+                  <p className="text-gray-900 dark:text-white">
+                    {product.gender.name}
+                  </p>
                 </div>
               </div>
             </div>

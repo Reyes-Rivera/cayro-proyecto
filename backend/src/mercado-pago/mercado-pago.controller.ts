@@ -95,11 +95,10 @@ export class MercadoPagoController {
     }
   }
 
- 
-
   @Post('webhook')
   async handleWebhook(@Body() webhookData: any) {
     try {
+      console.log("object");
       const result = await this.mercadoPagoService.processWebhook(webhookData);
       return result;
     } catch (error) {

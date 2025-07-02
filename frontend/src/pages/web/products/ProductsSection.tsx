@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+
 import {
   AlertTriangle,
   Palette,
@@ -9,10 +10,16 @@ import {
   SortAsc,
   Sparkles,
   Shirt,
+  ArrowRight,
+  Paintbrush,
 } from "lucide-react";
+
 import { motion, AnimatePresence } from "framer-motion";
+
 import Breadcrumbs from "@/components/web-components/Breadcrumbs";
+
 import img from "./assets/products.jpg";
+
 // Interfaces
 import type {
   Product,
@@ -23,10 +30,12 @@ import type {
   Color,
   Sleeve,
 } from "@/types/products";
+
 import ProductFilters from "./components/ProductFilters";
 import ActiveFilters from "./components/ActiveFilters";
 import ProductGrid from "./components/ProductGrid";
 import Pagination from "./components/Footer";
+
 import {
   getProducts,
   getBrands,
@@ -36,7 +45,9 @@ import {
   getColors,
   getSleeve,
 } from "@/api/products";
+
 import Loader from "@/components/web-components/Loader";
+import { useNavigate } from "react-router-dom";
 
 // Tipo para la respuesta de la API
 interface ApiResponse {
@@ -90,9 +101,8 @@ export default function ProductsPage() {
   });
 
   // Refs for animations
-
   const productsPerPage = 12;
-
+  const navigate = useNavigate();
   // Función para aplicar filtros desde la URL - Fix the reset logic
   const applyFiltersFromURL = () => {
     if (!filtersLoaded) return;
@@ -161,6 +171,7 @@ export default function ProductsPage() {
     // Precio
     const minPriceParam = params.get("precioMin") || params.get("priceMin");
     const maxPriceParam = params.get("precioMax") || params.get("priceMax");
+
     if (minPriceParam || maxPriceParam) {
       setPriceRange({
         min: minPriceParam ? Number(minPriceParam) : null,
@@ -330,6 +341,10 @@ export default function ProductsPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const handleCustomize = () => {
+    navigate("/personalizar");
+  };
+
   // Función para obtener productos con filtros
   const fetchProductsWithFilters = async () => {
     setIsLoading(true);
@@ -337,7 +352,6 @@ export default function ProductsPage() {
 
     try {
       const params = new URLSearchParams();
-
       params.append("page", currentPage.toString());
       params.append("limit", productsPerPage.toString());
 
@@ -356,7 +370,6 @@ export default function ProductsPage() {
         params.append("brand", activeBrandId.toString());
       if (activeSleeveId !== null)
         params.append("sleeves", activeSleeveId.toString());
-
       if (priceRange.min !== null)
         params.append("priceMin", priceRange.min.toString());
       if (priceRange.max !== null)
@@ -419,6 +432,7 @@ export default function ProductsPage() {
         if (!initialLoadRef.current && hasQueryParams) {
           setTimeout(() => scrollToProducts(), 100);
         }
+
         setProducts([]);
         setTotalPages(1);
       }
@@ -428,6 +442,7 @@ export default function ProductsPage() {
         setTotalPages(1);
         return;
       }
+
       setError(
         "No se pudieron cargar los productos. Por favor, intente nuevamente."
       );
@@ -476,7 +491,6 @@ export default function ProductsPage() {
 
   const clearAllFilters = () => {
     setIsLoading(true);
-
     setActiveCategoryId(null);
     setActiveGenderId(null);
     setActiveColorId(null);
@@ -520,6 +534,7 @@ export default function ProductsPage() {
             setTotalPages(totalPagesCount);
             setCurrentPage(1);
             setError(null);
+
             // Scroll to top when all filters are cleared
             scrollToTop();
           } else {
@@ -571,6 +586,7 @@ export default function ProductsPage() {
     const newUrl = `${window.location.pathname}${
       params.toString() ? `?${params.toString()}` : ""
     }`;
+
     window.history.pushState({}, "", newUrl);
   };
 
@@ -615,7 +631,6 @@ export default function ProductsPage() {
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-20 -right-20 w-64 h-64 md:w-96 md:h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-blue-50/50 dark:from-blue-900/10 to-transparent"></div>
-
           {/* Dots pattern */}
           <div className="absolute top-0 left-0 w-full h-full">
             <div className="absolute top-20 left-20 w-2 h-2 bg-blue-500/30 rounded-full"></div>
@@ -627,7 +642,7 @@ export default function ProductsPage() {
         </div>
 
         <div className="container mx-auto px-0 py-12 md:py-16 lg:py-24 relative z-10">
-          <div className="px-4  mx-auto transition-all duration-700 ease-out">
+          <div className="px-4 mx-auto transition-all duration-700 ease-out">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
               {/* Left Content */}
               <div className="text-center lg:text-left">
@@ -660,7 +675,7 @@ export default function ProductsPage() {
                 </p>
 
                 {/* Features */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto lg:mx-0">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto lg:mx-0 mb-8 md:mb-10">
                   <div className="flex items-center justify-center lg:justify-start gap-3 p-4 bg-white/50 dark:bg-gray-800/50 rounded-xl backdrop-blur-sm border border-gray-100 dark:border-gray-700">
                     <Sparkles className="w-5 h-5 text-blue-600 flex-shrink-0" />
                     <span className="text-sm font-medium text-gray-900 dark:text-white">
@@ -681,6 +696,31 @@ export default function ProductsPage() {
                   </div>
                 </div>
 
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8">
+                  <motion.button
+                    onClick={scrollToProducts}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-full transition-all flex items-center justify-center shadow-lg shadow-blue-600/20"
+                  >
+                    <span className="flex items-center">
+                      Ver Productos
+                      <ArrowRight className="ml-2 w-4 h-4" />
+                    </span>
+                  </motion.button>
+
+                  <motion.button
+                    onClick={handleCustomize}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="border border-gray-300 dark:border-gray-700 hover:border-blue-600 dark:hover:border-blue-500 text-gray-900 dark:text-white font-medium py-3 px-6 rounded-full transition-all flex items-center justify-center"
+                  >
+                    <Paintbrush className="mr-2 h-5 w-5" />
+                    Personalizar
+                  </motion.button>
+                </div>
+
                 {/* Breadcrumbs at bottom */}
                 <div className="mt-8">
                   <Breadcrumbs />
@@ -697,6 +737,7 @@ export default function ProductsPage() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                 </div>
+
                 {/* Floating elements */}
                 <div className="absolute -top-4 -right-4 w-20 h-20 bg-blue-500/20 rounded-full blur-xl"></div>
                 <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-purple-500/20 rounded-full blur-xl"></div>

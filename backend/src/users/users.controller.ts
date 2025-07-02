@@ -66,10 +66,10 @@ export class UsersController {
     return this.usersService.findOne(body.email);
   }
 
-  @Auth([Role.ADMIN])
+  @Auth([Role.USER])
   @Patch(':id')
   async update(@Param('id') id: number, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(id, updateUserDto);
+    return this.usersService.update(+id, updateUserDto);
   }
 
   @Auth([Role.USER])
@@ -78,7 +78,7 @@ export class UsersController {
     @Param('id') id: number,
     @Body() updateAnswer: AnswerQuestion,
   ) {
-    return this.usersService.updateAnswerQuestion(id, updateAnswer);
+    return this.usersService.updateAnswerQuestion(+id, updateAnswer);
   }
 
   @Post('compare-answer')
