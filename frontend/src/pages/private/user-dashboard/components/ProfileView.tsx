@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { updateUser } from "@/api/users";
@@ -23,6 +22,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import Loader from "@/components/web-components/Loader";
+import { useNavigate } from "react-router-dom";
 
 interface ProfileFormData {
   name: string;
@@ -38,7 +38,7 @@ export default function ProfileView() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
   const [animateContent, setAnimateContent] = useState(false);
-
+  const navigate = useNavigate();
   const {
     user,
     verifyUser,
@@ -105,6 +105,7 @@ export default function ProfileView() {
           "Perfil actualizado. Confirma que eres tú. Revisa tu correo electrónico."
         );
         await signOut();
+        navigate("/codigo-verificacion");
         window.scrollTo(0, 0);
         return;
       }
