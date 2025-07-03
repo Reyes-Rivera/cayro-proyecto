@@ -34,6 +34,7 @@ type UserOrEmployee = {
   lockUntil: Date | null;
   loginAttempts: number;
   active: boolean;
+  gender: string;
 };
 
 @Injectable()
@@ -794,6 +795,7 @@ export class AuthService {
           birthdate: userFound.birthdate,
           role: userFound.role,
           active: userFound.active,
+          gender: userFound.gender,
         },
         accessToken,
         refreshToken,

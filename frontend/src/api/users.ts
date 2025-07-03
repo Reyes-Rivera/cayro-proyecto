@@ -97,7 +97,7 @@ export const deleteAddressUser = async (userId: number, addressId: number) =>
  * Ruta: PATCH /users/user/:userId/address/:addressId/set-default
  */
 export const setDefaultAddressUser = async (
-  userId: number,
+  userId: number | null,
   addressId: number
 ) => axios.patch(`/users/user/${userId}/address/${addressId}/set-default`);
 

@@ -139,8 +139,8 @@ export class UsersController {
     },
   ) {
     return this.usersService.updateUserAddress(
-      userId,
-      addressId,
+      +userId,
+      +addressId,
       {
         street: body.street,
         city: body.city,
@@ -165,7 +165,7 @@ export class UsersController {
     @Param('userId') userId: number,
     @Param('addressId') addressId: number,
   ) {
-    return this.usersService.unlinkUserAddress(userId, addressId);
+    return this.usersService.unlinkUserAddress(+userId, +addressId);
   }
 
   @Auth([Role.USER])
@@ -174,7 +174,7 @@ export class UsersController {
     @Param('userId') userId: number,
     @Param('addressId') addressId: number,
   ) {
-    return this.usersService.setDefaultAddress(userId, addressId);
+    return this.usersService.setDefaultAddress(+userId, +addressId);
   }
 
   @Post('generate-smartwatch-code/:id')

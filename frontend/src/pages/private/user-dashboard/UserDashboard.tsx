@@ -18,13 +18,13 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContextType";
 import type { JSX } from "react/jsx-runtime";
-
 import ProfileView from "./components/ProfileView";
 import SecurityView from "./components/SecurityView";
 import AddressView from "./components/AddressView";
 import OrderHistoryView from "./components/OrderHistoryView";
 import NotificationsView from "./components/NotificationsView";
 import Loader from "@/components/web-components/Loader";
+import { useNavigate } from "react-router-dom";
 
 type TabKey = "profile" | "security" | "orders" | "addresses" | "notifications";
 
@@ -32,9 +32,10 @@ const CombinedDashboard = () => {
   const [activeTab, setActiveTab] = useState<TabKey>("profile");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [isExiting, setIsExiting] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
   const [animateContent, setAnimateContent] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false); // New state for sign out animation
+
   const { user, signOut } = useAuth();
 
   // Simulate page loading
@@ -46,7 +47,6 @@ const CombinedDashboard = () => {
         setAnimateContent(true);
       }, 100);
     }, 1000);
-
     return () => clearTimeout(timer);
   }, []);
 
@@ -55,7 +55,6 @@ const CombinedDashboard = () => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 60000);
-
     return () => clearInterval(timer);
   }, []);
 
@@ -64,7 +63,6 @@ const CombinedDashboard = () => {
     hour: "2-digit",
     minute: "2-digit",
   });
-
   const formattedDate = currentTime.toLocaleDateString("es-ES", {
     weekday: "long",
     day: "numeric",
@@ -92,12 +90,14 @@ const CombinedDashboard = () => {
       transition: { duration: 0.3 },
     },
   };
-
+  const navigate = useNavigate();
+  // Updated handleSignOut function with animation
   const handleSignOut = () => {
-    setIsExiting(true);
+    setIsSigningOut(true); 
     setTimeout(() => {
+      navigate("/login");
       signOut();
-    }, 300);
+    }, 1500);
   };
 
   // Navigation items
@@ -128,12 +128,9 @@ const CombinedDashboard = () => {
   return (
     <main className="min-h-screen bg-white dark:bg-gray-900 pt-24 pb-8 px-4 md:px-8 lg:px-12 overflow-x-hidden">
       <div className="container mx-auto max-w-7xl relative z-10">
-        {/* Loading Screen */}
         {pageLoading && <Loader />}
-
         {!pageLoading && (
           <>
-            {/* Dashboard Header */}
             <motion.div
               initial={{ opacity: 0, y: -30 }}
               animate={
@@ -208,7 +205,6 @@ const CombinedDashboard = () => {
                     </motion.p>
                   </div>
                 </div>
-
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -286,17 +282,45 @@ const CombinedDashboard = () => {
                         ))}
                       </nav>
                     </div>
-
-                    {/* Logout button */}
+                    {/* Logout button - Updated with animation */}
                     <div className="p-4 border-t border-gray-100 dark:border-gray-700">
                       <motion.button
                         whileHover={{ x: 3 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={handleSignOut}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200"
+                        disabled={isSigningOut}
+                        className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
+                          isSigningOut
+                            ? "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 cursor-not-allowed"
+                            : "text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                        }`}
                       >
-                        <LogOut className="w-5 h-5" />
-                        <span>Cerrar sesión</span>
+                        {isSigningOut ? (
+                          <>
+                            <motion.div
+                              animate={{ rotate: 360 }}
+                              transition={{
+                                duration: 1,
+                                repeat: Number.POSITIVE_INFINITY,
+                                ease: "linear",
+                              }}
+                            >
+                              <LogOut className="w-5 h-5" />
+                            </motion.div>
+                            <motion.span
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              className="font-medium"
+                            >
+                              Saliendo...
+                            </motion.span>
+                          </>
+                        ) : (
+                          <>
+                            <LogOut className="w-5 h-5" />
+                            <span>Cerrar sesión</span>
+                          </>
+                        )}
                       </motion.button>
                     </div>
                   </div>
@@ -316,7 +340,6 @@ const CombinedDashboard = () => {
                       className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
                       onClick={() => setIsMenuOpen(false)}
                     ></motion.div>
-
                     {/* Sidebar */}
                     <motion.div
                       initial={{ x: "-100%" }}
@@ -352,7 +375,6 @@ const CombinedDashboard = () => {
                           <X className="w-5 h-5" />
                         </button>
                       </div>
-
                       {/* Mobile navigation */}
                       <div className="p-4">
                         <nav className="space-y-1">
@@ -394,8 +416,7 @@ const CombinedDashboard = () => {
                           ))}
                         </nav>
                       </div>
-
-                      {/* Logout in mobile */}
+                      {/* Logout in mobile - Updated with animation */}
                       <div className="p-4 border-t border-gray-100 dark:border-gray-700 mt-auto">
                         <motion.button
                           whileTap={{ scale: 0.98 }}
@@ -403,10 +424,39 @@ const CombinedDashboard = () => {
                             handleSignOut();
                             setIsMenuOpen(false);
                           }}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200"
+                          disabled={isSigningOut}
+                          className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
+                            isSigningOut
+                              ? "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 cursor-not-allowed"
+                              : "text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                          }`}
                         >
-                          <LogOut className="w-5 h-5" />
-                          <span>Cerrar sesión</span>
+                          {isSigningOut ? (
+                            <>
+                              <motion.div
+                                animate={{ rotate: 360 }}
+                                transition={{
+                                  duration: 1,
+                                  repeat: Number.POSITIVE_INFINITY,
+                                  ease: "linear",
+                                }}
+                              >
+                                <LogOut className="w-5 h-5" />
+                              </motion.div>
+                              <motion.span
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="font-medium"
+                              >
+                                Saliendo...
+                              </motion.span>
+                            </>
+                          ) : (
+                            <>
+                              <LogOut className="w-5 h-5" />
+                              <span>Cerrar sesión</span>
+                            </>
+                          )}
                         </motion.button>
                       </div>
                     </motion.div>
@@ -417,7 +467,7 @@ const CombinedDashboard = () => {
               {/* Main content */}
               <div className="w-full">
                 <AnimatePresence mode="wait">
-                  {!isExiting ? (
+                  
                     <motion.div
                       className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-blue-100 dark:border-gray-700 overflow-hidden"
                       initial="hidden"
@@ -454,7 +504,6 @@ const CombinedDashboard = () => {
                           </div>
                         </div>
                       </div>
-
                       <AnimatePresence mode="wait">
                         <motion.div
                           key={activeTab}
@@ -467,32 +516,13 @@ const CombinedDashboard = () => {
                         </motion.div>
                       </AnimatePresence>
                     </motion.div>
-                  ) : (
-                    <motion.div
-                      className="flex items-center justify-center h-[80vh]"
-                      initial={{ opacity: 1 }}
-                      animate={{ opacity: 0 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <motion.div
-                        initial={{ scale: 1 }}
-                        animate={{ scale: 0.9 }}
-                        exit={{ scale: 0.9 }}
-                        transition={{ duration: 0.3 }}
-                        className="text-xl font-medium dark:text-white"
-                      >
-                        Cerrando sesión...
-                      </motion.div>
-                    </motion.div>
-                  )}
+                
                 </AnimatePresence>
               </div>
             </div>
           </>
         )}
       </div>
-
       {/* Mobile menu button */}
       <div className="fixed bottom-6 right-6 lg:hidden z-30">
         <motion.button

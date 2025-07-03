@@ -1432,13 +1432,10 @@ export class UsersService {
       postalCode: string;
       colony: string;
     },
-    isDefault: boolean = false,
+    isDefault: boolean ,
   ) {
     try {
-      this.logger.log({
-        message: 'Actualizando/creando dirección de usuario',
-        userId,
-      });
+      console.log(addressData);
 
       const userExists = await this.prismaService.user.findUnique({
         where: { id: userId },
@@ -1573,16 +1570,9 @@ export class UsersService {
     isDefault?: boolean,
   ) {
     try {
-      this.logger.log({
-        message: 'Actualizando dirección de usuario',
-        userId,
-        userAddressId,
-      });
-
-      // Verify the user address exists
       const existingUserAddress =
-        await this.prismaService.userAddress.findUnique({
-          where: { id: userAddressId },
+        await this.prismaService.userAddress.findFirst({
+          where: { addressId: userAddressId,userId },
           include: { address: true },
         });
 
@@ -1597,7 +1587,6 @@ export class UsersService {
         );
       }
 
-      // If changing default status
       if (isDefault === true) {
         await this.prismaService.userAddress.updateMany({
           where: { userId, isDefault: true },
@@ -1605,7 +1594,6 @@ export class UsersService {
         });
       }
 
-      // Update the address fields if provided
       if (Object.values(addressData).some((val) => val !== undefined)) {
         await this.prismaService.address.update({
           where: { id: existingUserAddress.addressId },
@@ -1613,17 +1601,10 @@ export class UsersService {
         });
       }
 
-      // Update the userAddress relationship if needed
       const updatedUserAddress = await this.prismaService.userAddress.update({
-        where: { id: userAddressId },
+        where: { id: existingUserAddress.id },
         data: { isDefault },
         include: { address: true },
-      });
-
-      this.logger.log({
-        message: 'Dirección actualizada exitosamente',
-        userId,
-        userAddressId,
       });
 
       return {
@@ -1632,13 +1613,6 @@ export class UsersService {
         isDefault: updatedUserAddress.isDefault,
       };
     } catch (error) {
-      this.logger.error({
-        message: 'Error al actualizar la dirección',
-        error: error.message,
-        stack: error.stack,
-        userId,
-        userAddressId,
-      });
       throw new HttpException(
         'No se pudo actualizar la dirección.',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -1682,15 +1656,10 @@ export class UsersService {
 
   async unlinkUserAddress(userId: number, userAddressId: number) {
     try {
-      this.logger.log({
-        message: 'Desvinculando dirección de usuario',
-        userId,
-        userAddressId,
-      });
-
+     
       const existingUserAddress =
-        await this.prismaService.userAddress.findUnique({
-          where: { id: userAddressId },
+        await this.prismaService.userAddress.findFirst({
+          where: { addressId: userAddressId, userId },
         });
 
       if (!existingUserAddress || existingUserAddress.userId !== userId) {
@@ -1705,7 +1674,7 @@ export class UsersService {
       }
 
       await this.prismaService.userAddress.delete({
-        where: { id: userAddressId },
+        where: { id: existingUserAddress.id },
       });
 
       this.logger.log({
@@ -1716,13 +1685,7 @@ export class UsersService {
 
       return { message: 'Dirección desvinculada del usuario exitosamente.' };
     } catch (error) {
-      this.logger.error({
-        message: 'Error al desvincular la dirección',
-        error: error.message,
-        stack: error.stack,
-        userId,
-        userAddressId,
-      });
+      console.log(error);
       throw new HttpException(
         'No se pudo desvincular la dirección.',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -1732,32 +1695,26 @@ export class UsersService {
 
   async setDefaultAddress(userId: number, userAddressId: number) {
     try {
-      this.logger.log({
-        message: 'Estableciendo dirección como predeterminada',
-        userId,
-        userAddressId,
-      });
-
-      // First reset all other default addresses
+     const existingUserAddress = await this.prismaService.userAddress.findFirst({
+       where: { addressId: userAddressId, userId },
+     })
+     if(!existingUserAddress || existingUserAddress.userId !== userId){
+       throw new NotFoundException(
+         'No se encontró la dirección para este usuario.',
+       );
+     }
       await this.prismaService.userAddress.updateMany({
         where: { userId, isDefault: true },
         data: { isDefault: false },
       });
 
-      // Set the new default address
       const updatedAddress = await this.prismaService.userAddress.update({
         where: {
-          id: userAddressId,
-          userId: userId, // Ensure the address belongs to this user
+          id: existingUserAddress.id,
+          userId: userId,
         },
         data: { isDefault: true },
         include: { address: true },
-      });
-
-      this.logger.log({
-        message: 'Dirección establecida como predeterminada',
-        userId,
-        userAddressId,
       });
 
       return {
