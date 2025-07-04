@@ -1,11 +1,7 @@
 "use client";
-
 import { useEffect, useState, useRef } from "react";
-
 import { motion, AnimatePresence } from "framer-motion";
-
 import { useForm, type SubmitHandler } from "react-hook-form";
-
 import {
   MapPin,
   Plus,
@@ -25,11 +21,8 @@ import {
   CheckCircle2,
   Mail,
 } from "lucide-react";
-
 import Swal from "sweetalert2";
-
 import "sweetalert2/src/sweetalert2.scss";
-
 import {
   addAddressUser,
   deleteAddressUser,
