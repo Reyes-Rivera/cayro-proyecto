@@ -6,8 +6,12 @@ import {
   Body,
   HttpException,
   HttpStatus,
+  Query,
+  Res,
 } from '@nestjs/common';
-import  { MercadoPagoService } from './mercado-pago.service';
+import { Response } from 'express';
+import { MercadoPagoService } from './mercado-pago.service';
+const frontendUrl = process.env.FRONTEND_URL?.replace(/\/$/, '');
 
 interface CreatePreferenceDto {
   cart: Array<{
@@ -23,10 +27,12 @@ interface CreatePreferenceDto {
     email: string;
     name: string;
   };
-  shippingDetails:{references:string,betweenStreetOne:string,betweenStreetTwo:string}
+  shippingDetails: {
+    references: string;
+    betweenStreetOne: string;
+    betweenStreetTwo: string;
+  };
 }
-
-
 
 @Controller('mercadopago')
 export class MercadoPagoController {
@@ -35,35 +41,26 @@ export class MercadoPagoController {
   @Post('create-preference')
   async createPreference(@Body() data: CreatePreferenceDto) {
     try {
-      
-
-      if (!data) {
+      // Validaciones básicas
+      if (!data)
         throw new HttpException('No data provided', HttpStatus.BAD_REQUEST);
-      }
-
-      if (!data.cart || !Array.isArray(data.cart)) {
+      if (!data.cart || !Array.isArray(data.cart) || data.cart.length === 0) {
         throw new HttpException(
-          'Cart is required and must be an array',
+          'Cart is required and cannot be empty',
           HttpStatus.BAD_REQUEST,
         );
       }
-
       if (!data.total || typeof data.total !== 'number') {
         throw new HttpException(
           'Total is required and must be a number',
           HttpStatus.BAD_REQUEST,
         );
       }
-
-      if (!data.user || !data.user.id || !data.user.email || !data.user.name) {
+      if (!data.user?.id || !data.user?.email || !data.user?.name) {
         throw new HttpException(
-          'User information is required (id, email, name)',
+          'User information is required',
           HttpStatus.BAD_REQUEST,
         );
-      }
-
-      if (data.cart.length === 0) {
-        throw new HttpException('Cart cannot be empty', HttpStatus.BAD_REQUEST);
       }
 
       for (const item of data.cart) {
@@ -75,6 +72,7 @@ export class MercadoPagoController {
         }
       }
 
+      // Llamar al servicio
       const preference = await this.mercadoPagoService.createPreference(data);
 
       return {
@@ -94,13 +92,10 @@ export class MercadoPagoController {
       );
     }
   }
-
   @Post('webhook')
-  async handleWebhook(@Body() webhookData: any) {
+  async handleWebhook(@Res() res: Response, @Body() webhookData: any) {
     try {
-      console.log("object");
-      const result = await this.mercadoPagoService.processWebhook(webhookData);
-      return result;
+      await this.mercadoPagoService.processWebhook(webhookData);
     } catch (error) {
       console.error('Error in webhook controller:', error);
       throw new HttpException(
@@ -111,6 +106,7 @@ export class MercadoPagoController {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+    return res.redirect(frontendUrl);
   }
 
   @Get('payment/:id')
@@ -162,8 +158,6 @@ export class MercadoPagoController {
 
   @Post('debug')
   debug(@Body() data: any) {
-    
-
     return {
       received: data,
       type: typeof data,
@@ -172,5 +166,68 @@ export class MercadoPagoController {
       cartType: typeof data?.cart,
       cartLength: Array.isArray(data?.cart) ? data.cart.length : 'not array',
     };
+  }
+
+  /**
+   * ✅ ENDPOINTS DE RETORNO DE MERCADO PAGO
+   */
+
+  @Get('success')
+  async success(@Query('payment_id') paymentId: string, @Res() res: Response) {
+    try {
+      const payment =
+        await this.mercadoPagoService.getPaymentDetails(paymentId);
+      console.log('✅ Pago aprobado. Estado:', payment.status);
+
+      if (payment.status === 'approved') {
+        return res.send(`
+        <html>
+          <head>
+            <title>Pago Exitoso</title>
+          </head>
+          <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+            <h1>✅ ¡Pago aprobado!</h1>
+            <p>Gracias por tu compra.</p>
+            <p>Estado del pago: <strong>${payment.status}</strong></p>
+            <a href="http://localhost:3001/pagarreparacion" style="display: inline-block; margin-top: 20px; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">
+              Regresar a la tienda
+            </a>
+          </body>
+        </html>
+      `);
+      }
+
+      // Si el pago no fue aprobado, muestra otro mensaje
+      return res.send(`
+      <h1>❌ El pago no fue aprobado</h1>
+      <p>Estado del pago: <strong>${payment.status}</strong></p>
+      <a href="http://localhost:3001/pagarreparacion">Volver a intentar</a>
+    `);
+    } catch (error) {
+      console.error('Error en success:', error);
+      return res.send(`
+      <h1>❌ Error al verificar el pago</h1>
+      <p>${error.message}</p>
+      <a href="http://localhost:3001/pagarreparacion">Volver al inicio</a>
+    `);
+    }
+  }
+
+  @Get('failure')
+  failure(@Res() res: Response) {
+    return res.send(`
+      <h1>❌ Pago fallido</h1>
+      <p>Intenta nuevamente o usa otro método de pago.</p>
+      <a href="http://localhost:5173">Volver al inicio</a>
+    `);
+  }
+
+  @Get('pending')
+  pending(@Res() res: Response) {
+    return res.send(`
+      <h1>⏳ Pago pendiente</h1>
+      <p>Estamos esperando la confirmación del pago.</p>
+      <a href="http://localhost:5173">Volver al inicio</a>
+    `);
   }
 }

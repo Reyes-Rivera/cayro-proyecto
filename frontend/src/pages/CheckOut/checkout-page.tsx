@@ -7,12 +7,11 @@ import { useAuth } from "@/context/AuthContextType";
 import { ArrowLeft } from "lucide-react";
 import Swal from "sweetalert2";
 import axios from "axios";
-
+import type { ShippingDetailsFormData } from "@/types/checkout";
+import CheckoutProgress from "./components/checkout-progress";
 import AddressSection from "./components/address-section";
 import PaymentSection from "./components/payment-section";
 import OrderSummary from "./components/order-summary";
-import CheckoutProgress from "./components/checkout-progress";
-import type { ShippingDetailsFormData } from "@/types/checkout";
 
 type CheckoutStep = "shipping" | "shipping-details" | "payment";
 
@@ -50,10 +49,8 @@ export default function CheckoutPage() {
   useEffect(() => {
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       console.error("Unhandled promise rejection in checkout:", event.reason);
-
       // Prevent the default browser behavior
       event.preventDefault();
-
       // Show user-friendly error message
       Swal.fire({
         title: "Error inesperado",
@@ -135,7 +132,6 @@ export default function CheckoutPage() {
     setOrderSummaryExpanded(!orderSummaryExpanded);
   };
 
- 
   const handlePaymentError = (errorMessage: string) => {
     try {
       setPaymentError(errorMessage);
@@ -177,7 +173,6 @@ export default function CheckoutPage() {
       });
       return;
     }
-
     if (addresses.length === 0) {
       Swal.fire({
         icon: "error",
@@ -190,7 +185,6 @@ export default function CheckoutPage() {
       });
       return;
     }
-
     setCurrentStep("shipping-details");
     window.scrollTo(0, 0);
   };
@@ -262,7 +256,6 @@ export default function CheckoutPage() {
           }
 
           console.log("Sending request to backend...");
-
           const response = await axios.post(
             "http://localhost:5000/mercadopago/create-preference",
             requestData,
@@ -297,7 +290,6 @@ export default function CheckoutPage() {
             // Log URLs que se van a usar
             const sandboxUrl = `https://sandbox.mercadopago.com.mx/checkout/v1/redirect?pref_id=${response.data.preferenceId}`;
             const prodUrl = `https://www.mercadopago.com.mx/checkout/v1/redirect?pref_id=${response.data.preferenceId}`;
-
             console.log("Sandbox URL:", sandboxUrl);
             console.log("Production URL:", prodUrl);
             console.log("Init Point:", response.data.initPoint);
@@ -311,7 +303,6 @@ export default function CheckoutPage() {
         } catch (error) {
           console.error("=== ERROR CREATING PREFERENCE ===");
           console.error("Error object:", error);
-
           let errorMessage =
             "No se pudo inicializar el pago. Por favor, intenta de nuevo.";
 

@@ -40,10 +40,10 @@ const AppRoutes = () => {
   const { auth, user } = useAuth();
   const navigate = useNavigate();
   useEffect(() => {
-    if(user?.role === "EMPLOYEE"){
+    if (user?.role === "EMPLOYEE") {
       navigate("/perfil-empleado");
     }
-    if(user?.role === "ADMIN"){
+    if (user?.role === "ADMIN") {
       navigate("/perfil-admin");
     }
     const getInfoPage = async () => {
@@ -66,8 +66,8 @@ const AppRoutes = () => {
           <Route path="/carrito" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/checkout/success" element={<CheckoutSuccess />} />
-        <Route path="/checkout/failure" element={<CheckoutFailure />} />
-        <Route path="/checkout/pending" element={<CheckoutPending />} />
+          <Route path="/checkout/failure" element={<CheckoutFailure />} />
+          <Route path="/checkout/pending" element={<CheckoutPending />} />
           <Route path="/preguntas-frecuentes" element={<Faq />} />
           <Route path="/" element={<HomePage />} />
           <Route path="/aviso-privacidad" element={<Policies />} />
