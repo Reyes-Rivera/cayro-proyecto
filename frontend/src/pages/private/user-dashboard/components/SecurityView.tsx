@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { updateAnswer, updatePasswordUser } from "@/api/users";
@@ -113,7 +112,6 @@ export default function SecurityView() {
         setAnimateContent(true);
       }, 100);
     }, 1000);
-
     return () => clearTimeout(timer);
   }, []);
 
@@ -134,7 +132,12 @@ export default function SecurityView() {
         noSequential: !containsSequentialPatterns(newPassword),
       };
       setPasswordChecks(checks);
-      setPasswordStrength(Object.values(checks).filter(Boolean).length * 20);
+
+      // Calcular fortaleza limitando a 100%
+      const validChecks = Object.values(checks).filter(Boolean).length;
+      const totalChecks = Object.keys(checks).length;
+      const strength = Math.min((validChecks / totalChecks) * 100, 100);
+      setPasswordStrength(Math.round(strength));
     } else {
       setPasswordStrength(0);
     }
@@ -173,9 +176,11 @@ export default function SecurityView() {
     return "Muy fuerte";
   };
 
+  // Verificar si todos los requisitos se cumplen
+  const allRequirementsMet = Object.values(passwordChecks).every(Boolean);
+
   const onPasswordSubmit = async (data: PasswordFormValues) => {
     setIsSubmitting(true);
-
     try {
       const newData = {
         currentPassword: data.currentPassword,
@@ -233,7 +238,6 @@ export default function SecurityView() {
     <div className="relative">
       {/* Loading Screen */}
       {pageLoading && <Loader />}
-
       {!pageLoading && (
         <div className="p-6 md:p-8">
           {/* Security Header */}
@@ -308,7 +312,6 @@ export default function SecurityView() {
                       Cambio de Contraseña
                     </h2>
                   </div>
-
                   {isSuccess ? (
                     <Alert className="mb-6 bg-green-50 dark:bg-green-900 border border-green-100 dark:border-green-800 text-gray-700 dark:text-green-100 py-3 rounded-lg">
                       <Check className="h-5 w-5 text-green-500 dark:text-green-300" />
@@ -340,7 +343,7 @@ export default function SecurityView() {
                               className={`block w-full rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300 ${
                                 passwordErrors.currentPassword
                                   ? "border-red-300 focus:ring-red-300 focus:border-red-300"
-                                  : "border-blue-200 dark:border-gray-700 focus:ring-blue-300 dark:focus:border-blue-400 focus:border-blue-300"
+                                  : " dark:border-gray-700 focus:ring-blue-500 dark:focus:border-blue-500 focus:border-blue-500"
                               }`}
                               {...registerPassword("currentPassword", {
                                 required: "La contraseña actual es requerida",
@@ -381,7 +384,7 @@ export default function SecurityView() {
                               className={`block w-full rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300 ${
                                 passwordErrors.newPassword
                                   ? "border-red-300 focus:ring-red-300 focus:border-red-300"
-                                  : "border-blue-200 dark:border-gray-700 focus:ring-blue-300 dark:focus:border-blue-400 focus:border-blue-300"
+                                  : " dark:border-gray-700 focus:ring-blue-500 dark:focus:border-blue-500 focus:border-blue-500"
                               }`}
                               {...registerPassword("newPassword", {
                                 required: "La nueva contraseña es requerida",
@@ -456,7 +459,7 @@ export default function SecurityView() {
                               className={`block w-full rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300 ${
                                 passwordErrors.confirmPassword
                                   ? "border-red-300 focus:ring-red-300 focus:border-red-300"
-                                  : "border-blue-200 dark:border-gray-700 focus:ring-blue-300 dark:focus:border-blue-400 focus:border-blue-300"
+                                  : " dark:border-gray-700 focus:ring-blue-500 dark:focus:border-blue-00 focus:border-blue-500"
                               }`}
                               {...registerPassword("confirmPassword", {
                                 required:
@@ -499,8 +502,8 @@ export default function SecurityView() {
                           )}
                         </div>
 
-                        {/* Password Strength */}
-                        {newPassword && (
+                        {/* Password Strength - Solo mostrar si no se cumplen todos los requisitos */}
+                        {newPassword && !allRequirementsMet && (
                           <div className="space-y-2">
                             <label className="flex items-center text-gray-600 dark:text-gray-300 text-sm font-medium">
                               <Shield className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
@@ -538,7 +541,6 @@ export default function SecurityView() {
                                       special: "Un carácter especial",
                                       noSequential: "Sin secuencias obvias",
                                     };
-
                                     return (
                                       <div
                                         key={key}
@@ -564,6 +566,23 @@ export default function SecurityView() {
                                     );
                                   }
                                 )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Mensaje de éxito cuando todos los requisitos se cumplen */}
+                        {newPassword && allRequirementsMet && (
+                          <div className="space-y-2">
+                            <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg p-3">
+                              <div className="flex items-center gap-2">
+                                <div className="flex-shrink-0 w-5 h-5 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                                  <Check className="w-3 h-3 text-green-600 dark:text-green-400" />
+                                </div>
+                                <span className="text-sm font-medium text-green-800 dark:text-green-200">
+                                  ¡Contraseña segura! Cumple con todos los
+                                  requisitos.
+                                </span>
                               </div>
                             </div>
                           </div>
@@ -603,7 +622,6 @@ export default function SecurityView() {
                       Pregunta de Seguridad
                     </h2>
                   </div>
-
                   {recoverySuccess ? (
                     <Alert className="mb-6 bg-green-50 dark:bg-green-900 border border-green-100 dark:border-green-800 text-gray-700 dark:text-green-100 py-3 rounded-lg">
                       <Check className="h-5 w-5 text-green-500 dark:text-green-300" />
@@ -615,7 +633,7 @@ export default function SecurityView() {
                           <Button
                             onClick={resetRecoveryForm}
                             variant="outline"
-                            className="gap-2 dark:border-gray-600 dark:text-gray-300"
+                            className="gap-2 dark:border-gray-600 dark:text-gray-300 bg-transparent"
                           >
                             <ArrowLeft className="w-4 h-4" />
                             <span>Regresar</span>
@@ -644,7 +662,7 @@ export default function SecurityView() {
                               className={`block w-full rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300 appearance-none ${
                                 recoveryErrors.securityQuestion
                                   ? "border-red-300 focus:ring-red-300 focus:border-red-300"
-                                  : "border-blue-200 dark:border-gray-700 focus:ring-blue-300 dark:focus:border-blue-400 focus:border-blue-300"
+                                  : " dark:border-gray-700 focus:ring-blue-300 dark:focus:border-blue-400 focus:border-blue-500"
                               }`}
                               {...registerRecovery("securityQuestion", {
                                 required:
@@ -699,7 +717,7 @@ export default function SecurityView() {
                               className={`block w-full rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-3.5 shadow-sm transition-all focus:outline-none group-hover:border-blue-300 ${
                                 recoveryErrors.securityAnswer
                                   ? "border-red-300 focus:ring-red-300 focus:border-red-300"
-                                  : "border-blue-200 dark:border-gray-700 focus:ring-blue-300 dark:focus:border-blue-400 focus:border-blue-300"
+                                  : " dark:border-gray-700 focus:ring-blue-300 dark:focus:border-blue-400 focus:border-blue-500"
                               }`}
                               {...registerRecovery("securityAnswer", {
                                 required: "La respuesta es requerida",
@@ -731,7 +749,7 @@ export default function SecurityView() {
                       </div>
 
                       {/* Security Info */}
-                      <div className="mt-6 bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 text-blue-800 dark:text-blue-100 text-sm">
+                      <div className="mt-6 bg-blue-100 dark:bg-blue-900/30 border  dark:border-blue-800 rounded-lg p-4 text-blue-800 dark:text-blue-100 text-sm">
                         <div className="flex items-start gap-2">
                           <Info className="w-5 h-5 flex-shrink-0 mt-0.5" />
                           <div>
@@ -792,7 +810,6 @@ export default function SecurityView() {
                   Consejos de seguridad
                 </h3>
               </div>
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg border border-gray-100 dark:border-gray-600">
                   <ChevronRight className="w-4 h-4 text-blue-600 dark:text-blue-400" />

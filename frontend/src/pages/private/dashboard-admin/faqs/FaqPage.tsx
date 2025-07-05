@@ -73,7 +73,6 @@ const FaqPage = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<number | null>(null);
-
   // Estado para ordenación
   const [sortBy, setSortBy] = useState<SortOption>(sortOptions[0]);
   const [showSortOptions, setShowSortOptions] = useState(false);
@@ -92,7 +91,6 @@ const FaqPage = () => {
   } = useForm<FormData>();
 
   const navigate = useNavigate();
-
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     try {
       if (editId !== null) {
@@ -152,19 +150,7 @@ const FaqPage = () => {
             timer: 3000,
             timerProgressBar: true,
           });
-          // Find category name
-          const categoryName =
-            categories.find((cat) => cat.id === data.categoryId)?.name || "";
-          setItems((prev) => [
-            ...prev,
-            {
-              id: prev.length + 1,
-              categoryId: data.categoryId,
-              question: data.question,
-              answer: data.answer,
-              category: categoryName,
-            },
-          ]);
+          refreshData();
           setIsLoading(false);
           reset();
           setShowStatusModal(false);

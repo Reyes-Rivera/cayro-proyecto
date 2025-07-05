@@ -102,6 +102,7 @@ type Sale = {
   updatedAt: string;
   user: SaleUser;
   saleDetails: SaleDetail[];
+  address: Address;
 };
 
 export default function OrderHistoryView() {
@@ -115,7 +116,6 @@ export default function OrderHistoryView() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sales, setSales] = useState<Sale[]>([]);
   const [error, setError] = useState<string | null>(null);
-
   // Cargar datos de ventas
   useEffect(() => {
     const fetchSales = async () => {
@@ -424,49 +424,41 @@ export default function OrderHistoryView() {
                       >
                         <div className="space-y-6">
                           {/* Shipping Address */}
-                          {sale.user.userAddresses.length > 0 && (
+                          {sale.address && (
                             <div>
                               <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4 flex items-center">
                                 <MapPin className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
                                 Dirección de envío
                               </h4>
                               <div className="bg-blue-50 dark:bg-gray-800 p-4 rounded-lg border border-blue-100 dark:border-gray-700">
-                                {sale.user.userAddresses
-                                  .filter(
-                                    (ua) => ua.addressId === sale.addressId
-                                  )
-                                  .map((userAddress) => (
-                                    <div
-                                      key={userAddress.id}
-                                      className="space-y-2"
-                                    >
-                                      <p className="text-gray-900 dark:text-white font-medium">
-                                        {userAddress.address.street},{" "}
-                                        {userAddress.address.colony}
-                                      </p>
-                                      <p className="text-gray-600 dark:text-gray-300">
-                                        {userAddress.address.city},{" "}
-                                        {userAddress.address.state},{" "}
-                                        {userAddress.address.country} -{" "}
-                                        {userAddress.address.postalCode}
-                                      </p>
-                                      {sale.references && (
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                                          <strong>Referencias:</strong>{" "}
-                                          {sale.references}
-                                        </p>
-                                      )}
-                                      {(sale.betweenStreetOne ||
-                                        sale.betweenStreetTwo) && (
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                                          <strong>Entre calles:</strong>{" "}
-                                          {sale.betweenStreetOne}
-                                          {sale.betweenStreetTwo &&
-                                            ` y ${sale.betweenStreetTwo}`}
-                                        </p>
-                                      )}
-                                    </div>
-                                  ))}
+                                <div key={sale.address.id} className="space-y-2">
+                                  <p className="text-gray-900 dark:text-white font-medium">
+                                    {sale.address.street},{" "}
+                                    {sale.address.colony}
+                                  </p>
+                                  <p className="text-gray-600 dark:text-gray-300">
+                                    {sale.address.city},{" "}
+                                    {sale.address.state},{" "}
+                                    {sale.address.country} -{" "}
+                                    {sale.address.postalCode}
+                                  </p>
+                                  {sale.references && (
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                                      <strong>Referencias:</strong>{" "}
+                                      {sale.references}
+                                    </p>
+                                  )}
+                                  {(sale.betweenStreetOne ||
+                                    sale.betweenStreetTwo) && (
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                                      <strong>Entre calles:</strong>{" "}
+                                      {sale.betweenStreetOne}
+                                      {sale.betweenStreetTwo &&
+                                        ` y ${sale.betweenStreetTwo}`}
+                                    </p>
+                                  )}
+                                </div>
+                               
                               </div>
                             </div>
                           )}
@@ -560,8 +552,6 @@ export default function OrderHistoryView() {
                           </div>
 
                           <Separator />
-
-                          
                         </div>
                       </motion.div>
                     )}

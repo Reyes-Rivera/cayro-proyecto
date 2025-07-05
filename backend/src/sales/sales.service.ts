@@ -179,7 +179,7 @@ export class SalesService {
       return this.prismaService.sale.findMany({
         where: { userId },
         include: {
-          
+          address: true,
           user: {
             select: {
               name: true,

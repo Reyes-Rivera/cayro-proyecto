@@ -129,7 +129,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-h-[calc(100vh-2rem)] bg-gray-50 dark:bg-gray-900 lg:ml-4 min-w-0">
+      <div className="flex-1 mt-16 lg:mt-0 flex flex-col min-h-[calc(100vh-2rem)] bg-gray-50 dark:bg-gray-900 lg:ml-4 min-w-0">
         {/* Mobile header with logo on left and burger menu on right */}
         <motion.div
           ref={headerRef}
