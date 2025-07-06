@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Clock, AlertCircle, ArrowRight, Home, RefreshCw } from "lucide-react";
+import Loader from "@/components/web-components/Loader";
 
 export default function CheckoutPending() {
   const [searchParams] = useSearchParams();
@@ -45,23 +46,11 @@ export default function CheckoutPending() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 relative mx-auto mb-4">
-            <div className="absolute inset-0 rounded-full border-4 border-gray-200 dark:border-gray-800 opacity-25"></div>
-            <div className="absolute inset-0 rounded-full border-4 border-t-yellow-600 dark:border-t-yellow-500 border-gray-200 dark:border-gray-800 animate-spin"></div>
-          </div>
-          <p className="text-gray-600 dark:text-gray-400">
-            Verificando el estado del pago...
-          </p>
-        </div>
-      </div>
-    );
+    return <Loader />;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 py-12">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 py-24">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Pending Header */}
         <div className="text-center mb-8">

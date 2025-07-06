@@ -17,6 +17,7 @@ import { PasswordSection } from "../components/PasswordSection";
 import { getCompanyInfoApi } from "@/api/company";
 import { Menu, X, Bell, Search } from "lucide-react";
 import Orders from "./orders/Orders";
+import SalesPage from "./sales/SalesPage";
 
 type TabKey =
   | "panel"
@@ -93,41 +94,7 @@ const EmployeeDashboard = () => {
     gender: <GenderPage />,
     brands: <BrandPage />,
     colors: <ColorPage />,
-    sales: (
-      <div className="px-6 space-y-6">
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700 relative">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-blue-700/10 rounded-full -mr-16 -mt-16 dark:from-blue-500/20 dark:to-blue-700/20"></div>
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-400/10 to-blue-600/10 rounded-full -ml-12 -mb-12 dark:from-blue-400/20 dark:to-blue-600/20"></div>
-          {/* Encabezado */}
-          <div className="relative">
-            <div className="bg-blue-500 p-6 rounded-b-[2.5rem]">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center">
-                  <div className="bg-white/20 p-3 rounded-full mr-4">
-                    <Bell className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-white">
-                      Reportes de Ventas
-                    </h2>
-                    <p className="mt-1 text-white/80 flex items-center">
-                      <Search className="w-3.5 h-3.5 mr-1.5 inline" />
-                      Análisis detallado de ventas
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="p-8 pt-10">
-            <p className="text-gray-600 dark:text-gray-300">
-              Esta sección está en desarrollo. Próximamente podrás ver
-              estadísticas detalladas de ventas.
-            </p>
-          </div>
-        </div>
-      </div>
-    ),
+    sales: <SalesPage />,
     orders: <Orders />,
     analytics: (
       <div className="px-6 space-y-6">
@@ -270,7 +237,6 @@ const EmployeeDashboard = () => {
               alt="Logo"
               className="h-28 w-28 object-cover dark:drop-shadow-[0_0_15px_rgba(59,130,246,0.8)]"
             />
-            
           </div>
 
           {/* Burger menu on right */}

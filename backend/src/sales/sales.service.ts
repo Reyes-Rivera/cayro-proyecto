@@ -9,6 +9,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { Sale, SaleStatus } from '@prisma/client';
 import * as nodemailer from 'nodemailer';
 import { createShippingNotificationEmail } from 'src/utils/email';
+import { FilterSalesDto } from './dto/filter-dto';
 @Injectable()
 export class SalesService {
   constructor(private prismaService: PrismaService) {}
@@ -71,9 +72,87 @@ export class SalesService {
       );
     }
   }
-  findAll(): Promise<Sale[]> {
+  async findAll(filters: FilterSalesDto): Promise<Sale[]> {
+    const {
+      startDate,
+      endDate,
+      employeeId,
+      userId,
+      productName,
+      minTotal,
+      maxTotal,
+      reference,
+      clientName,
+      clientEmail,
+      city,
+      state,
+      status = SaleStatus.DELIVERED,
+      page = 1,
+      limit = 10,
+    } = filters;
+
+    const skip = (page - 1) * limit;
+
+    const where: any = {
+      status,
+      ...(startDate &&
+        endDate && {
+          createdAt: {
+            gte: new Date(startDate),
+            lte: new Date(endDate),
+          },
+        }),
+      ...(employeeId && { employeeId: Number(employeeId) }),
+      ...(userId && { userId: Number(userId) }),
+      ...(minTotal !== undefined || maxTotal !== undefined
+        ? {
+            totalAmount: {
+              ...(minTotal !== undefined && { gte: minTotal }),
+              ...(maxTotal !== undefined && { lte: maxTotal }),
+            },
+          }
+        : {}),
+      ...(reference && { saleReference: { contains: reference } }),
+      ...(clientName || clientEmail
+        ? {
+            user: {
+              ...(clientName && { name: { contains: clientName } }),
+              ...(clientEmail && { email: { contains: clientEmail } }),
+            },
+          }
+        : {}),
+      ...(city || state
+        ? {
+            address: {
+              ...(city && { city: { contains: city } }),
+              ...(state && { state: { contains: state } }),
+            },
+          }
+        : {}),
+    };
+
+    // Búsqueda previa por producto usando filtrado manual
+    if (productName) {
+      const allProducts = await this.prismaService.product.findMany({
+        select: { id: true, name: true },
+      });
+
+      const productIds = allProducts
+        .filter((p) => p.name.toLowerCase().includes(productName.toLowerCase()))
+        .map((p) => p.id);
+
+      where.saleDetails = {
+        some: {
+          productVariant: {
+            productId: { in: productIds.length > 0 ? productIds : [0] },
+          },
+        },
+      };
+    }
+
     try {
-      return this.prismaService.sale.findMany({
+      const res = await this.prismaService.sale.findMany({
+        where,
         include: {
           user: {
             select: {
@@ -83,12 +162,11 @@ export class SalesService {
               phone: true,
               userAddresses: {
                 where: { isDefault: true },
-                include: {
-                  address: true,
-                },
+                include: { address: true },
               },
             },
           },
+
           saleDetails: {
             select: {
               quantity: true,
@@ -98,30 +176,24 @@ export class SalesService {
                 select: {
                   barcode: true,
                   price: true,
-                  product: {
-                    select: {
-                      name: true,
-                    },
-                  },
-                  color: {
-                    select: {
-                      name: true,
-                    },
-                  },
-                  size: {
-                    select: {
-                      name: true,
-                    },
-                  },
+                  product: { select: { name: true } },
+                  color: true,
+                  size: { select: { name: true } },
+                  images: true,
                 },
               },
             },
           },
+          address: true,
         },
+        skip,
+        take: +limit,
+        orderBy: { createdAt: 'desc' },
       });
+      console.log(res);
+      return res;
     } catch (error) {
-      if (error instanceof HttpException) throw error;
-
+      console.error(error);
       throw new HttpException(
         'Error interno en el servidor',
         HttpStatus.INTERNAL_SERVER_ERROR,

@@ -7,18 +7,20 @@ import {
   Param,
   NotFoundException,
   InternalServerErrorException,
+  Query,
 } from '@nestjs/common';
 import { SalesService } from './sales.service';
 import { ChangeStatusDto } from './dto/create-sale.dto';
 import { createShippingNotificationEmail } from 'src/utils/email';
+import { FilterSalesDto } from './dto/filter-dto';
 
 @Controller('sales')
 export class SalesController {
   constructor(private readonly salesService: SalesService) {}
 
   @Get()
-  findAll() {
-    return this.salesService.findAll();
+  findAll(@Query() filters: FilterSalesDto) {
+    return this.salesService.findAll(filters);
   }
   @Get('orders')
   getOrdes() {
@@ -50,7 +52,7 @@ export class SalesController {
     return this.salesService.confirmSale(+id, +idUser);
   }
 
- @Post('notify')
+  @Post('notify')
   async notifyCustomer(@Body() emailData: any) {
     console.log(emailData);
     return await this.salesService.sendShippingNotification(emailData);

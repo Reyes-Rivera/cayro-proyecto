@@ -6,58 +6,60 @@ datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
-model FAQ {
-  id          Int      @id @default(autoincrement())
-  question    String   @db.VarChar(5000)
-  answer      String   @db.VarChar(5000)
-  categoryId  Int
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
 
-  category    FAQCategory @relation(fields: [categoryId], references: [id])
+model FAQ {
+  id         Int      @id @default(autoincrement())
+  question   String   @db.VarChar(5000)
+  answer     String   @db.VarChar(5000)
+  categoryId Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  category FAQCategory @relation(fields: [categoryId], references: [id])
 }
 
 model FAQCategory {
-  id       Int    @id @default(autoincrement())
-  name     String @unique @db.VarChar(100)
-  faqs     FAQ[]
+  id   Int    @id @default(autoincrement())
+  name String @unique @db.VarChar(100)
+  faqs FAQ[]
 }
 
 model SecurityQuestion {
   id       Int    @id @default(autoincrement())
   question String @unique @db.VarChar(255)
-  users    User[] 
+  users    User[]
 }
 
 model User {
-  id                Int       @id @default(autoincrement())
-  name              String    @db.VarChar(100)
-  surname           String    @db.VarChar(100)
-  email             String    @unique @db.VarChar(100)
-  phone             String    @unique @db.VarChar(15)
-  birthdate         DateTime
-  password          String    @db.VarChar(255)
-  passwordSetAt     DateTime  @default(now())
-  passwordExpiresAt DateTime?
-  passwordsHistory  Json?
-  loginAttempts     Int       @default(0)
-  lockUntil         DateTime?
-  gender            GenderUser
-  smartWatchCode    String?   @unique @db.VarChar(255)
-  active            Boolean   @default(false)
-  role              Role      @default(USER)
-  profilePicture    String?   @db.VarChar(255)
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  isDeleted         Boolean   @default(false)
-  refreshToken String?
-  sales             Sale[]
-  userAddresses UserAddress[]
-  cart              Cart?     @relation("UserCart")
+  id                 Int               @id @default(autoincrement())
+  name               String            @db.VarChar(100)
+  surname            String            @db.VarChar(100)
+  email              String            @unique @db.VarChar(100)
+  phone              String            @unique @db.VarChar(15)
+  birthdate          DateTime
+  password           String            @db.VarChar(255)
+  passwordSetAt      DateTime          @default(now())
+  passwordExpiresAt  DateTime?
+  passwordsHistory   Json?
+  loginAttempts      Int               @default(0)
+  lockUntil          DateTime?
+  gender             GenderUser
+  smartWatchCode     String?           @unique @db.VarChar(255)
+  active             Boolean           @default(false)
+  role               Role              @default(USER)
+  profilePicture     String?           @db.VarChar(255)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  isDeleted          Boolean           @default(false)
+  refreshToken       String?
+  sales              Sale[]
+  userAddresses      UserAddress[]
+  cart               Cart?             @relation("UserCart")
   securityQuestionId Int?
   securityQuestion   SecurityQuestion? @relation(fields: [securityQuestionId], references: [id])
-  securityAnswer     String? @db.VarChar(255) 
+  securityAnswer     String?           @db.VarChar(255)
 }
+
 //done
 model Configuration {
   id                    Int  @id @default(autoincrement())
@@ -68,6 +70,7 @@ model Configuration {
   emailLogin            Json
   emailResetPass        Json
 }
+
 //done
 model UserActivity {
   id     Int      @id @default(autoincrement())
@@ -75,36 +78,38 @@ model UserActivity {
   action String   @db.VarChar(255)
   date   DateTime
 }
+
 //done
 model Employee {
-  id                Int       @id @default(autoincrement())
-  name              String    @db.VarChar(255)
-  surname           String    @db.VarChar(255)
-  email             String    @unique @db.VarChar(255)
-  phone             String    @db.VarChar(20)
+  id                Int               @id @default(autoincrement())
+  name              String            @db.VarChar(255)
+  surname           String            @db.VarChar(255)
+  email             String            @unique @db.VarChar(255)
+  phone             String            @db.VarChar(20)
   birthdate         DateTime
-  password          String    @db.VarChar(255)
-  passwordSetAt     DateTime  @default(now())
+  password          String            @db.VarChar(255)
+  passwordSetAt     DateTime          @default(now())
   passwordExpiresAt DateTime
-  active            Boolean   @default(false)
+  active            Boolean           @default(false)
   refreshToken      String?
   passwordsHistory  Json?
-  loginAttempts     Int       @default(0)
+  loginAttempts     Int               @default(0)
   lockUntil         DateTime?
   gender            GenderUser
   role              Role
   employeeAddresses EmployeeAddress[]
-  sales             Sale[]    @relation("EmployeeSales")
+  sales             Sale[]            @relation("EmployeeSales")
   auditLogs         Audit[]
 }
+
 model EmployeeAddress {
-  id         Int      @id @default(autoincrement())
+  id         Int     @id @default(autoincrement())
   employeeId Int
   addressId  Int
-  isDefault  Boolean  @default(false)
+  isDefault  Boolean @default(false)
 
-  employee   Employee @relation(fields: [employeeId], references: [id])
-  address    Address  @relation(fields: [addressId], references: [id])
+  employee Employee @relation(fields: [employeeId], references: [id])
+  address  Address  @relation(fields: [addressId], references: [id])
 
   @@unique([employeeId, addressId])
 }
@@ -131,26 +136,27 @@ enum SaleStatus {
 }
 
 model Address {
-  id         Int        @id @default(autoincrement())
-  street     String     @db.VarChar(255)
-  city       String     @db.VarChar(255)
-  state      String     @db.VarChar(255)
-  country    String     @db.VarChar(255)
-  postalCode String
-  colony     String     @db.VarChar(255)
-  userAddresses UserAddress[]
+  id                Int               @id @default(autoincrement())
+  street            String            @db.VarChar(255)
+  city              String            @db.VarChar(255)
+  state             String            @db.VarChar(255)
+  country           String            @db.VarChar(255)
+  postalCode        String
+  colony            String            @db.VarChar(255)
+  userAddresses     UserAddress[]
   employeeAddresses EmployeeAddress[]
-  
-  sales      Sale[]     @relation("SaleAddresses")
+
+  sales Sale[] @relation("SaleAddresses")
 }
+
 model UserAddress {
   id        Int     @id @default(autoincrement())
   userId    Int
   addressId Int
   isDefault Boolean @default(false)
 
-  user      User    @relation(fields: [userId], references: [id])
-  address   Address @relation(fields: [addressId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+  address Address @relation(fields: [addressId], references: [id])
 
   @@unique([userId, addressId])
 }
@@ -180,17 +186,17 @@ model CompanyProfile {
 }
 
 model DocumentRegulatory {
-  id                Int       @id @default(autoincrement())
-  title             String    @db.VarChar(255) 
-  content           String    @db.Text
-  version           Int?     
-  createdAt         DateTime? @default(now())
-  updatedAt         DateTime? @updatedAt
+  id                Int               @id @default(autoincrement())
+  title             String            @db.VarChar(255)
+  content           String            @db.Text
+  version           Int?
+  createdAt         DateTime?         @default(now())
+  updatedAt         DateTime?         @updatedAt
   effectiveDate     DateTime
-  isDeleted         Boolean?  @default(false) 
-  isCurrentVersion  Boolean?  @default(false)
-  previousVersionId Int?   
-  status            Status?  
+  isDeleted         Boolean?          @default(false)
+  isCurrentVersion  Boolean?          @default(false)
+  previousVersionId Int?
+  status            Status?
   type              DocumentTypeInter
 }
 
@@ -208,36 +214,36 @@ enum DocumentTypeInter {
 }
 
 model Product {
-  id               Int      @id @default(autoincrement())
-  name             String   @unique
-  description      String   @db.VarChar(5000)
-  active           Boolean  @default(true)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String   @db.VarChar(5000)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  brandId          Int
-  genderId         Int
-  sleeveId         Int
-  categoryId       Int
+  brandId    Int
+  genderId   Int
+  sleeveId   Int
+  categoryId Int
 
-  brand            Brand     @relation(fields: [brandId], references: [id])
-  gender           Gender    @relation(fields: [genderId], references: [id])
-  sleeve           Sleeve    @relation(fields: [sleeveId], references: [id])
-  category         Category  @relation(fields: [categoryId], references: [id])
+  brand    Brand    @relation(fields: [brandId], references: [id])
+  gender   Gender   @relation(fields: [genderId], references: [id])
+  sleeve   Sleeve   @relation(fields: [sleeveId], references: [id])
+  category Category @relation(fields: [categoryId], references: [id])
 
-  variants         ProductVariant[]
+  variants ProductVariant[]
 }
 
 model Color {
-  id       Int    @id @default(autoincrement())
-  name     String @unique
-  hexValue String @unique
+  id       Int              @id @default(autoincrement())
+  name     String           @unique
+  hexValue String           @unique
   variants ProductVariant[]
 }
 
 model Size {
-  id       Int    @id @default(autoincrement())
-  name     String @unique
+  id       Int              @id @default(autoincrement())
+  name     String           @unique
   variants ProductVariant[]
 }
 
@@ -247,23 +253,24 @@ model ProductVariant {
   colorId   Int
   sizeId    Int
   price     Float
-  stock     Int      @default(0)
-  barcode   String   @unique 
+  stock     Int     @default(0)
+  barcode   String  @unique
   images    Image[]
-  
-  product   Product @relation(fields: [productId], references: [id])
-  color     Color   @relation(fields: [colorId], references: [id])
-  size      Size    @relation(fields: [sizeId], references: [id])
-  saleDetails SaleDetail[] 
-  cartItems  CartItem[]
-  @@unique([productId, colorId, sizeId]) 
+
+  product     Product      @relation(fields: [productId], references: [id])
+  color       Color        @relation(fields: [colorId], references: [id])
+  size        Size         @relation(fields: [sizeId], references: [id])
+  saleDetails SaleDetail[]
+  cartItems   CartItem[]
+
+  @@unique([productId, colorId, sizeId])
 }
 
 model Image {
-  id             Int           @id @default(autoincrement())
-  url            String        @db.VarChar(255)
-  angle          String        // Puede ser "front", "side", "back", etc.
-  productVariant ProductVariant @relation(fields: [productVariantId], references: [id])
+  id               Int            @id @default(autoincrement())
+  url              String         @db.VarChar(255)
+  angle            String // Puede ser "front", "side", "back", etc.
+  productVariant   ProductVariant @relation(fields: [productVariantId], references: [id])
   productVariantId Int
 }
 
@@ -292,59 +299,56 @@ model Category {
 }
 
 model Sale {
-  id               Int          @id @default(autoincrement())
+  id               Int        @id @default(autoincrement())
   userId           Int
   addressId        Int
   employeeId       Int
-  subtotalAmount   Decimal      @db.Decimal(10, 2) // Solo productos
-  shippingCost     Decimal      @db.Decimal(10, 2) // Costo de envío
-  totalAmount      Decimal      @db.Decimal(10, 2) // Subtotal + envío
-  saleReference    String       @unique @db.VarChar(255)
-  references       String?      @db.VarChar(255)
-  betweenStreetOne String?      @db.VarChar(255)
-  betweenStreetTwo String?      @db.VarChar(255)
-  status           SaleStatus   @default(PENDING)
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
+  subtotalAmount   Decimal    @db.Decimal(10, 2) // Solo productos
+  shippingCost     Decimal    @db.Decimal(10, 2) // Costo de envío
+  totalAmount      Decimal    @db.Decimal(10, 2) // Subtotal + envío
+  saleReference    String     @unique @db.VarChar(255)
+  references       String?    @db.VarChar(255)
+  betweenStreetOne String?    @db.VarChar(255)
+  betweenStreetTwo String?    @db.VarChar(255)
+  status           SaleStatus @default(PENDING)
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
 
-  user             User         @relation(fields: [userId], references: [id])
-  address          Address      @relation("SaleAddresses", fields: [addressId], references: [id])
-  employee         Employee     @relation("EmployeeSales", fields: [employeeId], references: [id])
-  saleDetails      SaleDetail[]
+  user        User         @relation(fields: [userId], references: [id])
+  address     Address      @relation("SaleAddresses", fields: [addressId], references: [id])
+  employee    Employee     @relation("EmployeeSales", fields: [employeeId], references: [id])
+  saleDetails SaleDetail[]
 }
 
 model SaleDetail {
-  id                      Int             @id @default(autoincrement())
-  saleId                  Int
-  productVariantId        Int
-  quantity                Int
-  unitPrice               Float
-  totalPrice              Float
-  productVariant          ProductVariant  @relation(fields: [productVariantId], references: [id])
-  sale                    Sale            @relation(fields: [saleId], references: [id])
+  id               Int            @id @default(autoincrement())
+  saleId           Int
+  productVariantId Int
+  quantity         Int
+  unitPrice        Float
+  totalPrice       Float
+  productVariant   ProductVariant @relation(fields: [productVariantId], references: [id])
+  sale             Sale           @relation(fields: [saleId], references: [id])
 }
 
 model Cart {
-  id        Int       @id @default(autoincrement())
-  userId    Int       @unique  
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user      User      @relation("UserCart", fields: [userId], references: [id])
-  items     CartItem[]
+  user  User       @relation("UserCart", fields: [userId], references: [id])
+  items CartItem[]
 }
 
 model CartItem {
-  id               Int            @id @default(autoincrement())
+  id               Int @id @default(autoincrement())
   cartId           Int
   productVariantId Int
-  quantity         Int            @default(1)
+  quantity         Int @default(1)
 
-  cart            Cart           @relation(fields: [cartId], references: [id])
-  productVariant  ProductVariant @relation(fields: [productVariantId], references: [id])
+  cart           Cart           @relation(fields: [cartId], references: [id])
+  productVariant ProductVariant @relation(fields: [productVariantId], references: [id])
 
-  @@unique([cartId, productVariantId])  // Evita duplicados en el carrito
+  @@unique([cartId, productVariantId]) // Evita duplicados en el carrito
 }
-
-
-
