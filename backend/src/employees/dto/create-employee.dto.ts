@@ -7,6 +7,7 @@ import {
   MinLength,
   IsEnum,
   Matches,
+  IsBoolean,
 } from 'class-validator';
 import { Genders, Role } from '../entities/employee.entity';
 
@@ -126,4 +127,8 @@ export class CreateEmployeeDto {
     message: 'El rol seleccionado no es válido.',
   })
   role: Role;
+  @IsBoolean({
+    message: 'El campo active debe ser un booleano',
+  })
+  active: boolean;
 }

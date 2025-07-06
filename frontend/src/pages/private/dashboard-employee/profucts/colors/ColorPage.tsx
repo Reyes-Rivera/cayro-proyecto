@@ -485,7 +485,13 @@ const ColorPage = () => {
   const totalPages = Math.ceil(filteredAndSortedItems.length / itemsPerPage);
 
   // Cambiar de página
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+  const paginate = (pageNumber: number) => {
+    setCurrentPage(pageNumber);
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
 
   // Limpiar búsqueda
   const clearSearch = () => {
@@ -540,7 +546,7 @@ const ColorPage = () => {
   }, [showSortOptions]);
 
   return (
-    <div className="px-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div className=" bg-gray-50 dark:bg-gray-900 min-h-screen">
       {/* Header section - Siguiendo el estilo de marcas */}
       <div className="bg-blue-500 rounded-xl shadow-xl overflow-hidden relative mb-6">
         {/* Background elements */}
@@ -671,7 +677,7 @@ const ColorPage = () => {
               disabled={isRefreshing}
             >
               <RefreshCw
-                className={`w-5 h-5 ${isRefreshing ? "animate-spin" : ""}`}
+                className={`w-5 m-auto h-5 ${isRefreshing ? "animate-spin" : ""}`}
               />
             </button>
           </div>
@@ -860,6 +866,10 @@ const ColorPage = () => {
                       onChange={(e) => {
                         setItemsPerPage(Number(e.target.value));
                         setCurrentPage(1);
+                        window.scrollTo({
+                          top: 0,
+                          behavior: "smooth",
+                        });
                       }}
                     >
                       <option value={5}>5</option>
@@ -898,6 +908,10 @@ const ColorPage = () => {
                           if (!isNaN(page) && page > 0 && page <= totalPages) {
                             setCurrentPage(page);
                           }
+                          window.scrollTo({
+                            top: 0,
+                            behavior: "smooth",
+                          });
                         }}
                         aria-label="Número de página"
                       />

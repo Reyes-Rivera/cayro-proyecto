@@ -159,9 +159,8 @@ const EmployeePage = () => {
         birthdate: data.birthdate,
         gender: data.gender,
         role: data.role,
-        active: data.active, // Incluir el campo active
+        active: String(data.active).toLowerCase() === "true" ? true: false,
       };
-
       if (editId !== null) {
         setIsLoading(true);
         const updatedItem = await updateEmployee(editId, submitData);
@@ -200,9 +199,8 @@ const EmployeePage = () => {
           gender: data.gender,
           role: data.role,
           password: data.password,
-          active: data.active, // Incluir el campo active
+          active: String(data.active).toLowerCase() === "true" ? true: false,
         };
-
         setIsLoading(true);
         const newItem = await addEmployee(submitDataAdd);
         if (newItem) {
@@ -226,6 +224,7 @@ const EmployeePage = () => {
       }
     } catch (error: any) {
       setIsLoading(false);
+      console.log(error);
       if (error === "Error interno en el servidor.") {
         navigate("/500", { state: { fromError: true } });
         return;
@@ -519,7 +518,7 @@ const EmployeePage = () => {
   }, [showSortOptions]);
 
   return (
-    <div className="px-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div className=" bg-gray-50 dark:bg-gray-900 min-h-screen">
       {/* Header section */}
       <div className="bg-blue-500 rounded-xl shadow-xl overflow-hidden relative mb-6">
         {/* Background elements */}

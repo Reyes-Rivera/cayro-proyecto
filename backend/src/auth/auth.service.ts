@@ -45,12 +45,7 @@ export class AuthService {
     private jwtSvc: JwtService,
     private prismaService: PrismaService,
     private readonly logger: AppLogger,
-  ) {
-    this.logger.log({
-      message: 'Servicio de autenticación inicializado',
-      context: 'AuthService',
-    });
-  }
+  ) {}
 
   async sendEmail(
     correo: string,

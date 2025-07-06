@@ -6,9 +6,11 @@ import {
   Patch,
   Param,
   NotFoundException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { SalesService } from './sales.service';
 import { ChangeStatusDto } from './dto/create-sale.dto';
+import { createShippingNotificationEmail } from 'src/utils/email';
 
 @Controller('sales')
 export class SalesController {
@@ -38,7 +40,7 @@ export class SalesController {
     return this.salesService.getUserPurchases(+id);
   }
 
-  @Post('change-status')
+  @Patch('change-status')
   changeStatus(@Body() body: ChangeStatusDto) {
     return this.salesService.updateStatus(body.id, body.userId, body.status);
   }
@@ -46,5 +48,11 @@ export class SalesController {
   confirmSaleOrder(@Param('id') id: number, @Param('idUser') idUser: number) {
     console.log(id, idUser);
     return this.salesService.confirmSale(+id, +idUser);
+  }
+
+ @Post('notify')
+  async notifyCustomer(@Body() emailData: any) {
+    console.log(emailData);
+    return await this.salesService.sendShippingNotification(emailData);
   }
 }

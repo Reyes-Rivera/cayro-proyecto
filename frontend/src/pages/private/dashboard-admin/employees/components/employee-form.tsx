@@ -241,51 +241,53 @@ const EmployeeForm = ({
             </div>
 
             {/* Estado Activo/Inactivo */}
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {isActive ? (
-                  <CheckCircle className="w-4 h-4 inline mr-2 text-green-600 dark:text-green-400" />
-                ) : (
-                  <XCircle className="w-4 h-4 inline mr-2 text-red-600 dark:text-red-400" />
+            {editId === null && (
+              <div>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {isActive ? (
+                    <CheckCircle className="w-4 h-4 inline mr-2 text-green-600 dark:text-green-400" />
+                  ) : (
+                    <XCircle className="w-4 h-4 inline mr-2 text-red-600 dark:text-red-400" />
+                  )}
+                  Estado del Empleado *
+                </label>
+                <select
+                  {...register("active", {
+                    required: "El estado es obligatorio",
+                  })}
+                  className={`w-full px-3 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${
+                    errors.active
+                      ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                      : "border-gray-300 dark:border-gray-600"
+                  } bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100`}
+                >
+                  <option value="">Selecciona el estado</option>
+                  <option value="true">Activo - Trabaja actualmente</option>
+                  <option value="false">Inactivo - Ya no trabaja aquí</option>
+                </select>
+                {errors.active && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    {errors.active.message}
+                  </p>
                 )}
-                Estado del Empleado *
-              </label>
-              <select
-                {...register("active", {
-                  required: "El estado es obligatorio",
-                })}
-                className={`w-full px-3 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${
-                  errors.active
-                    ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                    : "border-gray-300 dark:border-gray-600"
-                } bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100`}
-              >
-                <option value="">Selecciona el estado</option>
-                <option value="true">Activo - Trabaja actualmente</option>
-                <option value="false">Inactivo - Ya no trabaja aquí</option>
-              </select>
-              {errors.active && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
-                  <AlertCircle className="w-4 h-4" />
-                  {errors.active.message}
-                </p>
-              )}
 
-              {/* Indicador visual del estado */}
-              <div className="mt-2 flex items-center gap-2">
-                {isActive ? (
-                  <div className="flex items-center gap-2 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-3 py-1 rounded-full text-xs">
-                    <CheckCircle className="w-3 h-3" />
-                    <span>Empleado Activo</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-3 py-1 rounded-full text-xs">
-                    <XCircle className="w-3 h-3" />
-                    <span>Empleado Inactivo</span>
-                  </div>
-                )}
+                {/* Indicador visual del estado */}
+                <div className="mt-2 flex items-center gap-2">
+                  {isActive ? (
+                    <div className="flex items-center gap-2 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-3 py-1 rounded-full text-xs">
+                      <CheckCircle className="w-3 h-3" />
+                      <span>Empleado Activo</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-3 py-1 rounded-full text-xs">
+                      <XCircle className="w-3 h-3" />
+                      <span>Empleado Inactivo</span>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Right Column */}
@@ -511,6 +513,53 @@ const EmployeeForm = ({
                 </p>
               )}
             </div>
+            {editId && (
+              <div>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {isActive ? (
+                    <CheckCircle className="w-4 h-4 inline mr-2 text-green-600 dark:text-green-400" />
+                  ) : (
+                    <XCircle className="w-4 h-4 inline mr-2 text-red-600 dark:text-red-400" />
+                  )}
+                  Estado del Empleado *
+                </label>
+                <select
+                  {...register("active", {
+                    required: "El estado es obligatorio",
+                  })}
+                  className={`w-full px-3 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${
+                    errors.active
+                      ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                      : "border-gray-300 dark:border-gray-600"
+                  } bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100`}
+                >
+                  <option value="">Selecciona el estado</option>
+                  <option value="true">Activo - Trabaja actualmente</option>
+                  <option value="false">Inactivo - Ya no trabaja aquí</option>
+                </select>
+                {errors.active && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    {errors.active.message}
+                  </p>
+                )}
+
+                {/* Indicador visual del estado */}
+                <div className="mt-2 flex items-center gap-2">
+                  {isActive ? (
+                    <div className="flex items-center gap-2 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-3 py-1 rounded-full text-xs">
+                      <CheckCircle className="w-3 h-3" />
+                      <span>Empleado Activo</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-3 py-1 rounded-full text-xs">
+                      <XCircle className="w-3 h-3" />
+                      <span>Empleado Inactivo</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

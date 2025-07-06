@@ -15,4 +15,4 @@ export const sendTrackingEmail = (data: {
   customerName: string;
   trackingNumber: string;
   shippingCompany: string;
-}) => axios.post(`/orders/send-tracking-email`, data);
+}) => axios.post(`/sales/notify`, data);

@@ -223,7 +223,7 @@ export default function Panel() {
   });
 
   return (
-    <div className="px-6 space-y-6">
+    <div className="space-y-6">
       <motion.div
         initial="hidden"
         animate="visible"
@@ -239,7 +239,7 @@ export default function Panel() {
           <div className="relative">
             <div className="bg-blue-500 p-6 rounded-b-[2.5rem]">
               <div className="flex justify-between items-center">
-                <div className="flex items-center">
+                <div className="flex items-center flex-wrap">
                   <div className="bg-white/20 p-3 rounded-full mr-4">
                     <LayoutDashboard className="w-6 h-6 text-white" />
                   </div>
@@ -251,7 +251,7 @@ export default function Panel() {
                     </p>
                   </div>
                 </div>
-                <div className="bg-white/20 px-4 py-2 rounded-lg text-white">
+                <div className="bg-white/20 px-4 text-center py-2 rounded-lg text-white">
                   <p className="text-sm font-medium">
                     {greeting}, {user?.name?.split(" ")[0] || "Usuario"}
                   </p>

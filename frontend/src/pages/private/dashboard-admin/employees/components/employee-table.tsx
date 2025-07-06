@@ -269,7 +269,7 @@ const EmployeeTable = ({
                             )}
                           </div>
                           <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
-                            {item.role} | {item.email} | {item.phone}
+                            {item.role === "ADMIN" ? "Administrador" : "Empleado"} | {item.email} | {item.phone}
                           </p>
                         </div>
                       </div>

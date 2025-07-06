@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
@@ -32,8 +31,6 @@ const AdminDashboard = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [logo, setLogo] = useState<string>("");
-  const [lastScrollY, setLastScrollY] = useState(0);
-  const [showMobileHeader, setShowMobileHeader] = useState(true);
   const headerRef = useRef<HTMLDivElement>(null);
 
   // Función para manejar el cambio de pestaña y hacer scroll hasta arriba
@@ -65,26 +62,6 @@ const AdminDashboard = () => {
     getInfo();
   }, []);
 
-  // Handle scroll events for mobile header
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      if (currentScrollY < 10) {
-        setShowMobileHeader(true);
-      } else if (currentScrollY > lastScrollY) {
-        setShowMobileHeader(false);
-      } else {
-        setShowMobileHeader(true);
-      }
-      setLastScrollY(currentScrollY);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, [lastScrollY]);
-
   const toggleTheme = () => {
     document.documentElement.classList.toggle("dark");
     const newTheme = document.documentElement.classList.contains("dark")
@@ -96,7 +73,7 @@ const AdminDashboard = () => {
 
   // Componentes para cada pestaña
   const tabs: Record<TabKey, JSX.Element> = {
-    panel: <AdminPanel/>,
+    panel: <AdminPanel />,
     users: <ProfileSection />,
     faq: <FaqPage />,
     faqCategories: <FaqCategoryPage />,
@@ -117,7 +94,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50 dark:bg-gray-900 sm:p-4">
+     <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50 dark:bg-gray-900  p-4">
       {/* Sidebar - Desktop */}
       <div className="hidden lg:block w-64 h-[calc(100vh-2rem)] sticky top-4 overflow-hidden z-30 rounded-xl shadow-md flex-shrink-0">
         <AdminSidebar
@@ -129,39 +106,33 @@ const AdminDashboard = () => {
       </div>
 
       {/* Main content */}
-      <div className="flex-1 mt-16 lg:mt-0 flex flex-col min-h-[calc(100vh-2rem)] bg-gray-50 dark:bg-gray-900 lg:ml-4 min-w-0">
-        {/* Mobile header with logo on left and burger menu on right */}
-        <motion.div
+       <div className="flex-1 flex flex-col min-h-[calc(100vh-2rem)] bg-gray-50 dark:bg-gray-900 lg:ml-4 min-w-0 sm:px-5">
+        {/* Mobile header - Always visible on mobile */}
+        <div
           ref={headerRef}
-          className="lg:hidden fixed top-0 left-0 right-0 z-30 flex items-center justify-between p-4 bg-white text-white shadow-md"
-          initial={{ y: 0 }}
-          animate={{
-            y: showMobileHeader ? 0 : -100,
-            opacity: showMobileHeader ? 1 : 0,
-          }}
-          transition={{ duration: 0.3 }}
+          className="lg:hidden fixed top-0 left-0 right-0 z-30 flex items-center justify-between p-4 bg-white dark:bg-gray-800 shadow-md border-b border-gray-200 dark:border-gray-700"
         >
           {/* Logo on left */}
           <div className="h-10 w-auto flex items-center">
             <img
               src={logo || "/placeholder.svg?height=40&width=40"}
               alt="Logo"
-              className="h-16 w-24  object-cover rounded-md"
+              className="h-28 w-28 object-cover dark:drop-shadow-[0_0_15px_rgba(59,130,246,0.8)]"
             />
           </div>
 
           {/* Burger menu on right */}
           <button
             onClick={() => setIsMenuOpen(true)}
-            className="p-2 rounded-md text-black hover:bg-white/20"
+            className="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             aria-label="Open menu"
           >
             <Menu className="h-6 w-6" />
           </button>
-        </motion.div>
+        </div>
 
         {/* Spacer for fixed mobile header */}
-        <div className="sm:hidden h-[72px] mb-4"></div>
+        <div className="lg:hidden h-16"></div>
 
         {/* Mobile menu */}
         <AnimatePresence>
@@ -173,9 +144,9 @@ const AdminDashboard = () => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 sm:hidden"
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
                 onClick={() => setIsMenuOpen(false)}
-              ></motion.div>
+              />
 
               {/* Sidebar */}
               <motion.div
@@ -183,7 +154,7 @@ const AdminDashboard = () => {
                 animate={{ x: 0 }}
                 exit={{ x: "-100%" }}
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                className="fixed top-4 left-4 h-[calc(100vh-2rem)] w-72 z-50 sm:hidden overflow-hidden rounded-xl shadow-lg"
+                className="fixed top-0 left-0 h-full w-80 z-50 lg:hidden overflow-hidden shadow-lg"
               >
                 <AdminSidebar
                   activeTab={activeTab}
@@ -197,13 +168,13 @@ const AdminDashboard = () => {
 
               {/* Close button */}
               <motion.button
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed top-6 right-6 z-50 p-2 rounded-full bg-gray-800/80 text-white sm:hidden"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="fixed top-4 right-4 z-50 p-2 rounded-full bg-gray-800/90 text-white shadow-lg lg:hidden hover:bg-gray-700/90 transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
-                <X className="h-6 w-6" />
+                <X className="h-5 w-5" />
               </motion.button>
             </>
           )}

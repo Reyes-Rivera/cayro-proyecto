@@ -59,7 +59,7 @@ export default function SignUpPage() {
   const [pageLoading, setPageLoading] = useState(true);
   const [animateContent, setAnimateContent] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false); // Estado para términos y condiciones
-  const { SignUp, error } = useAuth();
+  const { SignUp } = useAuth();
 
   const {
     register,
@@ -323,24 +323,7 @@ export default function SignUpPage() {
     }
   });
 
-  // Handle auth context errors
-  useEffect(() => {
-    if (error) {
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        toast: true,
-        text: error,
-        position: "top-end",
-        timer: 4000,
-        showConfirmButton: false,
-        animation: true,
-        background: "#FEF2F2",
-        color: "#DC2626",
-        iconColor: "#EF4444",
-      });
-    }
-  }, [error]);
+ 
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 relative overflow-hidden mt-10">

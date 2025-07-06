@@ -334,7 +334,7 @@ const ProductList: React.FC<ProductListProps> = ({
   }, []);
 
   return (
-    <div >
+    <div>
       {/* Header section */}
       <div className="bg-blue-500 mb-6 rounded-xl shadow-xl overflow-hidden relative">
         <div className="p-4 sm:p-6">
@@ -987,6 +987,10 @@ const ProductList: React.FC<ProductListProps> = ({
                     newItemsPerPage
                   );
                   onFilterChange(filterParams);
+                  window.scrollTo({
+                    top: 0,
+                    behavior: "smooth",
+                  });
                 }}
               >
                 <option value={5}>5</option>
@@ -1020,6 +1024,10 @@ const ProductList: React.FC<ProductListProps> = ({
                     itemsPerPage
                   );
                   onFilterChange(filterParams);
+                  window.scrollTo({
+                    top: 0,
+                    behavior: "smooth",
+                  });
                 }}
                 aria-label="Página anterior"
               >
@@ -1042,6 +1050,10 @@ const ProductList: React.FC<ProductListProps> = ({
                         itemsPerPage
                       );
                       onFilterChange(filterParams);
+                      window.scrollTo({
+                        top: 0,
+                        behavior: "smooth",
+                      });
                     }
                   }}
                   aria-label="Número de página"
@@ -1067,6 +1079,10 @@ const ProductList: React.FC<ProductListProps> = ({
                     itemsPerPage
                   );
                   onFilterChange(filterParams);
+                  window.scrollTo({
+                    top: 0,
+                    behavior: "smooth",
+                  });
                 }}
                 aria-label="Página siguiente"
               >

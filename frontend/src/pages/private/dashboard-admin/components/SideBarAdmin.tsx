@@ -1,14 +1,11 @@
 "use client";
-
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom"; // Agregar esta importación
-
+import { useNavigate } from "react-router-dom";
 import {
   Users,
   LogOut,
   Home,
   ChevronDown,
-  ChevronRight,
   HelpCircle,
   FileText,
   Building,
@@ -20,7 +17,6 @@ import {
   LayoutDashboard,
   Layers,
 } from "lucide-react";
-
 import { useAuth } from "@/context/AuthContextType";
 import { getCompanyInfoApi } from "@/api/company";
 import { motion } from "framer-motion";
@@ -43,7 +39,7 @@ export default function AdminSidebar({
   toggleTheme,
 }: SidebarProps) {
   const { user, signOut } = useAuth();
-  const navigate = useNavigate(); // Agregar el hook de navegación
+  const navigate = useNavigate();
   const [showFaq, setShowFaq] = useState(false);
   const [showUserSettings, setShowUserSettings] = useState(false);
   const [logo, setLogo] = useState<string>("");
@@ -61,12 +57,10 @@ export default function AdminSidebar({
     setActiveTab(tab);
     // Hacer scroll hasta arriba cuando se cambia de pestaña
     window.scrollTo({ top: 0, behavior: "smooth" });
-
     // Close user settings dropdown when selecting profile, address, or security
     if (tab === "users" || tab === "address" || tab === "security") {
       setShowUserSettings(false);
     }
-
     if (isMobile && onClose) {
       onClose();
     }
@@ -75,15 +69,12 @@ export default function AdminSidebar({
   // Handle sign out with animation and redirect to login
   const handleSignOut = async () => {
     setIsSigningOut(true);
-
     // Pequeño delay para mostrar la animación
     await new Promise((resolve) => setTimeout(resolve, 1500));
-
     // Ejecutar signOut para limpiar el estado de autenticación
     if (signOut) {
       await signOut();
     }
-
     // Redirigir al login
     navigate("/login");
   };
@@ -99,7 +90,6 @@ export default function AdminSidebar({
         console.error("Error fetching company info:", error);
       }
     };
-
     getInfo();
   }, []);
 
@@ -125,33 +115,24 @@ export default function AdminSidebar({
 
   return (
     <div className="h-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex flex-col rounded-xl overflow-hidden shadow-md">
-      {/* Header with logo */}
+      {/* Header with logo and close button for mobile */}
       <div className="relative">
-        <div className="px-6 py-5 rounded-b-[2rem]">
+        <div className="px-6 py-5 rounded-b-[2rem] bg-gradient-to-br from-blue-500 to-blue-600">
           <div className="flex items-center justify-between">
             <div className="flex items-center justify-center h-16 overflow-hidden w-full">
               <div className="flex-shrink-0 transition-transform duration-300 relative group h-full flex items-center justify-center">
-                <div className="relative p-2 rounded-lg flex items-center justify-center bg-white/20">
+                <div className="relative p-2 rounded-lg flex items-center justify-center">
                   <img
                     src={logo || "/placeholder.svg?height=80&width=120"}
                     alt="Logo"
-                    className="h-40 w-auto object-contain transition-all duration-300 relative max-w-full"
+                    className="h-36 w-36 object-cover transition-all duration-300 relative max-w-full"
                   />
                 </div>
               </div>
             </div>
-
-            {isMobile && (
-              <button
-                onClick={onClose}
-                className="ml-2 p-1 rounded-md text-white hover:bg-white/20"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            )}
+            
           </div>
         </div>
-
         <div className="absolute -bottom-3 left-0 right-0 flex justify-center">
           <div className="bg-white dark:bg-gray-700 px-3 py-1.5 rounded-full shadow-md border border-gray-100 dark:border-gray-600 flex items-center">
             <LayoutDashboard className="w-3.5 h-3.5 text-blue-500 mr-1.5" />
@@ -218,7 +199,6 @@ export default function AdminSidebar({
                 }`}
               />
             </button>
-
             {showFaq && (
               <div className="mt-1 ml-8 space-y-1">
                 <button
@@ -238,7 +218,6 @@ export default function AdminSidebar({
                   />
                   Preguntas Frecuentes
                 </button>
-
                 <button
                   onClick={() => handleTabChange("faqCategories")}
                   className={`w-full flex items-center px-3 py-2 text-sm relative rounded-lg transition-colors ${
@@ -328,13 +307,11 @@ export default function AdminSidebar({
           <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-medium shadow-md">
             {getUserInitial()}
           </div>
-
           <div className="ml-3 flex-1">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-gray-900 dark:text-white">
                 {user?.name || "Administrador"}
               </p>
-
               {/* Theme toggle icon */}
               <button
                 onClick={toggleTheme}
@@ -353,7 +330,6 @@ export default function AdminSidebar({
             </p>
           </div>
         </div>
-
         <div className="grid grid-cols-2 gap-2 mb-3">
           <button
             onClick={() => setShowUserSettings(!showUserSettings)}
@@ -362,7 +338,6 @@ export default function AdminSidebar({
             <Users className="w-4 h-4 mr-2" />
             Ajustes
           </button>
-
           {/* Botón de Salir con animación y redirección al login */}
           <button
             onClick={handleSignOut}
@@ -402,7 +377,6 @@ export default function AdminSidebar({
             )}
           </button>
         </div>
-
         {showUserSettings && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
@@ -415,7 +389,6 @@ export default function AdminSidebar({
               <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
                 Ajustes de usuario
               </span>
-
               <button
                 onClick={() => setShowUserSettings(false)}
                 className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 transition-colors"
@@ -423,7 +396,6 @@ export default function AdminSidebar({
                 <ChevronDown className="w-4 h-4 transform rotate-180" />
               </button>
             </div>
-
             <button
               onClick={() => handleTabChange("users")}
               className={`w-full flex items-center px-3 py-2 text-sm relative rounded-lg transition-colors ${
@@ -441,7 +413,6 @@ export default function AdminSidebar({
               />
               Perfil
             </button>
-
             <button
               onClick={() => handleTabChange("address")}
               className={`w-full flex items-center px-3 py-2 text-sm relative rounded-lg transition-colors ${
@@ -459,7 +430,6 @@ export default function AdminSidebar({
               />
               Dirección
             </button>
-
             <button
               onClick={() => handleTabChange("security")}
               className={`w-full flex items-center px-3 py-2 text-sm relative rounded-lg transition-colors ${

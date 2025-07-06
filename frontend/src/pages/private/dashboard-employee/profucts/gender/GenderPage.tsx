@@ -256,7 +256,13 @@ const GenderPage = () => {
   const totalPages = Math.ceil(filteredAndSortedGenders.length / itemsPerPage);
 
   // Cambiar de página
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+  const paginate = (pageNumber: number) => {
+    setCurrentPage(pageNumber);
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
 
   // Limpiar búsqueda
   const clearSearch = () => {
@@ -309,7 +315,7 @@ const GenderPage = () => {
   }, [showSortOptions]);
 
   return (
-    <div className="px-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
       {/* Header section - Siguiendo el estilo de marcas */}
       <div className="bg-blue-500 rounded-xl shadow-xl overflow-hidden relative mb-6">
         {/* Background elements */}
@@ -440,7 +446,9 @@ const GenderPage = () => {
               disabled={isRefreshing}
             >
               <RefreshCw
-                className={`w-5 h-5 ${isRefreshing ? "animate-spin" : ""}`}
+                className={`w-5 m-auto h-5 ${
+                  isRefreshing ? "animate-spin" : ""
+                }`}
               />
             </button>
           </div>
@@ -619,6 +627,10 @@ const GenderPage = () => {
                       onChange={(e) => {
                         setItemsPerPage(Number(e.target.value));
                         setCurrentPage(1);
+                        window.scrollTo({
+                          top: 0,
+                          behavior: "smooth",
+                        });
                       }}
                     >
                       <option value={5}>5</option>

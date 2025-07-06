@@ -75,7 +75,6 @@ export class MercadoPagoService {
         throw new Error('BACKEND_URL no está definido correctamente');
       }
 
-      // 🔍 Validación previa de stock
       for (const item of cart) {
         const variant = await this.prismaService.productVariant.findUnique({
           where: { id: item.variantId },
@@ -96,7 +95,6 @@ export class MercadoPagoService {
         }
       }
 
-      // ✅ Construcción de los items
       const items = [];
       for (const item of cart) {
         const variant = await this.prismaService.productVariant.findFirst({

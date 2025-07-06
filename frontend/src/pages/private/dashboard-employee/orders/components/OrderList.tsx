@@ -26,7 +26,6 @@ interface OrderListProps {
   totalOrders: number;
   totalPages: number;
   onView: (id: number) => void;
-  onUpdateStatus: (id: number, status: string) => void;
   onFilterChange: (filterParams: string) => void;
   isTableLoading?: boolean;
 }
@@ -551,7 +550,7 @@ const OrderList: React.FC<OrderListProps> = ({
                     <div className="col-span-2">
                       <div className="flex items-center font-medium text-gray-900 dark:text-white">
                         <DollarSign className="w-4 h-4 mr-1" />
-                        {formatCurrency(order.totalAmount || 0)}
+                        {formatCurrency(+order.totalAmount || 0)}
                       </div>
                     </div>
                     <div className="col-span-2 flex items-center justify-end space-x-2">
@@ -597,7 +596,7 @@ const OrderList: React.FC<OrderListProps> = ({
                       </div>
                       <div className="flex items-center font-medium text-gray-900 dark:text-white">
                         <DollarSign className="w-4 h-4 mr-1" />
-                        {formatCurrency(order.totalAmount || 0)}
+                        {formatCurrency(+order.totalAmount || 0)}
                       </div>
                     </div>
 

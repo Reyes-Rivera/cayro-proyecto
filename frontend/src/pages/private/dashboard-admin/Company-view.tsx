@@ -1,5 +1,4 @@
 "use client";
-
 import type React from "react";
 import { useEffect, useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
@@ -23,7 +22,6 @@ import {
   Lightbulb,
   AlertCircle,
 } from "lucide-react";
-
 import { companyInfoUpdateApi, getCompanyInfoApi } from "@/api/company";
 import { useAuth } from "@/context/AuthContextType";
 import { useNavigate } from "react-router-dom";
@@ -70,7 +68,6 @@ export function CompanyView() {
   const [image, setImage] = useState<File | null>(null);
   const [isUpload, setIsUpload] = useState(false);
   const [id, setId] = useState();
-
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -91,7 +88,6 @@ export function CompanyView() {
   const uploadImageToCloudinary = async () => {
     setIsUpload(true);
     if (!image) return;
-
     const formData = new FormData();
     formData.append("file", image);
     const uploadPreset = "ml_default";
@@ -226,7 +222,7 @@ export function CompanyView() {
   };
 
   return (
-    <div className="px-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div className=" bg-gray-50 dark:bg-gray-900 min-h-screen">
       {/* Header section */}
       <div className="bg-blue-500 rounded-xl shadow-xl overflow-hidden relative mb-6">
         {/* Background elements */}
@@ -234,7 +230,6 @@ export function CompanyView() {
           <div className="absolute -top-20 -right-20 w-64 h-64 md:w-96 md:h-96 bg-white/10 rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-blue-600/20 to-transparent"></div>
         </div>
-
         <div className="p-4 sm:p-6 relative z-10">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex items-center">
@@ -251,7 +246,6 @@ export function CompanyView() {
                 </p>
               </div>
             </div>
-
             <button
               className={`w-full sm:w-auto transition-colors text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center justify-center ${
                 isEditing
@@ -317,35 +311,52 @@ export function CompanyView() {
             {/* Logo Section */}
             <div className="lg:col-span-1">
               <div className="space-y-4">
-                <div className="relative w-full h-64 rounded-xl overflow-hidden shadow-lg border-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
-                  {logo ? (
-                    <img
-                      src={logo || "/placeholder.svg"}
-                      alt="Logo de la empresa"
-                      className="w-full h-full object-contain"
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center justify-center w-full h-full text-gray-500 dark:text-gray-400">
-                      <Building2 className="w-16 h-16 mb-2 opacity-50" />
-                      <span className="text-sm">Sin logo</span>
-                    </div>
-                  )}
-
-                  {isUpload && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                      <div className="bg-white/20 p-4 rounded-full">
-                        <Loader2 className="w-8 h-8 animate-spin text-white" />
+                <div className="relative group">
+                  <div className="relative w-full h-64 rounded-xl overflow-hidden shadow-lg border-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
+                    {logo ? (
+                      <img
+                        src={logo || "/placeholder.svg"}
+                        alt="Logo de la empresa"
+                        className="w-full h-full object-contain p-4"
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center w-full h-full text-gray-500 dark:text-gray-400">
+                        <Building2 className="w-16 h-16 mb-2 opacity-50" />
+                        <span className="text-sm">Sin logo</span>
                       </div>
-                    </div>
-                  )}
+                    )}
 
+                    {/* Loading overlay */}
+                    {isUpload && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm rounded-xl">
+                        <div className="bg-white/20 p-4 rounded-full">
+                          <Loader2 className="w-8 h-8 animate-spin text-white" />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Edit overlay - only show when editing and not uploading */}
+                    {isEditing && !isUpload && (
+                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-xl flex items-center justify-center">
+                        <label
+                          htmlFor="logoUpload"
+                          className="bg-blue-500 hover:bg-blue-600 p-4 rounded-full shadow-lg cursor-pointer transition-all transform hover:scale-105"
+                        >
+                          <CameraIcon className="w-6 h-6 text-white" />
+                        </label>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Upload button below the logo when editing */}
                   {isEditing && !isUpload && (
-                    <div className="absolute bottom-3 right-3">
+                    <div className="mt-3">
                       <label
                         htmlFor="logoUpload"
-                        className="bg-blue-500 hover:bg-blue-600 p-3 rounded-full shadow-lg cursor-pointer transition-colors"
+                        className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg cursor-pointer transition-colors flex items-center justify-center gap-2 text-sm font-medium"
                       >
-                        <CameraIcon className="w-5 h-5 text-white" />
+                        <CameraIcon className="w-4 h-4" />
+                        Cambiar Logo
                       </label>
                     </div>
                   )}
@@ -396,7 +407,6 @@ export function CompanyView() {
                             Identidad Corporativa
                           </h3>
                         </div>
-
                         <div className="space-y-6">
                           {/* Nombre de la Empresa */}
                           <div>
@@ -432,7 +442,6 @@ export function CompanyView() {
                               </p>
                             )}
                           </div>
-
                           {/* Slogan */}
                           <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -483,7 +492,6 @@ export function CompanyView() {
                             Información de Contacto
                           </h3>
                         </div>
-
                         <div className="space-y-6">
                           {/* Email */}
                           <div>
@@ -524,7 +532,6 @@ export function CompanyView() {
                               </p>
                             )}
                           </div>
-
                           {/* Teléfono */}
                           <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -560,7 +567,6 @@ export function CompanyView() {
                               </p>
                             )}
                           </div>
-
                           {/* Dirección */}
                           <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -617,7 +623,6 @@ export function CompanyView() {
                             Filosofía Corporativa
                           </h3>
                         </div>
-
                         <div className="space-y-6">
                           {/* Misión */}
                           <div>
@@ -662,7 +667,6 @@ export function CompanyView() {
                               Caracteres: {watch("mission")?.length || 0}/500
                             </p>
                           </div>
-
                           {/* Visión */}
                           <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

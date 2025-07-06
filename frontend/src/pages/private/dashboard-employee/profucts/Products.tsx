@@ -229,6 +229,10 @@ const Products: React.FC = () => {
   const handleBack = () => {
     setSelectedProduct(undefined);
     setIsViewing(false);
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   };
 
   const handleFilterChange = (filterParams: string) => {
@@ -238,7 +242,7 @@ const Products: React.FC = () => {
   // Mostrar loading cuando se está cargando el formulario o la vista de detalles
   if (isFormLoading) {
     return (
-      <div className="px-6 space-y-6 h-screen  dark:bg-gray-900 min-h-screen">
+      <div className="space-y-6 h-screen  dark:bg-gray-900 min-h-screen">
         <div className="flex flex-col h-screen items-center justify-center py-20">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
           <p className="text-gray-500 dark:text-gray-400">
@@ -254,7 +258,7 @@ const Products: React.FC = () => {
   }
 
   return (
-    <div className="px-6 space-y-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div className="space-y-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
       {isEditing ? (
         <div>
           <ProductForm

@@ -1,8 +1,6 @@
 "use client";
-
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-
 import Panel from "./panel/Panel";
 import Products from "./profucts/Products";
 import CategoryPage from "./profucts/category/CategoryPage";
@@ -44,8 +42,6 @@ const EmployeeDashboard = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [logo, setLogo] = useState<string>("");
-  const [lastScrollY, setLastScrollY] = useState(0);
-  const [showMobileHeader, setShowMobileHeader] = useState(true);
   const headerRef = useRef<HTMLDivElement>(null);
 
   // Función para manejar el cambio de pestaña y hacer scroll hasta arriba
@@ -56,7 +52,6 @@ const EmployeeDashboard = () => {
 
   // Check for dark mode preference
   useEffect(() => {
-    // Check for dark mode
     const savedTheme = localStorage.getItem("theme") || "light";
     if (savedTheme === "dark") {
       document.documentElement.classList.add("dark");
@@ -77,32 +72,6 @@ const EmployeeDashboard = () => {
     };
     getInfo();
   }, []);
-
-  // Handle scroll events for mobile header
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-
-      if (currentScrollY < 10) {
-        // Always show header at the top of the page
-        setShowMobileHeader(true);
-      } else if (currentScrollY > lastScrollY) {
-        // Scrolling down - hide header
-        setShowMobileHeader(false);
-      } else {
-        // Scrolling up - show header
-        setShowMobileHeader(true);
-      }
-
-      setLastScrollY(currentScrollY);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, [lastScrollY]);
 
   const toggleTheme = () => {
     document.documentElement.classList.toggle("dark");
@@ -129,7 +98,6 @@ const EmployeeDashboard = () => {
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700 relative">
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-blue-700/10 rounded-full -mr-16 -mt-16 dark:from-blue-500/20 dark:to-blue-700/20"></div>
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-400/10 to-blue-600/10 rounded-full -ml-12 -mb-12 dark:from-blue-400/20 dark:to-blue-600/20"></div>
-
           {/* Encabezado */}
           <div className="relative">
             <div className="bg-blue-500 p-6 rounded-b-[2.5rem]">
@@ -151,7 +119,6 @@ const EmployeeDashboard = () => {
               </div>
             </div>
           </div>
-
           <div className="p-8 pt-10">
             <p className="text-gray-600 dark:text-gray-300">
               Esta sección está en desarrollo. Próximamente podrás ver
@@ -167,7 +134,6 @@ const EmployeeDashboard = () => {
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700 relative">
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-blue-700/10 rounded-full -mr-16 -mt-16 dark:from-blue-500/20 dark:to-blue-700/20"></div>
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-400/10 to-blue-600/10 rounded-full -ml-12 -mb-12 dark:from-blue-400/20 dark:to-blue-600/20"></div>
-
           {/* Encabezado */}
           <div className="relative">
             <div className="bg-blue-500 p-6 rounded-b-[2.5rem]">
@@ -189,7 +155,6 @@ const EmployeeDashboard = () => {
               </div>
             </div>
           </div>
-
           <div className="p-8 pt-10">
             <p className="text-gray-600 dark:text-gray-300">
               Esta sección está en desarrollo. Próximamente podrás ver
@@ -204,7 +169,6 @@ const EmployeeDashboard = () => {
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700 relative">
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-blue-700/10 rounded-full -mr-16 -mt-16 dark:from-blue-500/20 dark:to-blue-700/20"></div>
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-400/10 to-blue-600/10 rounded-full -ml-12 -mb-12 dark:from-blue-400/20 dark:to-blue-600/20"></div>
-
           {/* Encabezado */}
           <div className="relative">
             <div className="bg-blue-500 p-6 rounded-b-[2.5rem]">
@@ -224,7 +188,6 @@ const EmployeeDashboard = () => {
               </div>
             </div>
           </div>
-
           <div className="p-8 pt-10">
             <p className="text-gray-600 dark:text-gray-300">
               Esta sección está en desarrollo. Próximamente podrás gestionar tus
@@ -239,7 +202,6 @@ const EmployeeDashboard = () => {
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700 relative">
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-blue-700/10 rounded-full -mr-16 -mt-16 dark:from-blue-500/20 dark:to-blue-700/20"></div>
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-400/10 to-blue-600/10 rounded-full -ml-12 -mb-12 dark:from-blue-400/20 dark:to-blue-600/20"></div>
-
           {/* Encabezado */}
           <div className="relative">
             <div className="bg-blue-500 p-6 rounded-b-[2.5rem]">
@@ -259,7 +221,6 @@ const EmployeeDashboard = () => {
               </div>
             </div>
           </div>
-
           <div className="p-8 pt-10">
             <p className="text-gray-600 dark:text-gray-300">
               Esta sección está en desarrollo. Próximamente podrás ver la
@@ -284,7 +245,7 @@ const EmployeeDashboard = () => {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
+    <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50 dark:bg-gray-900  p-4 ">
       {/* Sidebar - Desktop */}
       <div className="hidden lg:block w-64 h-[calc(100vh-2rem)] sticky top-4 overflow-hidden z-30 rounded-xl shadow-md flex-shrink-0">
         <Sidebar
@@ -296,40 +257,34 @@ const EmployeeDashboard = () => {
       </div>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-h-[calc(100vh-2rem)] bg-gray-50 dark:bg-gray-900 lg:ml-4 min-w-0">
-        {/* Mobile header with logo on left and burger menu on right */}
-        <motion.div
+      <div className="flex-1 flex flex-col min-h-[calc(100vh-2rem)] bg-gray-50 dark:bg-gray-900 lg:ml-4 min-w-0  sm:px-5">
+        {/* Mobile header - Always visible on mobile */}
+        <div
           ref={headerRef}
-          className="sm:hidden fixed top-0 left-0 right-0 z-30 flex items-center justify-between p-4 bg-blue-500 text-white shadow-md"
-          initial={{ y: 0 }}
-          animate={{
-            y: showMobileHeader ? 0 : -100,
-            opacity: showMobileHeader ? 1 : 0,
-          }}
-          transition={{ duration: 0.3 }}
+          className="lg:hidden fixed top-0 left-0 right-0 z-30 flex items-center justify-between p-4 bg-white dark:bg-gray-800 shadow-md border-b border-gray-200 dark:border-gray-700"
         >
           {/* Logo on left */}
           <div className="h-10 w-auto flex items-center">
             <img
               src={logo || "/placeholder.svg?height=40&width=40"}
               alt="Logo"
-              className="h-8 w-auto object-contain bg-white/20 p-1 rounded-md"
+              className="h-28 w-28 object-cover dark:drop-shadow-[0_0_15px_rgba(59,130,246,0.8)]"
             />
-            <span className="ml-2 font-semibold">Dashboard</span>
+            
           </div>
 
           {/* Burger menu on right */}
           <button
             onClick={() => setIsMenuOpen(true)}
-            className="p-2 rounded-md text-white hover:bg-white/20"
+            className="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             aria-label="Open menu"
           >
             <Menu className="h-6 w-6" />
           </button>
-        </motion.div>
+        </div>
 
         {/* Spacer for fixed mobile header */}
-        <div className="sm:hidden h-[72px] mb-4"></div>
+        <div className="lg:hidden h-16"></div>
 
         {/* Mobile menu */}
         <AnimatePresence>
@@ -341,9 +296,9 @@ const EmployeeDashboard = () => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 sm:hidden"
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
                 onClick={() => setIsMenuOpen(false)}
-              ></motion.div>
+              />
 
               {/* Sidebar */}
               <motion.div
@@ -351,7 +306,7 @@ const EmployeeDashboard = () => {
                 animate={{ x: 0 }}
                 exit={{ x: "-100%" }}
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                className="fixed top-4 left-4 h-[calc(100vh-2rem)] w-72 z-50 sm:hidden overflow-hidden rounded-xl shadow-lg"
+                className="fixed top-0 left-0 h-full w-80 z-50 lg:hidden overflow-hidden shadow-lg"
               >
                 <Sidebar
                   activeTab={activeTab}
@@ -365,13 +320,13 @@ const EmployeeDashboard = () => {
 
               {/* Close button */}
               <motion.button
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed top-6 right-6 z-50 p-2 rounded-full bg-gray-800/80 text-white sm:hidden"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="fixed top-4 right-4 z-50 p-2 rounded-full bg-gray-800/90 text-white shadow-lg lg:hidden hover:bg-gray-700/90 transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
-                <X className="h-6 w-6" />
+                <X className="h-5 w-5" />
               </motion.button>
             </>
           )}
@@ -379,7 +334,7 @@ const EmployeeDashboard = () => {
 
         {/* Page content */}
         <motion.main
-          className="flex-1 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-xl"
+          className="flex-1 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-xl "
           initial="hidden"
           animate="visible"
           variants={contentVariants}

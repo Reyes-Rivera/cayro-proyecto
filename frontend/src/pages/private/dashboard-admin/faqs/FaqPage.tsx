@@ -359,7 +359,7 @@ const FaqPage = () => {
   }, [showSortOptions]);
 
   return (
-    <div className="px-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
       {/* Header section - Siguiendo el estilo de BrandPage */}
       <div className="bg-blue-500 rounded-xl shadow-xl overflow-hidden relative mb-6">
         {/* Background elements */}
