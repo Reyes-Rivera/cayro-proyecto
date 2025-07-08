@@ -11,7 +11,6 @@ import {
   ChevronDown,
   PieChart,
   ShoppingBag,
-  FileText,
   CreditCard,
   Layers,
   Grid,
@@ -49,7 +48,6 @@ export default function Sidebar({
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [showProducts, setShowProducts] = useState(false);
-  const [showReports, setShowReports] = useState(false);
   const [showUserSettings, setShowUserSettings] = useState(false);
   const [logo, setLogo] = useState<string>("");
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -139,7 +137,6 @@ export default function Sidebar({
                 </div>
               </div>
             </div>
-           
           </div>
         </div>
         <div className="absolute -bottom-3 left-0 right-0 flex justify-center">
@@ -379,96 +376,69 @@ export default function Sidebar({
 
           <motion.div variants={itemVariants} className="pt-2 pb-1">
             <div className="px-3 text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/30 py-2 rounded-lg">
-              Reportes
+              Reportes & Análisis
             </div>
           </motion.div>
 
-          {/* Reports */}
-          <motion.div variants={itemVariants}>
-            <button
-              onClick={() => setShowReports(!showReports)}
-              className={`w-full flex items-center justify-between px-3 py-2.5 text-sm relative rounded-lg transition-colors ${
-                ["sales", "analytics", "finances"].includes(activeTab)
-                  ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium"
-                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50"
+          {/* Sales - Botón independiente */}
+          <motion.button
+            variants={itemVariants}
+            onClick={() => handleTabChange("sales")}
+            className={`w-full flex items-center px-3 py-2.5 text-sm relative rounded-lg transition-colors ${
+              activeTab === "sales"
+                ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium"
+                : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50"
+            }`}
+          >
+            <BarChart
+              className={`w-5 h-5 mr-3 ${
+                activeTab === "sales"
+                  ? "text-blue-600 dark:text-blue-400"
+                  : "text-gray-500 dark:text-gray-400"
               }`}
-            >
-              <div className="flex items-center">
-                <FileText
-                  className={`w-5 h-5 mr-3 ${
-                    ["sales", "analytics", "finances"].includes(activeTab)
-                      ? "text-blue-600 dark:text-blue-400"
-                      : "text-gray-500 dark:text-gray-400"
-                  }`}
-                />
-                Reportes
-              </div>
-              <ChevronDown
-                className={`w-4 h-4 ${
-                  ["sales", "analytics", "finances"].includes(activeTab)
-                    ? "text-blue-600 dark:text-blue-400"
-                    : "text-gray-500 dark:text-gray-400"
-                } transition-transform duration-200 ${
-                  showReports ? "transform rotate-180" : ""
-                }`}
-              />
-            </button>
-            {showReports && (
-              <div className="mt-1 ml-8 space-y-1">
-                <button
-                  onClick={() => handleTabChange("sales")}
-                  className={`w-full flex items-center px-3 py-2 text-sm relative rounded-lg transition-colors ${
-                    activeTab === "sales"
-                      ? "bg-blue-50/80 dark:bg-blue-900/10 text-blue-600 dark:text-blue-400"
-                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                  }`}
-                >
-                  <BarChart
-                    className={`w-4 h-4 mr-3 ${
-                      activeTab === "sales"
-                        ? "text-blue-600 dark:text-blue-400"
-                        : "text-gray-500 dark:text-gray-400"
-                    }`}
-                  />
-                  Ventas
-                </button>
-                <button
-                  onClick={() => handleTabChange("analytics")}
-                  className={`w-full flex items-center px-3 py-2 text-sm relative rounded-lg transition-colors ${
-                    activeTab === "analytics"
-                      ? "bg-blue-50/80 dark:bg-blue-900/10 text-blue-600 dark:text-blue-400"
-                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                  }`}
-                >
-                  <PieChart
-                    className={`w-4 h-4 mr-3 ${
-                      activeTab === "analytics"
-                        ? "text-blue-600 dark:text-blue-400"
-                        : "text-gray-500 dark:text-gray-400"
-                    }`}
-                  />
-                  Analíticas
-                </button>
-                <button
-                  onClick={() => handleTabChange("finances")}
-                  className={`w-full flex items-center px-3 py-2 text-sm relative rounded-lg transition-colors ${
-                    activeTab === "finances"
-                      ? "bg-blue-50/80 dark:bg-blue-900/10 text-blue-600 dark:text-blue-400"
-                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                  }`}
-                >
-                  <CreditCard
-                    className={`w-4 h-4 mr-3 ${
-                      activeTab === "finances"
-                        ? "text-blue-600 dark:text-blue-400"
-                        : "text-gray-500 dark:text-gray-400"
-                    }`}
-                  />
-                  Finanzas
-                </button>
-              </div>
-            )}
-          </motion.div>
+            />
+            Ventas
+          </motion.button>
+
+          {/* Reports - Botón independiente */}
+          <motion.button
+            variants={itemVariants}
+            onClick={() => handleTabChange("analytics")}
+            className={`w-full flex items-center px-3 py-2.5 text-sm relative rounded-lg transition-colors ${
+              activeTab === "analytics"
+                ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium"
+                : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50"
+            }`}
+          >
+            <PieChart
+              className={`w-5 h-5 mr-3 ${
+                activeTab === "analytics"
+                  ? "text-blue-600 dark:text-blue-400"
+                  : "text-gray-500 dark:text-gray-400"
+              }`}
+            />
+            Analíticas
+          </motion.button>
+
+          {/* Finances */}
+          <motion.button
+            variants={itemVariants}
+            onClick={() => handleTabChange("finances")}
+            className={`w-full flex items-center px-3 py-2.5 text-sm relative rounded-lg transition-colors ${
+              activeTab === "finances"
+                ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium"
+                : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50"
+            }`}
+          >
+            <CreditCard
+              className={`w-5 h-5 mr-3 ${
+                activeTab === "finances"
+                  ? "text-blue-600 dark:text-blue-400"
+                  : "text-gray-500 dark:text-gray-400"
+              }`}
+            />
+            Finanzas
+          </motion.button>
         </motion.nav>
       </div>
 

@@ -8,73 +8,134 @@ import {
   FileText,
   Download,
   Calendar,
-  DollarSign,
-  Hash,
-  Mail,
-  User,
   Building,
   MapPin,
   Filter,
-  FileSpreadsheet,
   Check,
   Info,
-  AlertCircle,
+  Package,
+  Users,
+  Tag,
+  Eye,
 } from "lucide-react";
 import Swal from "sweetalert2";
+import { getBrands, getCategories } from "@/api/products";
+import { getEmployees } from "@/api/users";
+import { generateSalesReportPDF, previewSalesReportPDF } from "@/api/sales";
 
 interface ReportsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onGenerateReport: (
-    filters: ReportFilters,
-    format: "excel" | "pdf"
-  ) => Promise<void>;
 }
 
 interface ReportFilters {
   startDate?: string;
   endDate?: string;
-  employeeId?: number;
-  userId?: number;
-  minTotal?: number;
-  maxTotal?: number;
-  reference?: string;
-  clientName?: string;
-  clientEmail?: string;
+  categoryId?: number;
   city?: string;
   state?: string;
-  status?: string;
+  employeeId?: number;
+  brandId?: number;
 }
 
-const statusOptions = [
+interface Category {
+  id: number;
+  name: string;
+}
+
+interface Brand {
+  id: number;
+  name: string;
+}
+
+interface Employee {
+  id: number;
+  name: string;
+  surname: string;
+}
+
+const mexicanStates = [
   { value: "", label: "Todos los estados" },
-  { value: "PENDING", label: "Pendiente" },
-  { value: "CONFIRMED", label: "Confirmado" },
-  { value: "SHIPPED", label: "Enviado" },
-  { value: "DELIVERED", label: "Entregado" },
-  { value: "CANCELLED", label: "Cancelado" },
+  { value: "AGS", label: "Aguascalientes" },
+  { value: "BC", label: "Baja California" },
+  { value: "BCS", label: "Baja California Sur" },
+  { value: "CAMP", label: "Campeche" },
+  { value: "CHIS", label: "Chiapas" },
+  { value: "CHIH", label: "Chihuahua" },
+  { value: "CDMX", label: "Ciudad de México" },
+  { value: "COAH", label: "Coahuila" },
+  { value: "COL", label: "Colima" },
+  { value: "DGO", label: "Durango" },
+  { value: "GTO", label: "Guanajuato" },
+  { value: "GRO", label: "Guerrero" },
+  { value: "HGO", label: "Hidalgo" },
+  { value: "JAL", label: "Jalisco" },
+  { value: "MEX", label: "Estado de México" },
+  { value: "MICH", label: "Michoacán" },
+  { value: "MOR", label: "Morelos" },
+  { value: "NAY", label: "Nayarit" },
+  { value: "NL", label: "Nuevo León" },
+  { value: "OAX", label: "Oaxaca" },
+  { value: "PUE", label: "Puebla" },
+  { value: "QRO", label: "Querétaro" },
+  { value: "QROO", label: "Quintana Roo" },
+  { value: "SLP", label: "San Luis Potosí" },
+  { value: "SIN", label: "Sinaloa" },
+  { value: "SON", label: "Sonora" },
+  { value: "TAB", label: "Tabasco" },
+  { value: "TAMPS", label: "Tamaulipas" },
+  { value: "TLAX", label: "Tlaxcala" },
+  { value: "VER", label: "Veracruz" },
+  { value: "YUC", label: "Yucatán" },
+  { value: "ZAC", label: "Zacatecas" },
 ];
 
-const ReportsModal: React.FC<ReportsModalProps> = ({
-  isOpen,
-  onClose,
-  onGenerateReport,
-}) => {
+const ReportsModal: React.FC<ReportsModalProps> = ({ isOpen, onClose }) => {
   const [filters, setFilters] = useState<ReportFilters>({});
   const [isGenerating, setIsGenerating] = useState(false);
-  const [selectedFormat, setSelectedFormat] = useState<"excel" | "pdf">(
-    "excel"
-  );
+  const [isPreviewing, setIsPreviewing] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loadingOptions, setLoadingOptions] = useState(false);
 
-  // Limpiar filtros al cerrar
   useEffect(() => {
-    if (!isOpen) {
-      setFilters({});
-      setSelectedFormat("excel");
+    if (isOpen) {
+      loadDropdownOptions();
     }
   }, [isOpen]);
 
-  // Manejar cambios de filtros
+  useEffect(() => {
+    if (!isOpen) {
+      setFilters({});
+    }
+  }, [isOpen]);
+
+  const loadDropdownOptions = async () => {
+    setLoadingOptions(true);
+    try {
+      const [categoriesRes, brandsRes, employeesRes] = await Promise.all([
+        getCategories(),
+        getBrands(),
+        getEmployees(),
+      ]);
+
+      setCategories(categoriesRes.data);
+      setBrands(brandsRes.data);
+      setEmployees(employeesRes.data);
+    } catch (error) {
+      console.error("Error loading dropdown options:", error);
+      Swal.fire({
+        title: "Error",
+        text: "No se pudieron cargar las opciones. Inténtalo de nuevo.",
+        icon: "error",
+        confirmButtonColor: "#2563eb",
+      });
+    } finally {
+      setLoadingOptions(false);
+    }
+  };
+
   const handleFilterChange = (
     key: keyof ReportFilters,
     value: string | number
@@ -85,65 +146,151 @@ const ReportsModal: React.FC<ReportsModalProps> = ({
     }));
   };
 
-  // Limpiar filtros
   const clearFilters = () => {
     setFilters({});
   };
 
-  // Verificar si hay filtros activos
   const hasActiveFilters = Object.values(filters).some(
     (filter) => filter !== undefined && filter !== ""
   );
 
-  // Obtener descripción de filtros
   const getFilterDescription = () => {
     const descriptions = [];
     if (filters.startDate) descriptions.push(`Desde: ${filters.startDate}`);
     if (filters.endDate) descriptions.push(`Hasta: ${filters.endDate}`);
-    if (filters.status) descriptions.push(`Estado: ${filters.status}`);
-    if (filters.minTotal) descriptions.push(`Monto mín: $${filters.minTotal}`);
-    if (filters.maxTotal) descriptions.push(`Monto máx: $${filters.maxTotal}`);
-    if (filters.reference)
-      descriptions.push(`Referencia: ${filters.reference}`);
-    if (filters.clientName) descriptions.push(`Cliente: ${filters.clientName}`);
-    if (filters.clientEmail) descriptions.push(`Email: ${filters.clientEmail}`);
+    if (filters.categoryId) {
+      const category = categories.find((c) => c.id === filters.categoryId);
+      descriptions.push(`Categoría: ${category?.name || filters.categoryId}`);
+    }
+    if (filters.brandId) {
+      const brand = brands.find((b) => b.id === filters.brandId);
+      descriptions.push(`Marca: ${brand?.name || filters.brandId}`);
+    }
+    if (filters.employeeId) {
+      const employee = employees.find((e) => e.id === filters.employeeId);
+      descriptions.push(
+        `Empleado: ${
+          employee ? `${employee.name} ${employee.surname}` : filters.employeeId
+        }`
+      );
+    }
     if (filters.city) descriptions.push(`Ciudad: ${filters.city}`);
-    if (filters.state) descriptions.push(`Estado: ${filters.state}`);
+    if (filters.state) {
+      const state = mexicanStates.find((s) => s.value === filters.state);
+      descriptions.push(`Estado: ${state?.label || filters.state}`);
+    }
 
     return descriptions.length > 0
       ? descriptions.join(" • ")
       : "Sin filtros aplicados";
   };
 
+  const generateFileName = (filters: ReportFilters): string => {
+    const date = new Date().toISOString().split("T")[0];
+    let fileName = `reporte-ventas-${date}`;
+
+    if (filters.startDate && filters.endDate) {
+      fileName += `_${filters.startDate}_${filters.endDate}`;
+    } else if (filters.startDate) {
+      fileName += `_desde-${filters.startDate}`;
+    } else if (filters.endDate) {
+      fileName += `_hasta-${filters.endDate}`;
+    }
+
+    if (filters.categoryId) {
+      fileName += `_cat-${filters.categoryId}`;
+    }
+
+    if (filters.city) {
+      fileName += `_${filters.city.toLowerCase().replace(/\s+/g, "-")}`;
+    }
+
+    return `${fileName}.pdf`;
+  };
+
+  const downloadBlob = (blob: Blob, filename: string) => {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  };
+
+  const handlePreviewReport = async () => {
+    setIsPreviewing(true);
+    try {
+      const cleanFilters = Object.fromEntries(
+        Object.entries(filters).filter(([, value]) => value !== undefined)
+      );
+
+      const blob = await previewSalesReportPDF(cleanFilters);
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, "_blank");
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error previewing report:", error);
+      Swal.fire({
+        title: "Error",
+        text: "Hubo un problema al generar la vista previa. Inténtalo de nuevo.",
+        icon: "error",
+        confirmButtonColor: "#2563eb",
+      });
+    } finally {
+      setIsPreviewing(false);
+    }
+  };
+
   const handleGenerateReport = async () => {
     const result = await Swal.fire({
-      title: "¿Generar reporte de ventas?",
+      title: "¿Generar reporte de ventas en PDF?",
       html: `
         <div class="text-left">
-          <p><strong>Formato:</strong> ${
-            selectedFormat === "excel" ? "Excel (.xlsx)" : "PDF (.pdf)"
-          }</p>
+          <p><strong>Formato:</strong> PDF (.pdf)</p>
           <p><strong>Filtros aplicados:</strong></p>
           <p class="text-sm text-gray-600 mb-3">${getFilterDescription()}</p>
-          <p class="text-xs text-blue-600 mt-2"><strong>Nota:</strong> El reporte incluirá datos agregados como ventas por mes y por categoría.</p>
+          <p class="text-xs text-blue-600 mt-2"><strong>Nota:</strong> El reporte incluirá datos agregados como ventas por mes, categoría, empleado y marca.</p>
         </div>
       `,
       icon: "question",
       showCancelButton: true,
       confirmButtonColor: "#2563eb",
       cancelButtonColor: "#6b7280",
-      confirmButtonText: `Generar ${selectedFormat.toUpperCase()}`,
+      confirmButtonText: "Generar PDF",
       cancelButtonText: "Cancelar",
     });
 
     if (result.isConfirmed) {
       setIsGenerating(true);
       try {
-        await onGenerateReport(filters, selectedFormat);
+        const cleanFilters = Object.fromEntries(
+          Object.entries(filters).filter(([, value]) => value !== undefined)
+        );
+
+        const blob = await generateSalesReportPDF(cleanFilters);
+        const filename = generateFileName(cleanFilters);
+
+        downloadBlob(blob, filename);
+
+        Swal.fire({
+          title: "¡Reporte generado!",
+          text: `El archivo ${filename} se ha descargado correctamente.`,
+          icon: "success",
+          confirmButtonColor: "#2563eb",
+        });
+
         onClose();
         clearFilters();
       } catch (error) {
         console.error("Error generating report:", error);
+        Swal.fire({
+          title: "Error",
+          text: "Hubo un problema al generar el reporte. Inténtalo de nuevo.",
+          icon: "error",
+          confirmButtonColor: "#2563eb",
+        });
       } finally {
         setIsGenerating(false);
       }
@@ -159,7 +306,7 @@ const ReportsModal: React.FC<ReportsModalProps> = ({
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto"
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto"
         >
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-500 to-blue-600">
@@ -172,7 +319,7 @@ const ReportsModal: React.FC<ReportsModalProps> = ({
                   Generar Reporte de Ventas
                 </h2>
                 <p className="text-sm text-white/80">
-                  Configura los filtros y formato para tu reporte
+                  Configura los filtros para tu reporte
                 </p>
               </div>
             </div>
@@ -191,101 +338,30 @@ const ReportsModal: React.FC<ReportsModalProps> = ({
                 <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
                 <div className="text-sm text-blue-700 dark:text-blue-300">
                   <p className="font-medium mb-2">📊 El reporte incluirá:</p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
                     <div>
                       <ul className="list-disc list-inside space-y-1">
-                        <li>Resumen total de ventas</li>
-                        <li>Total de productos vendidos</li>
-                        <li>Ventas agrupadas por mes</li>
+                        <li>Resumen ejecutivo de ventas</li>
+                        <li>Ventas por mes</li>
+                        <li>Top productos más vendidos</li>
                       </ul>
                     </div>
                     <div>
                       <ul className="list-disc list-inside space-y-1">
-                        <li>Ventas agrupadas por categoría</li>
-                        <li>Datos filtrados según criterios</li>
-                        <li>Formato Excel o PDF</li>
+                        <li>Análisis por categoría</li>
+                        <li>Rendimiento por empleado</li>
+                        <li>Ventas por ciudad</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <ul className="list-disc list-inside space-y-1">
+                        <li>Análisis por marca</li>
+                        <li>Top variantes vendidas</li>
+                        <li>Detalle de ventas recientes</li>
                       </ul>
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Formato del reporte */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
-                <Download className="w-5 h-5 mr-2 text-green-500" />
-                Formato del Reporte
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <label className="relative">
-                  <input
-                    type="radio"
-                    name="format"
-                    value="excel"
-                    checked={selectedFormat === "excel"}
-                    onChange={(e) =>
-                      setSelectedFormat(e.target.value as "excel" | "pdf")
-                    }
-                    className="sr-only"
-                  />
-                  <div
-                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                      selectedFormat === "excel"
-                        ? "border-green-500 bg-green-50 dark:bg-green-900/20"
-                        : "border-gray-200 dark:border-gray-600 hover:border-green-300"
-                    }`}
-                  >
-                    <div className="flex items-center">
-                      <FileSpreadsheet className="w-8 h-8 text-green-600 dark:text-green-400 mr-3" />
-                      <div>
-                        <h4 className="font-semibold text-gray-900 dark:text-white">
-                          Excel (.xlsx)
-                        </h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Ideal para análisis de datos y cálculos
-                        </p>
-                      </div>
-                      {selectedFormat === "excel" && (
-                        <Check className="w-5 h-5 text-green-600 dark:text-green-400 ml-auto" />
-                      )}
-                    </div>
-                  </div>
-                </label>
-                <label className="relative">
-                  <input
-                    type="radio"
-                    name="format"
-                    value="pdf"
-                    checked={selectedFormat === "pdf"}
-                    onChange={(e) =>
-                      setSelectedFormat(e.target.value as "excel" | "pdf")
-                    }
-                    className="sr-only"
-                  />
-                  <div
-                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                      selectedFormat === "pdf"
-                        ? "border-red-500 bg-red-50 dark:bg-red-900/20"
-                        : "border-gray-200 dark:border-gray-600 hover:border-red-300"
-                    }`}
-                  >
-                    <div className="flex items-center">
-                      <FileText className="w-8 h-8 text-red-600 dark:text-red-400 mr-3" />
-                      <div>
-                        <h4 className="font-semibold text-gray-900 dark:text-white">
-                          PDF (.pdf)
-                        </h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Perfecto para presentaciones y reportes
-                        </p>
-                      </div>
-                      {selectedFormat === "pdf" && (
-                        <Check className="w-5 h-5 text-red-600 dark:text-red-400 ml-auto" />
-                      )}
-                    </div>
-                  </div>
-                </label>
               </div>
             </div>
 
@@ -294,6 +370,9 @@ const ReportsModal: React.FC<ReportsModalProps> = ({
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
                 <Filter className="w-5 h-5 mr-2 text-blue-500" />
                 Filtros del Reporte
+                {loadingOptions && (
+                  <div className="ml-2 animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                )}
               </h3>
 
               {/* Resumen de filtros seleccionados */}
@@ -312,7 +391,7 @@ const ReportsModal: React.FC<ReportsModalProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {/* Fechas */}
                 <div>
-                  <label className=" text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
                     <Calendar className="w-4 h-4 mr-1" />
                     Fecha inicio
                   </label>
@@ -325,8 +404,9 @@ const ReportsModal: React.FC<ReportsModalProps> = ({
                     }
                   />
                 </div>
+
                 <div>
-                  <label className=" text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
                     <Calendar className="w-4 h-4 mr-1" />
                     Fecha fin
                   </label>
@@ -340,111 +420,78 @@ const ReportsModal: React.FC<ReportsModalProps> = ({
                   />
                 </div>
 
-                {/* Estado */}
+                {/* Categoría */}
                 <div>
-                  <label className=" text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
-                    <AlertCircle className="w-4 h-4 mr-1" />
-                    Estado
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
+                    <Package className="w-4 h-4 mr-1" />
+                    Categoría
                   </label>
                   <select
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500"
-                    value={filters.status || ""}
+                    value={filters.categoryId || ""}
                     onChange={(e) =>
-                      handleFilterChange("status", e.target.value)
+                      handleFilterChange("categoryId", Number(e.target.value))
                     }
+                    disabled={loadingOptions}
                   >
-                    {statusOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
+                    <option value="">Todas las categorías</option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
                       </option>
                     ))}
                   </select>
                 </div>
 
-                {/* Montos */}
+                {/* Marca */}
                 <div>
-                  <label className=" text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
-                    <DollarSign className="w-4 h-4 mr-1" />
-                    Monto mínimo
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
+                    <Tag className="w-4 h-4 mr-1" />
+                    Marca
                   </label>
-                  <input
-                    type="number"
-                    placeholder="0.00"
+                  <select
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500"
-                    value={filters.minTotal || ""}
+                    value={filters.brandId || ""}
                     onChange={(e) =>
-                      handleFilterChange("minTotal", Number(e.target.value))
+                      handleFilterChange("brandId", Number(e.target.value))
                     }
-                  />
-                </div>
-                <div>
-                  <label className=" text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
-                    <DollarSign className="w-4 h-4 mr-1" />
-                    Monto máximo
-                  </label>
-                  <input
-                    type="number"
-                    placeholder="0.00"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500"
-                    value={filters.maxTotal || ""}
-                    onChange={(e) =>
-                      handleFilterChange("maxTotal", Number(e.target.value))
-                    }
-                  />
+                    disabled={loadingOptions}
+                  >
+                    <option value="">Todas las marcas</option>
+                    {brands.map((brand) => (
+                      <option key={brand.id} value={brand.id}>
+                        {brand.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
-                {/* Referencia */}
+                {/* Empleado */}
                 <div>
-                  <label className=" text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
-                    <Hash className="w-4 h-4 mr-1" />
-                    Referencia
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
+                    <Users className="w-4 h-4 mr-1" />
+                    Empleado
                   </label>
-                  <input
-                    type="text"
-                    placeholder="Referencia de venta"
+                  <select
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500"
-                    value={filters.reference || ""}
+                    value={filters.employeeId || ""}
                     onChange={(e) =>
-                      handleFilterChange("reference", e.target.value)
+                      handleFilterChange("employeeId", Number(e.target.value))
                     }
-                  />
-                </div>
-
-                {/* Cliente */}
-                <div>
-                  <label className=" text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
-                    <User className="w-4 h-4 mr-1" />
-                    Nombre cliente
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Nombre del cliente"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500"
-                    value={filters.clientName || ""}
-                    onChange={(e) =>
-                      handleFilterChange("clientName", e.target.value)
-                    }
-                  />
-                </div>
-                <div>
-                  <label className=" text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
-                    <Mail className="w-4 h-4 mr-1" />
-                    Email cliente
-                  </label>
-                  <input
-                    type="email"
-                    placeholder="email@ejemplo.com"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500"
-                    value={filters.clientEmail || ""}
-                    onChange={(e) =>
-                      handleFilterChange("clientEmail", e.target.value)
-                    }
-                  />
+                    disabled={loadingOptions}
+                  >
+                    <option value="">Todos los empleados</option>
+                    {employees.map((employee) => (
+                      <option key={employee.id} value={employee.id}>
+                        {employee.name} {employee.surname}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 {/* Ubicación */}
                 <div>
-                  <label className=" text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
                     <Building className="w-4 h-4 mr-1" />
                     Ciudad
                   </label>
@@ -456,20 +503,25 @@ const ReportsModal: React.FC<ReportsModalProps> = ({
                     onChange={(e) => handleFilterChange("city", e.target.value)}
                   />
                 </div>
+
                 <div>
-                  <label className=" text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
                     <MapPin className="w-4 h-4 mr-1" />
                     Estado
                   </label>
-                  <input
-                    type="text"
-                    placeholder="Estado"
+                  <select
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500"
                     value={filters.state || ""}
                     onChange={(e) =>
                       handleFilterChange("state", e.target.value)
                     }
-                  />
+                  >
+                    {mexicanStates.map((state) => (
+                      <option key={state.value} value={state.value}>
+                        {state.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -498,30 +550,47 @@ const ReportsModal: React.FC<ReportsModalProps> = ({
           {/* Footer */}
           <div className="flex justify-between items-center p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
             <div className="text-xs text-gray-500 dark:text-gray-400">
-              💡 Los reportes incluyen datos agregados y estadísticas
+              💡 El reporte PDF incluye gráficos y análisis detallado
             </div>
             <div className="flex gap-3">
               <button
                 onClick={onClose}
-                disabled={isGenerating}
+                disabled={isGenerating || isPreviewing}
                 className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
               >
                 Cancelar
               </button>
               <button
+                onClick={handlePreviewReport}
+                disabled={isGenerating || isPreviewing || loadingOptions}
+                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
+              >
+                {isPreviewing ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Cargando...
+                  </>
+                ) : (
+                  <>
+                    <Eye className="w-4 h-4 mr-2" />
+                    Vista Previa
+                  </>
+                )}
+              </button>
+              <button
                 onClick={handleGenerateReport}
-                disabled={isGenerating}
+                disabled={isGenerating || isPreviewing || loadingOptions}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
               >
                 {isGenerating ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Generando {selectedFormat.toUpperCase()}...
+                    Generando PDF...
                   </>
                 ) : (
                   <>
                     <Download className="w-4 h-4 mr-2" />
-                    Generar {selectedFormat.toUpperCase()}
+                    Generar PDF
                   </>
                 )}
               </button>
