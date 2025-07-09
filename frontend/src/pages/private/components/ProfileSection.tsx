@@ -24,9 +24,9 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContextType";
 import { updateProfileEmployee } from "@/api/users";
-import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
 import { motion } from "framer-motion";
+import { AlertHelper } from "@/utils/alert.util";
 
 interface ProfileFormData {
   name: string;
@@ -36,7 +36,6 @@ interface ProfileFormData {
   birthdate: string;
   gender: string;
 }
-
 
 export function ProfileSection() {
   const [isEditing, setIsEditing] = useState(false);
@@ -61,8 +60,6 @@ export function ProfileSection() {
     },
   });
 
- 
-
   const toggleEditing = () => {
     if (isEditing) {
       reset();
@@ -83,29 +80,26 @@ export function ProfileSection() {
 
       const res = await updateProfileEmployee(Number(user?.id), formattedData);
       if (res) {
-        Swal.fire({
-          icon: "success",
+        AlertHelper.success({
           title: "Perfil actualizado",
-          text: "Su información personal ha sido actualizada correctamente.",
-          confirmButtonColor: "#3B82F6",
-          toast: true,
-          position: "top-end",
-          showConfirmButton: false,
+          message: "Su información personal ha sido actualizada correctamente.",
           timer: 3000,
-          timerProgressBar: true,
+          animation: "slideIn",
         });
         setIsEditing(false);
       }
       setIsSubmitting(false);
-    } catch (error) {
-      console.log(error);
-      setIsSubmitting(false);
-      Swal.fire({
-        icon: "error",
+    } catch (error:any) {
+      AlertHelper.error({
         title: "Error",
-        text: "No se pudo actualizar la información. Inténtelo de nuevo más tarde.",
-        confirmButtonColor: "#EF4444",
+        message:
+          error?.response?.data?.message ||
+          "No se pudo actualizar la información. Inténtelo de nuevo más tarde.",
+        isModal: true,
+        animation: "bounce",
       });
+      setIsSubmitting(false);
+     
     }
   };
 
@@ -770,8 +764,6 @@ export function ProfileSection() {
                       <ChevronRight className="w-4 h-4 ml-1" />
                     </a>
                   </div>
-
-                 
                 </div>
               </div>
             </div>

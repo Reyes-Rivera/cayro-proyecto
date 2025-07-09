@@ -28,6 +28,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import Loader from "@/components/web-components/Loader";
+import { AlertHelper } from "@/utils/alert.util";
 
 // Animated Section Component
 interface AnimatedSectionProps {
@@ -122,8 +123,15 @@ export default function Terms() {
       try {
         const res = await currentTerm();
         setTerms([res.data]);
-      } catch (error) {
-        console.error("Error fetching terms:", error);
+      } catch (err: any) {
+        AlertHelper.error({
+          title: "Error al cargar el documento",
+          message:
+            err.response?.data?.message ||
+            "Ocurrió un error al cargar el documento.",
+          timer: 4000,
+          animation: "slideIn",
+        });
       } finally {
         setIsLoading(false);
       }
@@ -141,7 +149,6 @@ export default function Terms() {
       year: "numeric",
     });
   };
-
 
   return (
     <>

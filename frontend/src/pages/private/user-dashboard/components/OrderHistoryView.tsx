@@ -21,6 +21,7 @@ import { Separator } from "@/components/ui/separator";
 import Loader from "@/components/web-components/Loader";
 import { useAuth } from "@/context/AuthContextType";
 import { getSaleByUser } from "@/api/sales";
+import { AlertHelper } from "@/utils/alert.util";
 
 // Tipos basados en la respuesta de la API
 type SaleStatus =
@@ -124,11 +125,19 @@ export default function OrderHistoryView() {
       try {
         setDataLoading(true);
         setError(null);
+
         const response = await getSaleByUser(+user.id);
         setSales(response.data || []);
-      } catch (err) {
-        console.error("Error fetching sales:", err);
+      } catch (err: any) {
         setError("Error al cargar el historial de pedidos");
+        AlertHelper.error({
+          title: "Error al cargar las ventas",
+          message:
+            err.response?.data?.message ||
+            "Ocurrió un error al cargar el historial de pedidos.",
+          timer: 4000,
+          animation: "slideIn",
+        });
       } finally {
         setDataLoading(false);
       }
@@ -431,14 +440,15 @@ export default function OrderHistoryView() {
                                 Dirección de envío
                               </h4>
                               <div className="bg-blue-50 dark:bg-gray-800 p-4 rounded-lg border border-blue-100 dark:border-gray-700">
-                                <div key={sale.address.id} className="space-y-2">
+                                <div
+                                  key={sale.address.id}
+                                  className="space-y-2"
+                                >
                                   <p className="text-gray-900 dark:text-white font-medium">
-                                    {sale.address.street},{" "}
-                                    {sale.address.colony}
+                                    {sale.address.street}, {sale.address.colony}
                                   </p>
                                   <p className="text-gray-600 dark:text-gray-300">
-                                    {sale.address.city},{" "}
-                                    {sale.address.state},{" "}
+                                    {sale.address.city}, {sale.address.state},{" "}
                                     {sale.address.country} -{" "}
                                     {sale.address.postalCode}
                                   </p>
@@ -458,7 +468,6 @@ export default function OrderHistoryView() {
                                     </p>
                                   )}
                                 </div>
-                               
                               </div>
                             </div>
                           )}

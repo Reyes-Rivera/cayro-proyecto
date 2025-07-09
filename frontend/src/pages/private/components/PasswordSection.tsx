@@ -15,14 +15,13 @@ import {
   X,
   Info,
 } from "lucide-react";
-import Swal from "sweetalert2";
-import "sweetalert2/dist/sweetalert2.min.css";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
 import { updatePasswordEmployee } from "@/api/users";
 import { useAuth } from "@/context/AuthContextType";
 import { logOutApi } from "@/api/auth";
 import { useNavigate } from "react-router-dom";
+import { AlertHelper } from "@/utils/alert.util";
 
 interface PasswordFormData {
   currentPassword: string;
@@ -133,11 +132,12 @@ export function PasswordSection() {
       // Validar que la nueva contraseña no tenga caracteres inválidos
       const invalidCharsRegex = /[<>'"`]/;
       if (invalidCharsRegex.test(data.newPassword)) {
-        Swal.fire({
-          icon: "error",
+        AlertHelper.error({
           title: "Error",
-          text: "La contraseña no puede contener caracteres especiales como < > ' \" `",
-          confirmButtonColor: "#3B82F6",
+          message:
+            "La contraseña no puede contener caracteres especiales como < > ' \" `",
+          isModal: true,
+          animation: "bounce",
         });
         setIsSubmitting(false);
         return;
@@ -145,11 +145,11 @@ export function PasswordSection() {
 
       // Validar que las contraseñas coincidan
       if (data.newPassword !== data.confirmPassword) {
-        Swal.fire({
-          icon: "error",
+        AlertHelper.error({
           title: "Error",
-          text: "Las contraseñas no coinciden.",
-          confirmButtonColor: "#3B82F6",
+          message: "Las contraseñas no coinciden.",
+          isModal: true,
+          animation: "bounce",
         });
         setIsSubmitting(false);
         return;
@@ -157,11 +157,12 @@ export function PasswordSection() {
 
       // Validar que cumpla con todos los requisitos de seguridad
       if (!Object.values(passwordChecks).every(Boolean)) {
-        Swal.fire({
-          icon: "error",
+        AlertHelper.error({
           title: "Error",
-          text: "La nueva contraseña no cumple con todos los requisitos de seguridad.",
-          confirmButtonColor: "#3B82F6",
+          message:
+            "La nueva contraseña no cumple con todos los requisitos de seguridad.",
+          isModal: true,
+          animation: "bounce",
         });
         setIsSubmitting(false);
         return;
@@ -175,35 +176,21 @@ export function PasswordSection() {
       });
       await logOutApi();
       navigate("/login");
-      Swal.fire({
-        icon: "success",
+      AlertHelper.success({
         title: "Contraseña actualizada",
-        text: "Tu contraseña se ha actualizado correctamente.",
-        confirmButtonColor: "#3B82F6",
-        toast: true,
-        position: "top-end",
-        showConfirmButton: false,
+        message: "Tu contraseña se ha actualizado correctamente.",
         timer: 3000,
-        timerProgressBar: true,
+        animation: "slideIn",
       });
-
-      // Reiniciar el formulario
       reset();
     } catch (error: any) {
-      Swal.fire({
-        icon: "error",
-        title: "Error al iniciar sesión",
-        toast: true,
-        text:
+      AlertHelper.error({
+        title: "Error al actualizar la contraseña",
+        message:
           error?.response?.data?.message ||
           "Hubo un error al actualizar la contraseña.",
-        position: "top-end",
         timer: 3000,
-        showConfirmButton: false,
-        animation: true,
-        background: "#FEF2F2",
-        color: "#B91C1C",
-        iconColor: "#EF4444",
+        animation: "slideIn",
       });
     } finally {
       setIsSubmitting(false);

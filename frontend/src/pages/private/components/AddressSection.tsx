@@ -20,9 +20,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContextType";
 import { getUserAddress, updateAddress } from "@/api/users";
-import Swal from "sweetalert2";
-import "sweetalert2/dist/sweetalert2.min.css";
 import { motion } from "framer-motion";
+import { AlertHelper } from "@/utils/alert.util";
 
 // Interfaz para la dirección como entidad separada
 interface Address {
@@ -86,8 +85,15 @@ export function AddressSection() {
             postalCode: addressData?.data?.postalCode || "",
             colony: addressData?.data?.colony || "",
           });
-        } catch (error) {
-          console.error("Error al cargar la dirección:", error);
+        } catch (error: any) {
+          AlertHelper.error({
+            title: "Error al cargar el documento",
+            message:
+              error.response?.data?.message ||
+              "Ocurrió un error al cargar el documento.",
+            timer: 4000,
+            animation: "slideIn",
+          });
         } finally {
           setIsLoading(false);
         }
@@ -133,27 +139,25 @@ export function AddressSection() {
           // Actualizar el estado local con los nuevos datos
           setAddress(updatedAddress);
 
-          Swal.fire({
-            icon: "success",
+          AlertHelper.success({
             title: "Dirección actualizada",
-            text: "Su información de dirección ha sido actualizada correctamente.",
-            confirmButtonColor: "#3B82F6",
-            toast: true,
-            position: "top-end",
-            showConfirmButton: false,
+            message:
+              "Su información de dirección ha sido actualizada correctamente.",
             timer: 3000,
-            timerProgressBar: true,
+            animation: "slideIn",
           });
+
           setIsEditing(false);
         }
       }
-    } catch (error) {
-      console.log(error);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "No se pudo actualizar la información. Inténtelo de nuevo más tarde.",
-        confirmButtonColor: "#EF4444",
+    } catch (error: any) {
+      AlertHelper.error({
+        title: "Error al actualizar la dirección",
+        message:
+          error.response?.data?.message ||
+          "Ocurrió un error al actualizar la dirección.",
+        timer: 4000,
+        animation: "slideIn",
       });
     } finally {
       setIsSubmitting(false);

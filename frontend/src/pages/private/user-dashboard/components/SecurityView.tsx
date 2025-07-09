@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getQuestions } from "@/api/auth";
 import Loader from "@/components/web-components/Loader";
+import { AlertHelper } from "@/utils/alert.util";
 
 // Tipos para los formularios
 type PasswordFormValues = {
@@ -186,17 +187,30 @@ export default function SecurityView() {
         currentPassword: data.currentPassword,
         password: data.newPassword,
       };
+
       await updatePasswordUser(Number(user?.id), newData);
-      alert(
-        "¡Contraseña actualizada exitosamente! Por favor, inicia sesión nuevamente con tu nueva contraseña."
-      );
+
+      await AlertHelper.success({
+        title: "Contraseña actualizada",
+        message: "Por favor, inicia sesión nuevamente con tu nueva contraseña.",
+        timer: 4000,
+        animation: "slideIn",
+      });
+
       setIsSubmitting(false);
       await signOut();
       return;
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message || "Error desconocido.";
-      alert(errorMessage);
+
+      AlertHelper.error({
+        title: "Error al actualizar la contraseña",
+        message: errorMessage,
+        isModal: true,
+        animation: "bounce",
+      });
+
       setIsSubmitting(false);
       return;
     }
@@ -209,17 +223,23 @@ export default function SecurityView() {
         securityAnswer: data.securityAnswer,
         securityQuestionId: +data.securityQuestion,
       };
+
       await updateAnswer(Number(user?.id), newData);
-      setIsRecoverySubmitting(false);
       setRecoverySuccess(true);
-      // Scroll to top after success
+
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message || "Error desconocido.";
-      alert(errorMessage);
+
+      AlertHelper.error({
+        title: "Error al actualizar la respuesta",
+        message: errorMessage,
+        isModal: true,
+        animation: "bounce",
+      });
+    } finally {
       setIsRecoverySubmitting(false);
-      return;
     }
   };
 

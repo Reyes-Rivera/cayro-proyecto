@@ -21,8 +21,6 @@ import {
   CheckCircle2,
   Mail,
 } from "lucide-react";
-import Swal from "sweetalert2";
-import "sweetalert2/src/sweetalert2.scss";
 import {
   addAddressUser,
   deleteAddressUser,
@@ -30,78 +28,48 @@ import {
   setDefaultAddressUser,
   updateAddressUser,
 } from "@/api/users";
-
 import { useAuth } from "@/context/AuthContextType";
-
 import { Button } from "@/components/ui/button";
-
 import { Separator } from "@/components/ui/separator";
-
 import Loader from "@/components/web-components/Loader";
+import { AlertHelper } from "@/utils/alert.util";
 
 type Address = {
   id: string;
-
   street: string;
-
   city: string;
-
   state: string;
-
   postalCode: string;
-
   colony: string;
-
   country: string;
-
   isDefault: boolean;
 };
 
 export default function AddressView() {
   const [addresses, setAddresses] = useState<Address[]>([]);
-
   const [isAddingAddress, setIsAddingAddress] = useState(false);
-
   const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
-
   const [isLoading, setIsLoading] = useState(false);
-
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
-
-  const [isSettingDefault, setIsSettingDefault] = useState<string | null>(null); // New state for setting default
-
+  const [isSettingDefault, setIsSettingDefault] = useState<string | null>(null);
   const [initialLoading, setInitialLoading] = useState(true);
-
   const [pageLoading, setPageLoading] = useState(true);
-
   const [animateContent, setAnimateContent] = useState(false);
-
   const addressListRef = useRef<HTMLDivElement>(null);
-
   const { user } = useAuth();
 
   const {
     register,
-
     handleSubmit,
-
     reset,
-
     formState: { errors },
-
     watch,
-
     clearErrors,
   } = useForm<Address>();
-
-  // Simulate page loading
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setPageLoading(false);
-
-      // Activate animations after loading screen disappears
-
       setTimeout(() => {
         setAnimateContent(true);
       }, 100);
@@ -114,17 +82,21 @@ export default function AddressView() {
     const getUserAdderssesApi = async () => {
       try {
         setInitialLoading(true);
-
         const res = await getUserAddresses(Number(user?.id));
-
         setAddresses(res.data);
-      } catch (error) {
-        console.error("Error fetching addresses:", error);
+      } catch (error: any) {
+        AlertHelper.error({
+          title: "Error al cargar las direcciones",
+          message:
+            error?.response?.data?.message ||
+            "No se pudieron cargar las direcciones. Inténtelo más tarde.",
+          timer: 4000,
+          animation: "slideIn",
+        });
       } finally {
         setInitialLoading(false);
       }
     };
-
     getUserAdderssesApi();
   }, [user?.id]);
 
@@ -132,150 +104,79 @@ export default function AddressView() {
 
   const handleAddAddress = () => {
     setIsAddingAddress(true);
-
     setEditingAddressId(null);
-
     reset({
       street: "",
-
       city: "",
-
       state: "",
-
       postalCode: "",
-
       colony: "",
-
       country: "México",
     });
 
-    // Scroll to form
-
     setTimeout(() => {
       document
-
         .getElementById("address-form")
-
         ?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 100);
   };
 
   const handleEditAddress = (address: Address) => {
     setIsAddingAddress(false);
-
     setEditingAddressId(address.id);
-
     reset(address);
-
-    // Scroll to form
-
     setTimeout(() => {
       document
-
         .getElementById("address-form")
-
         ?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 100);
   };
 
   const handleDeleteAddress = async (id: string) => {
-    Swal.fire({
+    const confirmed = await AlertHelper.confirm({
       title: "¿Estás seguro?",
-
-      text: "Esta acción no se puede revertir",
-
-      icon: "warning",
-
-      showCancelButton: true,
-
-      confirmButtonColor: "#3085d6",
-
-      cancelButtonColor: "#d33",
-
-      confirmButtonText: "Sí, eliminar",
-
-      cancelButtonText: "Cancelar",
-
-      color: "var(--foreground)",
-
-      customClass: {
-        confirmButton: "swal-confirm-button",
-
-        cancelButton: "swal-cancel-button",
-      },
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        try {
-          setIsDeleting(id);
-
-          await deleteAddressUser(Number(user?.id), +id);
-
-          Swal.fire({
-            icon: "success",
-
-            title: "¡Dirección eliminada!",
-
-            toast: true,
-
-            text: "Tu dirección ha sido eliminada correctamente.",
-
-            position: "top-end",
-
-            timer: 3000,
-
-            showConfirmButton: false,
-
-            animation: true,
-
-            background: "#F0FDF4",
-
-            color: "#166534",
-
-            iconColor: "#22C55E",
-          });
-
-          setAddresses(addresses.filter((address) => address.id !== id));
-        } catch (error: any) {
-          const errorMessage =
-            error.response?.data?.message || "Error desconocido.";
-
-          Swal.fire({
-            icon: "error",
-
-            title: "Error al eliminar",
-
-            toast: true,
-
-            text: errorMessage,
-
-            position: "top-end",
-
-            timer: 3000,
-
-            showConfirmButton: false,
-
-            animation: true,
-
-            background: "#FEF2F2",
-
-            color: "#B91C1C",
-
-            iconColor: "#EF4444",
-          });
-        } finally {
-          setIsDeleting(null);
-        }
-      }
+      message: "Esta acción no se puede revertir",
+      confirmText: "Sí, eliminar",
+      cancelText: "Cancelar",
+      type: "warning",
+      animation: "bounce",
     });
+
+    if (!confirmed) return;
+
+    try {
+      setIsDeleting(id);
+
+      await deleteAddressUser(Number(user?.id), +id);
+
+      AlertHelper.success({
+        title: "¡Dirección eliminada!",
+        message: "Tu dirección ha sido eliminada correctamente.",
+        timer: 3000,
+        animation: "slideIn",
+      });
+
+      setAddresses(addresses.filter((address) => address.id !== id));
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message || "Error desconocido.";
+
+      AlertHelper.error({
+        title: "Error al eliminar",
+        message: errorMessage,
+        timer: 3000,
+        animation: "slideIn",
+      });
+    } finally {
+      setIsDeleting(null);
+    }
   };
 
   const handleSetDefaultAddress = async (id: string) => {
     try {
       setIsSettingDefault(id); // Start loading animation for this address
-
       if (user?.id) {
         const res = await setDefaultAddressUser(+user?.id, +id);
-
         if (res) {
           setAddresses(
             addresses.map((address) => ({
@@ -284,58 +185,22 @@ export default function AddressView() {
               isDefault: address.id === id,
             }))
           );
-
-          Swal.fire({
-            icon: "success",
-
+          AlertHelper.success({
             title: "¡Dirección establecida!",
-
-            toast: true,
-
-            text: "Tu dirección ha sido establecida correctamente.",
-
-            position: "top-end",
-
+            message: "Tu dirección ha sido establecida correctamente.",
             timer: 3000,
-
-            showConfirmButton: false,
-
-            animation: true,
-
-            background: "#F0FDF4",
-
-            color: "#166534",
-
-            iconColor: "#22C55E",
+            animation: "slideIn",
           });
         }
       }
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message || "Error desconocido.";
-
-      Swal.fire({
-        icon: "error",
-
-        title: "Error al establecer",
-
-        toast: true,
-
-        text: errorMessage,
-
-        position: "top-end",
-
+      AlertHelper.error({
+        title: "Error al establecer dirección.",
+        message: errorMessage,
         timer: 3000,
-
-        showConfirmButton: false,
-
-        animation: true,
-
-        background: "#FEF2F2",
-
-        color: "#B91C1C",
-
-        iconColor: "#EF4444",
+        animation: "slideIn",
       });
     } finally {
       setIsSettingDefault(null); // Stop loading animation
@@ -345,7 +210,6 @@ export default function AddressView() {
   const onSubmit: SubmitHandler<Address> = async (data) => {
     try {
       setIsLoading(true);
-
       if (data.isDefault) {
         setAddresses(
           addresses.map((address) => ({
@@ -355,105 +219,51 @@ export default function AddressView() {
           }))
         );
       }
-
       if (editingAddressId) {
         const newData = {
           street: data.street,
-
           city: data.city,
-
           state: data.state,
-
           postalCode: data.postalCode,
-
           colony: data.colony,
-
           country: data.country,
-
           isDefault: data.isDefault,
         };
-
         await updateAddressUser(Number(user?.id), +data.id, newData);
-
-        Swal.fire({
-          icon: "success",
-
+        AlertHelper.success({
           title: "¡Dirección actualizada!",
-
-          toast: true,
-
-          text: "Tu dirección ha sido editada correctamente.",
-
-          position: "top-end",
-
+          message: "Tu dirección ha sido editada correctamente.",
           timer: 3000,
-
-          showConfirmButton: false,
-
-          animation: true,
-
-          background: "#F0FDF4",
-
-          color: "#166534",
-
-          iconColor: "#22C55E",
+          animation: "slideIn",
         });
-
         setAddresses(
           addresses.map((address) =>
             address.id === editingAddressId ? { ...address, ...data } : address
           )
         );
-
         window.scrollTo(0, 0);
       } else {
         const newData = {
           street: data.street,
-
           city: data.city,
-
           state: data.state,
-
           postalCode: data.postalCode,
-
           colony: data.colony,
-
           country: data.country,
-
           isDefault: data.isDefault,
         };
 
         await addAddressUser(Number(user?.id), newData);
-
-        Swal.fire({
-          icon: "success",
-
+        AlertHelper.success({
           title: "¡Dirección agregada!",
-
-          toast: true,
-
-          text: "Tu dirección ha sido agregada correctamente.",
-
-          position: "top-end",
-
+          message: "Tu dirección ha sido agregada correctamente.",
           timer: 3000,
-
-          showConfirmButton: false,
-
-          animation: true,
-
-          background: "#F0FDF4",
-
-          color: "#166534",
-
-          iconColor: "#22C55E",
+          animation: "slideIn",
         });
-
         if (data.isDefault) {
           setAddresses(
             addresses.map((address) => ({
               ...address,
-
               isDefault: false,
             }))
           );
@@ -461,44 +271,22 @@ export default function AddressView() {
 
         const newAddress: Address = {
           ...data,
-
           id: Date.now().toString(),
         };
-
         setAddresses([...addresses, newAddress]);
-
         window.scrollTo(0, 0);
       }
 
       setIsAddingAddress(false);
-
       setEditingAddressId(null);
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message || "Error desconocido.";
-
-      Swal.fire({
-        icon: "error",
-
+      AlertHelper.error({
         title: "Error al guardar",
-
-        toast: true,
-
-        text: errorMessage,
-
-        position: "top-end",
-
+        message: errorMessage,
         timer: 3000,
-
-        showConfirmButton: false,
-
-        animation: true,
-
-        background: "#FEF2F2",
-
-        color: "#B91C1C",
-
-        iconColor: "#EF4444",
+        animation: "slideIn",
       });
     } finally {
       setIsLoading(false);
@@ -507,13 +295,8 @@ export default function AddressView() {
 
   const handleCancel = () => {
     setIsAddingAddress(false);
-
     setEditingAddressId(null);
-
     reset();
-
-    // Scroll to top when canceling
-
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -522,67 +305,36 @@ export default function AddressView() {
       case "México":
         return [
           { value: "AGS", label: "Aguascalientes" },
-
           { value: "BC", label: "Baja California" },
-
           { value: "BCS", label: "Baja California Sur" },
-
           { value: "CAMP", label: "Campeche" },
-
           { value: "CHIS", label: "Chiapas" },
-
           { value: "CHIH", label: "Chihuahua" },
-
           { value: "CDMX", label: "Ciudad de México" },
-
           { value: "COAH", label: "Coahuila" },
-
           { value: "COL", label: "Colima" },
-
           { value: "DGO", label: "Durango" },
-
           { value: "GTO", label: "Guanajuato" },
-
           { value: "GRO", label: "Guerrero" },
-
           { value: "HGO", label: "Hidalgo" },
-
           { value: "JAL", label: "Jalisco" },
-
           { value: "MEX", label: "Estado de México" },
-
           { value: "MICH", label: "Michoacán" },
-
           { value: "MOR", label: "Morelos" },
-
           { value: "NAY", label: "Nayarit" },
-
           { value: "NL", label: "Nuevo León" },
-
           { value: "OAX", label: "Oaxaca" },
-
           { value: "PUE", label: "Puebla" },
-
           { value: "QRO", label: "Querétaro" },
-
           { value: "QROO", label: "Quintana Roo" },
-
           { value: "SLP", label: "San Luis Potosí" },
-
           { value: "SIN", label: "Sinaloa" },
-
           { value: "SON", label: "Sonora" },
-
           { value: "TAB", label: "Tabasco" },
-
           { value: "TAMPS", label: "Tamaulipas" },
-
           { value: "TLAX", label: "Tlaxcala" },
-
           { value: "VER", label: "Veracruz" },
-
           { value: "YUC", label: "Yucatán" },
-
           { value: "ZAC", label: "Zacatecas" },
         ];
 
@@ -598,9 +350,7 @@ export default function AddressView() {
   return (
     <div className="relative">
       {/* Loading Screen */}
-
       {pageLoading && <Loader />}
-
       {!pageLoading && (
         <div className="p-6 md:p-8">
           {/* Header */}

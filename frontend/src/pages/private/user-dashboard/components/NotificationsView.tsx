@@ -30,6 +30,7 @@ import {
 } from "@/api/users";
 import { useAuth } from "@/context/AuthContextType";
 import Loader from "@/components/web-components/Loader";
+import { AlertHelper } from "@/utils/alert.util";
 
 type NotificationItem = {
   productName: string;
@@ -132,6 +133,7 @@ export default function NotificationsView() {
 
     try {
       setIsLoadingNotifications(true);
+
       const response = await getNotifications(Number(user.id));
 
       if (response.data && Array.isArray(response.data)) {
@@ -143,15 +145,18 @@ export default function NotificationsView() {
         setNotifications([]);
       }
     } catch (error: any) {
-      console.error("Error loading notifications:", error);
-      // If no notifications found (404), set empty array
+      // Si es 404, dejamos las notificaciones vacías (no es un error crítico)
       if (error.response?.status === 404) {
         setNotifications([]);
       } else {
-        console.error(
-          "Error fetching notifications:",
-          error.response?.data?.message || "Error desconocido"
-        );
+        AlertHelper.error({
+          title: "Error al cargar las notificaciones",
+          message:
+            error.response?.data?.message ||
+            "Ocurrió un error al cargar las notificaciones.",
+          timer: 4000,
+          animation: "slideIn",
+        });
       }
     } finally {
       setIsLoadingNotifications(false);
@@ -164,6 +169,7 @@ export default function NotificationsView() {
 
     try {
       setIsLoadingCode(true);
+
       const response = await getSmartWatchCode(Number(user.id));
 
       if (response.data && response.data.code) {
@@ -175,10 +181,23 @@ export default function NotificationsView() {
         setSmartwatchCode("");
       }
     } catch (error: any) {
-      console.error("Error checking existing code:", error);
-      // If error (like 404), assume no code exists
-      setCodeGenerated(false);
-      setSmartwatchCode("");
+
+      // Si es 404, solo limpia el estado (no muestra alerta)
+      if (error.response?.status === 404) {
+        setCodeGenerated(false);
+        setSmartwatchCode("");
+      } else {
+        AlertHelper.error({
+          title: "Error al verificar el código",
+          message:
+            error.response?.data?.message ||
+            "Ocurrió un error al verificar el código del smartwatch.",
+          timer: 4000,
+          animation: "slideIn",
+        });
+        setCodeGenerated(false);
+        setSmartwatchCode("");
+      }
     } finally {
       setIsLoadingCode(false);
     }
@@ -187,25 +206,42 @@ export default function NotificationsView() {
   // Generate new smartwatch code
   const handleGenerateCode = async () => {
     if (!user?.id) {
-      alert("Error: Usuario no encontrado");
+      AlertHelper.error({
+        title: "Error",
+        message: "Usuario no encontrado.",
+        isModal: true,
+        animation: "bounce",
+      });
       return;
     }
 
     try {
       setIsGeneratingCode(true);
+
       const response = await generateSmartWatchCode(Number(user.id));
 
       if (response.data && response.data.code) {
         setSmartwatchCode(response.data.code);
         setCodeGenerated(true);
         setIsCodeCopied(false);
-        setShowCode(true); // Show code automatically when generated
+        setShowCode(true); // Mostrar el código automáticamente
       } else {
-        alert("Error al generar el código");
+        AlertHelper.error({
+          title: "Error",
+          message: "Error al generar el código.",
+          isModal: true,
+          animation: "bounce",
+        });
       }
     } catch (error: any) {
-      console.error("Error generating code:", error);
-      alert(error.response?.data?.message || "Error al generar el código");
+      AlertHelper.error({
+        title: "Error al generar el código",
+        message:
+          error.response?.data?.message ||
+          "Ocurrió un error al generar el código.",
+        isModal: true,
+        animation: "bounce",
+      });
     } finally {
       setIsGeneratingCode(false);
     }
@@ -217,9 +253,13 @@ export default function NotificationsView() {
       await navigator.clipboard.writeText(smartwatchCode);
       setIsCodeCopied(true);
       setTimeout(() => setIsCodeCopied(false), 2000);
-    } catch (err) {
-      console.error("Failed to copy code: ", err);
-      alert("Error al copiar el código");
+    } catch (err:any) {
+      AlertHelper.error({
+        title: "Error",
+        message: err.response?.data?.message || "No se pudo copiar el código al portapapeles.",
+        timer: 3000,
+        animation: "slideIn",
+      });
     }
   };
 
@@ -458,7 +498,8 @@ export default function NotificationsView() {
                         Vincular Smartwatch
                       </h3>
                       <p className="text-gray-600 dark:text-gray-300 mt-1">
-                        Conecta tu smartwatch para sincronizar tus notificaciones
+                        Conecta tu smartwatch para sincronizar tus
+                        notificaciones
                       </p>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">

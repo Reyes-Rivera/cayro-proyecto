@@ -27,6 +27,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import Loader from "@/components/web-components/Loader";
+import { AlertHelper } from "@/utils/alert.util";
 
 // Animated Section Component
 interface AnimatedSectionProps {
@@ -52,12 +53,12 @@ const AnimatedSection = memo(
         id={id}
         ref={ref}
         variants={{
-          hidden: { opacity: 0, y: 50 }, // Reduced distance for smoother animation
+          hidden: { opacity: 0, y: 50 },
           visible: { opacity: 1, y: 0 },
         }}
         initial="hidden"
         animate={mainControls}
-        transition={{ duration: 0.3, ease: "easeOut" }} // Reduced duration
+        transition={{ duration: 0.3, ease: "easeOut" }}
         className={className}
       >
         {children}
@@ -121,8 +122,15 @@ export default function Policies() {
       try {
         const res = await policyApi();
         setPolicy([res.data]);
-      } catch (error) {
-        console.error("Error fetching policy:", error);
+      } catch (err: any) {
+        AlertHelper.error({
+          title: "Error al cargar el documento",
+          message:
+            err.response?.data?.message ||
+            "Ocurrió un error al cargar el documento.",
+          timer: 4000,
+          animation: "slideIn",
+        });
       } finally {
         setIsLoading(false);
       }
@@ -130,7 +138,6 @@ export default function Policies() {
     getPolicy();
   }, []);
 
-  // Función para formatear la fecha de última actualización
   const formatDate = (dateString: string) => {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -140,8 +147,6 @@ export default function Policies() {
       year: "numeric",
     });
   };
-
-
 
   return (
     <>

@@ -23,6 +23,7 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import Loader from "@/components/web-components/Loader";
 import { useNavigate } from "react-router-dom";
+import { AlertHelper } from "@/utils/alert.util";
 
 interface ProfileFormData {
   name: string;
@@ -101,23 +102,39 @@ export default function ProfileView() {
         setEmailToVerify(data.email);
         setIsVerificationPending(true);
         navigate("/codigo-verificacion");
-        alert(
-          "Perfil actualizado. Confirma que eres tú. Revisa tu correo electrónico."
-        );
-        await signOut();
 
+        await AlertHelper.success({
+          title: "Perfil actualizado",
+          message: "Confirma que eres tú. Revisa tu correo electrónico.",
+          timer: 4000,
+          animation: "slideIn",
+        });
+
+        await signOut();
         window.scrollTo(0, 0);
         return;
       }
 
       if (res) {
-        alert("Su información personal ha sido actualizada correctamente.");
+        await AlertHelper.success({
+          title: "Perfil actualizado",
+          message: "Su información personal ha sido actualizada correctamente.",
+          timer: 3000,
+          animation: "slideIn",
+        });
+
         await verifyUser();
         setIsEditable(false);
         window.scrollTo(0, 0);
       }
     } catch (error: any) {
-      alert(error.response?.data?.message || "Error al actualizar el perfil");
+      AlertHelper.error({
+        title: "Error al actualizar el perfil",
+        message:
+          error.response?.data?.message || "Error al actualizar el perfil.",
+        isModal: true,
+        animation: "bounce",
+      });
     } finally {
       setIsSubmitting(false);
     }

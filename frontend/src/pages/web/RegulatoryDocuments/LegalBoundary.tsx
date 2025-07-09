@@ -1,7 +1,6 @@
 "use client";
 
 import type React from "react";
-
 import { useEffect, useState, useRef, memo } from "react";
 import {
   motion,
@@ -27,6 +26,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import Loader from "@/components/web-components/Loader";
+import { AlertHelper } from "@/utils/alert.util";
 
 // Animated Section Component
 interface AnimatedSectionProps {
@@ -121,12 +121,20 @@ export default function LegalBoundary() {
       try {
         const res = await boundaryApi();
         setDocuments([res.data]);
-      } catch (error) {
-        console.error("Error fetching legal boundary:", error);
+      } catch (err: any) {
+        AlertHelper.error({
+          title: "Error al cargar el documento",
+          message:
+            err.response?.data?.message ||
+            "Ocurrió un error al cargar el documento.",
+          timer: 4000,
+          animation: "slideIn",
+        });
       } finally {
         setIsLoading(false);
       }
     };
+
     getDocument();
   }, []);
 
@@ -140,8 +148,6 @@ export default function LegalBoundary() {
       year: "numeric",
     });
   };
-
-
 
   return (
     <>
