@@ -23,8 +23,6 @@ import {
   ArrowLeft,
   Map,
 } from "lucide-react";
-import Swal from "sweetalert2";
-
 import {
   getUserAddresses,
   addAddressUser,
@@ -37,6 +35,7 @@ import type {
   AddressFormData,
   ShippingDetailsFormData,
 } from "@/types/checkout";
+import { AlertHelper } from "@/utils/alert.util";
 
 interface AddressSectionProps {
   user: any;
@@ -263,19 +262,9 @@ export default function AddressSection({
       }
       try {
         setIsLoadingAddresses(true);
-
         setAddressError(null);
-
-        console.log("Loading addresses for user:", user.id);
-
         const response = await getUserAddresses(Number(user.id));
-
-        console.log("Addresses response:", response.data);
-
         const userAddresses = response.data || [];
-
-        // Transform the addresses to match our interface
-
         const transformedAddresses: Direction[] = userAddresses.map(
           (addr: any) => ({
             id: addr.id,
@@ -320,9 +309,15 @@ export default function AddressSection({
         } else {
           setIsAddressFormVisible(true);
         }
-      } catch (error) {
-        console.error("Error loading user addresses:", error);
-
+      } catch (error: any) {
+        const errorMessage =
+          error.response?.data?.message || "Error cargando direcciones.";
+        AlertHelper.error({
+          message: errorMessage,
+          title: "Error",
+          animation: "slideIn",
+          timer: 5000,
+        });
         setAddressError(
           "No se pudieron cargar las direcciones. Por favor, inténtalo de nuevo."
         );
@@ -415,27 +410,17 @@ export default function AddressSection({
   // Handle deleting an address
 
   const handleDeleteAddress = (id: string) => {
-    Swal.fire({
+    AlertHelper.confirm({
       title: "¿Estás seguro?",
-
-      text: "Esta acción no se puede revertir",
-
-      icon: "warning",
-
-      showCancelButton: true,
-
-      confirmButtonColor: "#3085d6",
-
-      cancelButtonColor: "#d33",
-
-      confirmButtonText: "Sí, eliminar",
-
-      cancelButtonText: "Cancelar",
-    }).then(async (result) => {
-      if (result.isConfirmed) {
+      message: "Esta acción no se puede revertir",
+      type: "warning",
+      confirmText: "Sí, eliminar",
+      cancelText: "Cancelar",
+      animation: "bounce",
+    }).then(async (isConfirmed) => {
+      if (isConfirmed) {
         try {
           const numericId = Number.parseInt(id);
-
           setIsDeleting(id);
 
           if (user && user.id) {
@@ -446,7 +431,6 @@ export default function AddressSection({
             if (addressToDelete && addressToDelete.userAddressId) {
               await deleteAddressUser(
                 Number(user.id),
-
                 addressToDelete.userAddressId
               );
             } else {
@@ -457,7 +441,6 @@ export default function AddressSection({
           const updatedAddresses = addresses.filter(
             (addr) => addr.id !== numericId
           );
-
           setAddresses(updatedAddresses);
 
           if (selectedAddressId === id) {
@@ -468,36 +451,28 @@ export default function AddressSection({
             if (defaultAddress && defaultAddress.id) {
               setSelectedAddressId(defaultAddress.id.toString());
             } else if (updatedAddresses.length > 0) {
-              const newSelectedId = updatedAddresses[0]?.id;
-
-              if (newSelectedId) setSelectedAddressId(newSelectedId.toString());
+              setSelectedAddressId(updatedAddresses[0].id.toString());
             } else {
               setSelectedAddressId(null);
-
               setIsAddressFormVisible(true);
             }
           }
 
-          Swal.fire({
+          AlertHelper.success({
             title: "¡Eliminada!",
-
-            text: "La dirección ha sido eliminada.",
-
-            icon: "success",
-
+            message: "La dirección ha sido eliminada.",
+            animation: "slideIn",
             timer: 2000,
-
-            showConfirmButton: false,
           });
-        } catch (error) {
-          console.error("Error deleting address:", error);
-
-          Swal.fire({
+        } catch (error: any) {
+          const errorMessage =
+            error.response?.data?.message || "Error eliminando la dirección.";
+          AlertHelper.error({
+            message: errorMessage,
             title: "Error",
-
-            text: "No se pudo eliminar la dirección. Por favor, inténtalo de nuevo.",
-
-            icon: "error",
+            animation: "slideIn",
+            timer: 5000,
+            showToast: false, // para que sea modal
           });
         } finally {
           setIsDeleting(null);
@@ -511,7 +486,6 @@ export default function AddressSection({
   const handleSetDefaultAddress = async (id: string) => {
     try {
       const numericId = Number.parseInt(id);
-
       const addressToUpdate = addresses.find((addr) => addr.id === numericId);
 
       if (user && user.id && addressToUpdate) {
@@ -524,39 +498,28 @@ export default function AddressSection({
           await setDefaultAddressUser(Number(user.id), numericId);
         }
       }
-
       const updatedAddresses = addresses.map((address) => ({
         ...address,
 
         isDefault: address.id === numericId,
       }));
-
       setAddresses(updatedAddresses);
-
       setSelectedAddressId(id);
 
-      Swal.fire({
-        icon: "success",
-
-        title: "¡Dirección predeterminada actualizada!",
-
-        toast: true,
-
-        position: "top-end",
-
+      AlertHelper.success({
+        title: "¡Actualizada!",
+        message: "La direccion ha sido actualizada.",
+        animation: "slideIn",
         timer: 2000,
-
-        showConfirmButton: false,
       });
-    } catch (error) {
-      console.error("Error setting default address:", error);
-
-      Swal.fire({
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message || "Error actualizando la dirección.";
+      AlertHelper.error({
+        message: errorMessage,
         title: "Error",
-
-        text: "No se pudo actualizar la dirección predeterminada. Por favor, inténtalo de nuevo.",
-
-        icon: "error",
+        animation: "slideIn",
+        timer: 5000,
       });
     }
   };
@@ -569,29 +532,20 @@ export default function AddressSection({
 
       const addressData = {
         street: data.street,
-
         city: data.city,
-
         state: data.state,
-
         country: data.country,
-
         postalCode: data.postalCode,
-
         colony: data.colony,
-
-        isDefault: data.isDefault ,
+        isDefault: data.isDefault,
       };
 
       if (editingAddressId && user && user.id) {
         // Editing existing address
-
         const editingIdNumber = Number.parseInt(editingAddressId);
-
         const addressToEdit = addresses.find(
           (addr) => addr.id === editingIdNumber
         );
-
         if (addressToEdit && addressToEdit.userAddressId) {
           await updateAddressUser(
             Number(user.id),
@@ -601,34 +555,22 @@ export default function AddressSection({
         } else {
           await updateAddressUser(
             Number(user.id),
-
             editingIdNumber,
-
             addressData
           );
         }
 
         const updatedAddress: Direction = {
           id: editingIdNumber,
-
           street: data.street,
-
           city: data.city,
-
           state: data.state,
-
           country: data.country,
-
           postalCode: data.postalCode,
-
           colony: data.colony,
-
           neighborhood: data.colony,
-
           references: data.references,
-
           isDefault: data.isDefault,
-
           userAddressId: addressToEdit?.userAddressId,
         };
 
@@ -650,102 +592,67 @@ export default function AddressSection({
           setSelectedAddressId(editingAddressId);
         }
 
-        Swal.fire({
-          icon: "success",
-
-          title: "¡Dirección actualizada!",
-
-          toast: true,
-
-          position: "top-end",
-
-          timer: 3000,
-
-          showConfirmButton: false,
+        AlertHelper.success({
+          title: "¡Actualizada!",
+          message: "La direccion ha sido actualizada.",
+          animation: "slideIn",
+          timer: 2000,
         });
       } else if (user && user.id) {
         // Adding new address
 
         const response = await addAddressUser(Number(user.id), addressData);
-
         const addedAddress = response.data;
-
         const transformedAddress: Direction = {
           id: addedAddress.address?.id || addedAddress.id,
-
           street: addedAddress.address?.street || addressData.street,
-
           city: addedAddress.address?.city || addressData.city,
-
           state: addedAddress.address?.state || addressData.state,
-
           country: addedAddress.address?.country || addressData.country,
-
           postalCode:
             addedAddress.address?.postalCode || addressData.postalCode,
-
           colony: addedAddress.address?.colony || addressData.colony,
-
           neighborhood: addedAddress.address?.colony || addressData.colony,
-
           references: data.references,
-
           isDefault: addedAddress.isDefault || addressData.isDefault,
-
           userAddressId: addedAddress.userAddressId,
         };
 
         if (addressData.isDefault) {
           const updatedAddresses = [
             ...addresses.map((addr) => ({ ...addr, isDefault: false })),
-
             transformedAddress,
           ];
-
           setAddresses(updatedAddresses);
-
           setSelectedAddressId(transformedAddress.id.toString());
         } else {
           const updatedAddresses = [...addresses, transformedAddress];
-
           setAddresses(updatedAddresses);
-
           if (!selectedAddressId) {
             setSelectedAddressId(transformedAddress.id.toString());
           }
         }
 
-        Swal.fire({
-          icon: "success",
-
-          title: "¡Dirección agregada!",
-
-          toast: true,
-
-          position: "top-end",
-
-          timer: 3000,
-
-          showConfirmButton: false,
+        AlertHelper.success({
+          title: "¡Creada!",
+          message: "La direccion ha sido creada.",
+          animation: "slideIn",
+          timer: 2000,
         });
       }
-
       setIsAddressFormVisible(false);
-
       setIsAddingAddress(false);
-
       setEditingAddressId(null);
-
       window.scrollTo({ top: 0, behavior: "smooth" });
-    } catch (error) {
-      console.error("Error saving address:", error);
-
-      Swal.fire({
-        title: "Error",
-
-        text: "No se pudo guardar la dirección. Por favor, inténtalo de nuevo.",
-
-        icon: "error",
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message;
+      AlertHelper.error({
+        title: "Error al agregar la dirección",
+        message:
+          errorMessage ||
+          "Hubo un problema al agregar la dirección. Por favor intenta nuevamente.",
+        timer: 6000,
+        animation: "slideIn",
       });
     } finally {
       setIsSavingAddress(false);
@@ -756,17 +663,13 @@ export default function AddressSection({
 
   const handleCancelAddressForm = () => {
     setIsAddressFormVisible(false);
-
     setIsAddingAddress(false);
-
     setEditingAddressId(null);
-
     resetAddress();
 
     if (addresses.length === 0) {
       setIsAddressFormVisible(true);
     }
-
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -774,42 +677,22 @@ export default function AddressSection({
 
   const handleContinueToShippingDetails = () => {
     if (!selectedAddressId && addresses.length > 0) {
-      Swal.fire({
-        icon: "error",
-
+      AlertHelper.error({
         title: "Selecciona una dirección",
-
-        text: "Por favor selecciona una dirección de envío para continuar",
-
-        toast: true,
-
-        position: "top-end",
-
+        message: "Por favor selecciona una dirección de envío para continuar",
+        animation: "slideIn",
         timer: 3000,
-
-        showConfirmButton: false,
       });
-
       return;
     }
 
     if (addresses.length === 0) {
-      Swal.fire({
-        icon: "error",
-
+      AlertHelper.error({
         title: "Agrega una dirección",
-
-        text: "Por favor agrega una dirección de envío para continuar",
-
-        toast: true,
-
-        position: "top-end",
-
+        message: "Por favor agrega una dirección de envío para continuar",
+        animation: "slideIn",
         timer: 3000,
-
-        showConfirmButton: false,
       });
-
       return;
     }
 
@@ -817,14 +700,10 @@ export default function AddressSection({
 
     setTimeout(() => {
       document
-
         .getElementById("shipping-details-form")
-
         ?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 100);
   };
-
-  // Handle shipping details form submission
 
   const onSubmitShippingDetails: SubmitHandler<
     ShippingDetailsFormData
@@ -1342,8 +1221,6 @@ export default function AddressSection({
                       </div>
                     </div>
                   </div>
-
-               
                 </div>
 
                 {/* Default checkbox */}

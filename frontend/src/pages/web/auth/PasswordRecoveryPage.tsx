@@ -1,7 +1,5 @@
 "use client";
-
 import type React from "react";
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import {
@@ -22,12 +20,11 @@ import {
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Link, useNavigate } from "react-router-dom";
-import Swal from "sweetalert2";
-import "sweetalert2/src/sweetalert2.scss";
 import { recoverPassword } from "@/api/auth";
 import { motion, AnimatePresence } from "framer-motion";
 import backgroundImage from "@/pages/web/Home/assets/hero.jpg";
 import Loader from "@/components/web-components/Loader";
+import { AlertHelper } from "@/utils/alert.util";
 
 export default function PasswordRecoveryPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -60,7 +57,6 @@ export default function PasswordRecoveryPage() {
         setAnimateContent(true);
       }, 100);
     }, 1000);
-
     return () => clearTimeout(timer);
   }, []);
 
@@ -68,45 +64,47 @@ export default function PasswordRecoveryPage() {
     try {
       setIsSubmitting(true);
       const res = await recoverPassword({ email: data.email });
+
       if (res) {
         setIsSubmitted(true);
-        Swal.fire({
-          icon: "success",
+        AlertHelper.success({
+          message:
+            "Se ha enviado un correo con las instrucciones.",
           title: "Recuperación de contraseña",
-          text: "Se ha enviado un correo con las instrucciones para la recuperación de su contraseña.",
-          confirmButtonColor: "#2563EB",
+          timer: 4000,
+          animation: "slideIn",
         });
         return;
       } else {
-        Swal.fire({
-          icon: "error",
+        AlertHelper.error({
+          message: "Por favor, inténtalo más tarde.",
           title: "Algo salió mal",
-          text: "Por favor, inténtalo más tarde.",
-          confirmButtonColor: "#2563EB",
+          timer: 5000,
+          animation: "slideIn",
         });
         return;
       }
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message || "Error desconocido.";
-      Swal.fire({
-        icon: "error",
-        title: "Error al iniciar sesión",
-        toast: true,
-        text: errorMessage,
-        position: "top-end",
-        timer: 3000,
-        showConfirmButton: false,
-        animation: true,
-        background: "#FEF2F2",
-        color: "#B91C1C",
-        iconColor: "#EF4444",
+
+      AlertHelper.error({
+        message: errorMessage,
+        title: "Error en la recuperación",
+        timer: 5000,
+        animation: "slideIn",
       });
+
+      // Manejar redirecciones de error
       if (error.response && error.response.status === 400) {
-        navigate("/400");
+        setTimeout(() => {
+          navigate("/400");
+        }, 2000);
       }
       if (error.response && error.response.status === 500) {
-        navigate("/500");
+        setTimeout(() => {
+          navigate("/500");
+        }, 2000);
       }
     } finally {
       setIsSubmitting(false);
@@ -271,7 +269,6 @@ export default function PasswordRecoveryPage() {
                     </span>
                     <h3 className="text-xl font-bold mt-2">Proceso seguro</h3>
                   </div>
-
                   {/* Floating badges */}
                   <motion.div
                     initial={{ scale: 0.8, opacity: 0 }}
@@ -354,7 +351,6 @@ export default function PasswordRecoveryPage() {
                 >
                   <KeyRound className="w-8 h-8" />
                 </motion.div>
-
                 <motion.h2
                   initial={{ opacity: 0, y: -10 }}
                   animate={
@@ -415,13 +411,11 @@ export default function PasswordRecoveryPage() {
                           })}
                           onChange={handleEmailChange}
                         />
-
                         {errors.email && (
                           <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                             <AlertCircle className="h-5 w-5 text-red-500" />
                           </div>
                         )}
-
                         {!errors.email && email && (
                           <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                             <CheckCircle className="h-5 w-5 text-green-500" />
@@ -461,7 +455,6 @@ export default function PasswordRecoveryPage() {
                     >
                       {/* Button background animation */}
                       <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-500/0 via-blue-500/30 to-blue-500/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
-
                       {isSubmitting ? (
                         <>
                           <Loader2 className="animate-spin mr-2 h-5 w-5" />
@@ -535,7 +528,6 @@ export default function PasswordRecoveryPage() {
                         <Mail className="h-4 w-4" />
                         Intentar con otro correo
                       </motion.button>
-
                       <Link
                         to="/login"
                         className="mt-4 inline-flex items-center text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300 font-medium transition-colors"

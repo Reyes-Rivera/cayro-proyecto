@@ -8,6 +8,7 @@ import {
   NotFoundException,
   InternalServerErrorException,
   Query,
+  BadRequestException,
 } from '@nestjs/common';
 import { SalesService } from './sales.service';
 import { ChangeStatusDto } from './dto/create-sale.dto';
@@ -25,6 +26,14 @@ export class SalesController {
   @Get('orders')
   getOrdes() {
     return this.salesService.getOrders();
+  }
+  @Get('references')
+  async getUserSaleReferences(@Query('userId') userId: string) {
+    if (!userId || isNaN(Number(userId))) {
+      throw new BadRequestException('Parámetro userId inválido');
+    }
+    console.log(userId);
+    return await this.salesService.getUserSaleReferences(Number(userId));
   }
   @Get(':id')
   findOne(@Param('id') id: string) {

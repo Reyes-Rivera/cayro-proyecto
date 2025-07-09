@@ -48,6 +48,7 @@ import {
 
 import Loader from "@/components/web-components/Loader";
 import { useNavigate } from "react-router-dom";
+import { AlertHelper } from "@/utils/alert.util";
 
 // Tipo para la respuesta de la API
 interface ApiResponse {
@@ -214,92 +215,67 @@ export default function ProductsPage() {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        // Cargar datos de filtros
-        let brandsData: Brand[] = [];
-        let categoriesData: Category[] = [];
-        let gendersData: Gender[] = [];
-        let sizesData: Size[] = [];
-        let colorsData: Color[] = [];
-        let sleevesData: Sleeve[] = [];
+        const handleFetch = async (
+          fetchFn: () => Promise<any>,
+          name: string
+        ) => {
+          try {
+            const response = await fetchFn();
+            return Array.isArray(response.data)
+              ? response.data
+              : Array.isArray(response.data?.data)
+              ? response.data.data
+              : [];
+          } catch (err: any) {
+            AlertHelper.error({
+              title: `Error al cargar ${name}`,
+              message:
+                err.response?.data?.message ||
+                `No se pudo cargar la información de ${name}.`,
+              animation: "slideIn",
+              timer: 4000,
+            });
+            return [];
+          }
+        };
 
-        try {
-          const brandsResponse = await getBrands();
-          brandsData = Array.isArray(brandsResponse.data)
-            ? brandsResponse.data
-            : Array.isArray(brandsResponse.data?.data)
-            ? brandsResponse.data.data
-            : [];
-        } catch (err) {
-          console.error("Error fetching brands:", err);
-        }
+        const [
+          brandsData,
+          categoriesData,
+          gendersData,
+          sizesData,
+          colorsData,
+          sleevesData,
+        ] = await Promise.all([
+          handleFetch(getBrands, "marcas"),
+          handleFetch(getCategories, "categorías"),
+          handleFetch(getGenders, "géneros"),
+          handleFetch(getSizes, "tallas"),
+          handleFetch(getColors, "colores"),
+          handleFetch(getSleeve, "tipos de cuello"),
+        ]);
+
         setBrands(brandsData);
-
-        try {
-          const categoriesResponse = await getCategories();
-          categoriesData = Array.isArray(categoriesResponse.data)
-            ? categoriesResponse.data
-            : Array.isArray(categoriesResponse.data?.data)
-            ? categoriesResponse.data.data
-            : [];
-        } catch (err) {
-          console.error("Error fetching categories:", err);
-        }
         setCategories(categoriesData);
-
-        try {
-          const gendersResponse = await getGenders();
-          gendersData = Array.isArray(gendersResponse.data)
-            ? gendersResponse.data
-            : Array.isArray(gendersResponse.data?.data)
-            ? gendersResponse.data.data
-            : [];
-        } catch (err) {
-          console.error("Error fetching genders:", err);
-        }
         setGenders(gendersData);
-
-        try {
-          const sizesResponse = await getSizes();
-          sizesData = Array.isArray(sizesResponse.data)
-            ? sizesResponse.data
-            : Array.isArray(sizesResponse.data?.data)
-            ? sizesResponse.data.data
-            : [];
-        } catch (err) {
-          console.error("Error fetching sizes:", err);
-        }
         setSizes(sizesData);
-
-        try {
-          const colorsResponse = await getColors();
-          colorsData = Array.isArray(colorsResponse.data)
-            ? colorsResponse.data
-            : Array.isArray(colorsResponse.data?.data)
-            ? colorsResponse.data.data
-            : [];
-        } catch (err) {
-          console.error("Error fetching colors:", err);
-        }
         setColors(colorsData);
-
-        try {
-          const sleevesResponse = await getSleeve();
-          sleevesData = Array.isArray(sleevesResponse.data)
-            ? sleevesResponse.data
-            : Array.isArray(sleevesResponse.data?.data)
-            ? sleevesResponse.data.data
-            : [];
-        } catch (err) {
-          console.error("Error fetching sleeves:", err);
-        }
         setSleeves(sleevesData);
 
         setFiltersLoaded(true);
-      } catch (err) {
-        console.error("Error loading data:", err);
+      } catch (err: any) {
         setError(
           "No se pudieron cargar los datos de filtros. Por favor, intente nuevamente."
         );
+        AlertHelper.error({
+          title: "Error general",
+          message:
+            err.response?.data?.message ||
+            "Error al cargar los datos de filtros.",
+          animation: "slideIn",
+          timer: 4000,
+        });
+      } finally {
         setIsLoading(false);
       }
     };
@@ -356,10 +332,8 @@ export default function ProductsPage() {
       params.append("limit", productsPerPage.toString());
 
       if (searchTerm) params.append("search", searchTerm);
-      if (activeCategoryId !== null) {
+      if (activeCategoryId !== null)
         params.append("category", activeCategoryId.toString());
-        console.log("Filtering by category ID:", activeCategoryId); // Debug log
-      }
       if (activeColorId !== null)
         params.append("colors", activeColorId.toString());
       if (activeSizeId !== null)
@@ -387,35 +361,23 @@ export default function ProductsPage() {
       }
 
       const queryString = params.toString();
-      console.log("API Query:", queryString); // Debug log
-
       const response = await getProducts(queryString);
 
-      if (response && response.data) {
-        let productsData: Product[] = [];
-        let totalPagesCount = 1;
+      let productsData: Product[] = [];
+      let totalPagesCount = 1;
 
-        if (response.data.data && Array.isArray(response.data.data)) {
-          const apiResponse = response.data as ApiResponse;
-          productsData = apiResponse.data;
+      if (response && response.data) {
+        if (Array.isArray(response.data.data)) {
+          productsData = response.data.data;
           totalPagesCount =
-            apiResponse.totalPages ||
-            Math.ceil(apiResponse.total / productsPerPage);
+            response.data.totalPages ||
+            Math.ceil(response.data.total / productsPerPage);
         } else if (Array.isArray(response.data)) {
           productsData = response.data;
           totalPagesCount = Math.ceil(productsData.length / productsPerPage);
-        } else if (
-          typeof response.data === "object" &&
-          Object.keys(response.data).length === 0
-        ) {
-          productsData = [];
-          totalPagesCount = 1;
-        } else {
-          productsData = [];
-          totalPagesCount = 1;
         }
 
-        // Solo hacer scroll si hay filtros activos (query parameters en la URL) y no es la carga inicial
+        // Scroll solo si hay filtros activos y no es carga inicial
         const urlParams = new URLSearchParams(window.location.search);
         const hasQueryParams = urlParams.toString().length > 0;
 
@@ -426,17 +388,11 @@ export default function ProductsPage() {
         setProducts(productsData);
         setTotalPages(totalPagesCount);
       } else {
-        const urlParams = new URLSearchParams(window.location.search);
-        const hasQueryParams = urlParams.toString().length > 0;
-
-        if (!initialLoadRef.current && hasQueryParams) {
-          setTimeout(() => scrollToProducts(), 100);
-        }
-
         setProducts([]);
         setTotalPages(1);
       }
     } catch (err: any) {
+
       if (err.status === 404) {
         setProducts([]);
         setTotalPages(1);
@@ -448,6 +404,15 @@ export default function ProductsPage() {
       );
       setProducts([]);
       setTotalPages(1);
+
+      AlertHelper.error({
+        title: "Error al cargar productos",
+        message:
+          err.response?.data?.message ||
+          "Ocurrió un error al cargar los productos.",
+        timer: 4000,
+        animation: "slideIn",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -517,7 +482,7 @@ export default function ProductsPage() {
             let productsData: Product[] = [];
             let totalPagesCount = 1;
 
-            if (response.data.data && Array.isArray(response.data.data)) {
+            if (Array.isArray(response.data.data)) {
               const apiResponse = response.data as ApiResponse;
               productsData = apiResponse.data;
               totalPagesCount =
@@ -535,22 +500,34 @@ export default function ProductsPage() {
             setCurrentPage(1);
             setError(null);
 
-            // Scroll to top when all filters are cleared
             scrollToTop();
           } else {
-            console.error(
-              "La API no devolvió datos válidos al limpiar filtros:",
-              response
-            );
+           
             setError(
               "No se pudieron cargar los productos. Por favor, intente nuevamente."
             );
+
+            AlertHelper.error({
+              title: "Error al cargar productos",
+              message:
+                "No se pudieron cargar los productos. Por favor, intente nuevamente.",
+              timer: 4000,
+              animation: "slideIn",
+            });
           }
-        } catch (err) {
-          console.error("Error al limpiar filtros:", err);
+        } catch (err: any) {
           setError(
             "No se pudieron cargar los productos. Por favor, intente nuevamente."
           );
+
+          AlertHelper.error({
+            title: "Error al cargar productos",
+            message:
+              err.response?.data?.message ||
+              "Ocurrió un error al cargar los productos.",
+            timer: 4000,
+            animation: "slideIn",
+          });
         } finally {
           setIsLoading(false);
         }

@@ -428,4 +428,13 @@ export class SalesService {
       );
     }
   }
+  async getUserSaleReferences(userId: number): Promise<string[]> {
+    const sales = await this.prismaService.sale.findMany({
+      where: { userId },
+      select: { references: true },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return sales.map((s) => s.references);
+  }
 }

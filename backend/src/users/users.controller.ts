@@ -85,14 +85,11 @@ export class UsersController {
   async compareAnswer(@Body() updateAnswer: AnswerQuestion) {
     return this.usersService.compareAnswer(updateAnswer);
   }
-
   @Auth([Role.ADMIN])
   @Delete(':id')
   async remove(@Param('id') id: number) {
     return this.usersService.remove(id);
   }
-
-  // User Address Endpoints
   @Auth([Role.USER])
   @Put('/address/:userId')
   async upsertUserAddress(

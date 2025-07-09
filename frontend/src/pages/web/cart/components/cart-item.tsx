@@ -5,7 +5,7 @@ import { Trash2, Minus, Plus, Heart, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/context/CartContext";
 import { Link } from "react-router-dom";
-import Swal from "sweetalert2";
+import { AlertHelper } from "@/utils/alert.util";
 
 interface CartItemProps {
   item: any;
@@ -78,53 +78,36 @@ export default function CartItem({ item }: CartItemProps) {
   };
 
   const handleRemove = async () => {
-    // Ask for confirmation
-    const result = await Swal.fire({
+    const isConfirmed = await AlertHelper.confirm({
       title: "¿Eliminar producto?",
-      text: `¿Estás seguro de eliminar ${getProductName()} de tu carrito?`,
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonText: "Sí, eliminar",
-      cancelButtonText: "Cancelar",
-      confirmButtonColor: "#EF4444",
-      cancelButtonColor: "#6B7280",
-      reverseButtons: true,
-      focusCancel: true,
-      position: "center",
+      message: `¿Estás seguro de eliminar ${getProductName()} de tu carrito?`,
+      confirmText: "Sí, eliminar",
+      cancelText: "Cancelar",
+      type: "question",
+      animation: "bounce",
     });
 
-    if (result.isConfirmed) {
+    if (isConfirmed) {
       setIsRemoving(true);
 
       try {
         await removeItem(item.id);
 
-        // Show success notification
-        Swal.fire({
+        AlertHelper.success({
+          message: "Producto eliminado del carrito",
           title: "Producto eliminado",
-          text: "El producto ha sido eliminado de tu carrito",
-          icon: "success",
-          timer: 2000,
-          timerProgressBar: true,
-          showConfirmButton: false,
-          position: "bottom-end",
-          toast: true,
-        });
-      } catch (error) {
-        console.error("Error removing item:", error);
-
-        // Show error notification
-        Swal.fire({
-          title: "Error",
-          text: "No se pudo eliminar el producto. Inténtalo de nuevo.",
-          icon: "error",
+          animation: "slideIn",
           timer: 3000,
-          timerProgressBar: true,
-          showConfirmButton: false,
-          position: "bottom-end",
-          toast: true,
         });
-
+      } catch (error: any) {
+        const errorMessage =
+          error.response?.data?.message || "Error al eliminar.";
+        AlertHelper.error({
+          message: errorMessage,
+          title: "Error al eliminar",
+          animation: "slideIn",
+          timer: 3000,
+        });
         setIsRemoving(false);
       }
     }
@@ -140,19 +123,16 @@ export default function CartItem({ item }: CartItemProps) {
         try {
           await updateQuantity(item.id, newQuantity);
           setShowStockWarning(false);
-        } catch (error) {
-          console.error("Error updating quantity:", error);
-
-          // Show error notification
-          Swal.fire({
+        } catch (error: any) {
+          const errorMessage =
+            error.response?.data?.message ||
+            "No se pudo actualizar la cantidad.";
+          AlertHelper.error({
             title: "Error",
-            text: "No se pudo actualizar la cantidad. Inténtalo de nuevo.",
-            icon: "error",
-            timer: 3000,
-            timerProgressBar: true,
-            showConfirmButton: false,
+            message: errorMessage,
+            animation: "slideIn",
             position: "bottom-end",
-            toast: true,
+            timer: 3000,
           });
         } finally {
           setIsUpdating(false);
@@ -160,17 +140,13 @@ export default function CartItem({ item }: CartItemProps) {
       } else {
         setShowStockWarning(true);
 
-        // Show stock warning notification
-        Swal.fire({
+        // Alerta de stock limitado
+        AlertHelper.warning({
           title: "Stock limitado",
-          text: `Solo hay ${currentStock} unidades disponibles`,
-          icon: "warning",
-          timer: 3000,
-          timerProgressBar: true,
-          showConfirmButton: false,
+          message: `Solo hay ${currentStock} unidades disponibles`,
+          animation: "slideIn",
           position: "bottom-end",
-          toast: true,
-          iconColor: "#F59E0B",
+          timer: 3000,
         });
 
         setTimeout(() => setShowStockWarning(false), 3000);
@@ -181,17 +157,12 @@ export default function CartItem({ item }: CartItemProps) {
   const handleSaveForLater = () => {
     setIsSaving(true);
 
-    // Simulate saving for later
     setTimeout(() => {
-      Swal.fire({
-        title: "Guardado",
-        text: "Producto guardado para más tarde",
-        icon: "success",
-        timer: 2000,
-        timerProgressBar: true,
-        showConfirmButton: false,
-        position: "bottom-end",
-        toast: true,
+      AlertHelper.success({
+        message: "Producto guardado para luego",
+        title: "Producto guardado",
+        animation: "slideIn",
+        timer: 3000,
       });
 
       setIsSaving(false);

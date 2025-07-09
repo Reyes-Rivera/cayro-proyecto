@@ -1,11 +1,6 @@
 "use client";
-import {
-  ArrowLeft,
-  Loader2,
-  Info,
-  Lock,
-  AlertCircle,
-} from "lucide-react";
+import { ArrowLeft, Loader2, Info, Lock, AlertCircle } from "lucide-react";
+import { AlertHelper } from "@/utils/alert.util";
 
 const apiUrl = import.meta.env.VITE_REACT_APP_MERCADOPAGO_PUBLIC_KEY;
 
@@ -30,44 +25,52 @@ export default function PaymentSection({
   total,
   onBack,
 }: PaymentSectionProps) {
-
- 
-
   // Función para abrir MercadoPago
   const openMercadoPagoCheckout = () => {
     if (!preferenceId) {
       onPaymentError("No se pudo generar la preferencia de pago");
+      AlertHelper.error({
+        title: "Error de pago",
+        message: "No se pudo generar la preferencia de pago",
+        timer: 5000,
+      });
       return;
     }
 
     setIsProcessing(true);
 
     try {
-      // Determinar si estamos en producción basado en la public key
       const isProduction = !apiUrl?.startsWith("TEST-");
-
-      // Construir URL de MercadoPago
       const baseUrl = isProduction
         ? "https://www.mercadopago.com.mx"
         : "https://sandbox.mercadopago.com.mx";
 
       const checkoutUrl = `${baseUrl}/checkout/v1/redirect?pref_id=${preferenceId}`;
 
-      // Abrir en la misma ventana para evitar problemas de popup blocker
-      window.location.href = checkoutUrl;
-    } catch (error) {
-      console.error("Error opening MercadoPago checkout:", error);
-      onPaymentError("Error abriendo el checkout de MercadoPago");
+      AlertHelper.success({
+        title: "Redirigiendo",
+        message: "Serás redirigido a MercadoPago para completar tu pago",
+        timer: 2000,
+      }).then(() => {
+        window.location.href = checkoutUrl;
+      });
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message ||
+        "Error abriendo el checkout de MercadoPago";
+      onPaymentError(errorMessage);
       setIsProcessing(false);
+
+      AlertHelper.error({
+        title: "Error de pago",
+        message: errorMessage,
+        timer: 6000,
+      });
     }
   };
 
-
-
   return (
     <>
-     
-
       {/* Payment Content */}
       <div className="mb-6">
         {isLoadingPayment ? (

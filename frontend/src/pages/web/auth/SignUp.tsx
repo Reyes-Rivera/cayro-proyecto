@@ -1,5 +1,4 @@
 "use client";
-
 import backgroundImage from "@/pages/web/Home/assets/hero.jpg";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -27,8 +26,8 @@ import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { NavLink, useNavigate } from "react-router-dom";
 import Loader from "@/components/web-components/Loader";
-import Swal from "sweetalert2";
 import { useAuth } from "@/context/AuthContextType";
+import { AlertHelper } from "@/utils/alert.util";
 
 type FormData = {
   name: string;
@@ -59,7 +58,9 @@ export default function SignUpPage() {
   const [pageLoading, setPageLoading] = useState(true);
   const [animateContent, setAnimateContent] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false); // Estado para términos y condiciones
+
   const { SignUp } = useAuth();
+  const navigate = useNavigate();
 
   const {
     register,
@@ -74,12 +75,10 @@ export default function SignUpPage() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setPageLoading(false);
-      // Activate animations after loading screen disappears
       setTimeout(() => {
         setAnimateContent(true);
       }, 100);
     }, 1000);
-
     return () => clearTimeout(timer);
   }, []);
 
@@ -92,12 +91,9 @@ export default function SignUpPage() {
       special: /[!@#$%^&*(),.?":{}|]/.test(password),
       noSequential: !containsSequentialPatterns(password),
     };
-
     setPasswordChecks(checks);
     setPasswordStrength(Object.values(checks).filter(Boolean).length * 20);
   }, [password]);
-
-  const navigate = useNavigate();
 
   const containsSequentialPatterns = (password: string): boolean => {
     const commonPatterns = [
@@ -161,7 +157,6 @@ export default function SignUpPage() {
     const birthDate = new Date(birthdate);
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
-
     if (
       monthDiff < 0 ||
       (monthDiff === 0 && today.getDate() < birthDate.getDate())
@@ -187,18 +182,12 @@ export default function SignUpPage() {
     if (currentStep === 2) {
       // Validar que se hayan aceptado los términos y condiciones
       if (!acceptTerms) {
-        Swal.fire({
-          icon: "warning",
+        AlertHelper.warning({
+          message:
+            "Debes aceptar los términos y condiciones, aviso de privacidad y deslinde legal para continuar.",
           title: "Términos y condiciones",
-          toast: true,
-          text: "Debes aceptar los términos y condiciones, aviso de privacidad y deslinde legal para continuar.",
-          position: "top-end",
-          timer: 4000,
-          showConfirmButton: false,
-          animation: true,
-          background: "#FFFBEB",
-          color: "#D97706",
-          iconColor: "#F59E0B",
+          timer: 5000,
+          animation: "slideIn",
         });
         return;
       }
@@ -212,18 +201,12 @@ export default function SignUpPage() {
             data.birthdate.toString()
           )
         ) {
-          Swal.fire({
-            icon: "error",
+          AlertHelper.error({
+            message:
+              "La contraseña no debe contener partes de tu nombre, apellido o fecha de nacimiento.",
             title: "Contraseña inválida",
-            toast: true,
-            text: "La contraseña no debe contener partes de tu nombre, apellido o fecha de nacimiento.",
-            position: "top-end",
-            timer: 4000,
-            showConfirmButton: false,
-            animation: true,
-            background: "#FEF2F2",
-            color: "#DC2626",
-            iconColor: "#EF4444",
+            timer: 5000,
+            animation: "slideIn",
           });
           return;
         }
@@ -246,20 +229,13 @@ export default function SignUpPage() {
             "success" in result &&
             result.success
           ) {
-            Swal.fire({
-              icon: "success",
+            AlertHelper.success({
+              message:
+                "¡Tu cuenta ha sido creada exitosamente! Serás redirigido para verificar tu correo.",
               title: "¡Cuenta creada!",
-              toast: true,
-              text: "Serás redirigido en breve.",
-              position: "top-end",
-              timer: 3000,
-              showConfirmButton: false,
-              animation: true,
-              background: "#F0FDF4",
-              color: "#166534",
-              iconColor: "#22C55E",
+              timer: 4000,
+              animation: "slideIn",
             });
-            // Optional: Redirect to verification page after success
             setTimeout(() => {
               navigate("/codigo-verificacion"); // Uncomment if using react-router
             }, 3000);
@@ -269,61 +245,42 @@ export default function SignUpPage() {
               result && typeof result === "object" && "message" in result
                 ? (result.message as string)
                 : "Error en el registro. Por favor intenta nuevamente.";
-            Swal.fire({
-              icon: "error",
+
+            AlertHelper.error({
+              message: errorMessage,
               title: "Error en el registro",
-              toast: true,
-              text: errorMessage,
-              position: "top-end",
-              timer: 4000,
-              showConfirmButton: false,
-              animation: true,
-              background: "#FEF2F2",
-              color: "#DC2626",
-              iconColor: "#EF4444",
+              timer: 5000,
+              animation: "slideIn",
             });
           }
         } catch (error: any) {
-          console.error("Error during registration:", error);
-          Swal.fire({
-            icon: "error",
+          const errorMessage =
+            error.response?.data?.message ||
+            error.message ||
+            "Ocurrió un error inesperado. Por favor intenta nuevamente.";
+          AlertHelper.error({
+            message: errorMessage,
             title: "Error inesperado",
-            toast: true,
-            text: "Ocurrió un error inesperado. Por favor intenta nuevamente.",
-            position: "top-end",
-            timer: 4000,
-            showConfirmButton: false,
-            animation: true,
-            background: "#FEF2F2",
-            color: "#DC2626",
-            iconColor: "#EF4444",
+            timer: 5000,
+            animation: "slideIn",
           });
         } finally {
           setIsLoading(false);
         }
       } else {
-        Swal.fire({
-          icon: "warning",
+        AlertHelper.warning({
+          message:
+            "La contraseña no cumple con todos los requisitos de seguridad. Revisa los criterios mostrados.",
           title: "Contraseña insegura",
-          toast: true,
-          text: "La contraseña no cumple con todos los requisitos de seguridad.",
-          position: "top-end",
-          timer: 4000,
-          showConfirmButton: false,
-          animation: true,
-          background: "#FFFBEB",
-          color: "#D97706",
-          iconColor: "#F59E0B",
+          timer: 5000,
+          animation: "slideIn",
         });
       }
     }
-
     if (currentStep < 2) {
       setCurrentStep(currentStep + 1);
     }
   });
-
- 
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 relative overflow-hidden mt-10">
@@ -427,7 +384,6 @@ export default function SignUpPage() {
                     Seguridad garantizada
                   </span>
                 </div>
-
                 <div className="flex items-center gap-2">
                   <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
                     <Award className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -436,7 +392,6 @@ export default function SignUpPage() {
                     Calidad premium
                   </span>
                 </div>
-
                 <div className="flex items-center gap-2">
                   <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
                     <Truck className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -473,7 +428,6 @@ export default function SignUpPage() {
                       Colección exclusiva
                     </h3>
                   </div>
-
                   {/* Floating badges */}
                   <motion.div
                     initial={{ scale: 0.8, opacity: 0 }}
@@ -556,7 +510,6 @@ export default function SignUpPage() {
                 >
                   <User className="w-8 h-8" />
                 </motion.div>
-
                 <motion.h2
                   initial={{ opacity: 0, y: -10 }}
                   animate={
@@ -569,7 +522,6 @@ export default function SignUpPage() {
                 >
                   Crear cuenta
                 </motion.h2>
-
                 <motion.div
                   initial={{ width: 0 }}
                   animate={animateContent ? { width: "6rem" } : { width: 0 }}
@@ -670,7 +622,6 @@ export default function SignUpPage() {
                             </p>
                           )}
                         </div>
-
                         <div className="space-y-2">
                           <Label
                             htmlFor="surname"

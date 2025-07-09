@@ -1,17 +1,16 @@
 "use client";
-
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContextType";
 import { ArrowLeft } from "lucide-react";
-import Swal from "sweetalert2";
 import axios from "axios";
 import type { ShippingDetailsFormData } from "@/types/checkout";
 import CheckoutProgress from "./components/checkout-progress";
 import AddressSection from "./components/address-section";
 import PaymentSection from "./components/payment-section";
 import OrderSummary from "./components/order-summary";
+import { AlertHelper } from "@/utils/alert.util";
 
 type CheckoutStep = "shipping" | "shipping-details" | "payment";
 
@@ -33,40 +32,35 @@ export default function CheckoutPage() {
   );
   const [addresses, setAddresses] = useState<any[]>([]);
 
-  // Usar refs para mantener los valores originales incluso después de limpiar el carrito
   const subtotalRef = useRef(subtotal);
   const shippingRef = useRef(shipping);
   const totalRef = useRef(total);
 
-  // Actualizar las refs cuando cambian los valores
   useEffect(() => {
     subtotalRef.current = subtotal;
     shippingRef.current = shipping;
     totalRef.current = total;
   }, [subtotal, shipping, total]);
 
-  // Global error handler
   useEffect(() => {
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
-      console.error("Unhandled promise rejection in checkout:", event.reason);
-      // Prevent the default browser behavior
-      event.preventDefault();
-      // Show user-friendly error message
-      Swal.fire({
+      AlertHelper.confirm({
         title: "Error inesperado",
-        text: "Ocurrió un error inesperado. Por favor, recarga la página e intenta de nuevo.",
-        icon: "error",
-        confirmButtonText: "Recargar página",
-        confirmButtonColor: "#3B82F6",
-      }).then((result) => {
-        if (result.isConfirmed) {
+        message:
+          "Ocurrió un error inesperado. Por favor, recarga la página e intenta de nuevo.",
+        confirmText: "Recargar página",
+        cancelText: "Cancelar",
+        type: "info",
+        animation: "bounce",
+      }).then((confirmed) => {
+        if (confirmed) {
           window.location.reload();
         }
       });
+      event.preventDefault();
     };
 
     window.addEventListener("unhandledrejection", handleUnhandledRejection);
-
     return () => {
       window.removeEventListener(
         "unhandledrejection",
@@ -75,23 +69,20 @@ export default function CheckoutPage() {
     };
   }, []);
 
-  // Check authentication and load user data
   useEffect(() => {
     const checkAuth = async () => {
       try {
         if (!isAuthenticated) {
-          const result = await Swal.fire({
+          const confirmed = await AlertHelper.confirm({
             title: "Iniciar sesión",
-            text: "Debes iniciar sesión para continuar con el pago",
-            icon: "info",
-            showCancelButton: true,
-            confirmButtonText: "Iniciar sesión",
-            cancelButtonText: "Cancelar",
-            confirmButtonColor: "#3B82F6",
-            cancelButtonColor: "#6B7280",
+            message: "Debes iniciar sesión para continuar con el pago",
+            confirmText: "Iniciar sesión",
+            cancelText: "Cancelar",
+            type: "info",
+            animation: "slideIn",
           });
 
-          if (result.isConfirmed) {
+          if (confirmed) {
             navigate("/login?redirect=/checkout");
           } else {
             navigate("/carrito");
@@ -99,54 +90,49 @@ export default function CheckoutPage() {
           return;
         }
 
-        // Verificar que hay items en el carrito
         if (items.length === 0) {
           navigate("/carrito");
           return;
         }
 
         setIsLoading(false);
-      } catch (error) {
-        console.error("Error in checkAuth:", error);
+      } catch (error: any) {
+        AlertHelper.error({
+          title: "Error",
+          message:
+            error.response.data.message || "Ocurrió un error al verificar la autenticación"
+            ,
+          timer: 4000,
+        });
         setIsLoading(false);
       }
     };
 
     const timer = setTimeout(() => {
-      checkAuth().catch((error) => {
-        console.error("Error in checkAuth timeout:", error);
-        setIsLoading(false);
-      });
+      checkAuth();
     }, 800);
 
     return () => clearTimeout(timer);
   }, [isAuthenticated, navigate, items.length]);
 
-  // Scroll to top on page load
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  // Toggle order summary on mobile
   const toggleOrderSummary = () => {
     setOrderSummaryExpanded(!orderSummaryExpanded);
   };
 
   const handlePaymentError = (errorMessage: string) => {
-    try {
-      setPaymentError(errorMessage);
-      Swal.fire({
-        title: "Error en el pago",
-        text:
-          errorMessage ||
-          "Hubo un problema procesando tu pago. Por favor intenta nuevamente.",
-        icon: "error",
-      }).catch((error) => {
-        console.error("Error showing payment error dialog:", error);
-      });
-    } catch (error) {
-      console.error("Error in handlePaymentError:", error);
-    }
+    setPaymentError(errorMessage);
+    AlertHelper.error({
+      title: "Error en el pago",
+      message:
+        errorMessage ||
+        "Hubo un problema procesando tu pago. Por favor intenta nuevamente.",
+      timer: 6000,
+      animation: "slideIn",
+    });
   };
 
   const handleShippingSubmit = (details: ShippingDetailsFormData) => {
@@ -154,42 +140,42 @@ export default function CheckoutPage() {
       setShippingDetails(details);
       setCurrentStep("payment");
       window.scrollTo(0, 0);
-    } catch (error) {
-      console.error("Error in handleShippingSubmit:", error);
+    } catch (error: any) {
+      AlertHelper.error({
+        title: "Error",
+        message:
+          "Ocurrió un error al procesar la información de envío" +
+          error.data.message,
+        timer: 4000,
+      });
     }
   };
 
-  // Función wrapper para el botón de continuar en OrderSummary
   const handleContinueToShippingDetails = () => {
     if (!selectedAddressId && addresses?.length > 0) {
-      Swal.fire({
-        icon: "error",
+      AlertHelper.warning({
         title: "Selecciona una dirección",
-        text: "Por favor selecciona una dirección de envío para continuar",
-        toast: true,
-        position: "top-end",
-        timer: 3000,
-        showConfirmButton: false,
+        message: "Por favor selecciona una dirección de envío para continuar",
+        timer: 4000,
+        animation: "slideIn",
       });
       return;
     }
+
     if (addresses.length === 0) {
-      Swal.fire({
-        icon: "error",
+      AlertHelper.warning({
         title: "Agrega una dirección",
-        text: "Por favor agrega una dirección de envío para continuar",
-        toast: true,
-        position: "top-end",
-        timer: 3000,
-        showConfirmButton: false,
+        message: "Por favor agrega una dirección de envío para continuar",
+        timer: 4000,
+        animation: "slideIn",
       });
       return;
     }
+
     setCurrentStep("shipping-details");
     window.scrollTo(0, 0);
   };
 
-  // Crear preferencia de Mercado Pago
   useEffect(() => {
     const createMercadoPagoPreference = async () => {
       if (
@@ -201,15 +187,8 @@ export default function CheckoutPage() {
         try {
           setIsLoadingPayment(true);
           setPaymentError("");
-          setPreferenceId(""); // Limpiar preferencia anterior
+          setPreferenceId("");
 
-          console.log("=== CREATING MERCADOPAGO PREFERENCE ===");
-          console.log("User:", user);
-          console.log("Items:", items);
-          console.log("Total:", total);
-          console.log("Shipping Details:", shippingDetails);
-
-          // Preparar datos del carrito
           const cart = items.map((item: any) => ({
             productId: item.product?.id || item.productId,
             variantId: item.variant?.id || item.variantId,
@@ -219,14 +198,12 @@ export default function CheckoutPage() {
             quantity: Number(item.quantity),
           }));
 
-          // Preparar datos del usuario
           const userData = {
             id: user.id?.toString() || "unknown",
             email: user.email || "test@test.com",
             name: `${user.name || "Usuario"} ${user.surname || ""}`.trim(),
           };
 
-          // Preparar payload completo con detalles de envío
           const requestData = {
             cart,
             total: Number(total),
@@ -236,9 +213,6 @@ export default function CheckoutPage() {
             shippingDetails,
           };
 
-          console.log("Request data:", JSON.stringify(requestData, null, 2));
-
-          // Validar datos antes de enviar
           if (!requestData.cart || requestData.cart.length === 0) {
             throw new Error("El carrito está vacío");
           }
@@ -255,7 +229,6 @@ export default function CheckoutPage() {
             throw new Error("Detalles de envío requeridos");
           }
 
-          console.log("Sending request to backend...");
           const response = await axios.post(
             "http://localhost:5000/mercadopago/create-preference",
             requestData,
@@ -263,56 +236,28 @@ export default function CheckoutPage() {
               headers: {
                 "Content-Type": "application/json",
               },
-              timeout: 15000, // 15 segundos de timeout
+              timeout: 15000,
             }
           );
 
-          console.log("=== BACKEND RESPONSE ===");
-          console.log("Full response:", response);
-          console.log("Response data:", JSON.stringify(response.data, null, 2));
-
           if (response.data.success && response.data.preferenceId) {
-            console.log(
-              "✅ Preference created successfully:",
-              response.data.preferenceId
-            );
             setPreferenceId(response.data.preferenceId);
             setPaymentError("");
-
-            // Verificar que la preferencia sea válida
-            if (!response.data.preferenceId.includes("-")) {
-              console.warn(
-                "⚠️ Preference ID format seems unusual:",
-                response.data.preferenceId
-              );
-            }
-
-            // Log URLs que se van a usar
-            const sandboxUrl = `https://sandbox.mercadopago.com.mx/checkout/v1/redirect?pref_id=${response.data.preferenceId}`;
-            const prodUrl = `https://www.mercadopago.com.mx/checkout/v1/redirect?pref_id=${response.data.preferenceId}`;
-            console.log("Sandbox URL:", sandboxUrl);
-            console.log("Production URL:", prodUrl);
-            console.log("Init Point:", response.data.initPoint);
-            console.log("Sandbox Init Point:", response.data.sandboxInitPoint);
+            AlertHelper.success({
+              title: "Pago listo",
+              message: "Redirigiendo a Mercado Pago...",
+              timer: 2000,
+            });
           } else {
-            console.error("❌ Invalid response from backend:", response.data);
             throw new Error(
               response.data.message || "No se pudo crear la preferencia de pago"
             );
           }
         } catch (error) {
-          console.error("=== ERROR CREATING PREFERENCE ===");
-          console.error("Error object:", error);
           let errorMessage =
             "No se pudo inicializar el pago. Por favor, intenta de nuevo.";
 
           if (axios.isAxiosError(error)) {
-            console.error("Axios error details:");
-            console.error("- Status:", error.response?.status);
-            console.error("- Data:", error.response?.data);
-            console.error("- Headers:", error.response?.headers);
-            console.error("- Config:", error.config);
-
             if (error.code === "ECONNABORTED") {
               errorMessage =
                 "Timeout: El servidor tardó demasiado en responder. Intenta de nuevo.";
@@ -334,18 +279,29 @@ export default function CheckoutPage() {
             errorMessage = error.message;
           }
 
-          console.error("Final error message:", errorMessage);
           setPaymentError(errorMessage);
+          AlertHelper.error({
+            title: "Error al inicializar el pago",
+            message: errorMessage,
+            timer: 6000,
+            animation: "slideIn",
+          });
         } finally {
           setIsLoadingPayment(false);
         }
       }
     };
 
-    createMercadoPagoPreference().catch((error) => {
-      console.error("Error in createMercadoPagoPreference effect:", error);
+    createMercadoPagoPreference().catch(() => {
       setIsLoadingPayment(false);
       setPaymentError("Error inesperado al inicializar el pago.");
+      AlertHelper.error({
+        title: "Error inesperado",
+        message:
+          "Error inesperado al inicializar el pago. Por favor, intenta de nuevo.",
+        timer: 5000,
+        animation: "slideIn",
+      });
     });
   }, [currentStep, items, total, subtotal, shipping, user, shippingDetails]);
 

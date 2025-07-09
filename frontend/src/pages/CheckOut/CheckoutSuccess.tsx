@@ -11,6 +11,7 @@ import {
   Home,
 } from "lucide-react";
 import Loader from "@/components/web-components/Loader";
+import { AlertHelper } from "@/utils/alert.util";
 const apiUrl = import.meta.env.VITE_REACT_APP_BASE_URL;
 export default function CheckoutSuccess() {
   const [searchParams] = useSearchParams();
@@ -31,7 +32,6 @@ export default function CheckoutSuccess() {
         const response = await fetch(
           `${apiUrl}/mercadopago/payment/${paymentId}`
         );
-
         if (!response.ok) {
           throw new Error(`Error al obtener el pago: ${response.status}`);
         }
@@ -47,7 +47,14 @@ export default function CheckoutSuccess() {
           paymentType: data.payment_type_id || "Desconocido",
         });
       } catch (error: any) {
-        console.error("Error al obtener detalles del pago:", error.message);
+        const errorMessage =
+          error.response?.data?.message || "Error desconocido.";
+        AlertHelper.error({
+          message: errorMessage,
+          title: "Error en el pago",
+          timer: 5000,
+          animation: "slideIn",
+        });
         setPaymentData({
           paymentId,
           status: "Error",

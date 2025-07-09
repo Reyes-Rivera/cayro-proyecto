@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
@@ -21,13 +20,12 @@ import {
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Link } from "react-router-dom";
-import Swal from "sweetalert2";
-import "sweetalert2/src/sweetalert2.scss";
 import { motion, AnimatePresence } from "framer-motion";
 import backgroundImage from "@/pages/web/Home/assets/hero.jpg";
 import { compareQuestion, getQuestions } from "@/api/auth";
 import { getUserByEmail } from "@/api/users";
 import Loader from "@/components/web-components/Loader";
+import { AlertHelper } from "@/utils/alert.util";
 
 type FormData = {
   email: string;
@@ -65,16 +63,13 @@ export default function PasswordRecoveryQuestionPage() {
 
   const email = watch("email");
 
-  // Simulate page loading
   useEffect(() => {
     const timer = setTimeout(() => {
       setPageLoading(false);
-      // Activate animations after loading screen disappears
       setTimeout(() => {
         setAnimateContent(true);
       }, 100);
     }, 1000);
-
     return () => clearTimeout(timer);
   }, []);
 
@@ -94,18 +89,12 @@ export default function PasswordRecoveryQuestionPage() {
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message || "Error desconocido al verificar.";
-      Swal.fire({
-        icon: "error",
-        title: "Error al iniciar sesión",
-        toast: true,
-        text: errorMessage,
-        position: "top-end",
-        timer: 3000,
-        showConfirmButton: false,
-        animation: true,
-        background: "#FEF2F2",
-        color: "#B91C1C",
-        iconColor: "#EF4444",
+
+      AlertHelper.error({
+        message: errorMessage,
+        title: "Error al verificar correo",
+        timer: 5000,
+        animation: "slideIn",
       });
     }
   };
@@ -118,32 +107,34 @@ export default function PasswordRecoveryQuestionPage() {
         securityQuestionId: +data.securityQuestion,
         securityAnswer: data.securityAnswer,
       };
-
       await compareQuestion(newData);
       setTimeout(() => {
         setCurrentStep(3);
-        Swal.fire({
-          icon: "success",
+        AlertHelper.success({
+          message: "La respuesta a tu pregunta de seguridad es correcta.",
           title: "Verificación exitosa",
-          text: "La respuesta a tu pregunta de seguridad es correcta.",
-          confirmButtonColor: "#2563EB",
+          timer: 4000,
+          animation: "slideIn",
         });
       }, 1000);
     } catch (error: any) {
-      Swal.fire({
-        icon: "error",
+      const errorMessage =
+        error.response?.data?.message ||
+        "La respuesta no es correcta. Inténtalo de nuevo.";
+      if (errorMessage === "Refresh token inválido o expirado.") {
+        AlertHelper.error({
+          message: "La respuesta no es correcta. Inténtalo de nuevo.",
+          title: "Error de verificación",
+          timer: 5000,
+          animation: "slideIn",
+        });
+        return;
+      }
+      AlertHelper.error({
+        message: "La respuesta no es correcta. Inténtalo de nuevo.",
         title: "Error de verificación",
-        toast: true,
-        text:
-          error.response?.data?.message ||
-          "La respuesta no es correcta. Inténtalo de nuevo.",
-        position: "top-end",
-        timer: 3000,
-        showConfirmButton: false,
-        animation: true,
-        background: "#FEF2F2",
-        color: "#B91C1C",
-        iconColor: "#EF4444",
+        timer: 5000,
+        animation: "slideIn",
       });
     } finally {
       setIsSubmitting(false);
@@ -155,8 +146,15 @@ export default function PasswordRecoveryQuestionPage() {
       try {
         const res = await getQuestions();
         setQuestions(res.data);
-      } catch (error) {
-        console.error("Error al cargar preguntas de seguridad:", error);
+      } catch (error: any) {
+        const errorMessage =
+          error.response?.data?.message || "Error desconocido.";
+        AlertHelper.error({
+          message: errorMessage,
+          title: "Error de carga",
+          timer: 5000,
+          animation: "slideIn",
+        });
       }
     };
     getQuestionsApi();
@@ -349,7 +347,6 @@ export default function PasswordRecoveryQuestionPage() {
                       {currentStep === 3 && "Revisa tu bandeja de entrada"}
                     </h3>
                   </div>
-
                   {/* Floating badges */}
                   <motion.div
                     initial={{ scale: 0.8, opacity: 0 }}
@@ -436,7 +433,6 @@ export default function PasswordRecoveryQuestionPage() {
                   {currentStep === 2 && <HelpCircle className="w-8 h-8" />}
                   {currentStep === 3 && <CheckCircle className="w-8 h-8" />}
                 </motion.div>
-
                 <motion.h2
                   initial={{ opacity: 0, y: -10 }}
                   animate={
@@ -560,13 +556,11 @@ export default function PasswordRecoveryQuestionPage() {
                             },
                           })}
                         />
-
                         {errors.email && (
                           <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                             <AlertCircle className="h-5 w-5 text-red-500" />
                           </div>
                         )}
-
                         {!errors.email && email && (
                           <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                             <CheckCircle className="h-5 w-5 text-green-500" />
@@ -606,7 +600,6 @@ export default function PasswordRecoveryQuestionPage() {
                     >
                       {/* Button background animation */}
                       <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-500/0 via-blue-500/30 to-blue-500/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
-
                       {isSubmitting ? (
                         <>
                           <Loader2 className="animate-spin mr-2 h-5 w-5" />
@@ -765,7 +758,6 @@ export default function PasswordRecoveryQuestionPage() {
                         <ArrowLeft className="mr-2 h-5 w-5" />
                         <span>Atrás</span>
                       </motion.button>
-
                       <motion.button
                         type="submit"
                         className="sm:w-2/3 p-3.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex justify-center items-center gap-2 relative overflow-hidden group"
@@ -775,7 +767,6 @@ export default function PasswordRecoveryQuestionPage() {
                       >
                         {/* Button background animation */}
                         <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-500/0 via-blue-500/30 to-blue-500/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
-
                         {isSubmitting ? (
                           <>
                             <Loader2 className="animate-spin mr-2 h-5 w-5" />

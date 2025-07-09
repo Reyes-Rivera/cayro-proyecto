@@ -1,12 +1,9 @@
 "use client";
-
 import { resendCodeApi } from "@/api/auth";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContextType";
 import { useEffect, useState } from "react";
 import { useNavigate, NavLink } from "react-router-dom";
-import Swal from "sweetalert2";
-import "sweetalert2/src/sweetalert2.scss";
 import ReCAPTCHA from "react-google-recaptcha";
 import {
   Eye,
@@ -37,6 +34,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import Loader from "@/components/web-components/Loader";
+import { AlertHelper } from "@/utils/alert.util";
 
 // Modificar el tipo FormData para eliminar loginType
 type FormData = {
@@ -84,7 +82,6 @@ export default function LoginPage() {
         setAnimateContent(true);
       }, 100);
     }, 1000);
-
     return () => clearTimeout(timer);
   }, []);
 
@@ -107,43 +104,25 @@ export default function LoginPage() {
 
   const onSubmit = async (data: FormData) => {
     if (!captchaToken) {
-      Swal.fire({
-        icon: "error",
-        title: "Error en el envío",
-        text: "Por favor, verifica que no eres un robot",
-        confirmButtonColor: "#3B82F6",
-        iconColor: "#EF4444",
-        showClass: {
-          popup: "animate__animated animate__fadeInDown",
-        },
-        hideClass: {
-          popup: "animate__animated animate__fadeOutUp",
-        },
+      AlertHelper.error({
+        message: "Por favor, verifica que no eres un robot",
+        title: "Verificación requerida",
+        isModal: true,
+        animation: "bounce",
       });
       return;
     }
-
     setIsLoading(true);
-
     try {
       const res = await login(data.identifier, data.password);
-      console.log(res);
-
       if (res?.role === "USER" && res.active === false) {
-        Swal.fire({
-          icon: "success",
-          title: "¡Verificación Exitosa!",
-          toast: true,
-          text: "Por favor verifica tu correo electrónico.",
-          position: "top-end",
-          timer: 3000,
-          showConfirmButton: false,
-          animation: true,
-          background: "#F0FDF4",
-          color: "#166534",
-          iconColor: "#22C55E", // Ícono verde
+        AlertHelper.error({
+          message:
+            "Tu cuenta ha sido desactivada. Por favor, contacta a tu administrador.",
+          title: "Cuenta desactivada",
+          animation: "slideIn",
+          timer: 6000,
         });
-        setIsLoading(true);
 
         localStorage.setItem("emailToVerify", res.email);
         localStorage.setItem("isVerificationPending", "true");
@@ -153,43 +132,61 @@ export default function LoginPage() {
         navigate("/codigo-verificacion");
         return;
       }
-      Swal.fire({
-        icon: "success",
-        title: "¡Verificación Exitosa!",
-        toast: true,
-        text: "Credenciales validas. Serás redirigido en breve.",
-        position: "top-end",
-        timer: 3000,
-        showConfirmButton: false,
-        animation: true,
-        background: "#F0FDF4",
-        color: "#166534",
-        iconColor: "#22C55E", // Ícono verde
+      AlertHelper.success({
+        message: "¡Bienvenido de vuelta! Redirigiendo...",
+        title: "Inicio de sesión exitoso",
+        timer: 2000,
+        animation: "slideIn",
       });
-      setIsLoading(false);
-      if (res?.role === "ADMIN") {
-        navigate("/perfil-admin");
-      } else if (res?.role === "USER") {
-        navigate("/perfil-usuario");
-      } else if (res?.role === "EMPLOYEE") {
-        navigate("/perfil-empleado");
-      }
+      setTimeout(() => {
+        if (res?.role === "ADMIN") {
+          navigate("/perfil-admin");
+        } else if (res?.role === "USER") {
+          navigate("/perfil-usuario");
+        } else if (res?.role === "EMPLOYEE") {
+          navigate("/perfil-empleado");
+        }
+      }, 1500);
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message || "Error desconocido al iniciar sesión.";
-      Swal.fire({
-        icon: "error",
-        title: "Error al iniciar sesión",
-        toast: true,
-        text: errorMessage,
-        position: "top-end",
-        timer: 3000,
-        showConfirmButton: false,
-        animation: true,
-        background: "#FEF2F2",
-        color: "#B91C1C",
-        iconColor: "#EF4444",
-      });
+      if (errorMessage.includes("credenciales")) {
+        AlertHelper.error({
+          message:
+            "Las credenciales proporcionadas no son válidas. Verifica tu correo/teléfono y contraseña.",
+          title: "Credenciales incorrectas",
+          animation: "slideIn",
+          timer: 5000,
+        });
+      } else if (
+        errorMessage.includes("bloqueada") ||
+        errorMessage.includes("bloqueado")
+      ) {
+        AlertHelper.warning({
+          message: errorMessage,
+          title: "Cuenta temporalmente bloqueada",
+          animation: "slideIn",
+          timer: 6000,
+        });
+      } else if (
+        errorMessage.includes("verificar") ||
+        errorMessage.includes("verificación")
+      ) {
+        AlertHelper.info({
+          message:
+            "Tu cuenta necesita ser verificada. Revisa tu correo electrónico.",
+          title: "Verificación pendiente",
+          animation: "slideIn",
+          timer: 5000,
+        });
+      } else {
+        AlertHelper.error({
+          message: errorMessage,
+          title: "Error al iniciar sesión",
+          animation: "slideIn",
+          timer: 5000,
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -216,12 +213,39 @@ export default function LoginPage() {
     return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
 
-  const handleRecoveryMethod = (method: "email" | "question") => {
+  const handleRecoveryMethod = async (method: "email" | "question") => {
     setShowRecoveryDialog(false);
-    if (method === "email") {
-      navigate("/recuperar-password");
-    } else {
-      navigate("/recuperar-password-pregunta");
+
+    // Mostrar confirmación antes de proceder
+    const confirmed = await AlertHelper.confirm({
+      title: "Recuperación de contraseña",
+      message:
+        method === "email"
+          ? "Se enviará un enlace de recuperación a tu correo electrónico registrado."
+          : "Serás redirigido para responder tu pregunta de seguridad.",
+      confirmText: "Continuar",
+      cancelText: "Cancelar",
+      type: "question",
+      animation: "bounce",
+    });
+
+    if (confirmed) {
+      AlertHelper.info({
+        message:
+          method === "email"
+            ? "Redirigiendo al formulario de recuperación por correo..."
+            : "Redirigiendo al formulario de pregunta secreta...",
+        timer: 2000,
+        animation: "slideIn",
+      });
+
+      setTimeout(() => {
+        if (method === "email") {
+          navigate("/recuperar-password");
+        } else {
+          navigate("/recuperar-password-pregunta");
+        }
+      }, 1500);
     }
   };
 
@@ -364,7 +388,7 @@ export default function LoginPage() {
               >
                 <div className="relative">
                   <img
-                    src={backgroundImage}
+                    src={backgroundImage || "/placeholder.svg"}
                     alt="Cayro Uniformes"
                     className="w-full max-w-md mx-auto rounded-2xl shadow-2xl object-cover"
                   />
@@ -377,7 +401,6 @@ export default function LoginPage() {
                       Colección exclusiva
                     </h3>
                   </div>
-
                   {/* Floating badges */}
                   <motion.div
                     initial={{ scale: 0.8, opacity: 0 }}
@@ -460,7 +483,6 @@ export default function LoginPage() {
                 >
                   <User className="w-8 h-8" />
                 </motion.div>
-
                 <motion.h2
                   initial={{ opacity: 0, y: -10 }}
                   animate={
@@ -513,7 +535,6 @@ export default function LoginPage() {
                           const emailRegex =
                             /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
                           const phoneRegex = /^\+?[0-9]{10,15}$/;
-
                           if (
                             emailRegex.test(value) ||
                             phoneRegex.test(value.replace(/\s/g, ""))
@@ -529,12 +550,10 @@ export default function LoginPage() {
                           // Para teléfono: números, +, espacios
                           value = value.replace(/[<>='"]/g, "");
                           e.target.value = value;
-
                           // Validar en tiempo real
                           const emailRegex =
                             /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
                           const phoneRegex = /^\+?[0-9]{10,15}$/;
-
                           if (
                             emailRegex.test(value) ||
                             phoneRegex.test(value.replace(/\s/g, ""))
@@ -544,7 +563,6 @@ export default function LoginPage() {
                         },
                       })}
                     />
-
                     {errors.identifier ? (
                       <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                         <AlertCircle className="h-5 w-5 text-red-500" />
@@ -683,7 +701,6 @@ export default function LoginPage() {
                 >
                   {/* Button background animation */}
                   <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-500/0 via-blue-500/30 to-blue-500/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
-
                   {isLoading ? (
                     <>
                       <Loader2 className="animate-spin mr-2 h-5 w-5" />
@@ -740,7 +757,6 @@ export default function LoginPage() {
               Selecciona el método que prefieres para recuperar tu contraseña
             </DialogDescription>
           </DialogHeader>
-
           <div className="grid gap-4 py-4">
             <motion.button
               onClick={() => handleRecoveryMethod("email")}
@@ -761,7 +777,6 @@ export default function LoginPage() {
               </div>
               <ArrowRight className="h-5 w-5 text-gray-400" />
             </motion.button>
-
             <motion.button
               onClick={() => handleRecoveryMethod("question")}
               className="flex items-center gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
@@ -782,7 +797,6 @@ export default function LoginPage() {
               <ArrowRight className="h-5 w-5 text-gray-400" />
             </motion.button>
           </div>
-
           <div className="flex justify-center">
             <button
               onClick={() => setShowRecoveryDialog(false)}

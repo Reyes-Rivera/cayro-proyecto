@@ -16,9 +16,9 @@ import { useCart } from "@/context/CartContext";
 import CartItem from "@/pages/web/cart/components/cart-item";
 import CartSummary from "@/pages/web/cart/components/cart-summary";
 import EmptyCart from "@/pages/web/cart/components/empty-cart";
-import Swal from "sweetalert2";
 import { useAuth } from "@/context/AuthContextType";
 import Loader from "@/components/web-components/Loader";
+import { AlertHelper } from "@/utils/alert.util";
 
 export default function CartPage() {
   const { items, clearCart, itemCount } = useCart();
@@ -28,10 +28,6 @@ export default function CartPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // Calculate subtotal if not available from useCart hook
-  console.log(items);
-
-  // Calculate estimated delivery date (3-5 business days from now)
   useEffect(() => {
     const today = new Date();
     const deliveryDate = new Date(today);
@@ -61,35 +57,36 @@ export default function CartPage() {
 
   // Handle clear cart with confirmation
   const handleClearCart = async () => {
-    const result = await Swal.fire({
-      title: "¿Vaciar carrito?",
-      text: "Se eliminarán todos los productos",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Sí, vaciar",
-      cancelButtonText: "Cancelar",
-      confirmButtonColor: "#EF4444",
-      cancelButtonColor: "#6B7280",
-      reverseButtons: true,
-      focusCancel: true,
-    });
+    try {
+      const isConfirmed = await AlertHelper.confirm({
+        title: "¿Vaciar carrito?",
+        message: "Se eliminarán todos los productos",
+        confirmText: "Sí, vaciar",
+        cancelText: "Cancelar",
+        type: "warning",
+        animation: "bounce",
+      });
 
-    if (result.isConfirmed) {
-      try {
-        await clearCart();
-        Swal.fire({
-          title: "Carrito vacío",
-          text: "Se han eliminado todos los productos",
-          icon: "success",
-          timer: 2000,
-          timerProgressBar: true,
-          showConfirmButton: false,
-          position: "top-right",
-          toast: true,
-        });
-      } catch (error) {
-        console.error("Error clearing cart:", error);
-      }
+      if (!isConfirmed) return;
+
+      await clearCart();
+
+      AlertHelper.success({
+        message: "Carrito vaciado.",
+        title: "Carrito vaciado",
+        timer: 5000,
+        animation: "slideIn",
+      });
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message || "Error vaciando el carrito.";
+
+      AlertHelper.error({
+        message: errorMessage,
+        title: "Error al vaciar el carrito",
+        timer: 5000,
+        animation: "slideIn",
+      });
     }
   };
 
@@ -97,24 +94,20 @@ export default function CartPage() {
   const toggleSummary = () => {
     setShowSummary(!showSummary);
   };
-
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (!user) {
-      Swal.fire({
+      const isConfirmed = await AlertHelper.confirm({
         title: "Iniciar sesión",
-        text: "Debes iniciar sesión para continuar con el pago",
-        icon: "info",
-        showCancelButton: true,
-        confirmButtonText: "Iniciar sesión",
-        cancelButtonText: "Cancelar",
-        confirmButtonColor: "#3B82F6",
-        cancelButtonColor: "#6B7280",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          // Redirect to login page with return URL
-          navigate("/login?redirect=/cart");
-        }
+        message: "Debes iniciar sesión para continuar con el pago",
+        confirmText: "Iniciar sesión",
+        cancelText: "Cancelar",
+        type: "info",
+        animation: "bounce",
       });
+
+      if (isConfirmed) {
+        navigate("/login?redirect=/cart");
+      }
     } else {
       // Proceed to checkout
       navigate("/checkout");
@@ -428,7 +421,7 @@ export default function CartPage() {
                       </button>
                     </div>
                     <div className="p-4">
-                      <CartSummary  />
+                      <CartSummary />
                     </div>
                   </motion.div>
                 </motion.div>

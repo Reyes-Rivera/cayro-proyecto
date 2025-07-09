@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ShoppingCart, Check } from "lucide-react";
 import { motion } from "framer-motion";
 import { useCart } from "@/context/CartContext";
-import Swal from "sweetalert2";
+import { AlertHelper } from "@/utils/alert.util";
 
 interface AddToCartButtonProps {
   product: any;
@@ -33,48 +33,27 @@ export default function AddToCartButton({
     setIsLoading(true);
 
     try {
-      // Call the addItem function from the cart context
       await addItem(product, variant, quantity);
-
-      // Show success notification
-      Swal.fire({
-        title: "¡Añadido al carrito!",
-        text: `${product.name} ha sido añadido`,
-        icon: "success",
-        timer: 2000,
-        timerProgressBar: true,
-        showConfirmButton: false,
-        position: "bottom-end",
-        toast: true,
-        iconColor: "#10B981",
-        customClass: {
-          popup: "colored-toast",
-          title: "swal-title",
-          htmlContainer: "swal-text",
-        },
+      AlertHelper.success({
+        message: "Producto agregado al carrito",
+        title: "Producto agregado",
+        timer: 5000,
+        animation: "slideIn",
       });
-
       setIsAdded(true);
-
-      // Reset the added state after 2 seconds
       setTimeout(() => {
         setIsAdded(false);
       }, 2000);
-    } catch (error) {
-      // Show error notification
-      Swal.fire({
-        title: "Error",
-        text: "No se pudo añadir el producto al carrito",
-        icon: "error",
-        timer: 3000,
-        timerProgressBar: true,
-        showConfirmButton: false,
-        position: "bottom-end",
-        toast: true,
-        iconColor: "#EF4444",
-      });
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message || "Error desconocido.";
 
-      console.error("Error adding item to cart:", error);
+      AlertHelper.error({
+        message: errorMessage,
+        title: "Error al agregar al carrito",
+        timer: 5000,
+        animation: "slideIn",
+      });
     } finally {
       setIsLoading(false);
     }

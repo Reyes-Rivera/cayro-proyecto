@@ -73,7 +73,6 @@ const FeaturedProductsCarousel = () => {
             // Direct array format
             productsData = response.data;
           } else {
-            console.warn("Unexpected API response format:", response.data);
             productsData = [];
           }
 
@@ -96,8 +95,8 @@ const FeaturedProductsCarousel = () => {
           setProducts([]);
         }
       } catch (err: any) {
-        console.error("Error fetching products:", err);
-        setError("No se pudieron cargar los productos destacados.");
+        
+        setError(err.response?.data?.message || "No se pudieron cargar los productos destacados.");
         setProducts([]);
       } finally {
         setIsLoading(false);

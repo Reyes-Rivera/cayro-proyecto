@@ -1,12 +1,11 @@
 "use client";
-
 import type React from "react";
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { ShoppingBag, Eye } from "lucide-react";
 import type { Product } from "@/types/products";
 import { useCart } from "@/context/CartContext";
-import Swal from "sweetalert2";
+import { AlertHelper } from "@/utils/alert.util";
 
 interface ProductCardProps {
   product: Product;
@@ -67,41 +66,23 @@ export default function ProductCard({
     try {
       await addItem(product, lowestPriceVariant, 1);
 
-      Swal.fire({
+      AlertHelper.success({
         title: "¡Producto añadido!",
-        text: `${product.name} ha sido añadido a tu carrito`,
-        icon: "success",
+        message: `${product.name} ha sido añadido a tu carrito`,
+        animation: "slideIn",
         timer: 2000,
-        timerProgressBar: true,
-        showConfirmButton: false,
-        position: "top-end",
-        toast: true,
-        iconColor: "#2563EB",
-        customClass: {
-          popup: "colored-toast",
-          title: "swal-title",
-          htmlContainer: "swal-text",
-        },
       });
-    } catch (error) {
-      Swal.fire({
-        title: "Error",
-        text: "No se pudo añadir el producto al carrito. Inténtalo de nuevo.",
-        icon: "error",
-        timer: 3000,
-        timerProgressBar: true,
-        showConfirmButton: false,
-        position: "top-end",
-        toast: true,
-        iconColor: "#EF4444",
-        customClass: {
-          popup: "colored-toast",
-          title: "swal-title",
-          htmlContainer: "swal-text",
-        },
-      });
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message ||
+        "No se pudo añadir el producto al carrito. Inténtalo de nuevo.";
 
-      console.error("Error adding item to cart:", error);
+      AlertHelper.error({
+        title: "Error",
+        message: errorMessage,
+        animation: "slideIn",
+        timer: 3000,
+      });
     } finally {
       setIsAdding(false);
     }
@@ -127,7 +108,7 @@ export default function ProductCard({
                 src={
                   lowestPriceVariant?.images.find(
                     (img) => img.angle === "front"
-                  )?.url 
+                  )?.url
                 }
                 alt={product.name}
                 className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
@@ -232,7 +213,7 @@ export default function ProductCard({
           <img
             src={
               lowestPriceVariant?.images.find((img) => img.angle === "front")
-                ?.url 
+                ?.url
             }
             alt={product.name}
             className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"

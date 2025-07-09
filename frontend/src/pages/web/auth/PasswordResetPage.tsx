@@ -19,14 +19,13 @@ import {
 import backgroundImage from "@/pages/web/Home/assets/hero.jpg";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
-import Swal from "sweetalert2";
-import "sweetalert2/src/sweetalert2.scss";
 import type { User } from "@/types/User";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { restorePassword } from "@/api/auth";
 import { motion, AnimatePresence } from "framer-motion";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Loader from "@/components/web-components/Loader";
+import { AlertHelper } from "@/utils/alert.util";
 
 export default function PasswordResetPage() {
   const [password, setPassword] = useState("");
@@ -124,53 +123,35 @@ export default function PasswordResetPage() {
         const res = await restorePassword(token, { password: data.password });
         if (res) {
           setIsSubmitted(true);
-          Swal.fire({
-            icon: "success",
+          AlertHelper.success({
+            message: "Tu contraseña ha sido restablecida correctamente.",
             title: "Contraseña actualizada",
-            text: "Tu contraseña ha sido restablecida correctamente.",
-            confirmButtonColor: "#3B82F6",
-            iconColor: "#10B981",
-            showClass: {
-              popup: "animate__animated animate__fadeInDown",
-            },
-            hideClass: {
-              popup: "animate__animated animate__fadeOutUp",
-            },
+            timer: 4000,
+            animation: "slideIn",
           });
+          return;
         }
       } catch (error: any) {
-        Swal.fire({
-          icon: "error",
-          title: "Error de Contraseña",
-          text:
+        AlertHelper.error({
+          message:
             error?.response?.data?.message ||
             "Ha ocurrido un error al restablecer la contraseña.",
-          confirmButtonColor: "#3B82F6",
-          iconColor: "#EF4444",
-          showClass: {
-            popup: "animate__animated animate__fadeInDown",
-          },
-          hideClass: {
-            popup: "animate__animated animate__fadeOutUp",
-          },
+          title: "Error de Contraseña",
+          timer: 5000,
+          animation: "slideIn",
         });
       } finally {
         setIsLoading(false);
       }
     } else {
-      Swal.fire({
-        icon: "error",
+      AlertHelper.error({
+        message:
+          "La contraseña no cumple con todos los requisitos de seguridad.",
         title: "Error de Contraseña",
-        text: "La contraseña no cumple con todos los requisitos de seguridad.",
-        confirmButtonColor: "#3B82F6",
-        iconColor: "#EF4444",
-        showClass: {
-          popup: "animate__animated animate__fadeInDown",
-        },
-        hideClass: {
-          popup: "animate__animated animate__fadeOutUp",
-        },
+        timer: 5000,
+        animation: "slideIn",
       });
+      return;
     }
   });
 

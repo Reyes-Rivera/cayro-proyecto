@@ -14,6 +14,7 @@ import {
 import type { Color, Product } from "../../../types/products";
 import { useCart } from "@/context/CartContext";
 import Loader from "@/components/web-components/Loader";
+import { AlertHelper } from "@/utils/alert.util";
 
 export default function ProductDetail() {
   const params = useParams<{ name: string }>();
@@ -152,13 +153,30 @@ export default function ProductDetail() {
   // Handle add to cart
   const handleAddToCart = async () => {
     if (!selectedVariant || !product) return;
+
     try {
       setIsAddingToCart(true);
+
       await addItem(product, selectedVariant, quantity);
+
       setIsAddedToCart(true);
+      AlertHelper.success({
+        message: "Producto añadido al carrito",
+        title: "¡Éxito!",
+        timer: 3000,
+        animation: "slideIn",
+      });
+
       setTimeout(() => setIsAddedToCart(false), 2000);
-    } catch (error) {
-      console.error("Error adding to cart:", error);
+    } catch (error: any) {
+      AlertHelper.error({
+        title: "Error al agregar al carrito",
+        message:
+          error.response?.data?.message ||
+          "No se pudo añadir el producto al carrito.",
+        timer: 4000,
+        animation: "slideIn",
+      });
     } finally {
       setIsAddingToCart(false);
     }
@@ -170,9 +188,21 @@ export default function ProductDetail() {
     try {
       setIsBuyingNow(true);
       await addItem(product, selectedVariant, quantity);
+      AlertHelper.success({
+        message: "Producto añadido al carrito",
+        title: "¡Listo para comprar!",
+        timer: 2000,
+        animation: "slideIn",
+      });
       navigate("/checkout");
-    } catch (error) {
-      console.error("Error during buy now:", error);
+    } catch (error: any) {
+      AlertHelper.error({
+        title: "Error al comprar",
+        message:
+          error.response?.data?.message || "No se pudo completar la compra.",
+        timer: 4000,
+        animation: "slideIn",
+      });
     } finally {
       setIsBuyingNow(false);
     }

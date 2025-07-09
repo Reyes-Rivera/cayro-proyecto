@@ -18,6 +18,7 @@ import { getCompanyInfoApi } from "@/api/company";
 import Breadcrumbs from "@/components/web-components/Breadcrumbs";
 import Loader from "@/components/web-components/Loader";
 import img from "./assets/contact.png";
+import { AlertHelper } from "@/utils/alert.util";
 // Types
 interface AnimatedSectionProps {
   children: React.ReactNode;
@@ -116,10 +117,18 @@ export default function ContactPage() {
         if (res) {
           setInfo(res.data[0]);
         }
-      } catch (error) {
-        console.error("Error fetching company info:", error);
+      } catch (error: any) {
+        AlertHelper.error({
+          title: "Error al obtener información",
+          message:
+            error.response?.data?.message ||
+            "Error al obtener la información de la empresa.",
+          animation: "slideIn",
+          timer: 4000,
+        });
       }
     };
+
     getInfo();
   }, []);
 
@@ -297,8 +306,6 @@ export default function ContactPage() {
                 {/* Decorative elements */}
                 <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-100 dark:bg-blue-900/20 rounded-full filter blur-3xl opacity-50 z-0"></div>
                 <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-blue-100 dark:bg-blue-900/20 rounded-full filter blur-3xl opacity-50 z-0"></div>
-
-              
               </motion.div>
             </div>
           </div>

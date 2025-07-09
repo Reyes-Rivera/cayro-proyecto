@@ -12,13 +12,13 @@ import {
   Hash,
   FileText,
 } from "lucide-react";
-import Swal from "sweetalert2";
 import Breadcrumbs from "@/components/web-components/Breadcrumbs";
 import img from "./assets/personalize.jpg";
+import { AlertHelper } from "@/utils/alert.util";
 interface FormData {
   productType: string;
-  gender: string; // Change from string[] to string
-  size: string; // Change from string[] to string
+  gender: string;
+  size: string;
   quantity: number;
   specialRequests: string;
   contactInfo: {
@@ -180,12 +180,12 @@ Por favor, envía las imágenes de referencia del diseño que quieres personaliz
     setIsSubmitting(false);
 
     // Show success message with SweetAlert
-    await Swal.fire({
-      title: "¡Solicitud enviada!",
-      text: "Te redirigiremos a WhatsApp. Recuerda enviar las imágenes de referencia en el chat.",
-      icon: "success",
-      confirmButtonText: "Entendido",
-      confirmButtonColor: "#3B82F6",
+    AlertHelper.success({
+      title: "Solicitud enviada",
+      message:
+        "Tu solicitud se ha enviado correctamente. En breve te contactaremos.",
+      animation: "slideIn",
+      timer: 5000,
     });
   };
 
@@ -208,12 +208,11 @@ Por favor, envía las imágenes de referencia del diseño que quieres personaliz
       setCurrentStep((prev) => prev + 1);
     } else {
       // Show validation error with SweetAlert
-      await Swal.fire({
-        title: "Campos incompletos",
-        text: "Por favor completa todos los campos requeridos antes de continuar.",
-        icon: "warning",
-        confirmButtonText: "Entendido",
-        confirmButtonColor: "#F59E0B",
+      AlertHelper.error({
+        title: "Error",
+        message: "Por favor, completa todos los campos requeridos.",
+        animation: "slideIn",
+        timer: 5000,
       });
     }
   };

@@ -20,6 +20,7 @@ import FormError from "@/components/web-components/FormError";
 import { REGEX, ERROR_MESSAGES } from "@/utils/FormValidation";
 import { CompanyProfile } from "@/types/CompanyInfo";
 import { getCompanyInfoApi } from "@/api/company";
+import { AlertHelper } from "@/utils/alert.util";
 
 interface FormValues {
   firstName: string;
@@ -69,8 +70,21 @@ const ContactFormSection: React.FC = () => {
       console.log("Form submitted:", data);
       setIsSubmitted(true);
       reset();
-    } catch (error) {
-      console.error("Error submitting form:", error);
+      AlertHelper.success({
+        title: "Formulario enviado",
+        message: "Tu formulario se ha enviado correctamente.",
+        animation: "slideIn",
+        timer: 3000,
+      });
+    } catch (error: any) {
+      AlertHelper.error({
+        title: "Error al enviar el formulario",
+        message:
+          error.response?.data?.message ||
+          "No se pudo enviar el formulario. Intenta nuevamente.",
+        animation: "slideIn",
+        timer: 4000,
+      });
     } finally {
       setIsLoading(false);
     }

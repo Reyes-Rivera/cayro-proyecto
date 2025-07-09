@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { getCategoriesFaqs, getFaqs } from "@/api/faqs";
 import Breadcrumbs from "@/components/web-components/Breadcrumbs";
 import Loader from "@/components/web-components/Loader";
+import { AlertHelper } from "@/utils/alert.util";
 
 // Types based on database models
 export interface FaqItem {
@@ -86,10 +87,10 @@ const AnimatedSection = memo(
         }}
         initial="hidden"
         animate={mainControls}
-        transition={{ 
-          duration: 0.4, 
-          ease: [0.22, 1, 0.36, 1], 
-          delay: delay 
+        transition={{
+          duration: 0.4,
+          ease: [0.22, 1, 0.36, 1],
+          delay: delay,
         }}
         className={className}
       >
@@ -150,7 +151,7 @@ const Faq = ({
         if (startTime === null) startTime = currentTime;
         const timeElapsed = currentTime - startTime;
         const progress = Math.min(timeElapsed / duration, 1);
-        
+
         // Cubic bezier easing for more natural motion
         const easeOutCubic = (t: number): number => {
           return 1 - Math.pow(1 - t, 3);
@@ -172,7 +173,6 @@ const Faq = ({
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        // Get categories and FAQs
         const [categoriesResponse, faqsResponse] = await Promise.all([
           getCategoriesFaqs(),
           getFaqs(),
@@ -186,11 +186,18 @@ const Faq = ({
           setItems(faqsResponse.data);
           setFilteredItems(faqsResponse.data);
         }
-      } catch (err) {
-        console.error("Error loading data:", err);
+      } catch (error: any) {
         setError(
           "No se pudieron cargar las preguntas frecuentes. Por favor, intenta de nuevo más tarde."
         );
+        AlertHelper.error({
+          title: "Error al cargar los datos",
+          message:
+            error.response?.data?.message ||
+            "No se pudieron cargar las preguntas frecuentes. Intenta más tarde.",
+          animation: "slideIn",
+          timer: 4000,
+        });
       } finally {
         setIsLoading(false);
       }
@@ -250,41 +257,41 @@ const Faq = ({
 
   const itemVariants = {
     hidden: { opacity: 0, y: 15 },
-    visible: { 
-      opacity: 1, 
-      y: 0, 
-      transition: { 
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
         duration: 0.4,
-        ease: [0.22, 1, 0.36, 1]
-      } 
+        ease: [0.22, 1, 0.36, 1],
+      },
     },
-    exit: { 
-      opacity: 0, 
-      y: -10, 
-      transition: { 
+    exit: {
+      opacity: 0,
+      y: -10,
+      transition: {
         duration: 0.3,
-        ease: [0.22, 1, 0.36, 1]
-      } 
+        ease: [0.22, 1, 0.36, 1],
+      },
     },
   };
 
   const contentVariants = {
     hidden: { opacity: 0, height: 0 },
-    visible: { 
-      opacity: 1, 
-      height: "auto", 
-      transition: { 
+    visible: {
+      opacity: 1,
+      height: "auto",
+      transition: {
         duration: 0.4,
-        ease: [0.22, 1, 0.36, 1]
-      } 
+        ease: [0.22, 1, 0.36, 1],
+      },
     },
-    exit: { 
-      opacity: 0, 
-      height: 0, 
-      transition: { 
+    exit: {
+      opacity: 0,
+      height: 0,
+      transition: {
         duration: 0.3,
-        ease: [0.22, 1, 0.36, 1]
-      } 
+        ease: [0.22, 1, 0.36, 1],
+      },
     },
   };
 
@@ -305,10 +312,10 @@ const Faq = ({
             <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-bl from-blue-50/80 to-transparent dark:from-blue-950/20 dark:to-transparent"></div>
             <div className="absolute -top-20 -right-20 w-96 h-96 bg-blue-100 dark:bg-blue-900/20 rounded-full opacity-70 blur-3xl"></div>
             <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-80 h-80 bg-blue-100 dark:bg-blue-900/20 rounded-full opacity-60 blur-3xl"></div>
-            
+
             {/* Added subtle grid pattern */}
             <div className="absolute inset-0 bg-grid-pattern opacity-[0.03] dark:opacity-[0.05]"></div>
-            
+
             {/* Added decorative circles */}
             <div className="absolute top-1/4 left-1/4 w-4 h-4 bg-blue-400 dark:bg-blue-500 rounded-full opacity-20"></div>
             <div className="absolute top-1/3 right-1/3 w-6 h-6 bg-blue-500 dark:bg-blue-400 rounded-full opacity-20"></div>
@@ -323,9 +330,9 @@ const Faq = ({
                 animate={
                   animateHero ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }
                 }
-                transition={{ 
+                transition={{
                   duration: 0.8,
-                  ease: [0.22, 1, 0.36, 1]
+                  ease: [0.22, 1, 0.36, 1],
                 }}
                 className="space-y-8"
               >
@@ -334,10 +341,10 @@ const Faq = ({
                   animate={
                     animateHero ? { opacity: 1, y: 0 } : { opacity: 0, y: -20 }
                   }
-                  transition={{ 
-                    duration: 0.7, 
+                  transition={{
+                    duration: 0.7,
                     delay: 0.2,
-                    ease: [0.22, 1, 0.36, 1]
+                    ease: [0.22, 1, 0.36, 1],
                   }}
                 >
                   <motion.div
@@ -347,9 +354,9 @@ const Faq = ({
                         ? { opacity: 1, scale: 1 }
                         : { opacity: 0, scale: 0.9 }
                     }
-                    transition={{ 
+                    transition={{
                       duration: 0.5,
-                      ease: [0.22, 1, 0.36, 1]
+                      ease: [0.22, 1, 0.36, 1],
                     }}
                     className="mb-6 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-blue-100 to-blue-50 dark:from-blue-900/30 dark:to-blue-800/20 px-4 py-1.5 border border-blue-100 dark:border-blue-800/30"
                   >
@@ -366,10 +373,10 @@ const Faq = ({
                         ? { opacity: 1, y: 0 }
                         : { opacity: 0, y: -20 }
                     }
-                    transition={{ 
-                      duration: 0.7, 
+                    transition={{
+                      duration: 0.7,
                       delay: 0.3,
-                      ease: [0.22, 1, 0.36, 1]
+                      ease: [0.22, 1, 0.36, 1],
                     }}
                     className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white leading-tight"
                   >
@@ -386,10 +393,10 @@ const Faq = ({
                 <motion.p
                   initial={{ opacity: 0 }}
                   animate={animateHero ? { opacity: 1 } : { opacity: 0 }}
-                  transition={{ 
-                    duration: 0.7, 
+                  transition={{
+                    duration: 0.7,
                     delay: 0.5,
-                    ease: [0.22, 1, 0.36, 1]
+                    ease: [0.22, 1, 0.36, 1],
                   }}
                   className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed max-w-lg"
                 >
@@ -401,10 +408,10 @@ const Faq = ({
                   animate={
                     animateHero ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }
                   }
-                  transition={{ 
-                    duration: 0.7, 
+                  transition={{
+                    duration: 0.7,
                     delay: 0.7,
-                    ease: [0.22, 1, 0.36, 1]
+                    ease: [0.22, 1, 0.36, 1],
                   }}
                   className="flex flex-col sm:flex-row gap-4 mt-8"
                 >
@@ -418,11 +425,11 @@ const Faq = ({
                       Ver preguntas frecuentes
                       <motion.div
                         animate={{ x: [0, 4, 0] }}
-                        transition={{ 
-                          repeat: Infinity, 
-                          repeatType: "reverse", 
+                        transition={{
+                          repeat: Infinity,
+                          repeatType: "reverse",
                           duration: 1.5,
-                          ease: "easeInOut"
+                          ease: "easeInOut",
                         }}
                       >
                         <ArrowRight className="ml-2 w-4 h-4" />
@@ -432,7 +439,10 @@ const Faq = ({
 
                   <motion.a
                     href="/contacto"
-                    whileHover={{ scale: 1.03, borderColor: "rgb(59, 130, 246)" }}
+                    whileHover={{
+                      scale: 1.03,
+                      borderColor: "rgb(59, 130, 246)",
+                    }}
                     whileTap={{ scale: 0.97 }}
                     className="border border-gray-300 dark:border-gray-700 hover:border-blue-600 dark:hover:border-blue-500 text-gray-900 dark:text-white font-medium py-3 px-6 rounded-full transition-all flex items-center justify-center bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm"
                   >
@@ -440,15 +450,13 @@ const Faq = ({
                     Contactar soporte
                   </motion.a>
                 </motion.div>
-                
+
                 <motion.div
                   initial={{ opacity: 0 }}
-                  animate={
-                    animateHero ? { opacity: 1 } : { opacity: 0 }
-                  }
-                  transition={{ 
-                    duration: 0.5, 
-                    delay: 0.9
+                  animate={animateHero ? { opacity: 1 } : { opacity: 0 }}
+                  transition={{
+                    duration: 0.5,
+                    delay: 0.9,
                   }}
                 >
                   <Breadcrumbs />
@@ -461,10 +469,10 @@ const Faq = ({
                 animate={
                   animateHero ? { opacity: 1, x: 0 } : { opacity: 0, x: 30 }
                 }
-                transition={{ 
-                  duration: 0.8, 
+                transition={{
+                  duration: 0.8,
                   delay: 0.3,
-                  ease: [0.22, 1, 0.36, 1]
+                  ease: [0.22, 1, 0.36, 1],
                 }}
                 className="relative"
               >
@@ -474,10 +482,10 @@ const Faq = ({
                   animate={
                     animateHero ? { y: 0, opacity: 1 } : { y: 20, opacity: 0 }
                   }
-                  transition={{ 
-                    duration: 0.7, 
+                  transition={{
+                    duration: 0.7,
                     delay: 0.4,
-                    ease: [0.22, 1, 0.36, 1]
+                    ease: [0.22, 1, 0.36, 1],
                   }}
                   className="relative z-20 rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 border border-blue-500/20"
                 >
@@ -500,12 +508,12 @@ const Faq = ({
                     </h3>
 
                     <div className="space-y-4">
-                      <motion.div 
+                      <motion.div
                         className="bg-white/10 rounded-lg p-3 backdrop-blur-sm border border-white/10"
-                        whileHover={{ 
-                          y: -2, 
+                        whileHover={{
+                          y: -2,
                           backgroundColor: "rgba(255, 255, 255, 0.15)",
-                          transition: { duration: 0.2 }
+                          transition: { duration: 0.2 },
                         }}
                       >
                         <div className="flex items-center text-white/80 text-sm mb-1">
@@ -517,12 +525,12 @@ const Faq = ({
                         <div className="h-2 w-3/4 bg-white/20 rounded-full"></div>
                       </motion.div>
 
-                      <motion.div 
+                      <motion.div
                         className="bg-white/10 rounded-lg p-3 backdrop-blur-sm border border-white/10"
-                        whileHover={{ 
-                          y: -2, 
+                        whileHover={{
+                          y: -2,
                           backgroundColor: "rgba(255, 255, 255, 0.15)",
-                          transition: { duration: 0.2 }
+                          transition: { duration: 0.2 },
                         }}
                       >
                         <div className="flex items-center text-white/80 text-sm mb-1">
@@ -534,12 +542,12 @@ const Faq = ({
                         <div className="h-2 w-4/5 bg-white/20 rounded-full"></div>
                       </motion.div>
 
-                      <motion.div 
+                      <motion.div
                         className="bg-white/10 rounded-lg p-3 backdrop-blur-sm border border-white/10"
-                        whileHover={{ 
-                          y: -2, 
+                        whileHover={{
+                          y: -2,
                           backgroundColor: "rgba(255, 255, 255, 0.15)",
-                          transition: { duration: 0.2 }
+                          transition: { duration: 0.2 },
                         }}
                       >
                         <div className="flex items-center text-white/80 text-sm mb-1">
@@ -551,7 +559,7 @@ const Faq = ({
                         <div className="h-2 w-1/2 bg-white/20 rounded-full"></div>
                       </motion.div>
 
-                      <motion.div 
+                      <motion.div
                         whileHover={{ scale: 1.03 }}
                         whileTap={{ scale: 0.97 }}
                         className="bg-white text-blue-600 text-center py-2.5 rounded-lg font-medium flex items-center justify-center shadow-md cursor-pointer"
@@ -575,10 +583,10 @@ const Faq = ({
                       ? { scale: 1, opacity: 1 }
                       : { scale: 0.8, opacity: 0 }
                   }
-                  transition={{ 
-                    duration: 0.5, 
+                  transition={{
+                    duration: 0.5,
                     delay: 0.8,
-                    ease: [0.22, 1, 0.36, 1]
+                    ease: [0.22, 1, 0.36, 1],
                   }}
                   className="absolute top-4 -right-4 bg-white dark:bg-gray-800 shadow-lg rounded-full px-4 py-2 z-30 border border-gray-100 dark:border-gray-700"
                 >
@@ -589,7 +597,7 @@ const Faq = ({
                     </span>
                   </div>
                 </motion.div>
-                
+
                 {/* Added new floating badge */}
                 <motion.div
                   initial={{ scale: 0.8, opacity: 0 }}
@@ -598,10 +606,10 @@ const Faq = ({
                       ? { scale: 1, opacity: 1 }
                       : { scale: 0.8, opacity: 0 }
                   }
-                  transition={{ 
-                    duration: 0.5, 
+                  transition={{
+                    duration: 0.5,
                     delay: 1,
-                    ease: [0.22, 1, 0.36, 1]
+                    ease: [0.22, 1, 0.36, 1],
                   }}
                   className="absolute -bottom-2 -left-4 bg-white dark:bg-gray-800 shadow-lg rounded-full px-4 py-2 z-30 border border-gray-100 dark:border-gray-700"
                 >
@@ -635,9 +643,9 @@ const Faq = ({
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ 
+              transition={{
                 duration: 0.6,
-                ease: [0.22, 1, 0.36, 1]
+                ease: [0.22, 1, 0.36, 1],
               }}
               className="text-center mb-16"
             >
@@ -645,16 +653,19 @@ const Faq = ({
                 PREGUNTAS FRECUENTES
               </span>
               <h2 className="text-3xl md:text-5xl font-bold text-gray-900 dark:text-white">
-                Respuestas a tus <span className="bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent">dudas</span>
+                Respuestas a tus{" "}
+                <span className="bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent">
+                  dudas
+                </span>
               </h2>
               <motion.div
                 initial={{ width: 0 }}
                 whileInView={{ width: "6rem" }}
                 viewport={{ once: true }}
-                transition={{ 
-                  duration: 0.5, 
+                transition={{
+                  duration: 0.5,
                   delay: 0.3,
-                  ease: [0.22, 1, 0.36, 1]
+                  ease: [0.22, 1, 0.36, 1],
                 }}
                 className="h-1 bg-gradient-to-r from-blue-600 to-blue-500 mx-auto mt-6 rounded-full"
               ></motion.div>
@@ -664,10 +675,10 @@ const Faq = ({
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              transition={{ 
-                duration: 0.6, 
+              transition={{
+                duration: 0.6,
                 delay: 0.2,
-                ease: [0.22, 1, 0.36, 1]
+                ease: [0.22, 1, 0.36, 1],
               }}
               className={cn(
                 "bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden relative p-8 md:p-10 max-w-full border border-gray-100 dark:border-gray-700",
@@ -687,22 +698,32 @@ const Faq = ({
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ 
-                    duration: 0.5, 
+                  transition={{
+                    duration: 0.5,
                     delay: 0.4,
-                    ease: [0.22, 1, 0.36, 1]
+                    ease: [0.22, 1, 0.36, 1],
                   }}
                   className="mb-8 space-y-4 relative z-10 max-w-full"
                 >
                   {allowSearch && (
                     <div className="relative">
-                      <div className={`absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none transition-opacity ${searchFocused ? 'text-blue-600' : 'text-gray-500 dark:text-gray-400'}`}>
+                      <div
+                        className={`absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none transition-opacity ${
+                          searchFocused
+                            ? "text-blue-600"
+                            : "text-gray-500 dark:text-gray-400"
+                        }`}
+                      >
                         <Search className="h-5 w-5" />
                       </div>
                       <input
                         type="text"
                         placeholder="Buscar preguntas..."
-                        className={`pl-10 pr-10 py-3.5 w-full border ${searchFocused ? 'border-blue-500 ring-2 ring-blue-500/20' : 'border-gray-200 dark:border-gray-600'} rounded-lg outline-none transition-all bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm`}
+                        className={`pl-10 pr-10 py-3.5 w-full border ${
+                          searchFocused
+                            ? "border-blue-500 ring-2 ring-blue-500/20"
+                            : "border-gray-200 dark:border-gray-600"
+                        } rounded-lg outline-none transition-all bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm`}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         onFocus={() => setSearchFocused(true)}
@@ -834,7 +855,9 @@ const Faq = ({
                           variants={itemVariants}
                           className={cn(
                             "border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden bg-white dark:bg-gray-800 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 max-w-full",
-                            expandedId === item.id ? "ring-2 ring-blue-500/20" : "",
+                            expandedId === item.id
+                              ? "ring-2 ring-blue-500/20"
+                              : "",
                             itemClassName
                           )}
                         >
@@ -960,7 +983,7 @@ const Faq = ({
               ></path>
             </svg>
             <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
-            
+
             {/* Added floating particles */}
             <div className="absolute top-1/4 left-1/4 w-4 h-4 bg-white rounded-full opacity-20"></div>
             <div className="absolute top-1/3 right-1/3 w-6 h-6 bg-white rounded-full opacity-20"></div>
@@ -979,9 +1002,9 @@ const Faq = ({
                 initial={{ opacity: 0, y: -20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ 
+                transition={{
                   duration: 0.6,
-                  ease: [0.22, 1, 0.36, 1]
+                  ease: [0.22, 1, 0.36, 1],
                 }}
                 className="text-3xl md:text-5xl font-bold mb-6"
               >
@@ -991,10 +1014,10 @@ const Faq = ({
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
-                transition={{ 
-                  duration: 0.6, 
+                transition={{
+                  duration: 0.6,
                   delay: 0.2,
-                  ease: [0.22, 1, 0.36, 1]
+                  ease: [0.22, 1, 0.36, 1],
                 }}
                 className="text-blue-100 text-lg max-w-2xl mx-auto mb-10"
               >
@@ -1005,10 +1028,10 @@ const Faq = ({
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ 
-                  duration: 0.6, 
+                transition={{
+                  duration: 0.6,
                   delay: 0.4,
-                  ease: [0.22, 1, 0.36, 1]
+                  ease: [0.22, 1, 0.36, 1],
                 }}
                 className="flex flex-col sm:flex-row justify-center gap-4"
               >
@@ -1039,14 +1062,14 @@ const Faq = ({
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: 0.6 }}
-                  animate={{ 
+                  animate={{
                     y: [0, -8, 0],
                     transition: {
                       repeat: Infinity,
                       repeatType: "reverse",
                       duration: 3,
-                      ease: "easeInOut"
-                    }
+                      ease: "easeInOut",
+                    },
                   }}
                   className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 flex items-center gap-2"
                 >
@@ -1058,15 +1081,15 @@ const Faq = ({
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: 0.7 }}
-                  animate={{ 
+                  animate={{
                     y: [0, -8, 0],
                     transition: {
                       repeat: Infinity,
                       repeatType: "reverse",
                       duration: 3.5,
                       ease: "easeInOut",
-                      delay: 0.5
-                    }
+                      delay: 0.5,
+                    },
                   }}
                   className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 flex items-center gap-2"
                 >
@@ -1080,15 +1103,15 @@ const Faq = ({
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: 0.8 }}
-                  animate={{ 
+                  animate={{
                     y: [0, -8, 0],
                     transition: {
                       repeat: Infinity,
                       repeatType: "reverse",
                       duration: 4,
                       ease: "easeInOut",
-                      delay: 1
-                    }
+                      delay: 1,
+                    },
                   }}
                   className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 flex items-center gap-2"
                 >

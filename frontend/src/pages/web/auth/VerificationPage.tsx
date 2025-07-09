@@ -1,7 +1,5 @@
 "use client";
-
 import type React from "react";
-
 import { useState, useEffect, useRef } from "react";
 import {
   Loader2,
@@ -22,12 +20,11 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContextType";
 import { useNavigate, Link } from "react-router-dom";
 import { resendCodeApi, resendCodeApiAuth } from "@/api/auth";
-import Swal from "sweetalert2";
-import "sweetalert2/src/sweetalert2.scss";
 import { motion, AnimatePresence } from "framer-motion";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import backgroundImage from "@/pages/web/Home/assets/hero.jpg";
 import Loader from "@/components/web-components/Loader";
+import { AlertHelper } from "@/utils/alert.util";
 
 export default function VerificationPage() {
   const [verificationCode, setVerificationCode] = useState([
@@ -45,7 +42,6 @@ export default function VerificationPage() {
   const [countdown, setCountdown] = useState(0);
   const [pageLoading, setPageLoading] = useState(true);
   const [animateContent, setAnimateContent] = useState(false);
-
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const {
@@ -65,7 +61,6 @@ export default function VerificationPage() {
         setAnimateContent(true);
       }, 100);
     }, 1000);
-
     return () => clearTimeout(timer);
   }, []);
 
@@ -101,12 +96,10 @@ export default function VerificationPage() {
     if (e.key === "Backspace" && !verificationCode[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
-
     // Handle left arrow key
     if (e.key === "ArrowLeft" && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
-
     // Handle right arrow key
     if (e.key === "ArrowRight" && index < 5) {
       inputRefs.current[index + 1]?.focus();
@@ -121,7 +114,6 @@ export default function VerificationPage() {
     if (/^\d{6}$/.test(pastedData)) {
       const digits = pastedData.split("");
       setVerificationCode(digits);
-
       // Focus the last input
       inputRefs.current[5]?.focus();
     }
@@ -147,98 +139,86 @@ export default function VerificationPage() {
     }
 
     setIsSubmitting(true);
+    try {
+      if (location.pathname === "/codigo-verificacion") {
+        const response = (await verifyCode(emailToVerify, code)) as {
+          status: number;
+          message: string;
+        };
 
-    if (location.pathname === "/codigo-verificacion") {
-      const response = (await verifyCode(emailToVerify, code)) as {
-        status: number;
-        message: string;
-      };
-      if (response.status === 201) {
-        setIsVerified(true);
-        Swal.fire({
-          icon: "success",
-          title: "¡Verificación Exitosa!",
-          toast: true,
-          text: "Tu código ha sido verificado correctamente. Por favor inicia sesión.",
-          position: "top-end",
-          timer: 3000,
-          showConfirmButton: false,
-          animation: true,
-          background: "#F0FDF4",
-          color: "#166534", // Texto verde oscuro
-          iconColor: "#22C55E", // Ícono verde
-        });
+        if (response.status === 201) {
+          setIsVerified(true);
+          AlertHelper.success({
+            message:
+              "Tu código ha sido verificado correctamente. Por favor inicia sesión.",
+            title: "¡Verificación Exitosa!",
+            timer: 4000,
+            animation: "slideIn",
+          });
 
-        navigate("/login");
-      }
-      if (response.status === 500) {
-        Swal.fire({
-          icon: "error",
-          title: "Error al verificar.",
-          toast: true,
-          text: response.message,
-          position: "top-end",
-          timer: 3000,
-          showConfirmButton: false,
-          animation: true,
-          background: "#FEF2F2",
-          color: "#B91C1C",
-          iconColor: "#EF4444",
-        });
-      }
-      setIsSubmitting(false);
-    } else if (location.pathname === "/codigo-verificacion-auth") {
-      const response = (await verifyCodeAuth(emailToVerify, code)) as {
-        status: number;
-        message: string;
-        data?: { role?: string };
-      };
-      if (response.status === 201) {
-        setIsVerified(true);
+          setTimeout(() => {
+            navigate("/login");
+          }, 3000);
+        } else if (response.status === 500) {
+          AlertHelper.error({
+            message: response.message,
+            title: "Error al verificar",
+            timer: 5000,
+            animation: "slideIn",
+          });
+        }
+      } else if (location.pathname === "/codigo-verificacion-auth") {
+        const response = (await verifyCodeAuth(emailToVerify, code)) as {
+          status: number;
+          message: string;
+          data?: { role?: string };
+        };
 
-        Swal.fire({
-          icon: "success",
-          title: "¡Verificación Exitosa!",
-          toast: true,
-          text: "Tu código ha sido verificado correctamente. Serás redirigido en breve.",
-          position: "top-end",
-          timer: 3000,
-          showConfirmButton: false,
-          animation: true,
-          background: "#F0FDF4", // Fondo verde claro
-          color: "#166534", // Texto verde oscuro
-          iconColor: "#22C55E", // Ícono verde
-        });
+        if (response.status === 201) {
+          setIsVerified(true);
+          AlertHelper.success({
+            message:
+              "Tu código ha sido verificado correctamente. Serás redirigido en breve.",
+            title: "¡Verificación Exitosa!",
+            timer: 4000,
+            animation: "slideIn",
+          });
 
-        setTimeout(() => {
-          setIsVerificationPending(false);
-          localStorage.removeItem("isVerificationPending");
-          localStorage.removeItem("emailToVerify");
-          const responseData = response as { data: { role: string } };
-          if (responseData.data?.role === "ADMIN") {
-            navigate("/perfil-admin");
-          } else if (response.data?.role === "USER") {
-            navigate("/perfil-usuario");
-          } else if (response.data?.role === "EMPLOYEE") {
-            navigate("/perfil-empleado");
-          }
-        }, 2000);
+          setTimeout(() => {
+            setIsVerificationPending(false);
+            localStorage.removeItem("isVerificationPending");
+            localStorage.removeItem("emailToVerify");
+
+            const responseData = response as { data: { role: string } };
+            if (responseData.data?.role === "ADMIN") {
+              navigate("/perfil-admin");
+            } else if (response.data?.role === "USER") {
+              navigate("/perfil-usuario");
+            } else if (response.data?.role === "EMPLOYEE") {
+              navigate("/perfil-empleado");
+            }
+          }, 2000);
+        } else if (response.status === 500) {
+          AlertHelper.error({
+            message: response.message,
+            title: "Error al verificar",
+            timer: 5000,
+            animation: "slideIn",
+          });
+        }
       }
-      if (response.status === 500) {
-        Swal.fire({
-          icon: "error",
-          title: "Error al verificar.",
-          toast: true,
-          text: response.message,
-          position: "top-end",
-          timer: 3000,
-          showConfirmButton: false,
-          animation: true,
-          background: "#FEF2F2",
-          color: "#B91C1C",
-          iconColor: "#EF4444",
-        });
-      }
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message ||
+        "Error inesperado al verificar el código.";
+
+      AlertHelper.error({
+        message: errorMessage,
+        title: "Error de verificación",
+        timer: 5000,
+        animation: "slideIn",
+      });
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -253,39 +233,41 @@ export default function VerificationPage() {
       if (location.pathname === "/codigo-verificacion") {
         const res = await resendCodeApi({ email: emailToVerify });
         if (res) {
-          Swal.fire({
-            icon: "success",
+          AlertHelper.success({
+            message:
+              "Se ha enviado un nuevo código de verificación a tu correo.",
             title: "Código reenviado",
-            text: "Se ha enviado un nuevo código de verificación a tu correo.",
-            confirmButtonColor: "#2563EB",
+            timer: 4000,
+            animation: "slideIn",
           });
           setCountdown(60); // Start 60 second countdown
         }
       } else if (location.pathname === "/codigo-verificacion-auth") {
         const res = await resendCodeApiAuth({ email: emailToVerify });
+
         if (res) {
-          Swal.fire({
-            icon: "success",
+          AlertHelper.success({
+            message:
+              "Se ha enviado un nuevo código de verificación a tu correo.",
             title: "Código reenviado",
-            text: "Se ha enviado un nuevo código de verificación a tu correo.",
-            confirmButtonColor: "#2563EB",
+            timer: 4000,
+            animation: "slideIn",
           });
           setCountdown(60); // Start 60 second countdown
         }
       }
     } catch (error: any) {
-      setError(
+      const errorMessage =
         error.response?.data?.message ||
-          "No se pudo reenviar el código, intente más tarde."
-      );
+        "No se pudo reenviar el código, intente más tarde.";
 
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text:
-          error.response?.data?.message ||
-          "No se pudo reenviar el código, intente más tarde.",
-        confirmButtonColor: "#2563EB",
+      setError(errorMessage);
+
+      AlertHelper.error({
+        message: errorMessage,
+        title: "Error al reenviar",
+        timer: 5000,
+        animation: "slideIn",
       });
     } finally {
       setIsResending(false);
@@ -307,9 +289,7 @@ export default function VerificationPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 relative overflow-hidden mt-10">
       {/* Loading Screen */}
-      {pageLoading && (
-       <Loader />
-      )}
+      {pageLoading && <Loader />}
 
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -452,7 +432,6 @@ export default function VerificationPage() {
                       Confirma tu identidad
                     </h3>
                   </div>
-
                   {/* Floating badges */}
                   <motion.div
                     initial={{ scale: 0.8, opacity: 0 }}
@@ -539,7 +518,6 @@ export default function VerificationPage() {
                     <CheckCircle className="w-8 h-8" />
                   )}
                 </motion.div>
-
                 <motion.h2
                   initial={{ opacity: 0, y: -10 }}
                   animate={
@@ -637,7 +615,6 @@ export default function VerificationPage() {
                       >
                         {/* Button background animation */}
                         <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-500/0 via-blue-500/30 to-blue-500/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
-
                         {isSubmitting ? (
                           <>
                             <Loader2 className="animate-spin mr-2 h-5 w-5" />
