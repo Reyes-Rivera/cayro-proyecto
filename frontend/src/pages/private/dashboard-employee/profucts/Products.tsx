@@ -11,11 +11,10 @@ import {
   createProduct,
   updateProduct,
 } from "@/api/products";
-import "sweetalert2/dist/sweetalert2.min.css";
-import Swal from "sweetalert2";
 import ProductList from "./components/ProductList";
 import ProductDetails from "./components/ProductDetails";
 import ProductForm from "./components/ProductForm";
+import { AlertHelper } from "@/utils/alert.util";
 
 const Products: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -42,17 +41,16 @@ const Products: React.FC = () => {
         setCurrentFilters(params);
       }
     } catch (error: any) {
-      console.error("Error al cargar productos:", error);
       if (error.response?.status === 404) {
         setProducts([]);
         setTotalProducts(0);
         setTotalPages(1);
       } else {
-        Swal.fire({
+        AlertHelper.error({
           title: "Error",
-          text: "No se pudieron cargar los productos. Inténtalo de nuevo.",
-          icon: "error",
-          confirmButtonColor: "#2563eb",
+          error,
+          message: "No se pudieron cargar los productos. Inténtalo de nuevo.",
+          animation: "fadeIn",
         });
       }
     } finally {
@@ -71,19 +69,19 @@ const Products: React.FC = () => {
       await loadProducts(currentFilters);
       setIsEditing(false);
       window.scrollTo(0, 0);
-      Swal.fire({
+      AlertHelper.success({
         title: "¡Éxito!",
-        text: "Producto añadido correctamente",
-        icon: "success",
-        confirmButtonColor: "#2563eb",
+        message: "Producto añadido correctamente",
+        animation: "fadeIn",
       });
-    } catch (error) {
-      console.error("Error adding product:", error);
-      Swal.fire({
+    } catch (error: any) {
+      AlertHelper.error({
         title: "Error",
-        text: "No se pudo añadir el producto. Inténtalo de nuevo.",
-        icon: "error",
-        confirmButtonColor: "#2563eb",
+        error,
+        message:
+          error.response?.data?.message ||
+          "No se pudo añadir el producto. Inténtalo de nuevo.",
+        animation: "fadeIn",
       });
     } finally {
       setIsFormLoading(false);
@@ -101,19 +99,17 @@ const Products: React.FC = () => {
         await loadProducts(currentFilters);
         setSelectedProduct(undefined);
         setIsEditing(false);
-        Swal.fire({
+        AlertHelper.success({
           title: "¡Éxito!",
-          text: "Producto actualizado correctamente",
-          icon: "success",
-          confirmButtonColor: "#2563eb",
+          message: "Producto actualizado correctamente",
+          animation: "fadeIn",
         });
       } catch (error) {
-        console.error("Error updating product:", error);
-        Swal.fire({
+        AlertHelper.error({
           title: "Error",
-          text: "No se pudo actualizar el producto. Inténtalo de nuevo.",
-          icon: "error",
-          confirmButtonColor: "#2563eb",
+          error,
+          message: "No se pudo actualizar el producto. Inténtalo de nuevo.",
+          animation: "fadeIn",
         });
       } finally {
         setIsFormLoading(false);
@@ -126,19 +122,17 @@ const Products: React.FC = () => {
     try {
       await activateProduct(id);
       await loadProducts(currentFilters);
-      Swal.fire({
+      AlertHelper.success({
         title: "¡Activado!",
-        text: "El producto ha sido activado correctamente.",
-        icon: "success",
-        confirmButtonColor: "#2563eb",
+        message: "El producto ha sido activado correctamente.",
+        animation: "fadeIn",
       });
     } catch (error) {
-      console.error("Error al activar el producto:", error);
-      Swal.fire({
+      AlertHelper.error({
         title: "Error",
-        text: "No se pudo activar el producto. Inténtalo de nuevo.",
-        icon: "error",
-        confirmButtonColor: "#2563eb",
+        error,
+        message: "No se pudo activar el producto. Inténtalo de nuevo.",
+        animation: "fadeIn",
       });
     } finally {
       setIsLoading(false);
@@ -150,19 +144,17 @@ const Products: React.FC = () => {
     try {
       await deactivateProduct(id);
       await loadProducts(currentFilters);
-      Swal.fire({
+      AlertHelper.success({
         title: "¡Desactivado!",
-        text: "El producto ha sido desactivado correctamente.",
-        icon: "success",
-        confirmButtonColor: "#2563eb",
+        message: "El producto ha sido desactivado correctamente.",
+        animation: "fadeIn",
       });
     } catch (error) {
-      console.error("Error al desactivar el producto:", error);
-      Swal.fire({
+      AlertHelper.error({
         title: "Error",
-        text: "No se pudo desactivar el producto. Inténtalo de nuevo.",
-        icon: "error",
-        confirmButtonColor: "#2563eb",
+        error,
+        message: "No se pudo desactivar el producto. Inténtalo de nuevo.",
+        animation: "fadeIn",
       });
     } finally {
       setIsLoading(false);
@@ -181,12 +173,11 @@ const Products: React.FC = () => {
         throw new Error("No se pudo obtener la información del producto");
       }
     } catch (error) {
-      console.error("Error al obtener detalles del producto:", error);
-      Swal.fire({
+      AlertHelper.error({
         title: "Error",
-        text: "No se pudieron cargar los detalles del producto.",
-        icon: "error",
-        confirmButtonColor: "#2563eb",
+        error,
+        message: "No se pudieron cargar los detalles del producto.",
+        animation: "fadeIn",
       });
     } finally {
       setIsFormLoading(false);
@@ -205,15 +196,11 @@ const Products: React.FC = () => {
         throw new Error("No se pudo obtener la información del producto");
       }
     } catch (error) {
-      console.error(
-        "Error al obtener detalles del producto para editar:",
-        error
-      );
-      Swal.fire({
+      AlertHelper.error({
         title: "Error",
-        text: "No se pudieron cargar los detalles del producto para editar.",
-        icon: "error",
-        confirmButtonColor: "#2563eb",
+        error,
+        message: "No se pudieron cargar los detalles del producto para editar.",
+        animation: "fadeIn",
       });
     } finally {
       setIsFormLoading(false);

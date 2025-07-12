@@ -3,8 +3,6 @@ import type React from "react";
 import { useEffect, useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { motion, AnimatePresence } from "framer-motion";
-import Swal from "sweetalert2";
-import "sweetalert2/dist/sweetalert2.min.css";
 import {
   CameraIcon,
   Edit,
@@ -25,6 +23,7 @@ import {
 import { companyInfoUpdateApi, getCompanyInfoApi } from "@/api/company";
 import { useAuth } from "@/context/AuthContextType";
 import { useNavigate } from "react-router-dom";
+import { AlertHelper } from "@/utils/alert.util";
 
 interface ContactInfo {
   email: string;
@@ -105,25 +104,21 @@ export function CompanyView() {
       const data = await response.json();
       setLogo(data.secure_url);
       setIsUpload(false);
-      Swal.fire({
-        icon: "success",
-        title: "Imagen subida",
-        text: "El logo ha sido actualizado correctamente.",
-        confirmButtonColor: "#2563EB",
-        toast: true,
-        position: "top-end",
-        showConfirmButton: false,
+      AlertHelper.success({
+        title: "Imagen subida con éxito",
+        message: "El logo ha sido actualizado correctamente.",
         timer: 3000,
-        timerProgressBar: true,
+        animation: "fadeIn",
       });
     } catch (error) {
-      console.log(error);
       setIsUpload(false);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "No se pudo subir la imagen, intenta nuevamente.",
-        confirmButtonColor: "#2563EB",
+      AlertHelper.error({
+        title: "Error al subir imagen",
+        message: "No se pudo subir la imagen, intenta nuevamente.",
+        error,
+        timer: 3000,
+        animation: "fadeIn",
+        isModal: true,
       });
     }
   };
@@ -142,21 +137,21 @@ export function CompanyView() {
     const validTypes = ["image/png", "image/jpeg"];
 
     if (file.size > maxSize) {
-      Swal.fire({
-        icon: "error",
-        title: "Error en el envío.",
-        text: "La imagen debe ser de 2 MB o menos.",
-        confirmButtonColor: "#2563EB",
+      AlertHelper.error({
+        title: "Error",
+        message: "La imagen debe ser de 2 MB o menos.",
+        timer: 3000,
+        animation: "fadeIn",
       });
       return;
     }
 
     if (!validTypes.includes(file.type)) {
-      Swal.fire({
-        icon: "error",
-        title: "Formato no válido",
-        text: "La imagen debe ser en formato PNG o JPEG.",
-        confirmButtonColor: "#2563EB",
+      AlertHelper.error({
+        title: "Error en el envío.",
+        message: "La imagen debe ser en formato PNG o JPEG.",
+        timer: 3000,
+        animation: "fadeIn",
       });
       return;
     }
@@ -180,7 +175,13 @@ export function CompanyView() {
         setValue("mission", companyData.mission);
         setValue("vision", companyData.vision);
       } catch (error) {
-        console.error(error);
+        AlertHelper.error({
+          title: "Error",
+          message: "Algo salió mal, intenta de nuevo.",
+          error,
+          animation: "fadeIn",
+          timer: 3000,
+        });
       }
     };
     getInfo();
@@ -194,29 +195,24 @@ export function CompanyView() {
         Number(user?.id)
       );
       if (res) {
-        Swal.fire({
-          icon: "success",
-          title: "Actualizado",
-          text: "Datos actualizados correctamente.",
-          confirmButtonColor: "#2563EB",
-          toast: true,
-          position: "top-end",
-          showConfirmButton: false,
+        AlertHelper.success({
+          title: "Éxito",
+          message: "Información de la empresa actualizada correctamente",
+          animation: "fadeIn",
           timer: 3000,
-          timerProgressBar: true,
         });
         setIsEditing(false);
         return;
       }
-      Swal.fire({
-        icon: "error",
+      AlertHelper.error({
         title: "Error",
-        text: "Algo salió mal, intenta de nuevo.",
-        confirmButtonColor: "#2563EB",
+        message: "Algo salió mal, intenta de nuevo.",
+        animation: "fadeIn",
+        timer: 3000,
       });
     } catch (error) {
-      console.log(error);
-      navigate("/500", { state: { fromError: true } });
+      if (error === "Error interno en el servidor.")
+        navigate("/500", { state: { fromError: true } });
       toggleEditing();
     }
   };

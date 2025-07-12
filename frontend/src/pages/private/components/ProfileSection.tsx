@@ -24,7 +24,6 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContextType";
 import { updateProfileEmployee } from "@/api/users";
-import "sweetalert2/dist/sweetalert2.min.css";
 import { motion } from "framer-motion";
 import { AlertHelper } from "@/utils/alert.util";
 

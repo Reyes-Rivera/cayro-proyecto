@@ -24,9 +24,9 @@ import {
   Send,
 } from "lucide-react";
 import { getSaleById } from "@/api/sales";
-import Swal from "sweetalert2";
 import type { Order, StatusUpdateData } from "../Orders";
 import Loader from "@/components/web-components/Loader";
+import { AlertHelper } from "@/utils/alert.util";
 
 interface OrderDetailsProps {
   order: { id: number };
@@ -125,13 +125,14 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
       if (response && response.data) {
         setOrder(response.data);
       }
-    } catch (error) {
-      console.error("Error loading order details:", error);
-      Swal.fire({
+    } catch (error: any) {
+      AlertHelper.error({
         title: "Error",
-        text: "No se pudieron cargar los detalles del pedido.",
-        icon: "error",
-        confirmButtonColor: "#2563eb",
+        message:
+          error.response?.data?.message ||
+          "No se pudieron cargar los detalles del pedido.",
+        isModal: true,
+        animation: "bounce",
       });
     } finally {
       setIsLoading(false);
@@ -152,16 +153,17 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
   const handleStatusChange = async () => {
     if (!order || !selectedStatus) return;
 
-    // Validate tracking fields if status is SHIPPED
+    // Validar campos obligatorios si el estado es SHIPPED
     if (
       selectedStatus === "SHIPPED" &&
       (!trackingNumber.trim() || !shippingCompany.trim())
     ) {
-      Swal.fire({
+      AlertHelper.warning({
         title: "Campos requeridos",
-        text: "Por favor ingresa el número de rastreo y la empresa de envío.",
-        icon: "warning",
-        confirmButtonColor: "#2563eb",
+        message:
+          "Por favor ingresa el número de rastreo y la empresa de envío.",
+        isModal: true,
+        animation: "bounce",
       });
       return;
     }
@@ -174,21 +176,23 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
         userId: order.userId,
       };
 
-      // Add tracking info if status is SHIPPED
       if (selectedStatus === "SHIPPED") {
         statusData.trackingNumber = trackingNumber.trim();
         statusData.shippingCompany = shippingCompany.trim();
       }
 
-      // Call the parent function to update status
       const success = await onUpdateStatus(statusData);
       if (success) {
-        // Reload order details to get updated data
-        await loadOrderDetails();
-        closeModal();
+        await loadOrderDetails(); // Recargar detalles
+        closeModal(); // Cerrar modal tras éxito
       }
-    } catch (error) {
-      console.error("Error updating order status:", error);
+    } catch (error:any) {
+      AlertHelper.error({
+        title: "Error al actualizar estado",
+        message: error.response?.data?.message || "Ocurrió un problema al actualizar el estado del pedido.",
+        isModal: true,
+        animation: "bounce",
+      });
     } finally {
       setUpdatingStatus(false);
     }

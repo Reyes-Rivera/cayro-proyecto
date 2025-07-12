@@ -26,14 +26,12 @@ import {
   User,
   FileText,
 } from "lucide-react";
-import Swal from "sweetalert2";
-import "sweetalert2/dist/sweetalert2.min.css";
 import { getSales } from "@/api/sales"; // Ajusta la ruta según tu estructura
 import ReportsModal from "./components/ReportsModal";
 import SaleDetails from "./components/SaleDetails";
 import Loader from "@/components/web-components/Loader";
+import { AlertHelper } from "@/utils/alert.util";
 
-// Interfaces actualizadas
 interface Address {
   id: number;
   street: string;
@@ -63,8 +61,6 @@ interface SaleUser {
 interface Product {
   name: string;
 }
-
-
 
 interface Size {
   name: string;
@@ -214,9 +210,18 @@ const SalesPage = () => {
         sales: Array.isArray(data) ? data : data.sales || data.data || [],
         total: data.total || data.count || data.length || 0,
       };
-    } catch (error) {
-      console.error("Error fetching sales:", error);
-      throw error;
+    } catch (error: any) {
+      AlertHelper.error({
+        title: "Error al obtener la información",
+        message:
+          error.response?.data?.message || "No se pudieron obtener las ventas.",
+        timer: 4000,
+        animation: "slideIn",
+      });
+      return {
+        sales: [],
+        total: 0,
+      };
     }
   };
 
@@ -268,14 +273,16 @@ const SalesPage = () => {
         const { sales: salesData, total } = await fetchSales(filters);
         setSales(salesData);
         setTotalItems(total);
-      } catch (error) {
-        console.error("Error loading sales:", error);
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: "No se pudieron cargar las ventas. Inténtalo de nuevo.",
-          confirmButtonColor: "#2563EB",
+      } catch (error: any) {
+        AlertHelper.error({
+          title: "Error al cargar ventas",
+          message:
+            error.response?.data?.message ||
+            "No se pudieron cargar las ventas. Inténtalo de nuevo.",
+          timer: 3000,
+          animation: "slideIn",
         });
+
       } finally {
         if (showLoading) {
           setIsInitialLoading(false);
@@ -293,8 +300,15 @@ const SalesPage = () => {
       setTimeout(() => {
         setIsRefreshing(false);
       }, 600);
-    } catch (error) {
-      console.log(error);
+    } catch (error:any) {
+      AlertHelper.error({
+        title: "Error al refrescar datos",
+        message:
+          error.response?.data?.message ||
+          "No se pudieron refrescar los datos. Inténtalo de nuevo.",
+        timer: 3000,
+        animation: "slideIn",
+      });
       setIsRefreshing(false);
     }
   };
@@ -309,39 +323,30 @@ const SalesPage = () => {
     setSelectedSaleForDetails(null);
   };
 
-  const handleGenerateReport = async (
-    filters: any,
-    format: "excel" | "pdf"
-  ) => {
-    try {
-      // Here you would call your API to generate the report
-      // const response = await generateSalesReport(filters, format)
-      console.log(
-        "Generating report with filters:",
-        filters,
-        "format:",
-        format
-      );
+ const handleGenerateReport = async (
+  format: "excel" | "pdf"
+) => {
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+    AlertHelper.success({
+      title: "Reporte generado",
+      message: `El reporte en formato ${format.toUpperCase()} se ha generado exitosamente.`,
+      timer: 3000,
+      animation: "slideIn",
+    });
+  } catch (error: any) {
+    AlertHelper.error({
+      title: "Error al generar el reporte",
+      message:
+        error.response?.data?.message ||
+        "No se pudo generar el reporte. Inténtalo de nuevo.",
+      timer: 3000,
+      animation: "slideIn",
+    });
+  }
+};
 
-      Swal.fire({
-        icon: "success",
-        title: "Reporte generado",
-        text: `El reporte en formato ${format.toUpperCase()} se ha generado exitosamente.`,
-        confirmButtonColor: "#2563EB",
-      });
-    } catch (error) {
-      console.log(error);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "No se pudo generar el reporte. Inténtalo de nuevo.",
-        confirmButtonColor: "#2563EB",
-      });
-    }
-  };
 
   // Función para aplicar filtros avanzados
   const applyAdvancedFilters = async () => {

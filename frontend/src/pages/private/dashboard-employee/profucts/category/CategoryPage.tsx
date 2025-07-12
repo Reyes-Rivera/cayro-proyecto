@@ -20,8 +20,6 @@ import {
   X,
   Layers,
 } from "lucide-react";
-import Swal from "sweetalert2";
-import "sweetalert2/dist/sweetalert2.min.css";
 import {
   addCategory,
   deleteCategory,
@@ -29,6 +27,7 @@ import {
   updateCategory,
 } from "@/api/products";
 import { useNavigate } from "react-router-dom";
+import { AlertHelper } from "@/utils/alert.util";
 
 interface Category {
   id: number;
@@ -82,71 +81,67 @@ const CategoryPage = () => {
 
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     try {
+      setIsLoading(true);
+
       if (editId !== null) {
-        setIsLoading(true);
         const updatedCategory = await updateCategory(editId, data);
         if (updatedCategory) {
-          Swal.fire({
-            icon: "success",
+          AlertHelper.success({
             title: "Categoría actualizada",
-            text: "La categoría ha sido actualizada exitosamente.",
-            confirmButtonColor: "#2563EB",
-            toast: true,
-            position: "top-end",
-            showConfirmButton: false,
+            message: "La categoría ha sido actualizada exitosamente.",
             timer: 3000,
-            timerProgressBar: true,
+            animation: "slideIn",
           });
+
           setCategories((prev) =>
             prev.map((cat) =>
               cat.id === editId ? { ...cat, name: data.name } : cat
             )
           );
-          setIsLoading(false);
+
           setEditId(null);
           reset();
           setShowStatusModal(false);
+          setIsLoading(false);
           return;
         }
-        setIsLoading(false);
+
         setEditId(null);
+        setIsLoading(false);
       } else {
-        setIsLoading(true);
         const newCategory = await addCategory(data);
         if (newCategory) {
-          Swal.fire({
-            icon: "success",
+          AlertHelper.success({
             title: "Categoría agregada",
-            text: "La categoría ha sido agregada exitosamente.",
-            confirmButtonColor: "#2563EB",
-            toast: true,
-            position: "top-end",
-            showConfirmButton: false,
+            message: "La categoría ha sido agregada exitosamente.",
             timer: 3000,
-            timerProgressBar: true,
+            animation: "slideIn",
           });
 
           setCategories((prev) => [
             ...prev,
             { id: prev.length + 1, name: data.name },
           ]);
-          setIsLoading(false);
+
           reset();
           setShowStatusModal(false);
+          setIsLoading(false);
           return;
         }
       }
     } catch (error: any) {
       setIsLoading(false);
+
       if (error === "Error interno en el servidor.") {
         navigate("/500", { state: { fromError: true } });
         return;
       }
-      Swal.fire({
-        icon: "error",
+
+      AlertHelper.error({
         title: "Error",
-        text: error.response?.data?.message || "Ha ocurrido un error",
-        confirmButtonColor: "#2563EB",
+        message: error.response?.data?.message || "Ha ocurrido un error",
+        isModal: true,
+        animation: "bounce",
       });
     }
   };
@@ -158,54 +153,42 @@ const CategoryPage = () => {
   };
 
   const handleDelete = async (category: Category) => {
-    const result = await Swal.fire({
+    const confirmed = await AlertHelper.confirm({
       title: "¿Estás seguro?",
-      text: `Eliminarás la categoría "${category.name}". Esta acción no se puede deshacer.`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#EF4444",
-      cancelButtonColor: "#6B7280",
-      confirmButtonText: "Sí, eliminar",
-      cancelButtonText: "Cancelar",
-      background: document.documentElement.classList.contains("dark")
-        ? "#1F2937"
-        : "#FFFFFF",
-      color: document.documentElement.classList.contains("dark")
-        ? "#F3F4F6"
-        : "#111827",
+      message: `Eliminarás la categoría "${category.name}". Esta acción no se puede deshacer.`,
+      confirmText: "Sí, eliminar",
+      cancelText: "Cancelar",
+      type: "warning",
+      animation: "bounce",
     });
 
-    if (result.isConfirmed) {
-      try {
-        const response = await deleteCategory(category.id);
-        if (response) {
-          setCategories((prev) => prev.filter((cat) => cat.id !== category.id));
+    if (!confirmed) return;
 
-          Swal.fire({
-            title: "Eliminado",
-            text: `La categoría "${category.name}" ha sido eliminada.`,
-            icon: "success",
-            confirmButtonColor: "#2563EB",
-            toast: true,
-            position: "top-end",
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
-          });
-        } else {
-          throw new Error("No se pudo eliminar la categoría.");
-        }
-      } catch (error: any) {
-        setIsLoading(false);
-        Swal.fire({
-          title: "Error",
-          text:
-            error.response?.data?.message ||
-            "Ha ocurrido un error al eliminar la categoría",
-          icon: "error",
-          confirmButtonColor: "#EF4444",
+    try {
+      const response = await deleteCategory(category.id);
+      if (response) {
+        setCategories((prev) => prev.filter((cat) => cat.id !== category.id));
+
+        AlertHelper.success({
+          title: "Eliminado",
+          message: `La categoría "${category.name}" ha sido eliminada.`,
+          timer: 3000,
+          animation: "slideIn",
         });
+      } else {
+        throw new Error("No se pudo eliminar la categoría.");
       }
+    } catch (error: any) {
+      setIsLoading(false);
+
+      AlertHelper.error({
+        title: "Error",
+        message:
+          error.response?.data?.message ||
+          "Ha ocurrido un error al eliminar la categoría.",
+        isModal: true,
+        animation: "bounce",
+      });
     }
   };
 

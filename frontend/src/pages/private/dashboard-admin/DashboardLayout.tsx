@@ -14,6 +14,7 @@ import { ProfileSection } from "../components/ProfileSection";
 import { AddressSection } from "../components/AddressSection";
 import { PasswordSection } from "../components/PasswordSection";
 import AdminPanel from "./panel/AdminPanel";
+import { AlertHelper } from "@/utils/alert.util";
 
 type TabKey =
   | "panel"
@@ -56,7 +57,13 @@ const AdminDashboard = () => {
           setLogo(res.data[0].logoUrl);
         }
       } catch (error) {
-        console.error("Error fetching company info:", error);
+        AlertHelper.error({
+          title: "Error.",
+          error,
+          timer: 4000,
+          animation: "slideIn",
+          message: "No se pudo obtener la información de la empresa",
+        });
       }
     };
     getInfo();
@@ -94,7 +101,7 @@ const AdminDashboard = () => {
   };
 
   return (
-     <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50 dark:bg-gray-900  p-4">
+    <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50 dark:bg-gray-900  p-4">
       {/* Sidebar - Desktop */}
       <div className="hidden lg:block w-64 h-[calc(100vh-2rem)] sticky top-4 overflow-hidden z-30 rounded-xl shadow-md flex-shrink-0">
         <AdminSidebar
@@ -106,7 +113,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Main content */}
-       <div className="flex-1 flex flex-col min-h-[calc(100vh-2rem)] bg-gray-50 dark:bg-gray-900 lg:ml-4 min-w-0 sm:px-5">
+      <div className="flex-1 flex flex-col min-h-[calc(100vh-2rem)] bg-gray-50 dark:bg-gray-900 lg:ml-4 min-w-0 sm:px-5">
         {/* Mobile header - Always visible on mobile */}
         <div
           ref={headerRef}

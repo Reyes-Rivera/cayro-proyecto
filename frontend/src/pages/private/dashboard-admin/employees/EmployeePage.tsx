@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { AnimatePresence } from "framer-motion";
 import { User, Sparkles, Users } from "lucide-react";
-import Swal from "sweetalert2";
-import "sweetalert2/dist/sweetalert2.min.css";
 
 import {
   addEmployee,
@@ -27,6 +25,7 @@ import EmployeeTable from "./components/employee-table";
 import EmployeeForm from "./components/employee-form";
 import PasswordUpdateForm from "./components/password-update-form";
 import EmployeeDetails from "./components/employee-details";
+import { AlertHelper } from "@/utils/alert.util";
 
 const EmployeePage = () => {
   const [items, setItems] = useState<Employee[]>([]);
@@ -113,38 +112,34 @@ const EmployeePage = () => {
 
   const onSubmit = async (data: EmployeeFormData) => {
     try {
-      // Validate that passwords match
       if (data.password !== data.confirmPassword) {
-        Swal.fire({
-          icon: "error",
+        AlertHelper.error({
           title: "Error",
-          text: "Las contraseñas no coinciden.",
-          confirmButtonColor: "#2563EB",
+          message: "Las contraseñas no coinciden.",
+          animation: "fadeIn",
         });
         return;
       }
-
-      // Validate password requirements if not empty or if it's a new employee
       if ((data.password && !editId) || (data.password && editId)) {
         // Validate no invalid characters in password
         const invalidCharsRegex = /[<>'"`]/;
         if (invalidCharsRegex.test(data.password)) {
-          Swal.fire({
-            icon: "error",
+          AlertHelper.error({
             title: "Error",
-            text: "La contraseña no puede contener caracteres especiales como < > ' \" `",
-            confirmButtonColor: "#2563EB",
+            message:
+              "La contraseña no puede contener caracteres especiales como < > ' \" `",
+            animation: "fadeIn",
           });
           return;
         }
 
         // Validate all security requirements
         if (!Object.values(passwordChecks).every(Boolean) && data.password) {
-          Swal.fire({
-            icon: "error",
+          AlertHelper.error({
             title: "Error",
-            text: "La contraseña no cumple con todos los requisitos de seguridad.",
-            confirmButtonColor: "#2563EB",
+            message:
+              "La contraseña no cumple con todos los requisitos de seguridad.",
+            animation: "fadeIn",
           });
           return;
         }
@@ -159,22 +154,16 @@ const EmployeePage = () => {
         birthdate: data.birthdate,
         gender: data.gender,
         role: data.role,
-        active: String(data.active).toLowerCase() === "true" ? true: false,
+        active: String(data.active).toLowerCase() === "true" ? true : false,
       };
       if (editId !== null) {
         setIsLoading(true);
         const updatedItem = await updateEmployee(editId, submitData);
         if (updatedItem) {
-          Swal.fire({
-            icon: "success",
+          AlertHelper.success({
             title: "Empleado actualizado",
-            text: "El empleado ha sido actualizado exitosamente.",
-            confirmButtonColor: "#2563EB",
-            toast: true,
-            position: "top-end",
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
+            message: "El empleado ha sido actualizado exitosamente.",
+            animation: "slideIn",
           });
           setItems((prev) =>
             prev.map((emp) =>
@@ -199,21 +188,15 @@ const EmployeePage = () => {
           gender: data.gender,
           role: data.role,
           password: data.password,
-          active: String(data.active).toLowerCase() === "true" ? true: false,
+          active: String(data.active).toLowerCase() === "true" ? true : false,
         };
         setIsLoading(true);
         const newItem = await addEmployee(submitDataAdd);
         if (newItem) {
-          Swal.fire({
-            icon: "success",
+          AlertHelper.success({
             title: "Empleado agregado",
-            text: "El empleado ha sido agregado exitosamente.",
-            confirmButtonColor: "#2563EB",
-            toast: true,
-            position: "top-end",
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
+            message: "El empleado ha sido agregado exitosamente.",
+            animation: "slideIn",
           });
           setItems((prev) => [...prev, { id: prev.length + 1, ...submitData }]);
           setIsLoading(false);
@@ -224,16 +207,15 @@ const EmployeePage = () => {
       }
     } catch (error: any) {
       setIsLoading(false);
-      console.log(error);
       if (error === "Error interno en el servidor.") {
         navigate("/500", { state: { fromError: true } });
         return;
       }
-      Swal.fire({
-        icon: "error",
+      AlertHelper.error({
         title: "Error",
-        text: error.response?.data?.message || "Ha ocurrido un error",
-        confirmButtonColor: "#2563EB",
+        error,
+        message: "Ha ocurrido un error",
+        animation: "fadeIn",
       });
     }
   };
@@ -242,11 +224,10 @@ const EmployeePage = () => {
     try {
       // Validate that passwords match
       if (data.password !== data.confirmPassword) {
-        Swal.fire({
-          icon: "error",
+        AlertHelper.error({
           title: "Error",
-          text: "Las contraseñas no coinciden.",
-          confirmButtonColor: "#2563EB",
+          message: "Las contraseñas no coinciden.",
+          animation: "fadeIn",
         });
         return;
       }
@@ -256,22 +237,22 @@ const EmployeePage = () => {
         // Validate no invalid characters in password
         const invalidCharsRegex = /[<>'"`]/;
         if (invalidCharsRegex.test(data.password)) {
-          Swal.fire({
-            icon: "error",
+          AlertHelper.error({
             title: "Error",
-            text: "La contraseña no puede contener caracteres especiales como < > ' \" `",
-            confirmButtonColor: "#2563EB",
+            message:
+              "La contraseña no puede contener caracteres especiales como < > ' \" `",
+            animation: "fadeIn",
           });
           return;
         }
 
         // Validate all security requirements
         if (!Object.values(passwordChecks).every(Boolean)) {
-          Swal.fire({
-            icon: "error",
+          AlertHelper.error({
             title: "Error",
-            text: "La contraseña no cumple con todos los requisitos de seguridad.",
-            confirmButtonColor: "#2563EB",
+            message:
+              "La contraseña no cumple con todos los requisitos de seguridad.",
+            animation: "fadeIn",
           });
           return;
         }
@@ -286,16 +267,10 @@ const EmployeePage = () => {
 
         const updatedItem = await newPasswordEmployee(editId, passwordData);
         if (updatedItem) {
-          Swal.fire({
-            icon: "success",
+          AlertHelper.success({
             title: "Contraseña actualizada",
-            text: "La contraseña ha sido actualizada exitosamente.",
-            confirmButtonColor: "#2563EB",
-            toast: true,
-            position: "top-end",
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
+            message: "La contraseña ha sido actualizada exitosamente.",
+            animation: "slideIn",
           });
           setIsLoading(false);
           setShowPasswordUpdateForm(false);
@@ -314,11 +289,11 @@ const EmployeePage = () => {
         navigate("/500", { state: { fromError: true } });
         return;
       }
-      Swal.fire({
-        icon: "error",
+      AlertHelper.error({
         title: "Error",
-        text: error.response?.data?.message || "Ha ocurrido un error",
-        confirmButtonColor: "#2563EB",
+        error,
+        message: "Ha ocurrido un error",
+        animation: "fadeIn",
       });
     }
   };
@@ -342,56 +317,47 @@ const EmployeePage = () => {
   };
 
   const handleDelete = async (employee: Employee) => {
-    const result = await Swal.fire({
+    const confirmed = await AlertHelper.confirm({
       title: "¿Estás seguro?",
-      text: `Eliminarás al empleado "${employee.name} ${employee.surname}". Esta acción no se puede deshacer.`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#EF4444",
-      cancelButtonColor: "#6B7280",
-      confirmButtonText: "Sí, eliminar",
-      cancelButtonText: "Cancelar",
+      message: `Eliminarás al empleado "${employee.name} ${employee.surname}". Esta acción no se puede deshacer.`,
+      confirmText: "Sí, eliminar",
+      cancelText: "Cancelar",
+      type: "warning",
+      animation: "bounce",
     });
 
-    if (result.isConfirmed) {
-      try {
-        const response = await deleteEmployee(employee.id);
-        if (response) {
-          setItems((prev) => prev.filter((emp) => emp.id !== employee.id));
-          Swal.fire({
-            title: "Eliminado",
-            text: `El empleado "${employee.name} ${employee.surname}" ha sido eliminado.`,
-            icon: "success",
-            confirmButtonColor: "#2563EB",
-            toast: true,
-            position: "top-end",
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
-          });
-          // If we're viewing the details of the deleted employee, go back to the table
-          if (
-            showDetails &&
-            selectedEmployee &&
-            selectedEmployee.id === employee.id
-          ) {
-            setShowDetails(false);
-            setSelectedEmployee(null);
-          }
-        } else {
-          throw new Error("No se pudo eliminar el empleado.");
-        }
-      } catch (error: any) {
-        setIsLoading(false);
-        Swal.fire({
-          title: "Error",
-          text:
-            error.response?.data?.message ||
-            "Ha ocurrido un error al eliminar el empleado",
-          icon: "error",
-          confirmButtonColor: "#EF4444",
+    if (!confirmed) return;
+
+    try {
+      const response = await deleteEmployee(employee.id);
+      if (response) {
+        setItems((prev) => prev.filter((emp) => emp.id !== employee.id));
+
+        AlertHelper.success({
+          title: "Eliminado",
+          message: `El empleado "${employee.name} ${employee.surname}" ha sido eliminado.`,
+          animation: "slideIn",
         });
+
+        if (
+          showDetails &&
+          selectedEmployee &&
+          selectedEmployee.id === employee.id
+        ) {
+          setShowDetails(false);
+          setSelectedEmployee(null);
+        }
+      } else {
+        throw new Error("No se pudo eliminar el empleado.");
       }
+    } catch (error: any) {
+      setIsLoading(false);
+      AlertHelper.error({
+        title: "Error",
+        message: "Ha ocurrido un error al eliminar el empleado.",
+        error,
+        animation: "fadeIn",
+      });
     }
   };
 

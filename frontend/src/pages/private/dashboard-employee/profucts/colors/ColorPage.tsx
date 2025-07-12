@@ -22,10 +22,9 @@ import {
   ChevronUp,
   X,
 } from "lucide-react";
-import Swal from "sweetalert2";
-import "sweetalert2/dist/sweetalert2.min.css";
 import { addColor, deleteColor, getColors, updateColor } from "@/api/products";
 import { useNavigate } from "react-router-dom";
+import { AlertHelper } from "@/utils/alert.util";
 
 interface DataForm {
   id: number;
@@ -95,33 +94,31 @@ const ColorPage = () => {
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     try {
       if (!data.hexValue) {
-        Swal.fire({
-          icon: "error",
+        AlertHelper.error({
           title: "Error",
-          text: "El valor hexadecimal es obligatorio.",
-          confirmButtonColor: "#2563EB",
+          message: "El valor hexadecimal es obligatorio.",
+          isModal: true,
+          animation: "bounce",
         });
         return;
       }
 
+      setIsLoading(true);
+
       if (editId !== null) {
-        setIsLoading(true);
         const updatedItem = await updateColor(editId, {
           name: data.name,
           hexValue: data.hexValue,
         });
+
         if (updatedItem) {
-          Swal.fire({
-            icon: "success",
+          AlertHelper.success({
             title: "Color actualizado",
-            text: "El color ha sido actualizado exitosamente.",
-            confirmButtonColor: "#2563EB",
-            toast: true,
-            position: "top-end",
-            showConfirmButton: false,
+            message: "El color ha sido actualizado exitosamente.",
             timer: 3000,
-            timerProgressBar: true,
+            animation: "slideIn",
           });
+
           setItems((prev) =>
             prev.map((cat) =>
               cat.id === editId
@@ -133,68 +130,69 @@ const ColorPage = () => {
                 : cat
             )
           );
-          setIsLoading(false);
-          setEditId(null);
+
           reset();
+          setEditId(null);
           setPreviewImage(null);
           setColorSuggestions([]);
           setShowStatusModal(false);
+          setIsLoading(false);
           return;
         }
-        setIsLoading(false);
+
         setEditId(null);
+        setIsLoading(false);
       } else {
-        setIsLoading(true);
         const newItem = await addColor({
           name: data.name.trim(),
           hexValue: data.hexValue.trim(),
         });
+
         if (newItem) {
-          Swal.fire({
-            icon: "success",
+          AlertHelper.success({
             title: "Color agregado",
-            text: "El color ha sido agregado exitosamente.",
-            confirmButtonColor: "#2563EB",
-            toast: true,
-            position: "top-end",
-            showConfirmButton: false,
+            message: "El color ha sido agregado exitosamente.",
             timer: 3000,
-            timerProgressBar: true,
+            animation: "slideIn",
           });
 
           setItems((prev) => [
             ...prev,
             { id: prev.length + 1, name: data.name, hexValue: data.hexValue },
           ]);
-          setIsLoading(false);
+
           reset();
           setPreviewImage(null);
           setColorSuggestions([]);
           setShowStatusModal(false);
+          setIsLoading(false);
           return;
         }
       }
     } catch (error: any) {
       setIsLoading(false);
+
       if (error?.response?.status === 500) {
         navigate("/500", { state: { fromError: true } });
         return;
       }
+
       if (error?.response?.status === 409) {
-        Swal.fire({
-          icon: "error",
+        AlertHelper.error({
           title: "Error",
-          text: error?.response?.data?.message,
-          confirmButtonColor: "#2563EB",
+          message: error?.response?.data?.message,
+          isModal: true,
+          animation: "bounce",
         });
         return;
       }
 
-      Swal.fire({
-        icon: "error",
+      AlertHelper.error({
         title: "Error",
-        text: "Ocurrió un problema al procesar la solicitud. Inténtalo de nuevo.",
-        confirmButtonColor: "#2563EB",
+        message:
+          "Ocurrió un problema al procesar la solicitud. Inténtalo de nuevo.",
+        isModal: true,
+        animation: "bounce",
       });
     }
   };
@@ -209,54 +207,42 @@ const ColorPage = () => {
   };
 
   const handleDelete = async (color: DataForm) => {
-    const result = await Swal.fire({
+    const confirmed = await AlertHelper.confirm({
       title: "¿Estás seguro?",
-      text: `Eliminarás el color "${color.name}". Esta acción no se puede deshacer.`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#EF4444",
-      cancelButtonColor: "#6B7280",
-      confirmButtonText: "Sí, eliminar",
-      cancelButtonText: "Cancelar",
-      background: document.documentElement.classList.contains("dark")
-        ? "#1F2937"
-        : "#FFFFFF",
-      color: document.documentElement.classList.contains("dark")
-        ? "#F3F4F6"
-        : "#111827",
+      message: `Eliminarás el color "${color.name}". Esta acción no se puede deshacer.`,
+      confirmText: "Sí, eliminar",
+      cancelText: "Cancelar",
+      type: "warning",
+      animation: "bounce",
     });
 
-    if (result.isConfirmed) {
-      try {
-        const response = await deleteColor(color.id);
-        if (response) {
-          setItems((prev) => prev.filter((cat) => cat.id !== color.id));
+    if (!confirmed) return;
 
-          Swal.fire({
-            title: "Eliminado",
-            text: `El color "${color.name}" ha sido eliminado.`,
-            icon: "success",
-            confirmButtonColor: "#2563EB",
-            toast: true,
-            position: "top-end",
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
-          });
-        } else {
-          throw new Error("No se pudo eliminar el color.");
-        }
-      } catch (error: any) {
-        setIsLoading(false);
-        Swal.fire({
-          title: "Error",
-          text:
-            error.response?.data?.message ||
-            "Ocurrió un problema al eliminar el color. Inténtalo de nuevo.",
-          icon: "error",
-          confirmButtonColor: "#EF4444",
+    try {
+      const response = await deleteColor(color.id);
+      if (response) {
+        setItems((prev) => prev.filter((cat) => cat.id !== color.id));
+
+        AlertHelper.success({
+          title: "Eliminado",
+          message: `El color "${color.name}" ha sido eliminado.`,
+          timer: 3000,
+          animation: "slideIn",
         });
+      } else {
+        throw new Error("No se pudo eliminar el color.");
       }
+    } catch (error: any) {
+      setIsLoading(false);
+
+      AlertHelper.error({
+        title: "Error",
+        message:
+          error.response?.data?.message ||
+          "Ocurrió un problema al eliminar el color. Inténtalo de nuevo.",
+        isModal: true,
+        animation: "bounce",
+      });
     }
   };
 
@@ -396,7 +382,6 @@ const ColorPage = () => {
       Math.pow(r2 - r1, 2) + Math.pow(g2 - g1, 2) + Math.pow(b2 - b1, 2)
     );
   };
-
   const handleImageUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -418,13 +403,14 @@ const ColorPage = () => {
           setValue("hexValue", suggestions[0].hex);
           setValue("name", suggestions[0].name);
         }
-      } catch (error) {
-        console.error("Error al extraer colores:", error);
-        Swal.fire({
-          icon: "error",
+      } catch (error: any) {
+        AlertHelper.error({
           title: "Error",
-          text: "No se pudieron extraer los colores de la imagen.",
-          confirmButtonColor: "#2563EB",
+          message:
+            error.response?.data?.message ||
+            "No se pudieron extraer los colores de la imagen.",
+          isModal: true,
+          animation: "bounce",
         });
       } finally {
         setIsAnalyzing(false);
@@ -677,7 +663,9 @@ const ColorPage = () => {
               disabled={isRefreshing}
             >
               <RefreshCw
-                className={`w-5 m-auto h-5 ${isRefreshing ? "animate-spin" : ""}`}
+                className={`w-5 m-auto h-5 ${
+                  isRefreshing ? "animate-spin" : ""
+                }`}
               />
             </button>
           </div>

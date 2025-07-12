@@ -5,8 +5,6 @@ import type React from "react";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm, type SubmitHandler } from "react-hook-form";
-import Swal from "sweetalert2";
-import "sweetalert2/dist/sweetalert2.min.css";
 import {
   Edit,
   Loader2,
@@ -52,6 +50,7 @@ import {
   deleteBoundaryApi,
   activeBoundaryApi,
 } from "@/api/boundary";
+import { AlertHelper } from "@/utils/alert.util";
 
 export enum Status {
   current = "CURRENT",
@@ -204,16 +203,10 @@ export const LegalSection = () => {
         }
 
         if (response) {
-          Swal.fire({
-            icon: "success",
+          AlertHelper.success({
             title: "Documento actualizado",
-            text: "El documento ha sido actualizado exitosamente.",
-            confirmButtonColor: "#2563EB",
-            toast: true,
-            position: "top-end",
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
+            message: "El documento ha sido actualizado exitosamente.",
+            animation: "fadeIn",
           });
 
           await fetchData();
@@ -247,18 +240,11 @@ export const LegalSection = () => {
         }
 
         if (response) {
-          Swal.fire({
-            icon: "success",
+          AlertHelper.success({
             title: "Documento agregado",
-            text: "El documento ha sido agregado exitosamente.",
-            confirmButtonColor: "#2563EB",
-            toast: true,
-            position: "top-end",
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
+            message: "El documento ha sido agregado exitosamente.",
+            animation: "fadeIn",
           });
-
           await fetchData();
           setIsLoading(false);
           reset();
@@ -268,11 +254,12 @@ export const LegalSection = () => {
       }
     } catch (error: any) {
       setIsLoading(false);
-      Swal.fire({
-        icon: "error",
+
+      AlertHelper.error({
         title: "Error",
-        text: error.response?.data?.message || "Ha ocurrido un error",
-        confirmButtonColor: "#2563EB",
+        error,
+        message: "Ha ocurrido un error",
+        animation: "fadeIn",
       });
     }
   };
@@ -292,18 +279,16 @@ export const LegalSection = () => {
   };
 
   const handleDelete = async (doc: RegulatoryDocument) => {
-    const result = await Swal.fire({
+    const isConfirmed = await AlertHelper.confirm({
       title: "¿Estás seguro?",
-      text: `Eliminarás el documento "${doc.title}". Esta acción no se puede deshacer.`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#EF4444",
-      cancelButtonColor: "#6B7280",
-      confirmButtonText: "Sí, eliminar",
-      cancelButtonText: "Cancelar",
+      message: `Eliminarás el documento "${doc.title}". Esta acción no se puede deshacer.`,
+      confirmText: "Sí, eliminar",
+      cancelText: "Cancelar",
+      type: "warning",
+      animation: "fadeIn",
     });
 
-    if (result.isConfirmed) {
+    if (isConfirmed) {
       try {
         let response;
         switch (doc.type) {
@@ -320,28 +305,20 @@ export const LegalSection = () => {
 
         if (response) {
           await fetchData();
-          Swal.fire({
+          AlertHelper.success({
             title: "Eliminado",
-            text: "El documento ha sido eliminado.",
-            icon: "success",
-            confirmButtonColor: "#2563EB",
-            toast: true,
-            position: "top-end",
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
+            message: "El documento ha sido eliminado.",
+            animation: "fadeIn",
           });
         } else {
           throw new Error("No se pudo eliminar el documento.");
         }
-      } catch (error: any) {
-        Swal.fire({
+      } catch (error) {
+        AlertHelper.error({
           title: "Error",
-          text:
-            error.response?.data?.message ||
-            "Ha ocurrido un error al eliminar el documento",
-          icon: "error",
-          confirmButtonColor: "#EF4444",
+          error,
+          message: "Ha ocurrido un error al eliminar el documento.",
+          animation: "fadeIn",
         });
       }
     }
@@ -365,26 +342,19 @@ export const LegalSection = () => {
       }
 
       if (response) {
-        Swal.fire({
-          icon: "success",
+        AlertHelper.success({
           title: "Activado",
-          text: "Documento activado correctamente.",
-          confirmButtonColor: "#2563EB",
-          toast: true,
-          position: "top-end",
-          showConfirmButton: false,
-          timer: 3000,
-          timerProgressBar: true,
+          message: "Documento activado correctamente.",
+          animation: "fadeIn",
         });
         await fetchData();
       }
     } catch (error) {
-      console.log(error);
-      Swal.fire({
-        icon: "error",
+      AlertHelper.error({
         title: "Error",
-        text: "Algo salió mal, por favor intenta más tarde.",
-        confirmButtonColor: "#2563EB",
+        error,
+        message: "Algo salió mal, por favor intenta más tarde.",
+        animation: "fadeIn",
       });
     }
   };
@@ -415,7 +385,13 @@ export const LegalSection = () => {
       setTerms(termsRes.data || []);
       setBoundary(boundaryRes.data || []);
     } catch (error) {
-      console.error("Error loading documents:", error);
+      AlertHelper.error({
+        title: "Error",
+        message: "Ha ocurrido un error al obtener los documentos",
+        error,
+        animation: "slideIn",
+        timer: 4000,
+      });
     } finally {
       setIsInitialLoading(false);
       setIsRefreshing(false);
@@ -1340,4 +1316,3 @@ export const LegalSection = () => {
     </div>
   );
 };
-

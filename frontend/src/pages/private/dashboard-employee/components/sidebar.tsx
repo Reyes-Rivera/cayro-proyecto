@@ -26,6 +26,7 @@ import {
 import { useAuth } from "@/context/AuthContextType";
 import { getCompanyInfoApi } from "@/api/company";
 import { motion } from "framer-motion";
+import { AlertHelper } from "@/utils/alert.util";
 
 type SidebarProps = {
   activeTab: string;
@@ -85,20 +86,27 @@ export default function Sidebar({
     // Redirigir al login
     navigate("/login");
   };
-
-  useEffect(() => {
-    const getInfo = async () => {
-      try {
-        const res = await getCompanyInfoApi();
-        if (res.data && res.data.length > 0) {
-          setLogo(res.data[0].logoUrl);
-        }
-      } catch (error) {
-        console.error("Error fetching company info:", error);
+useEffect(() => {
+  const getInfo = async () => {
+    try {
+      const res = await getCompanyInfoApi();
+      if (res.data && res.data.length > 0) {
+        setLogo(res.data[0].logoUrl);
       }
-    };
-    getInfo();
-  }, []);
+    } catch (error: any) {
+      AlertHelper.error({
+        title: "Error al cargar la información",
+        message:
+          error.response?.data?.message ||
+          "No se pudo cargar la información de la empresa.",
+        timer: 4000,
+        animation: "slideIn",
+      });
+    }
+  };
+
+  getInfo();
+}, []);
 
   // Animation variants
   const containerVariants = {

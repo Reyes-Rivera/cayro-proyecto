@@ -31,7 +31,6 @@ import type {
 } from "../data/sampleData";
 import FilterPanel from "./FilterPanel";
 import PriceUpdateModal from "./PriceUpdateModal";
-import Swal from "sweetalert2";
 import {
   getBrands,
   getCategories,
@@ -40,6 +39,7 @@ import {
   updatePricesBulk,
   getProducts,
 } from "@/api/products";
+import { AlertHelper } from "@/utils/alert.util";
 
 type TableFilterKey = "categories" | "brands" | "genders" | "neckTypes";
 
@@ -141,18 +141,12 @@ const ProductList: React.FC<ProductListProps> = ({
   const getTableCategoryName = (categoryId: number) =>
     tableCategories?.find((c) => c.id === categoryId)?.name || "Desconocido";
 
-  // ✅ Función para manejar actualización de precios (recibe filtros del modal)
   const handlePriceUpdate = async (
     priceFilters: PriceModalFilters,
     updateData: any
   ) => {
     try {
-      console.log("🎯 Filtros del modal de precios:", priceFilters);
-      console.log("📊 Datos de actualización:", updateData);
-
       await updatePricesBulk(priceFilters, updateData);
-
-      // ✅ Recargar productos usando los filtros de la TABLA (no del modal)
       const currentTableFilters = buildTableFilterParams(
         tableFilters,
         searchTerm,
@@ -160,25 +154,22 @@ const ProductList: React.FC<ProductListProps> = ({
         itemsPerPage
       );
       await getProducts(currentTableFilters);
-
-      Swal.fire({
+      AlertHelper.success({
         title: "¡Éxito!",
-        text: "Los precios se han actualizado correctamente.",
-        icon: "success",
-        confirmButtonColor: "#2563eb",
+        message: "Los precios se han actualizado correctamente.",
       });
-    } catch (error) {
-      console.error("Error updating prices:", error);
-      Swal.fire({
-        title: "Error",
-        text: "No se pudieron actualizar los precios. Inténtalo de nuevo.",
-        icon: "error",
-        confirmButtonColor: "#2563eb",
+    } catch (error: any) {
+      AlertHelper.error({
+        title: "Error al actualizar precios",
+        message:
+          error.response?.data?.message ||
+          "No se pudieron actualizar los precios. Inténtalo de nuevo.",
+        error,
+        isModal: true,
       });
     }
   };
 
-  // ✅ Función para manejar búsqueda en la tabla
   const handleTableSearch = () => {
     const filterParams = buildTableFilterParams(
       tableFilters,
@@ -777,21 +768,19 @@ const ProductList: React.FC<ProductListProps> = ({
                       </button>
                       {product.active ? (
                         <button
-                          onClick={() => {
-                            Swal.fire({
+                          onClick={async () => {
+                            const confirmed = await AlertHelper.confirm({
                               title: "¿Desactivar producto?",
-                              text: `¿Estás seguro de que deseas desactivar "${product.name}"?`,
-                              icon: "warning",
-                              showCancelButton: true,
-                              confirmButtonColor: "#d33",
-                              cancelButtonColor: "#6b7280",
-                              confirmButtonText: "Sí, desactivar",
-                              cancelButtonText: "Cancelar",
-                            }).then((result) => {
-                              if (result.isConfirmed) {
-                                onDeactivate(product.id);
-                              }
+                              message: `¿Estás seguro de que deseas desactivar "${product.name}"?`,
+                              confirmText: "Sí, desactivar",
+                              cancelText: "Cancelar",
+                              type: "warning",
+                              animation: "bounce",
                             });
+
+                            if (confirmed) {
+                              onDeactivate(product.id);
+                            }
                           }}
                           className="p-2 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800/50 transition-colors"
                           title="Desactivar producto"
@@ -800,21 +789,19 @@ const ProductList: React.FC<ProductListProps> = ({
                         </button>
                       ) : (
                         <button
-                          onClick={() => {
-                            Swal.fire({
+                          onClick={async () => {
+                            const confirmed = await AlertHelper.confirm({
                               title: "¿Activar producto?",
-                              text: `¿Estás seguro de que deseas activar "${product.name}"?`,
-                              icon: "question",
-                              showCancelButton: true,
-                              confirmButtonColor: "#2563eb",
-                              cancelButtonColor: "#6b7280",
-                              confirmButtonText: "Sí, activar",
-                              cancelButtonText: "Cancelar",
-                            }).then((result) => {
-                              if (result.isConfirmed) {
-                                onActivate(product.id);
-                              }
+                              message: `¿Estás seguro de que deseas activar "${product.name}"?`,
+                              confirmText: "Sí, activar",
+                              cancelText: "Cancelar",
+                              type: "question",
+                              animation: "bounce",
                             });
+
+                            if (confirmed) {
+                              onActivate(product.id);
+                            }
                           }}
                           className="p-2 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-800/50 transition-colors"
                           title="Activar producto"
@@ -884,21 +871,19 @@ const ProductList: React.FC<ProductListProps> = ({
                       </button>
                       {product.active ? (
                         <button
-                          onClick={() => {
-                            Swal.fire({
+                          onClick={async () => {
+                            const confirmed = await AlertHelper.confirm({
                               title: "¿Desactivar producto?",
-                              text: `¿Estás seguro de que deseas desactivar "${product.name}"?`,
-                              icon: "warning",
-                              showCancelButton: true,
-                              confirmButtonColor: "#d33",
-                              cancelButtonColor: "#6b7280",
-                              confirmButtonText: "Sí, desactivar",
-                              cancelButtonText: "Cancelar",
-                            }).then((result) => {
-                              if (result.isConfirmed) {
-                                onDeactivate(product.id);
-                              }
+                              message: `¿Estás seguro de que deseas desactivar "${product.name}"?`,
+                              confirmText: "Sí, desactivar",
+                              cancelText: "Cancelar",
+                              type: "warning",
+                              animation: "bounce",
                             });
+
+                            if (confirmed) {
+                              onDeactivate(product.id);
+                            }
                           }}
                           className="p-2 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800/50 transition-colors"
                           title="Desactivar producto"
@@ -908,21 +893,19 @@ const ProductList: React.FC<ProductListProps> = ({
                         </button>
                       ) : (
                         <button
-                          onClick={() => {
-                            Swal.fire({
+                          onClick={async () => {
+                            const confirmed = await AlertHelper.confirm({
                               title: "¿Activar producto?",
-                              text: `¿Estás seguro de que deseas activar "${product.name}"?`,
-                              icon: "question",
-                              showCancelButton: true,
-                              confirmButtonColor: "#2563eb",
-                              cancelButtonColor: "#6b7280",
-                              confirmButtonText: "Sí, activar",
-                              cancelButtonText: "Cancelar",
-                            }).then((result) => {
-                              if (result.isConfirmed) {
-                                onActivate(product.id);
-                              }
+                              message: `¿Estás seguro de que deseas activar "${product.name}"?`,
+                              confirmText: "Sí, activar",
+                              cancelText: "Cancelar",
+                              type: "question",
+                              animation: "bounce",
                             });
+
+                            if (confirmed) {
+                              onActivate(product.id);
+                            }
                           }}
                           className="p-2 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-800/50 transition-colors"
                           title="Activar producto"

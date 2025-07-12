@@ -31,6 +31,7 @@ export class CartController {
   // Añadir un ítem al carrito
   @Post('items')
   addItem(@Body() createCartItemDto: CreateCartItemDto) {
+    console.log(createCartItemDto);
     return this.cartService.addItemToCart(createCartItemDto);
   }
 

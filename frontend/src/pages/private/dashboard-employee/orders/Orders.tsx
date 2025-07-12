@@ -4,10 +4,9 @@ import type React from "react";
 import { useState, useEffect } from "react";
 import { getOrders } from "@/api/sales";
 import { changeStatus, sendTrackingEmail } from "@/api/sales";
-import "sweetalert2/dist/sweetalert2.min.css";
-import Swal from "sweetalert2";
 import OrderList from "./components/OrderList";
 import OrderDetails from "./components/OrderDetails";
+import { AlertHelper } from "@/utils/alert.util";
 
 export interface Order {
   id: number;
@@ -90,21 +89,20 @@ const Orders: React.FC = () => {
         const data = Array.isArray(response.data) ? response.data : [];
         setOrders(data);
         setTotalOrders(data.length);
-        setTotalPages(Math.ceil(data.length / 10)); // Assuming 10 items per page
+        setTotalPages(Math.ceil(data.length / 10)); // Asumiendo 10 elementos por página
         setCurrentFilters(params);
       }
     } catch (error: any) {
-      console.error("Error al cargar pedidos:", error);
       if (error.response?.status === 404) {
         setOrders([]);
         setTotalOrders(0);
         setTotalPages(1);
       } else {
-        Swal.fire({
-          title: "Error",
-          text: "No se pudieron cargar los pedidos. Inténtalo de nuevo.",
-          icon: "error",
-          confirmButtonColor: "#2563eb",
+        AlertHelper.error({
+          title: "Error al cargar los pedidos",
+          message: "No se pudieron cargar los pedidos. Inténtalo de nuevo.",
+          isModal: true,
+          animation: "bounce",
         });
       }
     } finally {
@@ -134,28 +132,20 @@ const Orders: React.FC = () => {
         statusData.shippingCompany
       ) {
         try {
-          // Find the order to get customer details
           const order = orders.find((o) => o.id === statusData.id);
           if (order) {
-            // Get default address
             const defaultAddress = order.user.userAddresses.find(
               (ua) => ua.isDefault
             );
 
-            // Prepare complete order data for email
             const emailData = {
-              // Basic order info
               orderId: order.id,
               saleReference: order.saleReference,
               customerEmail: order.user.email,
               customerName: `${order.user.name} ${order.user.surname}`,
               customerPhone: order.user.phone || "No proporcionado",
-
-              // Tracking info
               trackingNumber: statusData.trackingNumber,
               shippingCompany: statusData.shippingCompany,
-
-              // Address information
               shippingAddress: defaultAddress
                 ? {
                     street: defaultAddress.address.street,
@@ -167,20 +157,14 @@ const Orders: React.FC = () => {
                     fullAddress: `${defaultAddress.address.street}, ${defaultAddress.address.colony}, ${defaultAddress.address.city}, ${defaultAddress.address.state}, CP: ${defaultAddress.address.postalCode}, ${defaultAddress.address.country}`,
                   }
                 : null,
-
-              // References and additional info
               references: order.references || "Sin referencias",
               betweenStreets: {
                 streetOne: order.betweenStreetOne || "",
                 streetTwo: order.betweenStreetTwo || "",
               },
-
-              // Order financial details
               subtotalAmount: Number.parseFloat(order.subtotalAmount),
               shippingCost: Number.parseFloat(order.shippingCost),
               totalAmount: Number.parseFloat(order.totalAmount),
-
-              // Formatted currency amounts
               subtotalFormatted: new Intl.NumberFormat("es-MX", {
                 style: "currency",
                 currency: "MXN",
@@ -193,8 +177,6 @@ const Orders: React.FC = () => {
                 style: "currency",
                 currency: "MXN",
               }).format(Number.parseFloat(order.totalAmount)),
-
-              // Product details
               products: order.saleDetails.map((detail, index) => ({
                 id: index + 1,
                 name: detail.productVariant.product.name,
@@ -213,15 +195,11 @@ const Orders: React.FC = () => {
                   currency: "MXN",
                 }).format(detail.totalPrice),
               })),
-
-              // Order summary
               totalItems: order.saleDetails.reduce(
                 (sum, detail) => sum + detail.quantity,
                 0
               ),
               totalProducts: order.saleDetails.length,
-
-              // Dates
               orderDate: new Date(order.createdAt).toLocaleDateString("es-MX", {
                 year: "numeric",
                 month: "long",
@@ -237,41 +215,40 @@ const Orders: React.FC = () => {
                 minute: "2-digit",
               }),
             };
+
             await sendTrackingEmail(emailData);
           }
-        } catch (emailError) {
-          Swal.fire({
+        } catch (emailError:any) {
+          AlertHelper.error({
             title: "Error",
-            text: "No se pudo enviar el correo de rastreo.",
-            icon: "error",
-            confirmButtonColor: "#2563eb",
+            message: emailError.response?.data?.message || "No se pudo enviar el correo de rastreo.",
+            isModal: true,
+            animation: "bounce",
           });
-          console.error("Error sending tracking email:", emailError);
           return false;
-          // Don't fail the status update if email fails
         }
       }
 
       await loadOrders(currentFilters);
 
-      Swal.fire({
+      await AlertHelper.success({
         title: "¡Éxito!",
-        text:
+        message:
           statusData.status === "SHIPPED"
-            ? "Estado actualizado y correo de rastreo enviado correctamente"
-            : "Estado del pedido actualizado correctamente",
-        icon: "success",
-        confirmButtonColor: "#2563eb",
+            ? "Estado actualizado y correo de rastreo enviado correctamente."
+            : "Estado del pedido actualizado correctamente.",
+        timer: 3000,
+        animation: "slideIn",
       });
 
       return true;
-    } catch (error) {
-      console.error("Error al actualizar el estado del pedido:", error);
-      Swal.fire({
+    } catch (error:any) {
+      AlertHelper.error({
         title: "Error",
-        text: "No se pudo actualizar el estado del pedido. Inténtalo de nuevo.",
-        icon: "error",
-        confirmButtonColor: "#2563eb",
+        message: error.response?.data?.message ||
+          "No se pudo actualizar el estado del pedido. Inténtalo de nuevo.",
+        isModal: true,
+        animation: "bounce",
       });
       return false;
     } finally {

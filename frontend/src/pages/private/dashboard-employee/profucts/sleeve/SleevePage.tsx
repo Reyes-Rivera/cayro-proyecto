@@ -19,8 +19,6 @@ import {
   ChevronUp,
   X,
 } from "lucide-react";
-import Swal from "sweetalert2";
-import "sweetalert2/dist/sweetalert2.min.css";
 import {
   addSleeve,
   deleteSleeve,
@@ -28,6 +26,7 @@ import {
   updateSleeve,
 } from "@/api/products";
 import { useNavigate } from "react-router-dom";
+import { AlertHelper } from "@/utils/alert.util";
 
 interface Sleeve {
   id: number;
@@ -81,72 +80,61 @@ const SleevePage = () => {
 
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     try {
+      setIsLoading(true);
+
       if (editId !== null) {
-        setIsLoading(true);
         const updatedSleeve = await updateSleeve(editId, data);
         if (updatedSleeve) {
-          Swal.fire({
-            icon: "success",
+          AlertHelper.success({
             title: "Tipo de cuello actualizado",
-            text: "El tipo de cuello ha sido actualizado exitosamente.",
-            confirmButtonColor: "#2563EB",
-            toast: true,
-            position: "top-end",
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
+            message: "El tipo de cuello ha sido actualizado exitosamente.",
           });
+
           setSleeves((prev) =>
             prev.map((cat) =>
               cat.id === editId ? { ...cat, name: data.name } : cat
             )
           );
-          setIsLoading(false);
+
           setEditId(null);
           reset();
           setShowStatusModal(false);
           return;
         }
-        setIsLoading(false);
+
         setEditId(null);
       } else {
-        setIsLoading(true);
         const newSleeve = await addSleeve(data);
         if (newSleeve) {
-          Swal.fire({
-            icon: "success",
+          AlertHelper.success({
             title: "Tipo de cuello agregado",
-            text: "El tipo de cuello ha sido agregado exitosamente.",
-            confirmButtonColor: "#2563EB",
-            toast: true,
-            position: "top-end",
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
+            message: "El tipo de cuello ha sido agregado exitosamente.",
           });
 
           setSleeves((prev) => [
             ...prev,
             { id: prev.length + 1, name: data.name },
           ]);
-          setIsLoading(false);
+
           reset();
           setShowStatusModal(false);
           return;
         }
       }
     } catch (error: any) {
-      setIsLoading(false);
       if (error === "Error interno en el servidor.") {
         navigate("/500", { state: { fromError: true } });
         return;
       }
-      Swal.fire({
-        icon: "error",
+
+      AlertHelper.error({
         title: "Error",
-        text: error.response?.data?.message || "Ha ocurrido un error",
-        confirmButtonColor: "#2563EB",
+        error,
+        message: "Ha ocurrido un error al guardar el tipo de cuello.",
+        animation: "fadeIn",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -157,54 +145,38 @@ const SleevePage = () => {
   };
 
   const handleDelete = async (sleeve: Sleeve) => {
-    const result = await Swal.fire({
+    const confirmed = await AlertHelper.confirm({
       title: "¿Estás seguro?",
-      text: `Eliminarás el tipo de cuello "${sleeve.name}". Esta acción no se puede deshacer.`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#EF4444",
-      cancelButtonColor: "#6B7280",
-      confirmButtonText: "Sí, eliminar",
-      cancelButtonText: "Cancelar",
-      background: document.documentElement.classList.contains("dark")
-        ? "#1F2937"
-        : "#FFFFFF",
-      color: document.documentElement.classList.contains("dark")
-        ? "#F3F4F6"
-        : "#111827",
+      message: `Eliminarás el tipo de cuello "${sleeve.name}". Esta acción no se puede deshacer.`,
+      confirmText: "Sí, eliminar",
+      cancelText: "Cancelar",
+      type: "warning",
+      animation: "bounce",
     });
 
-    if (result.isConfirmed) {
-      try {
-        const response = await deleteSleeve(sleeve.id);
-        if (response) {
-          setSleeves((prev) => prev.filter((cat) => cat.id !== sleeve.id));
+    if (!confirmed) return;
 
-          Swal.fire({
-            title: "Eliminado",
-            text: `El tipo de cuello "${sleeve.name}" ha sido eliminado.`,
-            icon: "success",
-            confirmButtonColor: "#2563EB",
-            toast: true,
-            position: "top-end",
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
-          });
-        } else {
-          throw new Error("No se pudo eliminar el tipo de cuello.");
-        }
-      } catch (error: any) {
-        setIsLoading(false);
-        Swal.fire({
-          title: "Error",
-          text:
-            error.response?.data?.message ||
-            "Ha ocurrido un error al eliminar el tipo de cuello",
-          icon: "error",
-          confirmButtonColor: "#EF4444",
+    try {
+      const response = await deleteSleeve(sleeve.id);
+
+      if (response) {
+        setSleeves((prev) => prev.filter((cat) => cat.id !== sleeve.id));
+
+        AlertHelper.success({
+          title: "Eliminado",
+          message: `El tipo de cuello "${sleeve.name}" ha sido eliminado.`,
         });
+      } else {
+        throw new Error("No se pudo eliminar el tipo de cuello.");
       }
+    } catch (error) {
+      setIsLoading(false);
+      AlertHelper.error({
+        title: "Error",
+        error,
+        message: "Ha ocurrido un error al eliminar el tipo de cuello.",
+        animation: "fadeIn",
+      });
     }
   };
 

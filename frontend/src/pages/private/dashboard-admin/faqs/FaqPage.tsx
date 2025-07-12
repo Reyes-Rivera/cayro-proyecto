@@ -19,8 +19,6 @@ import {
   X,
   MessageSquare,
 } from "lucide-react";
-import Swal from "sweetalert2";
-import "sweetalert2/dist/sweetalert2.min.css";
 import { useNavigate } from "react-router-dom";
 import {
   createFaqs,
@@ -29,6 +27,7 @@ import {
   getFaqs,
   updateFaqs,
 } from "@/api/faqs";
+import { AlertHelper } from "@/utils/alert.util";
 
 interface Category {
   id: number;
@@ -93,24 +92,20 @@ const FaqPage = () => {
   const navigate = useNavigate();
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     try {
+      setIsLoading(true);
+
       if (editId !== null) {
-        setIsLoading(true);
         const updatedItem = await updateFaqs(editId, data);
         if (updatedItem) {
-          Swal.fire({
-            icon: "success",
+          AlertHelper.success({
             title: "Pregunta actualizada",
-            text: "La pregunta ha sido actualizada exitosamente.",
-            confirmButtonColor: "#2563EB",
-            toast: true,
-            position: "top-end",
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
+            message: "La pregunta ha sido actualizada exitosamente.",
+            animation: "slideIn",
           });
-          // Find category name
+
           const categoryName =
             categories.find((cat) => cat.id === data.categoryId)?.name || "";
+
           setItems((prev) =>
             prev.map((item) =>
               item.id === editId
@@ -124,52 +119,51 @@ const FaqPage = () => {
                 : item
             )
           );
-          setIsLoading(false);
-          setEditId(null);
-          reset();
-          setShowStatusModal(false);
+          resetState();
           return;
         }
-        setIsLoading(false);
-        setEditId(null);
       } else {
-        setIsLoading(true);
         const newItem = await createFaqs({
           ...data,
           categoryId: +data.categoryId,
         });
         if (newItem) {
-          Swal.fire({
-            icon: "success",
+          AlertHelper.success({
             title: "Pregunta agregada",
-            text: "La pregunta ha sido agregada exitosamente.",
-            confirmButtonColor: "#2563EB",
-            toast: true,
-            position: "top-end",
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
+            message: "La pregunta ha sido agregada exitosamente.",
+            animation: "slideIn",
           });
           refreshData();
-          setIsLoading(false);
-          reset();
-          setShowStatusModal(false);
+          resetState();
           return;
         }
       }
+
+      setIsLoading(false);
+      setEditId(null);
     } catch (error: any) {
       setIsLoading(false);
+
       if (error === "Error interno en el servidor.") {
         navigate("/500", { state: { fromError: true } });
         return;
       }
-      Swal.fire({
-        icon: "error",
+
+      AlertHelper.error({
         title: "Error",
-        text: error.response?.data?.message || "Ha ocurrido un error",
-        confirmButtonColor: "#2563EB",
+        error,
+        message: "Ha ocurrido un error al guardar la pregunta.",
+        animation: "fadeIn",
       });
     }
+  };
+
+  // Utilidad para reiniciar estado del formulario
+  const resetState = () => {
+    setIsLoading(false);
+    setEditId(null);
+    reset();
+    setShowStatusModal(false);
   };
 
   const handleEdit = (faq: DataForm) => {
@@ -181,51 +175,35 @@ const FaqPage = () => {
   };
 
   const handleDelete = async (faq: DataForm) => {
-    const result = await Swal.fire({
+    const result = await AlertHelper.confirm({
       title: "¿Estás seguro?",
-      text: `Eliminarás la pregunta "${faq.question}". Esta acción no se puede deshacer.`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#EF4444",
-      cancelButtonColor: "#6B7280",
-      confirmButtonText: "Sí, eliminar",
-      cancelButtonText: "Cancelar",
-      background: document.documentElement.classList.contains("dark")
-        ? "#1F2937"
-        : "#FFFFFF",
-      color: document.documentElement.classList.contains("dark")
-        ? "#F3F4F6"
-        : "#111827",
+      message: `Eliminarás la pregunta "${faq.question}". Esta acción no se puede deshacer.`,
+      confirmText: "Sí, eliminar",
+      cancelText: "Cancelar",
+      type: "warning",
+      animation: "bounce",
     });
 
-    if (result.isConfirmed) {
+    if (result) {
       try {
         const response = await deleteFaqs(faq.id);
         if (response) {
           setItems((prev) => prev.filter((item) => item.id !== faq.id));
-          Swal.fire({
+          AlertHelper.success({
             title: "Eliminado",
-            text: `La pregunta ha sido eliminada.`,
-            icon: "success",
-            confirmButtonColor: "#2563EB",
-            toast: true,
-            position: "top-end",
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
+            message: "La pregunta ha sido eliminada.",
+            animation: "slideIn",
           });
         } else {
           throw new Error("No se pudo eliminar la pregunta.");
         }
       } catch (error: any) {
         setIsLoading(false);
-        Swal.fire({
+        AlertHelper.error({
           title: "Error",
-          text:
-            error.response?.data?.message ||
-            "Ha ocurrido un error al eliminar la pregunta",
-          icon: "error",
-          confirmButtonColor: "#EF4444",
+          error,
+          message: "Ha ocurrido un error al eliminar la pregunta.",
+          animation: "fadeIn",
         });
       }
     }

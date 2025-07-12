@@ -310,7 +310,6 @@ export class ProductService {
 
   async update(id: number, updateProductDto: UpdateProductDto) {
     try {
-      // 1. Verificar si el producto existe
       const existingProduct = await this.prismaService.product.findUnique({
         where: { id },
         include: {
@@ -326,57 +325,32 @@ export class ProductService {
         throw new NotFoundException(`Producto con id ${id} no encontrado`);
       }
 
-      // 2. Separar variantes de los datos del producto
       const { variants: incomingVariants = [], ...productData } =
         updateProductDto;
 
-      // 3. Actualizar datos del producto principal
       await this.prismaService.product.update({
         where: { id },
         data: productData,
       });
 
-      // 4. Identificar variantes a eliminar
       const existingVariantIds = existingProduct.variants.map((v) => v.id);
       const incomingVariantIds = incomingVariants
         .filter((v) => v.id)
         .map((v) => v.id);
 
-      const variantsToDelete = existingVariantIds.filter(
+      const variantsToUnlink = existingVariantIds.filter(
         (existingId) => !incomingVariantIds.includes(existingId),
       );
 
-      // 5. Eliminar variantes que ya no existen
-      for (const variantIdToDelete of variantsToDelete) {
-        const variantToDelete = existingProduct.variants.find(
-          (v) => v.id === variantIdToDelete,
-        );
-
-        if (variantToDelete) {
-          // Eliminar imágenes de Cloudinary
-          for (const image of variantToDelete.images) {
-            // Solo eliminar si no es la imagen placeholder
-            if (
-              image.url !==
-              'https://res.cloudinary.com/dhhv8l6ti/image/upload/v1741550306/a58jbqkjh7csdrlw3qfd.jpg'
-            ) {
-              await this.deleteImageFromCloudinary(image.url);
-            }
-          }
-
-          // Eliminar imágenes de la base de datos
-          await this.prismaService.image.deleteMany({
-            where: { productVariantId: variantIdToDelete },
-          });
-
-          // Eliminar la variante
-          await this.prismaService.productVariant.delete({
-            where: { id: variantIdToDelete },
-          });
-        }
+      for (const variantIdToUnlink of variantsToUnlink) {
+        await this.prismaService.productVariant.update({
+          where: { id: variantIdToUnlink },
+          data: {
+            product: { disconnect: true },
+          },
+        });
       }
 
-      // 6. Manejo de variantes existentes y nuevas
       for (const variantDto of incomingVariants) {
         const {
           id: variantId,
@@ -385,19 +359,15 @@ export class ProductService {
         } = variantDto;
 
         if (variantId) {
-          // Actualizar variante existente
-
-          // Verificar si el barcode ya existe en OTRAS variantes
           if (variantData.barcode) {
-            const existingVariantWithSameBarcode =
+            const existingWithSameBarcode =
               await this.prismaService.productVariant.findFirst({
                 where: {
                   barcode: variantData.barcode,
                   id: { not: variantId },
                 },
               });
-
-            if (existingVariantWithSameBarcode) {
+            if (existingWithSameBarcode) {
               throw new HttpException(
                 `El código de barras "${variantData.barcode}" ya está en uso en otra variante.`,
                 HttpStatus.BAD_REQUEST,
@@ -405,26 +375,21 @@ export class ProductService {
             }
           }
 
-          // Actualizar datos de la variante
           await this.prismaService.productVariant.update({
             where: { id: variantId },
             data: variantData,
           });
 
-          // Obtener imágenes existentes de esta variante
           const existingImages = await this.prismaService.image.findMany({
             where: { productVariantId: variantId },
           });
 
-          // Identificar imágenes a eliminar (las que existían pero ya no están en incomingImages)
           const incomingImageUrls = incomingImages.map((img) => img.url);
           const imagesToDelete = existingImages.filter(
             (existingImg) => !incomingImageUrls.includes(existingImg.url),
           );
 
-          // Eliminar imágenes que ya no existen
           for (const imageToDelete of imagesToDelete) {
-            // Solo eliminar de Cloudinary si no es placeholder
             if (
               imageToDelete.url !==
               'https://res.cloudinary.com/dhhv8l6ti/image/upload/v1741550306/a58jbqkjh7csdrlw3qfd.jpg'
@@ -433,12 +398,10 @@ export class ProductService {
             }
           }
 
-          // Eliminar imágenes de la base de datos
           await this.prismaService.image.deleteMany({
             where: { productVariantId: variantId },
           });
 
-          // Crear las nuevas imágenes
           if (incomingImages.length > 0) {
             await this.prismaService.image.createMany({
               data: incomingImages.map((image) => ({
@@ -449,38 +412,96 @@ export class ProductService {
             });
           }
         } else {
-          // Crear nueva variante
-          if (variantData.barcode) {
-            const existingVariant =
-              await this.prismaService.productVariant.findFirst({
-                where: { barcode: variantData.barcode },
-              });
+          const reusedVariant =
+            await this.prismaService.productVariant.findFirst({
+              where: {
+                colorId: variantData.colorId,
+                sizeId: variantData.sizeId,
+                productId: null,
+              },
+            });
 
-            if (existingVariant) {
-              throw new HttpException(
-                `El código de barras "${variantData.barcode}" ya está en uso.`,
-                HttpStatus.BAD_REQUEST,
-              );
+          if (reusedVariant) {
+            if (variantData.barcode) {
+              const duplicateBarcode =
+                await this.prismaService.productVariant.findFirst({
+                  where: {
+                    barcode: variantData.barcode,
+                    id: { not: reusedVariant.id },
+                  },
+                });
+              if (duplicateBarcode) {
+                throw new HttpException(
+                  `El código de barras "${variantData.barcode}" ya está en uso.`,
+                  HttpStatus.BAD_REQUEST,
+                );
+              }
             }
-          }
 
-          const newVariant = await this.prismaService.productVariant.create({
-            data: {
-              ...variantData,
-              productId: id,
-              images: {
-                create: incomingImages.map((image) => ({
+            await this.prismaService.productVariant.update({
+              where: { id: reusedVariant.id },
+              data: {
+                ...variantData,
+                productId: id,
+              },
+            });
+
+            const existingImages = await this.prismaService.image.findMany({
+              where: { productVariantId: reusedVariant.id },
+            });
+
+            for (const imageToDelete of existingImages) {
+              if (
+                imageToDelete.url !==
+                'https://res.cloudinary.com/dhhv8l6ti/image/upload/v1741550306/a58jbqkjh7csdrlw3qfd.jpg'
+              ) {
+                await this.deleteImageFromCloudinary(imageToDelete.url);
+              }
+            }
+
+            await this.prismaService.image.deleteMany({
+              where: { productVariantId: reusedVariant.id },
+            });
+
+            if (incomingImages.length > 0) {
+              await this.prismaService.image.createMany({
+                data: incomingImages.map((image) => ({
                   url: image.url,
                   angle: image.angle || 'front',
+                  productVariantId: reusedVariant.id,
                 })),
+              });
+            }
+          } else {
+            if (variantData.barcode) {
+              const duplicate =
+                await this.prismaService.productVariant.findFirst({
+                  where: { barcode: variantData.barcode },
+                });
+              if (duplicate) {
+                throw new HttpException(
+                  `El código de barras "${variantData.barcode}" ya está en uso.`,
+                  HttpStatus.BAD_REQUEST,
+                );
+              }
+            }
+
+            await this.prismaService.productVariant.create({
+              data: {
+                ...variantData,
+                productId: id,
+                images: {
+                  create: incomingImages.map((image) => ({
+                    url: image.url,
+                    angle: image.angle || 'front',
+                  })),
+                },
               },
-            },
-            include: { images: true },
-          });
+            });
+          }
         }
       }
 
-      // 7. Obtener y devolver el producto actualizado
       const finalProduct = await this.prismaService.product.findUnique({
         where: { id },
         include: {
@@ -514,6 +535,7 @@ export class ProductService {
       );
     }
   }
+
   async updatePricesBulk(filters: any, updateData: any) {
     try {
       // Construir la consulta WHERE basada en los filtros SELECCIONADOS
@@ -697,6 +719,3 @@ export class ProductService {
     });
   }
 }
-
-
-

@@ -18,8 +18,6 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import Swal from "sweetalert2";
-import "sweetalert2/src/sweetalert2.scss";
 import DocumentDialog from "./DocumentDialog";
 import ViewDocumentDialog from "./ViewDocumentDialog";
 import {
@@ -40,6 +38,7 @@ import {
   updateBoundaryApi,
 } from "@/api/boundary";
 import { useNavigate } from "react-router-dom";
+import { AlertHelper } from "@/utils/alert.util";
 
 export enum Status {
   current = "CURRENT",
@@ -106,7 +105,13 @@ const LegalDocumentsView: React.FC = () => {
         setTerms(getTerms.data);
         setBoundary(getBoundary.data);
       } catch (error) {
-        console.error("Error al obtener las políticas:", error);
+        AlertHelper.error({
+          title: "Error de carga",
+          message:
+            "Ocurrió un error al obtener las políticas, términos o límites.",
+          error,
+          animation: "fadeIn",
+        });
       }
     };
 
@@ -140,90 +145,78 @@ const LegalDocumentsView: React.FC = () => {
       const updateDocumentState = () => {
         const currentData = dataMap[activeTab];
         if (currentData) {
-          // Desactiva todos los documentos excepto el seleccionado
           const updatedData = currentData.map((doc, i) => ({
             ...doc,
-            isCurrentVersion: i === index, // Solo activa el documento en el índice actual
+            isCurrentVersion: i === index,
           }));
-
           setDataMap[activeTab](updatedData);
         }
       };
 
+      let res;
+
       if (item.type === DocumentTypeInter.policy && !item.isCurrentVersion) {
-        const res = await activePolicyApi(Number(item.id));
-        if (res) {
-          Swal.fire({
-            icon: "success",
-            title: "Activado.",
-            text: "Documento activado correctamente.",
-            confirmButtonColor: "#2F93D1",
-          });
-          updateDocumentState();
-          return;
-        }
+        res = await activePolicyApi(Number(item.id));
+      } else if (
+        item.type === DocumentTypeInter.terms &&
+        !item.isCurrentVersion
+      ) {
+        res = await activeTermsApi(Number(item.id));
+      } else if (
+        item.type === DocumentTypeInter.boundary &&
+        !item.isCurrentVersion
+      ) {
+        res = await activeTermsApi(Number(item.id)); // ← ¿debería ser activeBoundaryApi?
       }
 
-      if (item.type === DocumentTypeInter.terms && !item.isCurrentVersion) {
-        const res = await activeTermsApi(Number(item.id));
-        if (res) {
-          Swal.fire({
-            icon: "success",
-            title: "Activado.",
-            text: "Documento activado correctamente.",
-            confirmButtonColor: "#2F93D1",
-          });
-          updateDocumentState();
-          return;
-        }
+      if (res) {
+        await AlertHelper.success({
+          title: "Activado",
+          message: "Documento activado correctamente.",
+          animation: "fadeIn",
+        });
+        updateDocumentState();
+      } else {
+        await AlertHelper.error({
+          title: "Error",
+          message: "Algo salió mal, por favor intenta más tarde.",
+          animation: "fadeIn",
+        });
       }
-
-      if (item.type === DocumentTypeInter.boundary && !item.isCurrentVersion) {
-        const res = await activeTermsApi(Number(item.id));
-        if (res) {
-          Swal.fire({
-            icon: "success",
-            title: "Activado.",
-            text: "Documento activado correctamente.",
-            confirmButtonColor: "#2F93D1",
-          });
-          updateDocumentState();
-          return;
-        }
-      }
-
-      Swal.fire({
-        icon: "error",
-        title: "Error.",
-        text: "Algo salió mal, por favor intenta más tarde.",
-        confirmButtonColor: "#2F93D1",
-      });
     } catch (error) {
-      console.log(error);
+      AlertHelper.error({
+        title: "Error interno",
+        message: "Ocurrió un error inesperado al activar el documento.",
+        error,
+        animation: "fadeIn",
+      });
       navigate("/500", { state: { fromError: true } });
     }
   };
 
-  const deleteDocument = (index: number) => {
-    Swal.fire({
+  const deleteDocument = async (index: number) => {
+    const confirmed = await AlertHelper.confirm({
       title: "¿Estás seguro?",
-      text: "Esta acción no se puede revertir",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
-      confirmButtonText: "Sí, eliminar",
-      cancelButtonText: "Cancelar",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        const currentData = dataMap[activeTab];
-        if (currentData) {
-          const updatedData = currentData.filter((_, i) => i !== index);
-          setDataMap[activeTab](updatedData);
-          Swal.fire("Eliminado", "El documento ha sido eliminado.", "success");
-        }
-      }
+      message: "Esta acción no se puede revertir",
+      confirmText: "Sí, eliminar",
+      cancelText: "Cancelar",
+      type: "warning",
+      animation: "fadeIn",
     });
+
+    if (confirmed) {
+      const currentData = dataMap[activeTab];
+      if (currentData) {
+        const updatedData = currentData.filter((_, i) => i !== index);
+        setDataMap[activeTab](updatedData);
+
+        AlertHelper.success({
+          title: "Eliminado",
+          message: "El documento ha sido eliminado.",
+          animation: "fadeIn",
+        });
+      }
+    }
   };
 
   const addDocument = async (newDocument: {
@@ -240,11 +233,20 @@ const LegalDocumentsView: React.FC = () => {
       type: newDocument.type,
     };
 
+    const formattedDate = new Date(newDocument.effectiveDate).toISOString();
+
+    const showSuccessAlert = () =>
+      AlertHelper.success({
+        title: "Agregado.",
+        message: "Documento agregado correctamente.",
+        animation: "fadeIn",
+      });
+
     if (newDocument.type === DocumentTypeInter.terms) {
       const res = await createTermsApi({
         title: newDocument.title,
         content: newDocument.content,
-        effectiveDate: new Date(newDocument.effectiveDate).toISOString(),
+        effectiveDate: formattedDate,
       });
 
       if (res) {
@@ -255,12 +257,7 @@ const LegalDocumentsView: React.FC = () => {
                 .concat(document)
             : [document]
         );
-        Swal.fire({
-          icon: "success",
-          title: "Agregado.",
-          text: "Documento agregado correctamente.",
-          confirmButtonColor: "#2F93D1",
-        });
+        showSuccessAlert();
         return;
       }
     }
@@ -269,7 +266,7 @@ const LegalDocumentsView: React.FC = () => {
       const res = await createPolicysApi({
         title: newDocument.title,
         content: newDocument.content,
-        effectiveDate: new Date(newDocument.effectiveDate).toISOString(),
+        effectiveDate: formattedDate,
       });
 
       if (res) {
@@ -280,12 +277,7 @@ const LegalDocumentsView: React.FC = () => {
                 .concat(document)
             : [document]
         );
-        Swal.fire({
-          icon: "success",
-          title: "Agregado.",
-          text: "Documento agregado correctamente.",
-          confirmButtonColor: "#2F93D1",
-        });
+        showSuccessAlert();
         return;
       }
     }
@@ -294,7 +286,7 @@ const LegalDocumentsView: React.FC = () => {
       const res = await createBoundaryApi({
         title: newDocument.title,
         content: newDocument.content,
-        effectiveDate: new Date(newDocument.effectiveDate).toISOString(),
+        effectiveDate: formattedDate,
       });
 
       if (res) {
@@ -305,12 +297,7 @@ const LegalDocumentsView: React.FC = () => {
                 .concat(document)
             : [document]
         );
-        Swal.fire({
-          icon: "success",
-          title: "Agregado.",
-          text: "Documento agregado correctamente.",
-          confirmButtonColor: "#2F93D1",
-        });
+        showSuccessAlert();
         return;
       }
     }
@@ -331,14 +318,19 @@ const LegalDocumentsView: React.FC = () => {
       type: newDocument.type,
     };
 
+    const formattedDate = new Date(newDocument.effectiveDate).toISOString();
+
+    const showSuccessAlert = () =>
+      AlertHelper.success({
+        title: "Actualizado.",
+        message: "Documento actualizado correctamente.",
+        animation: "fadeIn",
+      });
+
     try {
       if (newDocument.type === DocumentTypeInter.terms) {
         const res = await updateTermsApi(
-          {
-            title: newDocument.title,
-            content: newDocument.content,
-            effectiveDate: new Date(newDocument.effectiveDate).toISOString(),
-          },
+          { ...newDocument, effectiveDate: formattedDate },
           Number(newDocument.id)
         );
 
@@ -350,23 +342,14 @@ const LegalDocumentsView: React.FC = () => {
                   .concat(document)
               : [document]
           );
-          Swal.fire({
-            icon: "success",
-            title: "Actualizado.",
-            text: "Documento actualizado correctamente.",
-            confirmButtonColor: "#2F93D1",
-          });
+          showSuccessAlert();
           return;
         }
       }
 
       if (newDocument.type === DocumentTypeInter.policy) {
         const res = await updatePolicysApi(
-          {
-            title: newDocument.title,
-            content: newDocument.content,
-            effectiveDate: new Date(newDocument.effectiveDate).toISOString(),
-          },
+          { ...newDocument, effectiveDate: formattedDate },
           Number(newDocument.id)
         );
 
@@ -378,23 +361,14 @@ const LegalDocumentsView: React.FC = () => {
                   .concat(document)
               : [document]
           );
-          Swal.fire({
-            icon: "success",
-            title: "Actualizado.",
-            text: "Documento actualizado correctamente.",
-            confirmButtonColor: "#2F93D1",
-          });
+          showSuccessAlert();
           return;
         }
       }
 
       if (newDocument.type === DocumentTypeInter.boundary) {
         const res = await updateBoundaryApi(
-          {
-            title: newDocument.title,
-            content: newDocument.content,
-            effectiveDate: new Date(newDocument.effectiveDate).toISOString(),
-          },
+          { ...newDocument, effectiveDate: formattedDate },
           Number(newDocument.id)
         );
 
@@ -406,25 +380,23 @@ const LegalDocumentsView: React.FC = () => {
                   .concat(document)
               : [document]
           );
-          Swal.fire({
-            icon: "success",
-            title: "Actualizado.",
-            text: "Documento actualizado correctamente.",
-            confirmButtonColor: "#2F93D1",
-          });
+          showSuccessAlert();
           return;
         }
       }
 
-      Swal.fire({
-        icon: "error",
+      AlertHelper.error({
         title: "Error.",
-        text: "Algo salió mal, intenta más tarde.",
-        confirmButtonColor: "#2F93D1",
+        message: "Algo salió mal, intenta más tarde.",
+        animation: "fadeIn",
       });
-      return;
     } catch (error: any) {
-      console.log(error);
+      AlertHelper.error({
+        title: "Error.",
+        error,
+        message: "Algo salió mal, intenta más tarde.",
+        animation: "fadeIn",
+      });
       navigate("/500", { state: { fromError: true } });
     }
   };

@@ -1,5 +1,4 @@
 "use client";
-
 import type React from "react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -18,14 +17,16 @@ import {
   Tag,
   Eye,
 } from "lucide-react";
-import Swal from "sweetalert2";
 import { getBrands, getCategories } from "@/api/products";
 import { getEmployees } from "@/api/users";
 import { generateSalesReportPDF, previewSalesReportPDF } from "@/api/sales";
+import { AlertHelper } from "@/utils/alert.util";
 
 interface ReportsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  // Add the missing prop here
+  onGenerateReport: (format: "excel" | "pdf") => Promise<void>;
 }
 
 interface ReportFilters {
@@ -90,7 +91,11 @@ const mexicanStates = [
   { value: "ZAC", label: "Zacatecas" },
 ];
 
-const ReportsModal: React.FC<ReportsModalProps> = ({ isOpen, onClose }) => {
+const ReportsModal: React.FC<ReportsModalProps> = ({
+  isOpen,
+  onClose,
+  onGenerateReport,
+}) => {
   const [filters, setFilters] = useState<ReportFilters>({});
   const [isGenerating, setIsGenerating] = useState(false);
   const [isPreviewing, setIsPreviewing] = useState(false);
@@ -123,13 +128,14 @@ const ReportsModal: React.FC<ReportsModalProps> = ({ isOpen, onClose }) => {
       setCategories(categoriesRes.data);
       setBrands(brandsRes.data);
       setEmployees(employeesRes.data);
-    } catch (error) {
-      console.error("Error loading dropdown options:", error);
-      Swal.fire({
+    } catch (error: any) {
+      AlertHelper.error({
         title: "Error",
-        text: "No se pudieron cargar las opciones. Inténtalo de nuevo.",
-        icon: "error",
-        confirmButtonColor: "#2563eb",
+        message:
+          error.response?.data?.message ||
+          "No se pudieron cargar las opciones. Inténtalo de nuevo.",
+        isModal: true,
+        animation: "bounce",
       });
     } finally {
       setLoadingOptions(false);
@@ -179,7 +185,6 @@ const ReportsModal: React.FC<ReportsModalProps> = ({ isOpen, onClose }) => {
       const state = mexicanStates.find((s) => s.value === filters.state);
       descriptions.push(`Estado: ${state?.label || filters.state}`);
     }
-
     return descriptions.length > 0
       ? descriptions.join(" • ")
       : "Sin filtros aplicados";
@@ -188,7 +193,6 @@ const ReportsModal: React.FC<ReportsModalProps> = ({ isOpen, onClose }) => {
   const generateFileName = (filters: ReportFilters): string => {
     const date = new Date().toISOString().split("T")[0];
     let fileName = `reporte-ventas-${date}`;
-
     if (filters.startDate && filters.endDate) {
       fileName += `_${filters.startDate}_${filters.endDate}`;
     } else if (filters.startDate) {
@@ -196,15 +200,12 @@ const ReportsModal: React.FC<ReportsModalProps> = ({ isOpen, onClose }) => {
     } else if (filters.endDate) {
       fileName += `_hasta-${filters.endDate}`;
     }
-
     if (filters.categoryId) {
       fileName += `_cat-${filters.categoryId}`;
     }
-
     if (filters.city) {
       fileName += `_${filters.city.toLowerCase().replace(/\s+/g, "-")}`;
     }
-
     return `${fileName}.pdf`;
   };
 
@@ -225,77 +226,73 @@ const ReportsModal: React.FC<ReportsModalProps> = ({ isOpen, onClose }) => {
       const cleanFilters = Object.fromEntries(
         Object.entries(filters).filter(([, value]) => value !== undefined)
       );
-
       const blob = await previewSalesReportPDF(cleanFilters);
       const url = window.URL.createObjectURL(blob);
       window.open(url, "_blank");
       window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Error previewing report:", error);
-      Swal.fire({
+    } catch (error: any) {
+      AlertHelper.error({
         title: "Error",
-        text: "Hubo un problema al generar la vista previa. Inténtalo de nuevo.",
-        icon: "error",
-        confirmButtonColor: "#2563eb",
+        message: error.response?.data?.message || 
+          "Hubo un problema al generar la vista previa. Inténtalo de nuevo.",
+        isModal: true,
+        animation: "bounce",
       });
     } finally {
       setIsPreviewing(false);
     }
   };
 
-  const handleGenerateReport = async () => {
-    const result = await Swal.fire({
-      title: "¿Generar reporte de ventas en PDF?",
-      html: `
-        <div class="text-left">
-          <p><strong>Formato:</strong> PDF (.pdf)</p>
-          <p><strong>Filtros aplicados:</strong></p>
-          <p class="text-sm text-gray-600 mb-3">${getFilterDescription()}</p>
-          <p class="text-xs text-blue-600 mt-2"><strong>Nota:</strong> El reporte incluirá datos agregados como ventas por mes, categoría, empleado y marca.</p>
-        </div>
-      `,
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonColor: "#2563eb",
-      cancelButtonColor: "#6b7280",
-      confirmButtonText: "Generar PDF",
-      cancelButtonText: "Cancelar",
+const handleGenerateReportClick = async () => {
+  const confirmed = await AlertHelper.confirm({
+    title: "¿Generar reporte de ventas en PDF?",
+    message: `
+      <div class="text-left">
+        <p><strong>Formato:</strong> PDF (.pdf)</p>
+        <p><strong>Filtros aplicados:</strong></p>
+        <p class="text-sm text-gray-600 mb-3">${getFilterDescription()}</p>
+        <p class="text-xs text-blue-600 mt-2"><strong>Nota:</strong> El reporte incluirá datos agregados como ventas por mes, categoría, empleado y marca.</p>
+      </div>
+    `,
+    confirmText: "Generar PDF",
+    cancelText: "Cancelar",
+    type: "question",
+    animation: "bounce",
+  });
+
+  if (!confirmed) return;
+
+  setIsGenerating(true);
+  try {
+    const cleanFilters = Object.fromEntries(
+      Object.entries(filters).filter(([, value]) => value !== undefined)
+    );
+    const blob = await generateSalesReportPDF(cleanFilters);
+    const filename = generateFileName(cleanFilters);
+    downloadBlob(blob, filename);
+
+    await AlertHelper.success({
+      title: "¡Reporte generado!",
+      message: `El archivo ${filename} se ha descargado correctamente.`,
+      timer: 3000,
+      animation: "slideIn",
     });
 
-    if (result.isConfirmed) {
-      setIsGenerating(true);
-      try {
-        const cleanFilters = Object.fromEntries(
-          Object.entries(filters).filter(([, value]) => value !== undefined)
-        );
+    onClose();
+    clearFilters();
+    await onGenerateReport("pdf");
+  } catch (error: any) {
+    AlertHelper.error({
+      title: "Error",
+      message: error.response?.data?.message || "Hubo un problema al generar el reporte. Inténtalo de nuevo.",
+      isModal: true,
+      animation: "bounce",
+    });
+  } finally {
+    setIsGenerating(false);
+  }
+};
 
-        const blob = await generateSalesReportPDF(cleanFilters);
-        const filename = generateFileName(cleanFilters);
-
-        downloadBlob(blob, filename);
-
-        Swal.fire({
-          title: "¡Reporte generado!",
-          text: `El archivo ${filename} se ha descargado correctamente.`,
-          icon: "success",
-          confirmButtonColor: "#2563eb",
-        });
-
-        onClose();
-        clearFilters();
-      } catch (error) {
-        console.error("Error generating report:", error);
-        Swal.fire({
-          title: "Error",
-          text: "Hubo un problema al generar el reporte. Inténtalo de nuevo.",
-          icon: "error",
-          confirmButtonColor: "#2563eb",
-        });
-      } finally {
-        setIsGenerating(false);
-      }
-    }
-  };
 
   if (!isOpen) return null;
 
@@ -330,7 +327,6 @@ const ReportsModal: React.FC<ReportsModalProps> = ({ isOpen, onClose }) => {
               <X className="w-5 h-5 text-white" />
             </button>
           </div>
-
           <div className="p-6 space-y-6">
             {/* Información del reporte */}
             <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border-l-4 border-blue-400">
@@ -364,7 +360,6 @@ const ReportsModal: React.FC<ReportsModalProps> = ({ isOpen, onClose }) => {
                 </div>
               </div>
             </div>
-
             {/* Filtros */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
@@ -374,7 +369,6 @@ const ReportsModal: React.FC<ReportsModalProps> = ({ isOpen, onClose }) => {
                   <div className="ml-2 animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
                 )}
               </h3>
-
               {/* Resumen de filtros seleccionados */}
               {hasActiveFilters && (
                 <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
@@ -387,7 +381,6 @@ const ReportsModal: React.FC<ReportsModalProps> = ({ isOpen, onClose }) => {
                   </p>
                 </div>
               )}
-
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {/* Fechas */}
                 <div>
@@ -404,7 +397,6 @@ const ReportsModal: React.FC<ReportsModalProps> = ({ isOpen, onClose }) => {
                     }
                   />
                 </div>
-
                 <div>
                   <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
                     <Calendar className="w-4 h-4 mr-1" />
@@ -419,7 +411,6 @@ const ReportsModal: React.FC<ReportsModalProps> = ({ isOpen, onClose }) => {
                     }
                   />
                 </div>
-
                 {/* Categoría */}
                 <div>
                   <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
@@ -442,7 +433,6 @@ const ReportsModal: React.FC<ReportsModalProps> = ({ isOpen, onClose }) => {
                     ))}
                   </select>
                 </div>
-
                 {/* Marca */}
                 <div>
                   <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
@@ -465,7 +455,6 @@ const ReportsModal: React.FC<ReportsModalProps> = ({ isOpen, onClose }) => {
                     ))}
                   </select>
                 </div>
-
                 {/* Empleado */}
                 <div>
                   <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
@@ -488,7 +477,6 @@ const ReportsModal: React.FC<ReportsModalProps> = ({ isOpen, onClose }) => {
                     ))}
                   </select>
                 </div>
-
                 {/* Ubicación */}
                 <div>
                   <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
@@ -503,7 +491,6 @@ const ReportsModal: React.FC<ReportsModalProps> = ({ isOpen, onClose }) => {
                     onChange={(e) => handleFilterChange("city", e.target.value)}
                   />
                 </div>
-
                 <div>
                   <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
                     <MapPin className="w-4 h-4 mr-1" />
@@ -524,7 +511,6 @@ const ReportsModal: React.FC<ReportsModalProps> = ({ isOpen, onClose }) => {
                   </select>
                 </div>
               </div>
-
               {hasActiveFilters && (
                 <div className="flex justify-between items-center">
                   <button
@@ -546,7 +532,6 @@ const ReportsModal: React.FC<ReportsModalProps> = ({ isOpen, onClose }) => {
               )}
             </div>
           </div>
-
           {/* Footer */}
           <div className="flex justify-between items-center p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
             <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -578,7 +563,7 @@ const ReportsModal: React.FC<ReportsModalProps> = ({ isOpen, onClose }) => {
                 )}
               </button>
               <button
-                onClick={handleGenerateReport}
+                onClick={handleGenerateReportClick} // Changed to handle internal logic before calling prop
                 disabled={isGenerating || isPreviewing || loadingOptions}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
               >

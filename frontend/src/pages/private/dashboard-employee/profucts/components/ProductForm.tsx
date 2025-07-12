@@ -6,8 +6,6 @@ import type React from "react";
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import Swal from "sweetalert2";
-import "sweetalert2/dist/sweetalert2.min.css";
 import { useForm, Controller } from "react-hook-form";
 import type {
   Product,
@@ -56,6 +54,7 @@ import {
 
 // Import the delete image API function
 import { deleteImg } from "@/api/products";
+import { AlertHelper } from "@/utils/alert.util";
 
 // Definir los tipos de ángulos disponibles
 type ImageAngle = "front" | "side" | "back";
@@ -123,9 +122,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
   const [uploadingAngle, setUploadingAngle] = useState<ImageAngle | null>(null);
 
   // Estado para rastrear las variantes originales (para detectar eliminaciones)
-  const [originalVariantIds, setOriginalVariantIds] = useState<Set<number>>(
-    new Set()
-  );
 
   // Pagination for variants table
   const [currentPage, setCurrentPage] = useState(1);
@@ -187,9 +183,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
   // Cargar las variantes del producto al inicializar el formulario
   useEffect(() => {
     if (product) {
-      console.log(product);
-
-      // Rastrear IDs de variantes originales
       const originalIds = new Set<number>();
 
       const initialColorConfigs: ColorSizeConfig[] = product.variants.reduce(
@@ -250,7 +243,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
         [] as ColorSizeConfig[]
       );
 
-      setOriginalVariantIds(originalIds);
       setColorConfigs(initialColorConfigs);
     }
   }, [product]);
@@ -272,8 +264,15 @@ const ProductForm: React.FC<ProductFormProps> = ({
         if (sleeveData) setNeckType(sleeveData.data);
         if (colorsData) setColors(colorsData.data);
         if (res) setSizes(res.data);
-      } catch (error) {
-        console.error("Error al cargar datos:", error);
+      } catch (error: any) {
+        AlertHelper.error({
+          title: "Error de carga",
+          message:
+            error.response?.data?.message ||
+            "No se pudieron cargar los datos necesarios. Intenta nuevamente.",
+          error,
+          isModal: true,
+        });
       }
     };
 
@@ -418,6 +417,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
   const uploadImageToCloudinary = async (file: File) => {
     setIsUploading(true);
+
     const formData = new FormData();
     formData.append("file", file);
     formData.append("upload_preset", "ml_default");
@@ -431,18 +431,21 @@ const ProductForm: React.FC<ProductFormProps> = ({
           body: formData,
         }
       );
+
       const data = await response.json();
       setIsUploading(false);
       return data.secure_url;
-    } catch (error) {
-      console.log(error);
+    } catch (error: any) {
       setIsUploading(false);
-      Swal.fire({
-        icon: "error",
+      AlertHelper.error({
         title: "Error",
-        text: "No se pudo subir la imagen, intenta nuevamente.",
-        confirmButtonColor: "#2F93D1",
+        message:
+          error.response?.data?.message ||
+          "No se pudo subir la imagen, intenta nuevamente.",
+        isModal: true,
+        animation: "bounce",
       });
+
       return null;
     }
   };
@@ -451,9 +454,13 @@ const ProductForm: React.FC<ProductFormProps> = ({
   const deleteImageFromCloudinary = async (imageUrl: string) => {
     try {
       await deleteImg(imageUrl);
-      console.log(`Imagen eliminada exitosamente: ${imageUrl}`);
-    } catch (error) {
-      console.error("Error al eliminar imagen de Cloudinary:", error);
+    } catch (error:any) {
+      AlertHelper.error({
+        title: "Error al eliminar imagen",
+        message: error.response?.data?.message || "No se pudo eliminar la imagen de Cloudinary.",
+        error,
+        isModal: true,
+      });
     }
   };
 
@@ -469,35 +476,33 @@ const ProductForm: React.FC<ProductFormProps> = ({
     const validTypes = ["image/png", "image/jpeg"];
 
     if (file.size > maxSize) {
-      Swal.fire({
-        icon: "error",
-        title: "Error en el envío.",
-        text: "La imagen debe ser de 2 MB o menos.",
-        confirmButtonColor: "#2F93D1",
+      AlertHelper.error({
+        title: "Error en el envío",
+        message: "La imagen debe ser de 2 MB o menos.",
+        isModal: true,
+        animation: "bounce",
       });
       return;
     }
 
     if (!validTypes.includes(file.type)) {
-      Swal.fire({
-        icon: "error",
+      AlertHelper.error({
         title: "Formato no válido",
-        text: "La imagen debe ser en formato PNG o JPEG.",
-        confirmButtonColor: "#2F93D1",
+        message: "La imagen debe ser en formato PNG o JPEG.",
+        isModal: true,
+        animation: "bounce",
       });
       return;
     }
 
     setUploadingAngle(angle);
 
-    // Get the current image for this angle to delete it if it's a new image
     const config = colorConfigs.find((c) => c.colorId === colorId);
     const existingImage = config?.images.find((img) => img.angle === angle);
 
     const imageUrl = await uploadImageToCloudinary(file);
 
     if (imageUrl) {
-      // Delete the previous image if it was newly uploaded and not a placeholder
       if (
         existingImage &&
         existingImage.isNew &&
@@ -515,24 +520,18 @@ const ProductForm: React.FC<ProductFormProps> = ({
             );
             const newImages = [...config.images];
 
+            const newImage = {
+              id: 0,
+              productVariantId: 0,
+              url: imageUrl,
+              angle,
+              isNew: true,
+            };
+
             if (existingImageIndex >= 0) {
-              // Update existing image
-              newImages[existingImageIndex] = {
-                id: 0,
-                productVariantId: 0,
-                url: imageUrl,
-                angle: angle,
-                isNew: true,
-              };
+              newImages[existingImageIndex] = newImage;
             } else {
-              // Add new image
-              newImages.push({
-                id: 0,
-                productVariantId: 0,
-                url: imageUrl,
-                angle: angle,
-                isNew: true,
-              });
+              newImages.push(newImage);
             }
 
             return { ...config, images: newImages };
@@ -541,25 +540,22 @@ const ProductForm: React.FC<ProductFormProps> = ({
         })
       );
     }
+
     setUploadingAngle(null);
   };
 
   // Enhanced cancel function to clean up new images
   const handleCancel = async () => {
-    // Show confirmation dialog
-    const result = await Swal.fire({
+    const confirmed = await AlertHelper.confirm({
       title: "¿Estás seguro?",
-      text: "Se perderán todos los cambios no guardados y las imágenes subidas.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
-      confirmButtonText: "Sí, cancelar",
-      cancelButtonText: "No, continuar editando",
+      message:
+        "Se perderán todos los cambios no guardados y las imágenes subidas.",
+      confirmText: "Sí, cancelar",
+      cancelText: "No, continuar editando",
+      animation: "fadeIn", // ✅ válido
     });
 
-    if (result.isConfirmed) {
-      // Delete all new images from Cloudinary before canceling
+    if (confirmed) {
       for (const config of colorConfigs) {
         for (const image of config.images) {
           if (
@@ -572,7 +568,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
         }
       }
 
-      // Call the original onCancel function
       onCancel();
     }
   };
@@ -611,11 +606,12 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
   const onSubmitForm = async (data: CreateProductDto) => {
     if (!isVariantsValid) {
-      Swal.fire({
-        icon: "warning",
+      AlertHelper.warning({
         title: "Datos incompletos",
-        text: "Debe agregar al menos un color, una talla, y una imagen para cada ángulo (frontal, lateral y posterior). También complete el precio y stock (stock debe ser mayor a 0).",
-        confirmButtonColor: "#3B82F6",
+        message:
+          "Debe agregar al menos un color, una talla, y una imagen para cada ángulo (frontal, lateral y posterior). También complete el precio y stock (stock debe ser mayor a 0).",
+        isModal: true,
+        animation: "bounce",
       });
       return;
     }
@@ -631,7 +627,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
           const sizeName =
             sizes?.find((s) => s.id === sizeId)?.name || "unknown";
 
-          // Crear la variante con las imágenes (sin el campo angle para el backend)
           const variant: ProductVariantDto = {
             colorId: config.colorId,
             sizeId,
@@ -642,7 +637,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
               "-"
             )}-${sizeName.replace(/\s+/g, "-")}`.toUpperCase(),
             images: config.images
-              .filter((img) => !isPlaceholderImage(img.url)) // Filtrar placeholders
+              .filter((img) => !isPlaceholderImage(img.url))
               .map((img) => ({
                 id: img.id,
                 productVariantId: img.productVariantId,
@@ -651,7 +646,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
               })),
           };
 
-          // Si existe un ID para esta variante, añadirlo
           if (config.variantIds && config.variantIds[sizeId]) {
             (variant as any).id = config.variantIds[sizeId];
           }
@@ -672,34 +666,30 @@ const ProductForm: React.FC<ProductFormProps> = ({
       product ? await onEdit(payload, product.id) : await onAdd(payload);
 
       reset();
-      Swal.fire({
-        icon: "success",
+
+      AlertHelper.success({
         title: `¡Producto ${product ? "actualizado" : "agregado"}!`,
-        text: `El producto se ha ${
+        message: `El producto se ha ${
           product ? "actualizado" : "agregado"
         } correctamente.`,
-        toast: true,
-        position: "top-end",
         timer: 3000,
-        showConfirmButton: false,
-        timerProgressBar: true,
+        animation: "slideIn",
       });
+
       window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
-      setIsLoading(false);
     } catch (error: any) {
-      console.log(error);
-      setIsLoading(false);
-      console.error(error);
-      Swal.fire({
-        icon: "error",
+      AlertHelper.error({
         title: "Error",
-        text:
+        message:
           error.response?.data?.message ||
           `Ha ocurrido un error al ${
             product ? "actualizar" : "agregar"
           } el producto`,
-        confirmButtonColor: "#3B82F6",
+        isModal: true,
+        animation: "bounce",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -716,11 +706,10 @@ const ProductForm: React.FC<ProductFormProps> = ({
     e.preventDefault();
 
     if (formStep === 0 && !isBasicInfoComplete) {
-      Swal.fire({
-        icon: "warning",
+      AlertHelper.warning({
         title: "Información incompleta",
-        text: "Por favor complete todos los campos obligatorios antes de continuar.",
-        confirmButtonColor: "#3B82F6",
+        message:
+          "Por favor complete todos los campos obligatorios antes de continuar.",
       });
       return;
     }

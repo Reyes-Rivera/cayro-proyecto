@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { useForm, type SubmitHandler } from "react-hook-form";
-import Swal from "sweetalert2";
 import {
   AlertCircle,
   Calendar,
@@ -13,6 +12,7 @@ import {
   Tag,
   X,
 } from "lucide-react";
+import { AlertHelper } from "@/utils/alert.util";
 
 enum DocumentTypeInter {
   policy = "POLICIES",
@@ -133,11 +133,11 @@ export default function DocumentDialog({
 
     if (diffInDays <= 6) {
       setIsLoading(false);
-      Swal.fire({
-        icon: "error",
+      AlertHelper.error({
         title: "Fecha inválida",
-        text: "La fecha de vigencia debe ser al menos 6 días mayor a la fecha actual.",
-        confirmButtonColor: "#2563EB",
+        message:
+          "La fecha de vigencia debe ser al menos 6 días mayor a la fecha actual.",
+        animation: "fadeIn",
       });
       return;
     }
@@ -149,31 +149,20 @@ export default function DocumentDialog({
           ...data,
         };
         updateDocument(updatedDocument);
-        Swal.fire({
-          icon: "success",
+        AlertHelper.success({
           title: "Documento actualizado",
-          text: "El documento se actualizó correctamente.",
-          confirmButtonColor: "#2563EB",
-          toast: true,
-          position: "top-end",
-          showConfirmButton: false,
-          timer: 3000,
-          timerProgressBar: true,
+          message: "El documento se actualizó correctamente.",
+          animation: "slideIn",
         });
       } else {
         addDocument(data);
-        Swal.fire({
-          icon: "success",
+        AlertHelper.success({
           title: "Documento creado",
-          text: "El documento se creó correctamente.",
-          confirmButtonColor: "#2563EB",
-          toast: true,
-          position: "top-end",
-          showConfirmButton: false,
-          timer: 3000,
-          timerProgressBar: true,
+          message: "El documento se creó correctamente.",
+          animation: "slideIn",
         });
       }
+
       setIsLoading(false);
       reset();
       onClose();

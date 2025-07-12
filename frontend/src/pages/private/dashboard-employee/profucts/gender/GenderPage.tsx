@@ -19,8 +19,6 @@ import {
   ChevronUp,
   X,
 } from "lucide-react";
-import Swal from "sweetalert2";
-import "sweetalert2/dist/sweetalert2.min.css";
 import {
   addGender,
   deleteGender,
@@ -28,6 +26,7 @@ import {
   updateGender,
 } from "@/api/products";
 import { useNavigate } from "react-router-dom";
+import { AlertHelper } from "@/utils/alert.util";
 
 interface Gender {
   id: number;
@@ -85,16 +84,11 @@ const GenderPage = () => {
         setIsLoading(true);
         const updatedGender = await updateGender(editId, data);
         if (updatedGender) {
-          Swal.fire({
-            icon: "success",
+          AlertHelper.success({
             title: "Género actualizado",
-            text: "El género ha sido actualizado exitosamente.",
-            confirmButtonColor: "#2563EB",
-            toast: true,
-            position: "top-end",
-            showConfirmButton: false,
+            message: "El género ha sido actualizado exitosamente.",
+            animation: "slideIn",
             timer: 3000,
-            timerProgressBar: true,
           });
           setGenders((prev) =>
             prev.map((cat) =>
@@ -113,16 +107,11 @@ const GenderPage = () => {
         setIsLoading(true);
         const newGender = await addGender(data);
         if (newGender) {
-          Swal.fire({
-            icon: "success",
+          AlertHelper.success({
             title: "Género agregado",
-            text: "El género ha sido agregado exitosamente.",
-            confirmButtonColor: "#2563EB",
-            toast: true,
-            position: "top-end",
-            showConfirmButton: false,
+            message: "El género ha sido agregado exitosamente.",
+            animation: "slideIn",
             timer: 3000,
-            timerProgressBar: true,
           });
 
           setGenders((prev) => [
@@ -141,11 +130,11 @@ const GenderPage = () => {
         navigate("/500", { state: { fromError: true } });
         return;
       }
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: error.response?.data?.message || "Ha ocurrido un error",
-        confirmButtonColor: "#2563EB",
+      AlertHelper.error({
+        title: "Error al agregar genero",
+        message: error.response?.data?.message || "Ha ocurrido un error",
+        animation: "slideIn",
+        timer: 3000,
       });
     }
   };
@@ -157,52 +146,35 @@ const GenderPage = () => {
   };
 
   const handleDelete = async (gender: Gender) => {
-    const result = await Swal.fire({
+    const result = await AlertHelper.confirm({
       title: "¿Estás seguro?",
-      text: `Eliminarás el género "${gender.name}". Esta acción no se puede deshacer.`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#EF4444",
-      cancelButtonColor: "#6B7280",
-      confirmButtonText: "Sí, eliminar",
-      cancelButtonText: "Cancelar",
-      background: document.documentElement.classList.contains("dark")
-        ? "#1F2937"
-        : "#FFFFFF",
-      color: document.documentElement.classList.contains("dark")
-        ? "#F3F4F6"
-        : "#111827",
+      message: `Eliminarás el género "${gender.name}". Esta acción no se puede deshacer.`,
+      confirmText: "Sí, eliminar",
+      cancelText: "Cancelar",
+      type: "warning",
+      animation: "bounce",
     });
 
-    if (result.isConfirmed) {
+    if (result) {
       try {
         const response = await deleteGender(gender.id);
         if (response) {
           setGenders((prev) => prev.filter((cat) => cat.id !== gender.id));
 
-          Swal.fire({
+          AlertHelper.success({
             title: "Eliminado",
-            text: `El género "${gender.name}" ha sido eliminado.`,
-            icon: "success",
-            confirmButtonColor: "#2563EB",
-            toast: true,
-            position: "top-end",
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
+            message: `El género "${gender.name}" ha sido eliminado.`,
+            animation: "slideIn",
           });
         } else {
           throw new Error("No se pudo eliminar el género.");
         }
       } catch (error: any) {
         setIsLoading(false);
-        Swal.fire({
+        AlertHelper.error({
           title: "Error",
-          text:
-            error.response?.data?.message ||
-            "Ha ocurrido un error al eliminar el género",
-          icon: "error",
-          confirmButtonColor: "#EF4444",
+          message: error.response?.data?.message || "Ha ocurrido un error",
+          animation: "fadeIn",
         });
       }
     }

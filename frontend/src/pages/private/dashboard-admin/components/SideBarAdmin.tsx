@@ -20,6 +20,7 @@ import {
 import { useAuth } from "@/context/AuthContextType";
 import { getCompanyInfoApi } from "@/api/company";
 import { motion } from "framer-motion";
+import { AlertHelper } from "@/utils/alert.util";
 
 type SidebarProps = {
   activeTab: string;
@@ -87,7 +88,12 @@ export default function AdminSidebar({
           setLogo(res.data[0].logoUrl);
         }
       } catch (error) {
-        console.error("Error fetching company info:", error);
+        AlertHelper.error({
+          title: "Error",
+          error,
+          message: "No se pudo obtener la información de la empresa.",
+          animation: "fadeIn",
+        });
       }
     };
     getInfo();
@@ -130,7 +136,6 @@ export default function AdminSidebar({
                 </div>
               </div>
             </div>
-            
           </div>
         </div>
         <div className="absolute -bottom-3 left-0 right-0 flex justify-center">

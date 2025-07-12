@@ -12,7 +12,7 @@ import {
   getColors,
   getSizes,
 } from "@/api/products";
-import Swal from "sweetalert2";
+import { AlertHelper } from "@/utils/alert.util";
 
 interface PriceUpdateModalProps {
   isOpen: boolean;
@@ -84,13 +84,14 @@ const PriceUpdateModal: React.FC<PriceUpdateModalProps> = ({
         if (gendersRes?.data) setModalGenders(gendersRes.data);
         if (colorsRes?.data) setModalColors(colorsRes.data);
         if (sizesRes?.data) setModalSizes(sizesRes.data);
-      } catch (error) {
-        console.error("Error loading modal data:", error);
-        Swal.fire({
+      } catch (error: any) {
+        AlertHelper.error({
           title: "Error",
-          text: "No se pudieron cargar los datos necesarios.",
-          icon: "error",
-          confirmButtonColor: "#2563eb",
+          message:
+            error.response?.data?.message ||
+            "No se pudieron cargar los datos necesarios.",
+          isModal: true,
+          animation: "bounce",
         });
       } finally {
         setIsLoading(false);
@@ -220,74 +221,75 @@ const PriceUpdateModal: React.FC<PriceUpdateModalProps> = ({
 
   const handleSubmit = async () => {
     if (!hasPriceFilters) {
-      Swal.fire({
+      AlertHelper.warning({
         title: "Filtros requeridos",
-        text: "Debe seleccionar al menos un filtro para actualizar precios.",
-        icon: "warning",
-        confirmButtonColor: "#2563eb",
+        message: "Debe seleccionar al menos un filtro para actualizar precios.",
+        isModal: true,
+        animation: "bounce",
       });
       return;
     }
 
     if (updateData.value <= 0) {
-      Swal.fire({
+      AlertHelper.warning({
         title: "Valor inválido",
-        text: "El valor debe ser mayor a 0.",
-        icon: "warning",
-        confirmButtonColor: "#2563eb",
+        message: "El valor debe ser mayor a 0.",
+        isModal: true,
+        animation: "bounce",
       });
       return;
     }
 
-    const result = await Swal.fire({
+    const confirmed = await AlertHelper.confirm({
       title: "¿Confirmar actualización masiva de precios?",
-      html: `
-        <div class="text-left">
-          <p><strong>Filtros aplicados:</strong></p>
-          <p class="text-sm text-gray-600 mb-3">${getPriceFilterDescription()}</p>
-          <p><strong>Acción:</strong> ${
-            updateData.operation === "increase"
-              ? "Aumentar"
-              : updateData.operation === "decrease"
-              ? "Disminuir"
-              : "Establecer"
-          } los precios ${
+      message: `
+      <div class="text-left">
+        <p><strong>Filtros aplicados:</strong></p>
+        <p class="text-sm text-gray-600 mb-3">${getPriceFilterDescription()}</p>
+        <p><strong>Acción:</strong> ${
+          updateData.operation === "increase"
+            ? "Aumentar"
+            : updateData.operation === "decrease"
+            ? "Disminuir"
+            : "Establecer"
+        } los precios ${
         updateData.updateType === "percentage"
           ? `en ${updateData.value}%`
           : updateData.operation === "set"
           ? `a $${updateData.value}`
           : `en $${updateData.value}`
       }</p>
-          <p class="text-xs text-red-600 mt-2"><strong>Nota:</strong> Esta acción afectará múltiples productos y no se puede deshacer.</p>
-        </div>
-      `,
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonColor: "#2563eb",
-      cancelButtonColor: "#6b7280",
-      confirmButtonText: "Sí, actualizar precios",
-      cancelButtonText: "Cancelar",
+        <p class="text-xs text-red-600 mt-2"><strong>Nota:</strong> Esta acción afectará múltiples productos y no se puede deshacer.</p>
+      </div>
+    `,
+      confirmText: "Sí, actualizar precios",
+      cancelText: "Cancelar",
+      type: "question",
+      animation: "bounce",
     });
 
-    if (result.isConfirmed) {
-      setIsSubmitting(true);
-      try {
-        // ✅ Enviar filtros del modal (independientes de la tabla)
-        await onUpdate(priceFilters, updateData);
-        onClose();
-        // ✅ Limpiar solo el estado del modal
-        setPriceFilters({});
-        setUpdateData({
-          updateType: "amount",
-          operation: "increase",
-          value: 0,
-        });
-        setValueInputTouched(false);
-      } catch (error) {
-        console.error("Error updating prices:", error);
-      } finally {
-        setIsSubmitting(false);
-      }
+    if (!confirmed) return;
+
+    setIsSubmitting(true);
+    try {
+      await onUpdate(priceFilters, updateData);
+      onClose();
+      setPriceFilters({});
+      setUpdateData({
+        updateType: "amount",
+        operation: "increase",
+        value: 0,
+      });
+      setValueInputTouched(false);
+    } catch (error:any) {
+      AlertHelper.error({
+        title: "Error",
+        message: error.response?.data?.message || "Ocurrió un problema al actualizar los precios.",
+        isModal: true,
+        animation: "bounce",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
