@@ -29,6 +29,8 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { SalesReportModule } from './reports/sales-report.module';
+import { DashboardEmployeeModule } from './dashboard-employee/dashboard-employee.module';
+import { DashboardAdminModule } from './dashboard-admin/dashboard-admin.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -62,7 +64,9 @@ import { SalesReportModule } from './reports/sales-report.module';
     NotificationModule,
     SalesModule,
     CloudinaryModule,
-    SalesReportModule
+    SalesReportModule,
+    DashboardEmployeeModule,
+    DashboardAdminModule
   ],
   controllers: [],
   providers: [AppService],

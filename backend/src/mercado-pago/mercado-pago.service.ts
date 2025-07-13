@@ -87,13 +87,27 @@ export class MercadoPagoService {
           );
         }
 
-        if (variant.stock < item.quantity) {
+        const availableStock = variant.stock - (variant.reserved || 0);
+
+        if (availableStock < item.quantity) {
           throw new HttpException(
-            `Stock insuficiente para la variante ${variant.id}. Disponible: ${variant.stock}, solicitado: ${item.quantity}`,
+            `Stock insuficiente para la variante ${variant.id}. Disponible: ${availableStock}, solicitado: ${item.quantity}`,
             HttpStatus.BAD_REQUEST,
           );
         }
       }
+
+      // Reservar los productos (en una transacción por seguridad)
+      await this.prismaService.$transaction(async (prisma) => {
+        for (const item of cart) {
+          await prisma.productVariant.update({
+            where: { id: item.variantId },
+            data: {
+              reserved: { increment: item.quantity },
+            },
+          });
+        }
+      });
 
       const items = [];
       for (const item of cart) {
@@ -191,10 +205,35 @@ export class MercadoPagoService {
       );
 
     const payment = await this.getPaymentDetails(paymentId);
+    const metadata = payment.metadata;
+
+    // 🟡 Si el pago fue rechazado/cancelado/expirado, liberar la reserva
+    if (['rejected', 'cancelled', 'expired'].includes(payment.status)) {
+      const cartItems = metadata?.cart;
+
+      if (Array.isArray(cartItems)) {
+        for (const item of cartItems) {
+          await this.prismaService.productVariant.update({
+            where: { id: item.variantId },
+            data: {
+              reserved: { decrement: item.quantity },
+            },
+          });
+        }
+      }
+
+      return {
+        paymentId,
+        status: payment.status,
+        processed: false,
+        released: true,
+      };
+    }
+
+    // 🔴 Si no está aprobado, no hacemos nada
     if (payment.status !== 'approved')
       return { paymentId, status: payment.status, processed: false };
 
-    const metadata = payment.metadata;
     const userId = Number(metadata.user_id);
 
     const userCart = await this.prismaService.cart.findUnique({
@@ -208,6 +247,7 @@ export class MercadoPagoService {
         include: { address: true },
       })
     )?.address;
+
     const employee = await this.prismaService.employee.findFirst({
       where: { active: true },
       orderBy: { id: 'asc' },
@@ -217,10 +257,12 @@ export class MercadoPagoService {
       throw new Error('Faltan datos del usuario, carrito o dirección');
 
     const sale = await this.prismaService.$transaction(async (prisma) => {
+      // Validar stock por si algo cambió
       for (const item of userCart.items) {
         const variant = await prisma.productVariant.findUnique({
           where: { id: item.productVariant.id },
         });
+
         if (!variant || variant.stock < item.quantity) {
           await this.refundPayment(paymentId);
           throw new HttpException(
@@ -263,11 +305,15 @@ export class MercadoPagoService {
       for (const item of userCart.items) {
         await prisma.productVariant.update({
           where: { id: item.productVariant.id },
-          data: { stock: { decrement: item.quantity } },
+          data: {
+            stock: { decrement: item.quantity },
+            reserved: { decrement: item.quantity }, // ✅ quitar reserva
+          },
         });
       }
 
       await prisma.cartItem.deleteMany({ where: { cartId: userCart.id } });
+
       return saleRecord;
     });
 

@@ -28,7 +28,7 @@ type TabKey =
   | "security";
 
 const AdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState<TabKey>("users");
+  const [activeTab, setActiveTab] = useState<TabKey>("panel");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [logo, setLogo] = useState<string>("");
