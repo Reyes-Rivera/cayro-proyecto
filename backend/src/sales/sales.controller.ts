@@ -6,13 +6,11 @@ import {
   Patch,
   Param,
   NotFoundException,
-  InternalServerErrorException,
   Query,
   BadRequestException,
 } from '@nestjs/common';
 import { SalesService } from './sales.service';
 import { ChangeStatusDto } from './dto/create-sale.dto';
-import { createShippingNotificationEmail } from 'src/utils/email';
 import { FilterSalesDto } from './dto/filter-dto';
 
 @Controller('sales')

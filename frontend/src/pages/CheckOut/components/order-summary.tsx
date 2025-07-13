@@ -36,7 +36,7 @@ export default function OrderSummary({
 
   const getProductImageUrl = (item: any) => {
     if (item.variant && item.variant.images) {
-      return item.variant.images[0].url;
+      return item.variant?.images[0]?.url;
     } else if (item.images) {
       return item.images;
     } else if (item.product && item.product.image) {
@@ -88,7 +88,7 @@ export default function OrderSummary({
                   <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-md border border-gray-200 dark:border-gray-700">
                     <img
                       src={getProductImageUrl(item) || "/placeholder.svg"}
-                      alt={item.product?.name || item.name || "Producto"}
+                      alt={item.product?.name || item?.name || "Producto"}
                       className="h-full w-full object-cover object-center"
                       onError={handleImageError}
                     />

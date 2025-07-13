@@ -10,6 +10,9 @@ export const getOrders = () => axios.get("/sales/orders");
 export const changeStatus = (data: object) =>
   axios.patch(`/sales/change-status`, data);
 
+export const getUserSaleReferences = (id: string) =>
+  axios.get(`/sales/references?userId=${id}`);
+
 export const sendTrackingEmail = (data: {
   orderId: number;
   customerEmail: string;
