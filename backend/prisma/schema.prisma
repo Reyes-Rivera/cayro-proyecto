@@ -60,7 +60,6 @@ model User {
   securityAnswer     String?           @db.VarChar(255)
 }
 
-//done
 model Configuration {
   id                    Int  @id @default(autoincrement())
   timeTokenLogin        Int
@@ -71,7 +70,6 @@ model Configuration {
   emailResetPass        Json
 }
 
-//done
 model UserActivity {
   id     Int      @id @default(autoincrement())
   email  String   @db.VarChar(255)
@@ -79,7 +77,6 @@ model UserActivity {
   date   DateTime
 }
 
-//done
 model Employee {
   id                Int               @id @default(autoincrement())
   name              String            @db.VarChar(255)

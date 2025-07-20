@@ -10,6 +10,7 @@ import { Sale, SaleStatus } from '@prisma/client';
 import * as nodemailer from 'nodemailer';
 import { createShippingNotificationEmail } from 'src/utils/email';
 import { FilterSalesDto } from './dto/filter-dto';
+import { SalesAnalysisResponseDto } from './dto/create-sale.dto';
 @Injectable()
 export class SalesService {
   constructor(private prismaService: PrismaService) {}
@@ -428,16 +429,96 @@ export class SalesService {
       );
     }
   }
+
   async getUserSaleReferences(userId: number): Promise<object[]> {
     const sales = await this.prismaService.sale.findMany({
       where: { userId },
-      select: { references: true, betweenStreetOne: true, betweenStreetTwo: true },
+      select: {
+        references: true,
+        betweenStreetOne: true,
+        betweenStreetTwo: true,
+      },
       orderBy: { createdAt: 'desc' },
     });
     const references = sales.map((s) => {
-
-      return {reference:s.references,betweenStreetOne:s.betweenStreetOne,betweenStreetTwo:s.betweenStreetTwo};
+      return {
+        reference: s.references,
+        betweenStreetOne: s.betweenStreetOne,
+        betweenStreetTwo: s.betweenStreetTwo,
+      };
     });
     return references;
+  }
+  async getSalesForAnalysis(
+    page: number = 1,
+    limit: number = 1000,
+  ): Promise<SalesAnalysisResponseDto> {
+    const skip = (page - 1) * limit;
+
+    const [sales, total] = await Promise.all([
+      this.prismaService.sale.findMany({
+        skip,
+        take: limit,
+        where: {
+          status: 'DELIVERED', // Solo ventas completadas
+        },
+        include: {
+          saleDetails: {
+            include: {
+              productVariant: {
+                include: {
+                  product: {
+                    include: {
+                      category: true,
+                      brand: true,
+                    },
+                  },
+                  color: true,
+                  size: true,
+                },
+              },
+            },
+          },
+          user: {
+            select: {
+              id: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      }),
+      this.prismaService.sale.count({
+        where: {
+          status: 'DELIVERED',
+        },
+      }),
+    ]);
+
+    const data = sales.flatMap((sale) =>
+      sale.saleDetails.map((detail) => ({
+        id: sale.id,
+        userId: sale.user.id,
+        productName: detail.productVariant.product.name,
+        category: detail.productVariant.product.category.name,
+        brand: detail.productVariant.product.brand.name,
+        price: detail.productVariant.price,
+        color: detail.productVariant.color.name,
+        size: detail.productVariant.size.name,
+        quantity: detail.quantity,
+        saleDate: sale.createdAt,
+      })),
+    );
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 }

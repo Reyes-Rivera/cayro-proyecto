@@ -16,9 +16,6 @@ const FeaturedProductsCarousel = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
 
   
-
-
-
   // Number of products to display at once based on screen size
   const getItemsToShow = () => {
     if (typeof window !== "undefined") {

@@ -5,6 +5,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { Minus, Plus, ShoppingCart, Share2 } from "lucide-react";
 import Breadcrumbs from "@/components/web-components/Breadcrumbs";
 import { getProductByName } from "@/api/products";
+import ProductRecommendationsCarousel from "./components/ProductRecommendations";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +21,6 @@ export default function ProductDetail() {
   const params = useParams<{ name: string }>();
   const productName = params.name;
   const navigate = useNavigate();
-
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -153,12 +153,9 @@ export default function ProductDetail() {
   // Handle add to cart
   const handleAddToCart = async () => {
     if (!selectedVariant || !product) return;
-
     try {
       setIsAddingToCart(true);
-
       await addItem(product, selectedVariant, quantity);
-
       setIsAddedToCart(true);
       AlertHelper.success({
         message: "Producto añadido al carrito",
@@ -166,7 +163,6 @@ export default function ProductDetail() {
         timer: 3000,
         animation: "slideIn",
       });
-
       setTimeout(() => setIsAddedToCart(false), 2000);
     } catch (error: any) {
       AlertHelper.error({
@@ -279,7 +275,6 @@ export default function ProductDetail() {
                 onClick={() => setShowZoomModal(true)}
               />
             </div>
-
             {/* Thumbnails */}
             <div className="flex gap-2 mt-4">
               {displayImages.map((image, index) => (
@@ -318,9 +313,6 @@ export default function ProductDetail() {
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
                 {product.name}
               </h1>
-
-              {/* Ratings */}
-              {/* No ratings section */}
             </div>
 
             {/* Price */}
@@ -479,7 +471,6 @@ export default function ProductDetail() {
               </button>
             </div>
 
-            {/* Shipping and Returns */}
             {/* Information Notice */}
             <div className="py-6 border-t border-b">
               <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
@@ -515,7 +506,6 @@ export default function ProductDetail() {
                 const description =
                   product.description ||
                   "Playera de corte clásico con cuello redondo, diseñada para ofrecer comodidad y estilo en cualquier ocasión. Su silueta favorecedora y ajuste relajado la convierten en una prenda esencial para el uso diario. Confeccionada en un material suave y transpirable, es ideal para combinar con jeans, shorts o capas adicionales. Perfecta tanto para un look casual como para complementar outfits más elaborados. Disponible en una amplia variedad de colores.";
-
                 // Check if description contains bullet points
                 if (description.includes("•")) {
                   // Split by bullet points and clean up
@@ -523,7 +513,6 @@ export default function ProductDetail() {
                     .split("•")
                     .map((item) => item.trim())
                     .filter((item) => item.length > 0);
-
                   return (
                     <ul className="text-gray-600 dark:text-gray-300 leading-relaxed space-y-2">
                       {items.map((item, index) => (
@@ -537,7 +526,6 @@ export default function ProductDetail() {
                     </ul>
                   );
                 }
-
                 // Fallback to regular paragraph if no bullet points
                 return (
                   <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
@@ -545,7 +533,6 @@ export default function ProductDetail() {
                   </p>
                 );
               })()}
-
               {/* Specifications */}
               <div className="grid grid-cols-2 gap-6 mt-8">
                 <div>
@@ -568,6 +555,9 @@ export default function ProductDetail() {
             </div>
           </div>
         </div>
+
+        {/* Product Recommendations Carousel */}
+        <ProductRecommendationsCarousel currentProduct={product} />
       </div>
 
       {/* Zoom Modal */}

@@ -10,7 +10,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { SalesService } from './sales.service';
-import { ChangeStatusDto } from './dto/create-sale.dto';
+import { ChangeStatusDto, SalesAnalysisResponseDto } from './dto/create-sale.dto';
 import { FilterSalesDto } from './dto/filter-dto';
 
 @Controller('sales')
@@ -20,6 +20,16 @@ export class SalesController {
   @Get()
   findAll(@Query() filters: FilterSalesDto) {
     return this.salesService.findAll(filters);
+  }
+  @Get('sales/analysis')
+  async getSalesForAnalysis(
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 1000,
+  ): Promise<SalesAnalysisResponseDto> {
+    return this.salesService.getSalesForAnalysis(
+      Number(page),
+      Number(limit),
+    );
   }
   @Get('orders')
   getOrdes() {

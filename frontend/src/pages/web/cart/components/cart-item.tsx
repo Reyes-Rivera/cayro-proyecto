@@ -250,7 +250,7 @@ export default function CartItem({ item }: CartItemProps) {
         {/* Product image - same size on all devices */}
         <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden flex-shrink-0">
           <Link
-            to={`/producto/${getProductId()}`}
+            to={`/producto/${getProductName()}`}
             className="block w-full h-full"
           >
             <img

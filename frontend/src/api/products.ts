@@ -92,7 +92,11 @@ export const getProductById = (id: number) => axios.get(`/product/${id}`);
 
 export const deleteImg = (url: string) =>
   axios.delete(`/cloudinary?url=${url}`);
+export const recomendation = (data:any) =>
+  axios.post(`/recommendation`,data);
 
+export const recomendationCart = (data:any) =>
+  axios.post(`/recommendation/carrito`,data);
 export const updatePricesBulk = async (filters: any, updateData: any) => {
   try {
     const response = await axios.put("/product/bulk-price-update", {

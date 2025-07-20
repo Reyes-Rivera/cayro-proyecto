@@ -31,6 +31,7 @@ import { join } from 'path';
 import { SalesReportModule } from './reports/sales-report.module';
 import { DashboardEmployeeModule } from './dashboard-employee/dashboard-employee.module';
 import { DashboardAdminModule } from './dashboard-admin/dashboard-admin.module';
+import { RecommendationModule } from './recommendation/recommendation.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -66,7 +67,8 @@ import { DashboardAdminModule } from './dashboard-admin/dashboard-admin.module';
     CloudinaryModule,
     SalesReportModule,
     DashboardEmployeeModule,
-    DashboardAdminModule
+    DashboardAdminModule,
+    RecommendationModule
   ],
   controllers: [],
   providers: [AppService],

@@ -12,10 +12,43 @@ import PaymentSection from "./components/payment-section";
 import OrderSummary from "./components/order-summary";
 import { AlertHelper } from "@/utils/alert.util";
 
+const apiUrl = import.meta.env.VITE_REACT_APP_BASE_URL;
+
 type CheckoutStep = "shipping" | "shipping-details" | "payment";
 
+// Shipping prediction API service
+const ShippingApiService = {
+  async predictShippingCost(data: {
+    subtotalAmount: number;
+    totalAmount: number;
+    num_items: number;
+    total_quantity: number;
+    state: string;
+  }): Promise<number> {
+    try {
+      const response = await fetch("https://envios-8tp4.onrender.com/predict", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      return result.shipping_cost_prediction || 0;
+    } catch (error) {
+      console.error("Error predicting shipping cost:", error);
+      throw error;
+    }
+  },
+};
+
 export default function CheckoutPage() {
-  const { items, subtotal, itemCount, shipping, total } = useCart();
+  const { items, subtotal, itemCount } = useCart();
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
@@ -32,6 +65,15 @@ export default function CheckoutPage() {
   );
   const [addresses, setAddresses] = useState<any[]>([]);
 
+  // Shipping calculation states
+  const [shipping, setShipping] = useState(0);
+  const [shippingLoading, setShippingLoading] = useState(false);
+  // Remove these lines:
+  // const [userState, setUserState] = useState("BCS") // Default state
+
+  // Calculate total with shipping
+  const total = subtotal + shipping;
+
   const subtotalRef = useRef(subtotal);
   const shippingRef = useRef(shipping);
   const totalRef = useRef(total);
@@ -41,6 +83,71 @@ export default function CheckoutPage() {
     shippingRef.current = shipping;
     totalRef.current = total;
   }, [subtotal, shipping, total]);
+
+  // Calculate shipping cost using API
+  const calculateShippingCost = async () => {
+    if (items.length === 0) {
+      setShipping(0);
+      return;
+    }
+
+    try {
+      setShippingLoading(true);
+
+      // Calculate num_items (unique products) and total_quantity
+      const num_items = items.length;
+      const total_quantity = items.reduce(
+        (sum, item) => sum + item.quantity,
+        0
+      );
+
+      // In the calculateShippingCost function, update the state detection logic:
+      // Get state from selected address or use default
+      let selectedState = "BCS"; // Default state
+      if (selectedAddressId && addresses.length > 0) {
+        const selectedAddress = addresses.find(
+          (addr) => addr.id.toString() === selectedAddressId
+        );
+        if (selectedAddress && selectedAddress.state) {
+          selectedState = selectedAddress.state;
+        }
+      }
+
+      // Prepare API request data
+      const requestData = {
+        subtotalAmount: subtotal,
+        totalAmount: subtotal, // We'll update this after getting shipping cost
+        num_items,
+        total_quantity,
+        state: selectedState,
+      };
+
+      const predictedShipping = await ShippingApiService.predictShippingCost(
+        requestData
+      );
+      setShipping(predictedShipping);
+    } catch (err) {
+      console.error("Failed to calculate shipping:", err);
+      AlertHelper.error({
+        title: "Error de envío",
+        message:
+          "Error al calcular el costo de envío. Se usará un costo estimado.",
+        timer: 4000,
+        animation: "slideIn",
+      });
+      // Fallback to a default shipping cost
+      setShipping(200);
+    } finally {
+      setShippingLoading(false);
+    }
+  };
+
+  // Recalculate shipping when items, addresses, or selected address change
+  useEffect(() => {
+    if (currentStep === "shipping-details" || currentStep === "payment") {
+      calculateShippingCost();
+    }
+  }, [items, selectedAddressId, addresses, subtotal, currentStep]);
 
   useEffect(() => {
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
@@ -81,7 +188,6 @@ export default function CheckoutPage() {
             type: "info",
             animation: "slideIn",
           });
-
           if (confirmed) {
             navigate("/login?redirect=/checkout");
           } else {
@@ -89,19 +195,17 @@ export default function CheckoutPage() {
           }
           return;
         }
-
         if (items.length === 0) {
           navigate("/carrito");
           return;
         }
-
         setIsLoading(false);
       } catch (error: any) {
         AlertHelper.error({
           title: "Error",
           message:
-            error.response.data.message || "Ocurrió un error al verificar la autenticación"
-            ,
+            error.response.data.message ||
+            "Ocurrió un error al verificar la autenticación",
           timer: 4000,
         });
         setIsLoading(false);
@@ -111,7 +215,6 @@ export default function CheckoutPage() {
     const timer = setTimeout(() => {
       checkAuth();
     }, 800);
-
     return () => clearTimeout(timer);
   }, [isAuthenticated, navigate, items.length]);
 
@@ -161,7 +264,6 @@ export default function CheckoutPage() {
       });
       return;
     }
-
     if (addresses.length === 0) {
       AlertHelper.warning({
         title: "Agrega una dirección",
@@ -171,7 +273,6 @@ export default function CheckoutPage() {
       });
       return;
     }
-
     setCurrentStep("shipping-details");
     window.scrollTo(0, 0);
   };
@@ -188,7 +289,6 @@ export default function CheckoutPage() {
           setIsLoadingPayment(true);
           setPaymentError("");
           setPreferenceId("");
-
           const cart = items.map((item: any) => ({
             productId: item.product?.id || item.productId,
             variantId: item.variant?.id || item.variantId,
@@ -230,7 +330,7 @@ export default function CheckoutPage() {
           }
 
           const response = await axios.post(
-            "http://localhost:5000/mercadopago/create-preference",
+            `${apiUrl}/mercadopago/create-preference`,
             requestData,
             {
               headers: {
@@ -256,7 +356,6 @@ export default function CheckoutPage() {
         } catch (error) {
           let errorMessage =
             "No se pudo inicializar el pago. Por favor, intenta de nuevo.";
-
           if (axios.isAxiosError(error)) {
             if (error.code === "ECONNABORTED") {
               errorMessage =
@@ -331,9 +430,7 @@ export default function CheckoutPage() {
             Finalizar compra
           </h1>
         </div>
-
         <CheckoutProgress currentStep={currentStep} />
-
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="w-full lg:w-2/3">
             {(currentStep === "shipping" ||
@@ -354,7 +451,6 @@ export default function CheckoutPage() {
                 </div>
               </div>
             )}
-
             {currentStep === "payment" && (
               <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
                 <div className="p-6">
@@ -375,7 +471,6 @@ export default function CheckoutPage() {
               </div>
             )}
           </div>
-
           <div className="w-full lg:w-1/3">
             <OrderSummary
               items={items}
@@ -383,6 +478,7 @@ export default function CheckoutPage() {
               subtotal={subtotal}
               shipping={shipping}
               total={total}
+              shippingLoading={shippingLoading}
               expanded={orderSummaryExpanded}
               toggleExpanded={toggleOrderSummary}
               currentStep={currentStep}

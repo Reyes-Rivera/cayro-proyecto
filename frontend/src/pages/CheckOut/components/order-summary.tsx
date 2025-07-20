@@ -1,7 +1,12 @@
 "use client";
-
 import type React from "react";
-import { ChevronUp, ChevronDown, Truck, ArrowRight } from "lucide-react";
+import {
+  ChevronUp,
+  ChevronDown,
+  Truck,
+  ArrowRight,
+  Loader2,
+} from "lucide-react";
 import type { CheckoutStep } from "@/types/checkout";
 
 interface OrderSummaryProps {
@@ -10,6 +15,7 @@ interface OrderSummaryProps {
   subtotal: number;
   shipping: number;
   total: number;
+  shippingLoading: boolean;
   expanded: boolean;
   toggleExpanded: () => void;
   currentStep: CheckoutStep;
@@ -23,6 +29,7 @@ export default function OrderSummary({
   subtotal,
   shipping,
   total,
+  shippingLoading,
   expanded,
   toggleExpanded,
   currentStep,
@@ -63,7 +70,6 @@ export default function OrderSummary({
           )}
         </button>
       </div>
-
       {/* Main Content */}
       <div
         className={`transition-all duration-300 ease-in-out ${
@@ -76,7 +82,6 @@ export default function OrderSummary({
           <h2 className="hidden lg:block text-lg font-medium text-gray-900 dark:text-white mb-4">
             Resumen del pedido
           </h2>
-
           {/* Items */}
           <div className="mb-4">
             <div className="max-h-64 overflow-y-auto pr-2">
@@ -122,7 +127,6 @@ export default function OrderSummary({
               ))}
             </div>
           </div>
-
           {/* Totals */}
           <div className="space-y-3">
             <div className="flex justify-between text-sm">
@@ -134,19 +138,31 @@ export default function OrderSummary({
                 ${subtotal.toFixed(2)}
               </span>
             </div>
-
             <div className="flex justify-between text-sm">
               <span className="text-gray-500 dark:text-gray-400">Envío</span>
               <span className="text-gray-900 dark:text-white">
-                ${shipping.toFixed(2)}
+                {shippingLoading ? (
+                  <div className="flex items-center">
+                    <Loader2 className="w-4 h-4 animate-spin mr-1" />
+                    <span className="text-sm text-gray-500">Calculando...</span>
+                  </div>
+                ) : (
+                  `$${shipping.toFixed(2)}`
+                )}
               </span>
             </div>
-
             <div className="border-t border-gray-100 dark:border-gray-800 pt-3 mt-3">
               <div className="flex justify-between font-medium">
                 <span className="text-gray-900 dark:text-white">Total</span>
                 <span className="text-gray-900 dark:text-white text-lg">
-                  ${total.toFixed(2)}
+                  {shippingLoading ? (
+                    <div className="flex items-center">
+                      <Loader2 className="w-4 h-4 animate-spin mr-1" />
+                      <span className="text-sm">Calculando...</span>
+                    </div>
+                  ) : (
+                    `$${total.toFixed(2)}`
+                  )}
                 </span>
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -155,7 +171,6 @@ export default function OrderSummary({
             </div>
           </div>
         </div>
-
         {/* Shipping Info */}
         <div className="bg-gray-50 dark:bg-gray-800 p-4 border-t border-gray-100 dark:border-gray-800">
           <div className="flex items-start">
@@ -165,24 +180,33 @@ export default function OrderSummary({
                 Información de envío
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                Envío calculado según cantidad de productos
+                {shippingLoading
+                  ? "Calculando costo de envío con IA..."
+                  : "Costo calculado con inteligencia artificial"}
               </p>
             </div>
           </div>
         </div>
       </div>
-
       {/* Mobile Footer */}
       <div className="lg:hidden p-4 border-t border-gray-100 dark:border-gray-800 flex justify-between items-center">
         <div>
           <div className="text-xs text-gray-500 dark:text-gray-400">Total</div>
           <div className="text-lg font-medium text-gray-900 dark:text-white">
-            ${total.toFixed(2)}
+            {shippingLoading ? (
+              <div className="flex items-center">
+                <Loader2 className="w-4 h-4 animate-spin mr-1" />
+                <span className="text-sm">Calculando...</span>
+              </div>
+            ) : (
+              `$${total.toFixed(2)}`
+            )}
           </div>
         </div>
         {currentStep === "shipping" && (
           <button
             onClick={onContinue}
+            disabled={shippingLoading}
             className="py-2.5 px-4 bg-blue-600 dark:bg-blue-500 text-white font-medium rounded-full flex items-center justify-center gap-2 hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors disabled:opacity-70"
           >
             Continuar

@@ -4,24 +4,32 @@ import { ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 
-
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors({
-    origin: ['https://darkred-vulture-762056.hostingersite.com', 'http://localhost:5173',"https://alexa.amazon.com","https://developer.amazon.com"],
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    origin: (origin, callback) => {
+      const allowedOrigins = [
+        'http://localhost:5173',
+        'https://alexa.amazon.com',
+        'https://developer.amazon.com',
+        'https://cayro.netlify.app',
+      ];
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   });
+
   app.use(
     helmet({
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
-          scriptSrc: [
-            "'self'",
-            "'unsafe-inline'",
-            "'unsafe-eval'",
-          ],
+          scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
         },
       },
     }),
@@ -30,7 +38,7 @@ async function bootstrap() {
   // app.use(
   //   rateLimit({
   //     windowMs: 15 * 60 * 1000,
-  //     max: 100, 
+  //     max: 100,
   //     message: 'Demasiadas solicitudes, intenta nuevamente más tarde.',
   //   }),
   // );
