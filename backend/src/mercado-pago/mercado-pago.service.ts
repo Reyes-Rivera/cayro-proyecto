@@ -30,10 +30,8 @@ export class MercadoPagoService {
   async refundPayment(paymentId: string) {
     try {
       const refund = await this.refund.create({ payment_id: paymentId });
-      console.log(`🔄 Reembolso realizado para el pago ${paymentId}`);
       return refund;
     } catch (error) {
-      console.error(`❌ Error reembolsando pago ${paymentId}:`, error);
       throw new HttpException(
         `Error al reembolsar: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -87,27 +85,26 @@ export class MercadoPagoService {
           );
         }
 
-        const availableStock = variant.stock - (variant.reserved || 0);
+        // const availableStock = variant.stock - (variant.reserved || 0);
 
-        if (availableStock < item.quantity) {
-          throw new HttpException(
-            `Stock insuficiente para la variante ${variant.id}. Disponible: ${availableStock}, solicitado: ${item.quantity}`,
-            HttpStatus.BAD_REQUEST,
-          );
-        }
+        // if (availableStock < item.quantity) {
+        //   throw new HttpException(
+        //     `Stock insuficiente para la variante ${variant.id}. Disponible: ${availableStock}, solicitado: ${item.quantity}`,
+        //     HttpStatus.BAD_REQUEST,
+        //   );
+        // }
       }
 
-      // Reservar los productos (en una transacción por seguridad)
-      await this.prismaService.$transaction(async (prisma) => {
-        for (const item of cart) {
-          await prisma.productVariant.update({
-            where: { id: item.variantId },
-            data: {
-              reserved: { increment: item.quantity },
-            },
-          });
-        }
-      });
+      // await this.prismaService.$transaction(async (prisma) => {
+      //   for (const item of cart) {
+      //     await prisma.productVariant.update({
+      //       where: { id: item.variantId },
+      //       data: {
+      //         reserved: { increment: item.quantity },
+      //       },
+      //     });
+      //   }
+      // });
 
       const items = [];
       for (const item of cart) {
@@ -151,12 +148,8 @@ export class MercadoPagoService {
         },
       };
 
-      console.log('🔍 Preference data:', preferenceData);
 
       const preference = await this.preference.create({ body: preferenceData });
-
-      console.log('✅ Preference created:', { id: preference.id });
-
       return preference;
     } catch (error) {
       console.error('Error creating MercadoPago preference:', error);
@@ -207,7 +200,6 @@ export class MercadoPagoService {
     const payment = await this.getPaymentDetails(paymentId);
     const metadata = payment.metadata;
 
-    // 🟡 Si el pago fue rechazado/cancelado/expirado, liberar la reserva
     if (['rejected', 'cancelled', 'expired'].includes(payment.status)) {
       const cartItems = metadata?.cart;
 
@@ -230,7 +222,6 @@ export class MercadoPagoService {
       };
     }
 
-    // 🔴 Si no está aprobado, no hacemos nada
     if (payment.status !== 'approved')
       return { paymentId, status: payment.status, processed: false };
 
@@ -307,7 +298,7 @@ export class MercadoPagoService {
           where: { id: item.productVariant.id },
           data: {
             stock: { decrement: item.quantity },
-            reserved: { decrement: item.quantity }, // ✅ quitar reserva
+            reserved: { decrement: item.quantity },
           },
         });
       }
@@ -342,10 +333,10 @@ export class MercadoPagoService {
         forDevelopment: 'Usa credenciales TEST- para desarrollo',
         forProduction: 'Usa credenciales APP_USR- para producción',
         currentStatus: isTest
-          ? '✅ Configuración correcta para desarrollo'
+          ? 'Configuración correcta para desarrollo'
           : isProduction
-            ? '⚠️  Credenciales de producción detectadas'
-            : '❌ Credenciales no válidas',
+            ? 'Credenciales de producción detectadas'
+            : 'Credenciales no válidas',
       },
     };
   }

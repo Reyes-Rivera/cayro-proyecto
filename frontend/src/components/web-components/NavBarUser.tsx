@@ -1,7 +1,5 @@
 "use client";
-
 import type React from "react";
-
 import {
   Menu,
   Sun,
@@ -43,7 +41,7 @@ const NavBarUser = () => {
   const [menuNeedsScroll, setMenuNeedsScroll] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { itemCount } = useCart();
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]); // Initialize as empty array
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -55,12 +53,18 @@ const NavBarUser = () => {
     const fetchCategories = async () => {
       try {
         const response = await getCategories();
-        setCategories(response.data);
+        // Ensure we always set an array
+        if (response && response.data && Array.isArray(response.data)) {
+          setCategories(response.data);
+        } else {
+          console.warn("Categories response is not an array:", response);
+          setCategories([]); // Fallback to empty array
+        }
       } catch (error) {
         console.error("Error fetching categories:", error);
+        setCategories([]); // Fallback to empty array on error
       }
     };
-
     fetchCategories();
   }, []);
 
@@ -74,11 +78,9 @@ const NavBarUser = () => {
           setMenuNeedsScroll(menuHeight > viewportHeight);
         }
       };
-
       // Check initially and on resize
       checkMenuHeight();
       window.addEventListener("resize", checkMenuHeight);
-
       return () => {
         window.removeEventListener("resize", checkMenuHeight);
       };
@@ -90,20 +92,17 @@ const NavBarUser = () => {
     if (isMenuOpen) {
       // Store the current scroll position
       const scrollY = window.scrollY;
-
       // Disable scrolling on body when menu is open
       document.body.style.position = "fixed";
       document.body.style.top = `-${scrollY}px`;
       document.body.style.width = "100%";
       document.body.style.overflow = "hidden"; // Add this to prevent scrolling
-
       return () => {
         // Re-enable scrolling when menu is closed
         document.body.style.position = "";
         document.body.style.top = "";
         document.body.style.width = "";
         document.body.style.overflow = ""; // Reset overflow
-
         // Restore scroll position
         window.scrollTo(0, scrollY);
       };
@@ -112,23 +111,25 @@ const NavBarUser = () => {
 
   useEffect(() => {
     const getInfo = async () => {
-      const res = await getCompanyInfoApi();
-      setLogo(res.data[0].logoUrl);
+      try {
+        const res = await getCompanyInfoApi();
+        if (res && res.data && res.data[0] && res.data[0].logoUrl) {
+          setLogo(res.data[0].logoUrl);
+        }
+      } catch (error) {
+        console.error("Error fetching company info:", error);
+      }
     };
     getInfo();
-
     const savedTheme = localStorage.getItem("theme") || "light";
     if (savedTheme === "dark") {
       document.documentElement.classList.add("dark");
       setDarkMode(true);
     }
-
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-
       // Determine if we've scrolled enough to change the navbar appearance
       setScrolled(currentScrollY > 5);
-
       // Show/hide based on scroll direction
       if (currentScrollY > lastScrollY.current && currentScrollY > 80) {
         // Scrolling down & past threshold - hide navbar
@@ -137,7 +138,6 @@ const NavBarUser = () => {
         // Scrolling up or at top - show navbar
         setVisible(true);
       }
-
       lastScrollY.current = currentScrollY;
     };
 
@@ -193,7 +193,6 @@ const NavBarUser = () => {
         text: "text-rose-600 dark:text-rose-400",
       },
     ];
-
     return colors[index % colors.length];
   };
 
@@ -225,14 +224,12 @@ const NavBarUser = () => {
     <>
       {/* Spacer div to prevent content from being hidden under the navbar */}
       <div className="h-20"></div>
-
       <div
         className={`fixed w-full top-0 z-50 transition-all duration-300 bg-white dark:bg-gray-900 shadow-sm ${
           scrolled ? "shadow-lg" : ""
         } ${visible ? "translate-y-0" : "-translate-y-full"}`}
       >
         <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 via-transparent to-blue-50/50 dark:from-blue-900/10 dark:via-transparent dark:to-blue-900/10 pointer-events-none"></div>
-
         <nav
           ref={navRef}
           className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative"
@@ -255,7 +252,6 @@ const NavBarUser = () => {
                 />
               </NavLink>
             </div>
-
             {/* Menú de navegación en escritorio */}
             <div className="hidden sm:flex sm:items-center sm:space-x-1 lg:space-x-2">
               {/* Búsqueda o Navegación */}
@@ -335,7 +331,6 @@ const NavBarUser = () => {
                       <span>Inicio</span>
                       <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-blue-600 dark:bg-blue-400 transition-all duration-200 group-hover:w-1/2"></span>
                     </NavLink>
-
                     {/* Menú desplegable de Productos con categorías dinámicas */}
                     <div className="relative group">
                       <button className="text-sm font-medium transition-all duration-200 flex items-center gap-1.5 group px-3 py-2 rounded-full text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100/70 dark:hover:bg-gray-800/70">
@@ -344,7 +339,6 @@ const NavBarUser = () => {
                         <ChevronDown className="w-3.5 h-3.5 transition-transform duration-300 group-hover:rotate-180" />
                         <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-blue-600 dark:bg-blue-400 transition-all duration-200 group-hover:w-1/2"></span>
                       </button>
-
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -353,7 +347,6 @@ const NavBarUser = () => {
                       >
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 p-2 overflow-hidden">
                           <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-white dark:from-blue-900/20 dark:to-gray-800 opacity-50"></div>
-
                           <div className="relative">
                             <Link
                               to="/productos"
@@ -371,41 +364,42 @@ const NavBarUser = () => {
                                 </p>
                               </div>
                             </Link>
-
-                            {categories.map((category, index) => (
-                              <Link
-                                key={category.id}
-                                to={`/productos?categoria=${encodeURIComponent(
-                                  category.name
-                                )}`}
-                                className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors mt-1"
-                              >
-                                <div
-                                  className={`w-8 h-8 rounded-full ${
-                                    getCategoryColor(index).bg
-                                  } flex items-center justify-center`}
+                            {/* Safe check for categories array */}
+                            {Array.isArray(categories) &&
+                              categories.length > 0 &&
+                              categories.map((category, index) => (
+                                <Link
+                                  key={category.id}
+                                  to={`/productos?categoria=${encodeURIComponent(
+                                    category.name
+                                  )}`}
+                                  className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors mt-1"
                                 >
-                                  <span
-                                    className={getCategoryColor(index).text}
+                                  <div
+                                    className={`w-8 h-8 rounded-full ${
+                                      getCategoryColor(index).bg
+                                    } flex items-center justify-center`}
                                   >
-                                    {getCategoryIcon()}
-                                  </span>
-                                </div>
-                                <div>
-                                  <span className="font-medium">
-                                    {category.name}
-                                  </span>
-                                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                                    {category.description}
-                                  </p>
-                                </div>
-                              </Link>
-                            ))}
+                                    <span
+                                      className={getCategoryColor(index).text}
+                                    >
+                                      {getCategoryIcon()}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <span className="font-medium">
+                                      {category.name}
+                                    </span>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                      {category.description}
+                                    </p>
+                                  </div>
+                                </Link>
+                              ))}
                           </div>
                         </div>
                       </motion.div>
                     </div>
-
                     <NavLink
                       to="/contacto"
                       className={({ isActive }) =>
@@ -424,7 +418,6 @@ const NavBarUser = () => {
                 )}
               </AnimatePresence>
             </div>
-
             {/* Iconos en escritorio */}
             <div className="hidden sm:flex items-center gap-1 lg:gap-2">
               {/* Botón de búsqueda */}
@@ -436,7 +429,6 @@ const NavBarUser = () => {
               >
                 <Search className="h-4 w-4 transition-colors duration-200 text-gray-700 dark:text-gray-300" />
               </button>
-
               <Link to="/carrito" className="relative group">
                 <div className="p-2 rounded-full transition-colors duration-200 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700">
                   <ShoppingCart className="h-4 w-4 transition-colors duration-200 text-gray-700 dark:text-gray-300" />
@@ -446,7 +438,6 @@ const NavBarUser = () => {
                 </span>
                 <span className="sr-only">Carrito de compras</span>
               </Link>
-
               <button
                 onClick={toggleTheme}
                 className="p-2 rounded-full transition-colors duration-200 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
@@ -460,7 +451,6 @@ const NavBarUser = () => {
                   <Moon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 )}
               </button>
-
               {auth ? (
                 <Link
                   to={
@@ -489,7 +479,6 @@ const NavBarUser = () => {
                 </Link>
               )}
             </div>
-
             {/* Menú móvil */}
             <div className="flex items-center sm:hidden gap-2">
               {/* Búsqueda o Navegación móvil */}
@@ -558,7 +547,6 @@ const NavBarUser = () => {
                   </motion.button>
                 )}
               </AnimatePresence>
-
               <Link to="/carrito" className="relative">
                 <div className="p-2 rounded-full transition-colors text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">
                   <ShoppingCart className="w-5 h-5" />
@@ -567,7 +555,6 @@ const NavBarUser = () => {
                   {itemCount}
                 </span>
               </Link>
-
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 className="p-2 rounded-full transition-colors text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
@@ -581,7 +568,6 @@ const NavBarUser = () => {
               </button>
             </div>
           </div>
-
           <AnimatePresence>
             {isMenuOpen && (
               <motion.div
@@ -605,7 +591,6 @@ const NavBarUser = () => {
                       <X className="w-5 h-5" />
                     </button>
                   </div>
-
                   {auth ? (
                     <div className="flex items-center gap-3 mb-6 p-4 bg-gradient-to-r from-blue-50 to-blue-100/50 dark:from-blue-900/20 dark:to-blue-800/10 rounded-xl">
                       <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-xl font-bold shadow-md">
@@ -634,7 +619,6 @@ const NavBarUser = () => {
                       Iniciar sesión
                     </Link>
                   )}
-
                   <div className="space-y-1 mb-6">
                     <NavLink
                       to="/"
@@ -653,7 +637,6 @@ const NavBarUser = () => {
                       <Home className="w-5 h-5" />
                       Inicio
                     </NavLink>
-
                     <div className="px-4 py-3 text-base font-medium text-gray-800 dark:text-gray-200">
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-3">
@@ -670,23 +653,23 @@ const NavBarUser = () => {
                         >
                           Todos los productos
                         </Link>
-
-                        {/* Categorías dinámicas en el menú móvil */}
-                        {categories.map((category) => (
-                          <Link
-                            key={category.id}
-                            to={`/productos?categoria=${encodeURIComponent(
-                              category.name
-                            )}`}
-                            onClick={closeMenu}
-                            className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-                          >
-                            {category.name}
-                          </Link>
-                        ))}
+                        {/* Categorías dinámicas en el menú móvil - Safe check */}
+                        {Array.isArray(categories) &&
+                          categories.length > 0 &&
+                          categories.map((category) => (
+                            <Link
+                              key={category.id}
+                              to={`/productos?categoria=${encodeURIComponent(
+                                category.name
+                              )}`}
+                              onClick={closeMenu}
+                              className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                            >
+                              {category.name}
+                            </Link>
+                          ))}
                       </div>
                     </div>
-
                     <NavLink
                       to="/contacto"
                       onClick={closeMenu}
@@ -701,7 +684,6 @@ const NavBarUser = () => {
                       <Phone className="w-5 h-5" />
                       Contacto
                     </NavLink>
-
                     <NavLink
                       to="/carrito"
                       onClick={closeMenu}
@@ -717,7 +699,6 @@ const NavBarUser = () => {
                       Carrito ({itemCount})
                     </NavLink>
                   </div>
-
                   <div className="mt-auto">
                     <div className="flex justify-between items-center p-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-700/50 rounded-xl">
                       <span className="text-gray-800 dark:text-gray-200 font-medium">
@@ -741,7 +722,6 @@ const NavBarUser = () => {
               </motion.div>
             )}
           </AnimatePresence>
-
           {/* Overlay for mobile menu - Fixed positioning to prevent content overlap */}
           <AnimatePresence>
             {isMenuOpen && (

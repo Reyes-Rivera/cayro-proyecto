@@ -1,7 +1,6 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { RecommendationService } from './recommendation.service';
 import { CreateCartRecommendationDto, CreateRecommendationDto } from './dto/create-recommendation.dto';
-import { UpdateRecommendationDto } from './dto/update-recommendation.dto';
 
 @Controller('recommendation')
 export class RecommendationController {
