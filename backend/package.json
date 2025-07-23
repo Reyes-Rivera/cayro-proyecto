@@ -28,7 +28,7 @@
     "@nestjs/mapped-types": "*",
     "@nestjs/mongoose": "^10.0.10",
     "@nestjs/passport": "^10.0.3",
-    "@nestjs/platform-express": "^10.4.15",
+    "@nestjs/platform-express": "^11.1.5",
     "@nestjs/serve-static": "^4.0.2",
     "@prisma/client": "^6.2.1",
     "@sendgrid/mail": "^8.1.4",
@@ -60,7 +60,7 @@
     "rxjs": "^7.8.1",
     "stripe": "^18.1.0",
     "swagger": "^0.7.5",
-    "vercel": "^37.9.0",
+    "vercel": "^41.7.4",
     "winston": "^3.17.0",
     "winston-daily-rotate-file": "^5.0.0"
   },
