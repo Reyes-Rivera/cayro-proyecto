@@ -7,7 +7,6 @@ export class CreateRecommendationDto {
     })
     producto: string;
 }
-// create-cart-recommendation.dto.ts
 import { IsArray, ArrayNotEmpty, IsString } from 'class-validator';
 
 export class CreateCartRecommendationDto {

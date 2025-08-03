@@ -241,7 +241,7 @@ const CartRecommendationsCarousel = ({
   return (
     <section
       ref={sectionRef}
-      className="mt-8 mb-8 bg-gradient-to-br from-gray-50 via-blue-50/20 to-emerald-50/10 dark:from-gray-900 dark:via-blue-950/20 dark:to-emerald-950/10 relative overflow-hidden rounded-2xl p-8"
+      className="mt-8 mb-8 bg-gradient-to-br from-gray-50 via-blue-50/20 to-emerald-50/10 dark:from-gray-900 dark:via-blue-950/20 dark:to-emerald-950/10 relative overflow-hidden rounded-2xl p-4"
     >
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">

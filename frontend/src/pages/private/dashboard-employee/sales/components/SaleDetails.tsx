@@ -214,7 +214,7 @@ const SaleDetails: React.FC<SaleDetailsProps> = ({ sale, onBack }) => {
                   <div className="flex items-start">
                     <UserIcon className="w-3 h-3 text-white/80 flex-shrink-0 mt-0.5 mr-1.5" />
                     <p className="text-white/90 text-xs sm:text-sm leading-relaxed break-words">
-                      {sale.user.name} {sale.user.surname}
+                      {sale?.user?.name} {sale?.user?.surname}
                     </p>
                   </div>
                 </div>
@@ -558,7 +558,7 @@ const SaleDetails: React.FC<SaleDetailsProps> = ({ sale, onBack }) => {
                         </div>
                         <div>
                           <div className="font-semibold text-gray-900 dark:text-white">
-                            {detail.productVariant.product.name}
+                            {detail.productVariant.product?.name}
                           </div>
                           
                         </div>
@@ -569,12 +569,12 @@ const SaleDetails: React.FC<SaleDetailsProps> = ({ sale, onBack }) => {
                         <div className="flex items-center">
                           <div style={{ backgroundColor: detail.productVariant.color.hexValue }} className={`w-4 h-4 rounded-full mr-2 border border-gray-200 dark:border-gray-700 bg-[${detail.productVariant.color.hexValue}]`}></div>
                           <span className="text-sm font-medium text-gray-900 dark:text-white">
-                            {detail.productVariant.color.name}
+                            {detail.productVariant.color?.name}
                           </span>
                         </div>
                         <div>
                           <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 text-xs font-medium px-2 py-1 rounded-full">
-                            {detail.productVariant.size.name}
+                            {detail.productVariant.size?.name}
                           </span>
                         </div>
                       </div>
@@ -642,7 +642,7 @@ const SaleDetails: React.FC<SaleDetailsProps> = ({ sale, onBack }) => {
                   {/* Product Details */}
                   <div className="flex-1 min-w-0">
                     <h4 className="font-semibold text-sm sm:text-base text-gray-900 dark:text-white mb-1 break-words">
-                      {detail.productVariant.product.name}
+                      {detail.productVariant.product?.name}
                     </h4>
 
                     <div className="flex flex-wrap items-center gap-2 mb-2">

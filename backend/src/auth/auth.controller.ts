@@ -42,8 +42,8 @@ export class AuthController {
       'Set-Cookie',
       cookie.serialize('refreshToken', result.refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        secure: true,
+        sameSite: 'none',
         maxAge: 60 * 60 * 24 * 7, // 7 días
         path: '/',
       }),

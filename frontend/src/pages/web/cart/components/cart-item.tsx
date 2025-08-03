@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Trash2, Minus, Plus, Heart, AlertCircle } from "lucide-react";
+import { Trash2, Minus, Plus, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/context/CartContext";
 import { Link } from "react-router-dom";
@@ -14,7 +14,6 @@ interface CartItemProps {
 export default function CartItem({ item }: CartItemProps) {
   const { updateQuantity, removeItem, loading } = useCart();
   const [isRemoving, setIsRemoving] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const [showStockWarning, setShowStockWarning] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   // Safe image URL getter with fallbacks
@@ -152,21 +151,6 @@ export default function CartItem({ item }: CartItemProps) {
         setTimeout(() => setShowStockWarning(false), 3000);
       }
     }
-  };
-
-  const handleSaveForLater = () => {
-    setIsSaving(true);
-
-    setTimeout(() => {
-      AlertHelper.success({
-        message: "Producto guardado para luego",
-        title: "Producto guardado",
-        animation: "slideIn",
-        timer: 3000,
-      });
-
-      setIsSaving(false);
-    }, 1000);
   };
 
   // Determine if any loading state is active
@@ -342,21 +326,7 @@ export default function CartItem({ item }: CartItemProps) {
             </div>
 
             <div className="flex items-center gap-3">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleSaveForLater}
-                disabled={isLoading}
-                className="text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-500 transition-colors flex items-center text-xs disabled:opacity-50"
-                aria-label="Save for later"
-              >
-                <Heart
-                  className={`w-4 h-4 mr-1 ${
-                    isSaving ? "fill-blue-500 text-blue-500" : ""
-                  }`}
-                />
-                {isSaving ? "Guardado" : "Guardar"}
-              </motion.button>
+             
 
               <motion.button
                 whileHover={{ scale: 1.05 }}

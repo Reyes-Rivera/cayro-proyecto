@@ -228,7 +228,7 @@ const ProductRecommendationsCarousel = ({
   return (
     <section
       ref={sectionRef}
-      className="mt-16 mb-8 bg-gradient-to-br from-gray-50 via-indigo-50/20 to-purple-50/10 dark:from-gray-900 dark:via-indigo-950/20 dark:to-purple-950/10 relative overflow-hidden rounded-2xl p-8"
+      className="mt-16 mb-8 bg-gradient-to-br from-gray-50 via-indigo-50/20 to-purple-50/10 dark:from-gray-900 dark:via-indigo-950/20 dark:to-purple-950/10 relative overflow-hidden rounded-2xl p-4"
     >
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">

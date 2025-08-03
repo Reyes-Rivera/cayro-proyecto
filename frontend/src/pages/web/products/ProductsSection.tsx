@@ -1,24 +1,21 @@
 "use client";
-
-import { useState, useEffect, useRef } from "react";
-
+import { useState, useEffect, useRef, useCallback } from "react";
+import type React from "react";
 import {
   AlertTriangle,
-  Palette,
   Grid3X3,
   List,
-  SortAsc,
-  Sparkles,
-  Shirt,
-  ArrowRight,
+  Search,
   Paintbrush,
+  Zap,
+  TrendingUp,
+  ArrowRight,
+  Sparkles,
+  ShoppingBag,
+  Heart,
 } from "lucide-react";
-
-import { motion, AnimatePresence } from "framer-motion";
-
+import { motion } from "framer-motion";
 import Breadcrumbs from "@/components/web-components/Breadcrumbs";
-
-import img from "./assets/products.jpg";
 
 // Interfaces
 import type {
@@ -30,12 +27,10 @@ import type {
   Color,
   Sleeve,
 } from "@/types/products";
-
 import ProductFilters from "./components/ProductFilters";
 import ActiveFilters from "./components/ActiveFilters";
 import ProductGrid from "./components/ProductGrid";
 import Pagination from "./components/Footer";
-
 import {
   getProducts,
   getBrands,
@@ -45,19 +40,9 @@ import {
   getColors,
   getSleeve,
 } from "@/api/products";
-
 import Loader from "@/components/web-components/Loader";
 import { useNavigate } from "react-router-dom";
 import { AlertHelper } from "@/utils/alert.util";
-
-// Tipo para la respuesta de la API
-interface ApiResponse {
-  data: Product[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
 
 export type SortOption = "default" | "price-low" | "price-high" | "newest";
 
@@ -74,7 +59,6 @@ export default function ProductsPage() {
   const [error, setError] = useState<string | null>(null);
   const [totalPages, setTotalPages] = useState(1);
   const [filtersLoaded, setFiltersLoaded] = useState(false);
-  const initialLoadRef = useRef(true);
 
   // State for active filters
   const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
@@ -86,13 +70,11 @@ export default function ProductsPage() {
   const [activeSort, setActiveSort] = useState<SortOption>("default");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [searchInput, setSearchInput] = useState<string>(""); // Separate input state
   const [hoveredProduct, setHoveredProduct] = useState<number | null>(null);
 
   // UI State
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [showSortDropdown, setShowSortDropdown] = useState(false);
-
-  // Price range filter
   const [priceRange, setPriceRange] = useState<{
     min: number | null;
     max: number | null;
@@ -101,18 +83,75 @@ export default function ProductsPage() {
     max: null,
   });
 
-  // Refs for animations
   const productsPerPage = 12;
   const navigate = useNavigate();
-  // Función para aplicar filtros desde la URL - Fix the reset logic
-  const applyFiltersFromURL = () => {
-    if (!filtersLoaded) return;
+  const isInitialMount = useRef(true);
 
+  // Función para cargar filtros base
+  const loadFiltersData = useCallback(async () => {
+    try {
+      const handleFetch = async (fetchFn: () => Promise<any>, name: string) => {
+        try {
+          const response = await fetchFn();
+          return Array.isArray(response.data)
+            ? response.data
+            : Array.isArray(response.data?.data)
+            ? response.data.data
+            : [];
+        } catch (err: any) {
+          AlertHelper.error({
+            title: `Error al cargar ${name}`,
+            message:
+              err.response?.data?.message ||
+              `No se pudo cargar la información de ${name}.`,
+            animation: "slideIn",
+            timer: 4000,
+          });
+          return [];
+        }
+      };
+
+      const [
+        brandsData,
+        categoriesData,
+        gendersData,
+        sizesData,
+        colorsData,
+        sleevesData,
+      ] = await Promise.all([
+        handleFetch(getBrands, "marcas"),
+        handleFetch(getCategories, "categorías"),
+        handleFetch(getGenders, "géneros"),
+        handleFetch(getSizes, "tallas"),
+        handleFetch(getColors, "colores"),
+        handleFetch(getSleeve, "tipos de cuello"),
+      ]);
+
+      setBrands(brandsData);
+      setCategories(categoriesData);
+      setGenders(gendersData);
+      setSizes(sizesData);
+      setColors(colorsData);
+      setSleeves(sleevesData);
+      setFiltersLoaded(true);
+    } catch (err: any) {
+      setError(
+        "No se pudieron cargar los datos de filtros. Por favor, intente nuevamente."
+      );
+      AlertHelper.error({
+        title: "Error general",
+        message:
+          err.response?.data?.message ||
+          "Error al cargar los datos de filtros.",
+        animation: "slideIn",
+        timer: 4000,
+      });
+    }
+  }, []);
+
+  // Función para aplicar filtros desde URL
+  const applyFiltersFromURL = useCallback(() => {
     const params = new URLSearchParams(window.location.search);
-    const hasAnyParams = params.toString().length > 0;
-
-    // Only reset filters if there are no URL parameters at all
-    // Otherwise, apply the filters from URL or keep existing ones
 
     // Categoría
     const categoryParam = params.get("categoria");
@@ -121,208 +160,64 @@ export default function ProductsPage() {
         (category) =>
           category.name.toLowerCase() === categoryParam.toLowerCase()
       );
-      if (matchedCategory) {
-        setActiveCategoryId(matchedCategory.id);
-      }
-    } else if (!hasAnyParams) {
-      // Only reset if no params at all
+      setActiveCategoryId(matchedCategory ? matchedCategory.id : null);
+    } else {
       setActiveCategoryId(null);
     }
 
     // Género
     const genderParam = params.get("genero");
-    if (genderParam && !isNaN(Number(genderParam))) {
-      setActiveGenderId(Number(genderParam));
-    } else if (!hasAnyParams) {
-      setActiveGenderId(null);
-    }
+    setActiveGenderId(
+      genderParam && !isNaN(Number(genderParam)) ? Number(genderParam) : null
+    );
 
     // Talla
     const sizeParam = params.get("talla");
-    if (sizeParam && !isNaN(Number(sizeParam))) {
-      setActiveSizeId(Number(sizeParam));
-    } else if (!hasAnyParams) {
-      setActiveSizeId(null);
-    }
+    setActiveSizeId(
+      sizeParam && !isNaN(Number(sizeParam)) ? Number(sizeParam) : null
+    );
 
     // Color
     const colorParam = params.get("color");
-    if (colorParam && !isNaN(Number(colorParam))) {
-      setActiveColorId(Number(colorParam));
-    } else if (!hasAnyParams) {
-      setActiveColorId(null);
-    }
+    setActiveColorId(
+      colorParam && !isNaN(Number(colorParam)) ? Number(colorParam) : null
+    );
 
     // Manga
     const sleeveParam = params.get("manga");
-    if (sleeveParam && !isNaN(Number(sleeveParam))) {
-      setActiveSleeveId(Number(sleeveParam));
-    } else if (!hasAnyParams) {
-      setActiveSleeveId(null);
-    }
+    setActiveSleeveId(
+      sleeveParam && !isNaN(Number(sleeveParam)) ? Number(sleeveParam) : null
+    );
 
     // Marca
     const brandParam = params.get("marca");
-    if (brandParam && !isNaN(Number(brandParam))) {
-      setActiveBrandId(Number(brandParam));
-    } else if (!hasAnyParams) {
-      setActiveBrandId(null);
-    }
+    setActiveBrandId(
+      brandParam && !isNaN(Number(brandParam)) ? Number(brandParam) : null
+    );
 
     // Precio
     const minPriceParam = params.get("precioMin") || params.get("priceMin");
     const maxPriceParam = params.get("precioMax") || params.get("priceMax");
-
-    if (minPriceParam || maxPriceParam) {
-      setPriceRange({
-        min: minPriceParam ? Number(minPriceParam) : null,
-        max: maxPriceParam ? Number(maxPriceParam) : null,
-      });
-    } else if (!hasAnyParams) {
-      setPriceRange({ min: null, max: null });
-    }
+    setPriceRange({
+      min: minPriceParam ? Number(minPriceParam) : null,
+      max: maxPriceParam ? Number(maxPriceParam) : null,
+    });
 
     // Búsqueda
     const searchParam = params.get("search");
-    if (searchParam) {
-      setSearchTerm(searchParam);
-    } else if (!hasAnyParams) {
-      setSearchTerm("");
-    }
-
-    // Ordenamiento
-    const sortParam = params.get("orden");
-    if (
-      sortParam &&
-      ["price-low", "price-high", "newest"].includes(sortParam)
-    ) {
-      setActiveSort(sortParam as SortOption);
-    } else if (!hasAnyParams) {
-      setActiveSort("default");
-    }
+    const searchValue = searchParam || "";
+    setSearchTerm(searchValue);
+    setSearchInput(searchValue); // Sync input with URL
 
     // Página
     const pageParam = params.get("page");
-    if (pageParam && !isNaN(Number(pageParam))) {
-      setCurrentPage(Number(pageParam));
-    } else if (!hasAnyParams) {
-      setCurrentPage(1);
-    }
-  };
-
-  // Fetch data from API with filters
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const handleFetch = async (
-          fetchFn: () => Promise<any>,
-          name: string
-        ) => {
-          try {
-            const response = await fetchFn();
-            return Array.isArray(response.data)
-              ? response.data
-              : Array.isArray(response.data?.data)
-              ? response.data.data
-              : [];
-          } catch (err: any) {
-            AlertHelper.error({
-              title: `Error al cargar ${name}`,
-              message:
-                err.response?.data?.message ||
-                `No se pudo cargar la información de ${name}.`,
-              animation: "slideIn",
-              timer: 4000,
-            });
-            return [];
-          }
-        };
-
-        const [
-          brandsData,
-          categoriesData,
-          gendersData,
-          sizesData,
-          colorsData,
-          sleevesData,
-        ] = await Promise.all([
-          handleFetch(getBrands, "marcas"),
-          handleFetch(getCategories, "categorías"),
-          handleFetch(getGenders, "géneros"),
-          handleFetch(getSizes, "tallas"),
-          handleFetch(getColors, "colores"),
-          handleFetch(getSleeve, "tipos de cuello"),
-        ]);
-
-        setBrands(brandsData);
-        setCategories(categoriesData);
-        setGenders(gendersData);
-        setSizes(sizesData);
-        setColors(colorsData);
-        setSleeves(sleevesData);
-
-        setFiltersLoaded(true);
-      } catch (err: any) {
-        setError(
-          "No se pudieron cargar los datos de filtros. Por favor, intente nuevamente."
-        );
-        AlertHelper.error({
-          title: "Error general",
-          message:
-            err.response?.data?.message ||
-            "Error al cargar los datos de filtros.",
-          animation: "slideIn",
-          timer: 4000,
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  // Reemplaza el useEffect que maneja la carga inicial y aplicación de filtros desde URL
-  useEffect(() => {
-    if (filtersLoaded && initialLoadRef.current && categories.length > 0) {
-      // Aplicar filtros desde URL si existen
-      applyFiltersFromURL();
-      initialLoadRef.current = false;
-    }
-  }, [filtersLoaded, categories]);
-
-  // Handle URL changes when navigating back from other pages
-  useEffect(() => {
-    const handleURLChange = () => {
-      if (filtersLoaded && !initialLoadRef.current) {
-        applyFiltersFromURL();
-      }
-    };
-
-    // Check if URL has changed on component mount (when coming back from another page)
-    if (filtersLoaded && !initialLoadRef.current) {
-      handleURLChange();
-    }
-  }, [filtersLoaded]);
-
-  const scrollToProducts = () => {
-    const productsSection = document.getElementById("products-grid");
-    if (productsSection) {
-      productsSection.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  };
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const handleCustomize = () => {
-    navigate("/personalizar");
-  };
+    setCurrentPage(
+      pageParam && !isNaN(Number(pageParam)) ? Number(pageParam) : 1
+    );
+  }, [categories]);
 
   // Función para obtener productos con filtros
-  const fetchProductsWithFilters = async () => {
+  const fetchProductsWithFilters = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
@@ -361,8 +256,9 @@ export default function ProductsPage() {
       }
 
       const queryString = params.toString();
-      const response = await getProducts(queryString);
+      console.log("Fetching products with params:", queryString);
 
+      const response = await getProducts(queryString);
       let productsData: Product[] = [];
       let totalPagesCount = 1;
 
@@ -377,34 +273,30 @@ export default function ProductsPage() {
           totalPagesCount = Math.ceil(productsData.length / productsPerPage);
         }
 
-        // Scroll solo si hay filtros activos y no es carga inicial
-        const urlParams = new URLSearchParams(window.location.search);
-        const hasQueryParams = urlParams.toString().length > 0;
-
-        if (!initialLoadRef.current && hasQueryParams) {
-          setTimeout(() => scrollToProducts(), 100);
-        }
-
         setProducts(productsData);
         setTotalPages(totalPagesCount);
+        setError(null);
+
+        // Scroll solo si no es la carga inicial
+        if (!isInitialMount.current) {
+          setTimeout(() => scrollToProducts(), 100);
+        }
       } else {
         setProducts([]);
         setTotalPages(1);
       }
     } catch (err: any) {
-
+      console.error("Error fetching products:", err);
       if (err.status === 404) {
         setProducts([]);
         setTotalPages(1);
         return;
       }
-
       setError(
         "No se pudieron cargar los productos. Por favor, intente nuevamente."
       );
       setProducts([]);
       setTotalPages(1);
-
       AlertHelper.error({
         title: "Error al cargar productos",
         message:
@@ -416,130 +308,22 @@ export default function ProductsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  useEffect(() => {
-    const handlePopState = () => {
-      if (!filtersLoaded) return;
-
-      // Apply filters from URL when user navigates back/forward
-      applyFiltersFromURL();
-    };
-
-    window.addEventListener("popstate", handlePopState);
-
-    return () => {
-      window.removeEventListener("popstate", handlePopState);
-    };
-  }, [filtersLoaded, categories, genders, sizes, colors, sleeves, brands]);
-
-  // Modifica el useEffect principal para manejar mejor la carga inicial con filtros
-  useEffect(() => {
-    if (filtersLoaded && !initialLoadRef.current) {
-      fetchProductsWithFilters();
-      updateURLWithFilters();
-    }
   }, [
-    filtersLoaded,
+    currentPage,
+    searchTerm,
     activeCategoryId,
-    activeGenderId,
     activeColorId,
     activeSizeId,
-    activeSleeveId,
+    activeGenderId,
     activeBrandId,
-    activeSort,
-    searchTerm,
-    currentPage,
+    activeSleeveId,
     priceRange.min,
     priceRange.max,
+    activeSort,
   ]);
 
-  const clearAllFilters = () => {
-    setIsLoading(true);
-    setActiveCategoryId(null);
-    setActiveGenderId(null);
-    setActiveColorId(null);
-    setActiveSizeId(null);
-    setActiveSleeveId(null);
-    setActiveBrandId(null);
-    setActiveSort("default");
-    setSearchTerm("");
-    setPriceRange({ min: null, max: null });
-    setCurrentPage(1);
-
-    window.history.pushState({}, "", window.location.pathname);
-
-    setTimeout(() => {
-      const fetchWithoutFilters = async () => {
-        try {
-          const params = new URLSearchParams();
-          params.append("page", "1");
-          params.append("limit", productsPerPage.toString());
-
-          const response = await getProducts(params.toString());
-
-          if (response.data) {
-            let productsData: Product[] = [];
-            let totalPagesCount = 1;
-
-            if (Array.isArray(response.data.data)) {
-              const apiResponse = response.data as ApiResponse;
-              productsData = apiResponse.data;
-              totalPagesCount =
-                apiResponse.totalPages ||
-                Math.ceil(apiResponse.total / productsPerPage);
-            } else if (Array.isArray(response.data)) {
-              productsData = response.data;
-              totalPagesCount = Math.ceil(
-                productsData.length / productsPerPage
-              );
-            }
-
-            setProducts(productsData);
-            setTotalPages(totalPagesCount);
-            setCurrentPage(1);
-            setError(null);
-
-            scrollToTop();
-          } else {
-           
-            setError(
-              "No se pudieron cargar los productos. Por favor, intente nuevamente."
-            );
-
-            AlertHelper.error({
-              title: "Error al cargar productos",
-              message:
-                "No se pudieron cargar los productos. Por favor, intente nuevamente.",
-              timer: 4000,
-              animation: "slideIn",
-            });
-          }
-        } catch (err: any) {
-          setError(
-            "No se pudieron cargar los productos. Por favor, intente nuevamente."
-          );
-
-          AlertHelper.error({
-            title: "Error al cargar productos",
-            message:
-              err.response?.data?.message ||
-              "Ocurrió un error al cargar los productos.",
-            timer: 4000,
-            animation: "slideIn",
-          });
-        } finally {
-          setIsLoading(false);
-        }
-      };
-
-      fetchWithoutFilters();
-    }, 100);
-  };
-
-  const updateURLWithFilters = () => {
-    if (!filtersLoaded || initialLoadRef.current) return;
-
+  // Función para actualizar URL con filtros
+  const updateURLWithFilters = useCallback(() => {
     const params = new URLSearchParams();
 
     if (searchTerm) params.set("search", searchTerm);
@@ -557,14 +341,118 @@ export default function ProductsPage() {
       params.set("precioMin", priceRange.min.toString());
     if (priceRange.max !== null)
       params.set("precioMax", priceRange.max.toString());
-    if (activeSort !== "default") params.set("orden", activeSort);
     if (currentPage > 1) params.set("page", currentPage.toString());
 
     const newUrl = `${window.location.pathname}${
       params.toString() ? `?${params.toString()}` : ""
     }`;
 
-    window.history.pushState({}, "", newUrl);
+    if (window.location.href !== window.location.origin + newUrl) {
+      window.history.pushState({}, "", newUrl);
+    }
+  }, [
+    searchTerm,
+    activeCategoryId,
+    activeGenderId,
+    activeColorId,
+    activeSizeId,
+    activeSleeveId,
+    activeBrandId,
+    priceRange.min,
+    priceRange.max,
+    activeSort,
+    currentPage,
+    categories,
+  ]);
+
+  // Cargar filtros al montar el componente
+  useEffect(() => {
+    loadFiltersData();
+  }, [loadFiltersData]);
+
+  // Aplicar filtros desde URL cuando los filtros estén cargados
+  useEffect(() => {
+    if (filtersLoaded && categories.length > 0) {
+      applyFiltersFromURL();
+    }
+  }, [filtersLoaded, categories, applyFiltersFromURL]);
+
+  // Cargar productos cuando cambien los filtros
+  useEffect(() => {
+    if (filtersLoaded) {
+      fetchProductsWithFilters();
+      // Solo actualizar URL si no es la carga inicial
+      if (!isInitialMount.current) {
+        updateURLWithFilters();
+      }
+    }
+  }, [
+    filtersLoaded,
+    activeCategoryId,
+    activeGenderId,
+    activeColorId,
+    activeSizeId,
+    activeSleeveId,
+    activeBrandId,
+    activeSort,
+    searchTerm,
+    currentPage,
+    priceRange.min,
+    priceRange.max,
+    fetchProductsWithFilters,
+    updateURLWithFilters,
+  ]);
+
+  // Marcar que ya no es la carga inicial después del primer render
+  useEffect(() => {
+    if (filtersLoaded && isInitialMount.current) {
+      isInitialMount.current = false;
+    }
+  }, [filtersLoaded]);
+
+  // Manejar navegación del historial (botón atrás/adelante)
+  useEffect(() => {
+    const handlePopState = () => {
+      if (filtersLoaded && categories.length > 0) {
+        applyFiltersFromURL();
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [filtersLoaded, categories, applyFiltersFromURL]);
+
+  const scrollToProducts = () => {
+    const productsSection = document.getElementById("products-grid");
+    if (productsSection) {
+      productsSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleCustomize = () => {
+    navigate("/personalizar");
+  };
+
+  const clearAllFilters = () => {
+    setActiveCategoryId(null);
+    setActiveGenderId(null);
+    setActiveColorId(null);
+    setActiveSizeId(null);
+    setActiveSleeveId(null);
+    setActiveBrandId(null);
+    setActiveSort("default");
+    setSearchTerm("");
+    setSearchInput("");
+    setPriceRange({ min: null, max: null });
+    setCurrentPage(1);
+    window.history.pushState({}, "", window.location.pathname);
+    scrollToTop();
   };
 
   const hasActiveFilters =
@@ -580,159 +468,334 @@ export default function ProductsPage() {
     activeSort !== "default" ||
     currentPage > 1;
 
-  const getSortLabel = (sort: SortOption) => {
-    switch (sort) {
-      case "price-low":
-        return "Precio: Menor a Mayor";
-      case "price-high":
-        return "Precio: Mayor a Menor";
-      case "newest":
-        return "Más Recientes";
-      default:
-        return "Ordenar por";
-    }
-  };
-
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
-      setTimeout(() => scrollToProducts(), 100);
     }
   };
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSearchTerm(searchInput);
+    setCurrentPage(1);
+    scrollToProducts();
+  };
+
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 overflow-x-hidden">
-      {/* Hero Section - Simplified design */}
-      <section className="relative min-h-[50vh] md:min-h-[60vh] bg-white dark:bg-gray-900 flex items-center overflow-hidden">
-        {/* Background elements */}
+    <div className="min-h-screen bg-white dark:bg-gray-900">
+      {/* Responsive Hero Section */}
+      <section className="relative min-h-screen bg-gradient-to-br from-white via-blue-50/30 to-white dark:from-gray-900 dark:via-blue-900/10 dark:to-gray-900 overflow-hidden">
+        {/* Animated Background Elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-20 -right-20 w-64 h-64 md:w-96 md:h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-blue-50/50 dark:from-blue-900/10 to-transparent"></div>
-          {/* Dots pattern */}
-          <div className="absolute top-0 left-0 w-full h-full">
-            <div className="absolute top-20 left-20 w-2 h-2 bg-blue-500/30 rounded-full"></div>
-            <div className="absolute top-40 left-40 w-3 h-3 bg-blue-500/20 rounded-full"></div>
-            <div className="absolute top-60 left-60 w-2 h-2 bg-blue-500/30 rounded-full"></div>
-            <div className="absolute top-20 right-40 w-3 h-3 bg-blue-500/20 rounded-full"></div>
-            <div className="absolute top-60 right-60 w-2 h-2 bg-blue-500/30 rounded-full"></div>
+          {/* Large floating circles - responsive sizes */}
+          <motion.div
+            animate={{
+              y: [0, -30, 0],
+              x: [0, 20, 0],
+              rotate: [0, 10, 0],
+            }}
+            transition={{
+              duration: 20,
+              repeat: Number.POSITIVE_INFINITY,
+              ease: "easeInOut",
+            }}
+            className="absolute -top-20 sm:-top-40 -right-20 sm:-right-40 w-48 h-48 sm:w-96 sm:h-96 bg-blue-600/10 rounded-full blur-3xl"
+          />
+          <motion.div
+            animate={{
+              y: [0, 40, 0],
+              x: [0, -15, 0],
+              rotate: [0, -8, 0],
+            }}
+            transition={{
+              duration: 25,
+              repeat: Number.POSITIVE_INFINITY,
+              ease: "easeInOut",
+            }}
+            className="absolute top-1/2 -left-16 sm:-left-32 w-40 h-40 sm:w-80 sm:h-80 bg-blue-600/5 rounded-full blur-2xl"
+          />
+          <motion.div
+            animate={{
+              y: [0, -25, 0],
+              x: [0, 10, 0],
+              scale: [1, 1.1, 1],
+            }}
+            transition={{
+              duration: 15,
+              repeat: Number.POSITIVE_INFINITY,
+              ease: "easeInOut",
+            }}
+            className="absolute bottom-10 sm:bottom-20 right-1/4 w-32 h-32 sm:w-64 sm:h-64 bg-blue-600/8 rounded-full blur-xl"
+          />
+
+          {/* Geometric shapes - responsive */}
+          <motion.div
+            animate={{
+              rotate: [0, 360],
+            }}
+            transition={{
+              duration: 50,
+              repeat: Number.POSITIVE_INFINITY,
+              ease: "linear",
+            }}
+            className="absolute top-1/4 left-1/4 w-3 h-3 sm:w-4 sm:h-4 bg-blue-600/20 rotate-45"
+          />
+          <motion.div
+            animate={{
+              rotate: [0, -360],
+            }}
+            transition={{
+              duration: 40,
+              repeat: Number.POSITIVE_INFINITY,
+              ease: "linear",
+            }}
+            className="absolute top-3/4 right-1/3 w-4 h-4 sm:w-6 sm:h-6 bg-blue-600/15 rounded-full"
+          />
+
+          {/* Grid pattern */}
+          <div className="absolute inset-0 opacity-[0.02]">
+            <div
+              className="w-full h-full"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%232563eb' fillOpacity='0.4'%3E%3Ccircle cx='20' cy='20' r='1'/%3E%3C/g%3E%3C/svg%3E")`,
+              }}
+            />
           </div>
         </div>
 
-        <div className="container mx-auto px-0 py-12 md:py-16 lg:py-24 relative z-10">
-          <div className="px-4 mx-auto transition-all duration-700 ease-out">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-              {/* Left Content */}
-              <div className="text-center lg:text-left">
-                {/* Badge Component */}
-                <div className="flex items-center justify-center lg:justify-start mb-6 md:mb-8">
-                  <div className="inline-flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-4 py-1.5">
-                    <Shirt className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                    <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                      DESCUBRE NUESTRO CATÁLOGO
-                    </span>
-                  </div>
-                </div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center min-h-screen">
+          <div className="w-full">
+            <div className="pt-4 sm:pt-6 pb-4 sm:pb-8">
+              <Breadcrumbs />
+            </div>
 
-                {/* Main Title */}
-                <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 dark:text-white mb-4 md:mb-6 leading-tight">
-                  Encuentra tu{" "}
+            <div className="text-center">
+              {/* Badge - responsive */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-blue-600/10 border border-blue-600/20 text-blue-600 dark:text-blue-400 text-xs sm:text-sm font-semibold mb-6 sm:mb-8 backdrop-blur-sm"
+              >
+                <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 animate-pulse" />
+                CATÁLOGO PREMIUM
+                <motion.div
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{
+                    duration: 2,
+                    repeat: Number.POSITIVE_INFINITY,
+                    ease: "easeInOut",
+                  }}
+                  className="ml-1.5 sm:ml-2 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-600 rounded-full"
+                />
+              </motion.div>
+
+              {/* Main Title - highly responsive */}
+              <motion.div
+                initial={{ opacity: 0, y: 50, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                className="mb-6 sm:mb-8"
+              >
+                <h1 className="text-4xl xs:text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-7xl font-black text-gray-900 dark:text-white mb-4 sm:mb-6 leading-none relative px-2">
                   <span className="relative inline-block">
-                    <span className="relative z-10 text-blue-600 dark:text-blue-400">
-                      estilo
+                    <span className="bg-clip-text text-transparent bg-gray-900 animate-pulse">
+                      ENCUENTRA
                     </span>
-                    <span className="absolute bottom-1 md:bottom-2 left-0 w-full h-2 md:h-3 bg-blue-600/20 dark:bg-blue-400/20 -z-10 rounded"></span>
-                  </span>{" "}
-                  perfecto
+                    {/* Glow effect en negro */}
+                    <span className="absolute inset-0 bg-clip-text text-transparent bg-gradient-to-r from-black to-black blur-sm opacity-30">
+                      ENCUENTRA
+                    </span>
+                  </span>
                 </h1>
 
-                {/* Subtitle */}
-                <p className="text-base md:text-lg lg:text-xl text-gray-600 dark:text-gray-400 mb-6 md:mb-8">
-                  Explora nuestra colección completa de ropa premium diseñada
-                  para cada ocasión y personalidad.
-                </p>
-
-                {/* Features */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto lg:mx-0 mb-8 md:mb-10">
-                  <div className="flex items-center justify-center lg:justify-start gap-3 p-4 bg-white/50 dark:bg-gray-800/50 rounded-xl backdrop-blur-sm border border-gray-100 dark:border-gray-700">
-                    <Sparkles className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">
-                      200+ Productos
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-center lg:justify-start gap-3 p-4 bg-white/50 dark:bg-gray-800/50 rounded-xl backdrop-blur-sm border border-gray-100 dark:border-gray-700">
-                    <Palette className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">
-                      15+ Categorías
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-center lg:justify-start gap-3 p-4 bg-white/50 dark:bg-gray-800/50 rounded-xl backdrop-blur-sm border border-gray-100 dark:border-gray-700">
-                    <Sparkles className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">
-                      Calidad Premium
-                    </span>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8">
-                  <motion.button
-                    onClick={scrollToProducts}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-full transition-all flex items-center justify-center shadow-lg shadow-blue-600/20"
+                {/* Decorative elements - responsive */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.8, delay: 0.3 }}
+                  className="flex items-center justify-center gap-2 sm:gap-4 mb-4 sm:mb-6"
+                >
+                  <motion.div
+                    animate={{ rotate: [0, 360] }}
+                    transition={{
+                      duration: 8,
+                      repeat: Number.POSITIVE_INFINITY,
+                      ease: "linear",
+                    }}
+                    className="w-8 h-8 sm:w-12 sm:h-12 border-2 border-blue-600/30 rounded-full flex items-center justify-center"
                   >
-                    <span className="flex items-center">
-                      Ver Productos
-                      <ArrowRight className="ml-2 w-4 h-4" />
-                    </span>
-                  </motion.button>
-
-                  <motion.button
-                    onClick={handleCustomize}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="border border-gray-300 dark:border-gray-700 hover:border-blue-600 dark:hover:border-blue-500 text-gray-900 dark:text-white font-medium py-3 px-6 rounded-full transition-all flex items-center justify-center"
+                    <Sparkles className="w-4 h-4 sm:w-6 sm:h-6 text-blue-600" />
+                  </motion.div>
+                  <div className="h-px w-12 sm:w-20 bg-gradient-to-r from-transparent via-blue-600 to-transparent" />
+                  <motion.div
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{
+                      duration: 3,
+                      repeat: Number.POSITIVE_INFINITY,
+                      ease: "easeInOut",
+                    }}
+                    className="text-2xl sm:text-4xl"
                   >
-                    <Paintbrush className="mr-2 h-5 w-5" />
-                    Personalizar
-                  </motion.button>
-                </div>
+                    ✨
+                  </motion.div>
+                  <div className="h-px w-12 sm:w-20 bg-gradient-to-r from-transparent via-blue-600 to-transparent" />
+                  <motion.div
+                    animate={{ rotate: [0, -360] }}
+                    transition={{
+                      duration: 10,
+                      repeat: Number.POSITIVE_INFINITY,
+                      ease: "linear",
+                    }}
+                    className="w-8 h-8 sm:w-12 sm:h-12 border-2 border-blue-600/30 rounded-full flex items-center justify-center"
+                  >
+                    <Heart className="w-4 h-4 sm:w-6 sm:h-6 text-blue-600" />
+                  </motion.div>
+                </motion.div>
 
-                {/* Breadcrumbs at bottom */}
-                <div className="mt-8">
-                  <Breadcrumbs />
-                </div>
-              </div>
+                {/* Description - responsive */}
+                <motion.p
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.5 }}
+                  className="text-base sm:text-xl md:text-2xl text-gray-600 dark:text-gray-400 font-medium max-w-4xl mx-auto leading-relaxed px-4"
+                >
+                  La colección más{" "}
+                  <span className="relative inline-block">
+                    <span className="text-blue-600 font-bold">exclusiva</span>
+                    <motion.div
+                      animate={{ scaleX: [0, 1] }}
+                      transition={{ duration: 1, delay: 1 }}
+                      className="absolute bottom-0 left-0 w-full h-0.5 sm:h-1 bg-blue-600/30 rounded-full"
+                    />
+                  </span>{" "}
+                  de productos personalizados
+                  <br className="hidden sm:block" />
+                  <span className="block sm:inline">
+                    {" "}
+                    diseñados especialmente para ti
+                  </span>
+                </motion.p>
+              </motion.div>
 
-              {/* Right Image */}
-              <div className="relative">
-                <div className="relative rounded-2xl overflow-hidden shadow-2xl">
-                  <img
-                    src={img || "/placeholder.svg"}
-                    alt="Catálogo de productos"
-                    className="w-full h-[400px] md:h-[500px] object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-                </div>
+              {/* Search Bar - responsive */}
+              <motion.div
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 1 }}
+                className="max-w-5xl mx-auto mb-8 sm:mb-12 px-4"
+              >
+                <form onSubmit={handleSearch} className="relative group">
+                  <div className="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-xl sm:rounded-2xl border border-white/20 dark:border-gray-700/50 shadow-2xl">
+                    <div className="flex items-center">
+                      <div className="pl-4 sm:pl-8 pr-2 sm:pr-4 py-4 sm:py-8">
+                        <Search className="w-5 h-5 sm:w-8 sm:h-8 text-gray-400 group-hover:text-blue-600 transition-colors duration-300" />
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="¿Qué estás buscando hoy?"
+                        value={searchInput}
+                        onChange={(e) => setSearchInput(e.target.value)}
+                        className="flex-1 py-4 sm:py-8 text-base sm:text-xl bg-transparent text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none"
+                      />
+                      <motion.button
+                        type="submit"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="mr-2 sm:mr-4 px-4 sm:px-8 py-2 sm:py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold rounded-lg sm:rounded-xl transition-all flex items-center gap-2 sm:gap-3 shadow-lg hover:shadow-xl text-sm sm:text-base"
+                      >
+                        <Zap className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <span className="hidden xs:inline">Buscar</span>
+                      </motion.button>
+                    </div>
+                  </div>
+                </form>
+              </motion.div>
 
-                {/* Floating elements */}
-                <div className="absolute -top-4 -right-4 w-20 h-20 bg-blue-500/20 rounded-full blur-xl"></div>
-                <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-purple-500/20 rounded-full blur-xl"></div>
-              </div>
+              {/* Action Buttons - responsive */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 1.2 }}
+                className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6 mb-8 sm:mb-12 px-4"
+              >
+                <motion.button
+                  onClick={scrollToProducts}
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="group relative overflow-hidden flex items-center justify-center gap-2 sm:gap-3 px-6 sm:px-10 py-3 sm:py-5 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white border-2 border-gray-200 dark:border-gray-700 rounded-full hover:border-blue-600 hover:shadow-2xl transition-all font-semibold text-base sm:text-lg"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-600/0 via-blue-600/5 to-blue-600/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                  <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 group-hover:text-blue-600 transition-colors relative z-10" />
+                  <span className="relative z-10">Ver Catálogo</span>
+                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform relative z-10" />
+                </motion.button>
+
+                <motion.button
+                  onClick={handleCustomize}
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="group relative overflow-hidden flex items-center justify-center gap-2 sm:gap-3 px-6 sm:px-10 py-3 sm:py-5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-full transition-all font-bold text-base sm:text-lg shadow-lg hover:shadow-2xl"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                  <Paintbrush className="w-5 h-5 sm:w-6 sm:h-6 relative z-10" />
+                  <span className="relative z-10">Personalizar</span>
+                  <motion.div
+                    animate={{ rotate: [0, 10, -10, 0] }}
+                    transition={{
+                      duration: 2,
+                      repeat: Number.POSITIVE_INFINITY,
+                      ease: "easeInOut",
+                    }}
+                    className="relative z-10 text-lg sm:text-xl"
+                  ></motion.div>
+                </motion.button>
+              </motion.div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Main Products Section */}
+      {/* Enhanced Main Products Section */}
       <section
-        className="w-full py-6 md:py-8 bg-gradient-to-br from-slate-50 via-blue-50/20 to-indigo-50/10 dark:from-gray-900 dark:via-blue-950/20 dark:to-indigo-950/10"
+        className="py-12 bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 relative overflow-hidden"
         id="products-grid"
       >
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Background Elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-20 right-20 w-64 h-64 bg-blue-600/5 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-20 left-20 w-48 h-48 bg-blue-600/3 rounded-full blur-2xl"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-600/2 rounded-full blur-3xl"></div>
+        </div>
+
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          {/* Enhanced Section Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-600/10 border border-blue-600/20 text-blue-600 dark:text-blue-400 text-sm font-semibold mb-4 backdrop-blur-sm">
+              <ShoppingBag className="w-4 h-4 mr-2" />
+              CATÁLOGO DE PRODUCTOS
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+              Explora Nuestra Colección
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+              Descubre productos únicos diseñados especialmente para ti
+            </p>
+          </motion.div>
+
           {/* Active Filters */}
           {hasActiveFilters && (
-            <div className="mb-4 md:mb-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="mb-8"
+            >
               <ActiveFilters
                 activeCategoryId={activeCategoryId}
                 setActiveCategoryId={setActiveCategoryId}
@@ -760,184 +823,205 @@ export default function ProductsPage() {
                 genders={genders}
                 sleeves={sleeves}
               />
-            </div>
+            </motion.div>
           )}
 
-          <div className="flex flex-col md:flex-row gap-6 md:gap-8 lg:gap-12">
+          <div className="flex flex-col lg:flex-row gap-8">
             {/* Enhanced Filters Sidebar */}
-            <ProductFilters
-              categories={categories}
-              brands={brands}
-              colors={colors}
-              sizes={sizes}
-              genders={genders}
-              sleeves={sleeves}
-              activeCategoryId={activeCategoryId}
-              setActiveCategoryId={setActiveCategoryId}
-              activeBrandId={activeBrandId}
-              setActiveBrandId={setActiveBrandId}
-              activeColorId={activeColorId}
-              setActiveColorId={setActiveColorId}
-              activeSizeId={activeSizeId}
-              setActiveSizeId={setActiveSizeId}
-              activeGenderId={activeGenderId}
-              setActiveGenderId={setActiveGenderId}
-              activeSleeveId={activeSleeveId}
-              setActiveSleeveId={setActiveSleeveId}
-              activeSort={activeSort}
-              setActiveSort={setActiveSort}
-              priceRange={priceRange}
-              setPriceRange={setPriceRange}
-              hasActiveFilters={hasActiveFilters}
-              clearAllFilters={clearAllFilters}
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-            />
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="lg:w-80 flex-shrink-0"
+            >
+              <ProductFilters
+                categories={categories}
+                brands={brands}
+                colors={colors}
+                sizes={sizes}
+                genders={genders}
+                sleeves={sleeves}
+                activeCategoryId={activeCategoryId}
+                setActiveCategoryId={setActiveCategoryId}
+                activeBrandId={activeBrandId}
+                setActiveBrandId={setActiveBrandId}
+                activeColorId={activeColorId}
+                setActiveColorId={setActiveColorId}
+                activeSizeId={activeSizeId}
+                setActiveSizeId={setActiveSizeId}
+                activeGenderId={activeGenderId}
+                setActiveGenderId={setActiveGenderId}
+                activeSleeveId={activeSleeveId}
+                setActiveSleeveId={setActiveSleeveId}
+                activeSort={activeSort}
+                setActiveSort={setActiveSort}
+                priceRange={priceRange}
+                setPriceRange={setPriceRange}
+                hasActiveFilters={hasActiveFilters}
+                clearAllFilters={clearAllFilters}
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+              />
+            </motion.div>
 
             {/* Main Content */}
-            <div className="flex-1">
-              {/* Toolbar */}
-              <div className="flex items-center justify-between mb-6 md:mb-8 p-3 md:p-4 bg-white dark:bg-gray-900 rounded-xl md:rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
-                <div className="flex items-center gap-2 md:gap-4">
-                  <span className="text-xs md:text-sm text-gray-600 dark:text-gray-400 font-medium">
-                    {products.length} productos encontrados
-                  </span>
-                </div>
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="flex-1"
+            >
+              {/* Enhanced Toolbar */}
+              <div className="relative mb-8 group">
+                {/* Animated background */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600/20 via-purple-600/10 to-blue-600/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
 
-                <div className="flex items-center gap-2 md:gap-3">
-                  {/* View Mode Toggle */}
-                  <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
-                    <button
-                      onClick={() => setViewMode("grid")}
-                      className={`p-1.5 md:p-2 rounded-md transition-all ${
-                        viewMode === "grid"
-                          ? "bg-white dark:bg-gray-700 text-blue-600 shadow-sm"
-                          : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-                      }`}
-                    >
-                      <Grid3X3 className="w-3 h-3 md:w-4 md:h-4" />
-                    </button>
-                    <button
-                      onClick={() => setViewMode("list")}
-                      className={`p-1.5 md:p-2 rounded-md transition-all ${
-                        viewMode === "list"
-                          ? "bg-white dark:bg-gray-700 text-blue-600 shadow-sm"
-                          : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-                      }`}
-                    >
-                      <List className="w-3 h-3 md:w-4 md:h-4" />
-                    </button>
+                <div className="relative flex items-center justify-between p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-xl border border-white/20 dark:border-gray-700/50 shadow-lg">
+                  <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                        <ShoppingBag className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                          {products.length}
+                        </span>
+                        <span className="text-gray-600 dark:text-gray-400 ml-2 font-medium">
+                          productos encontrados
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Sort Dropdown */}
-                  <div className="relative">
-                    <button
-                      onClick={() => setShowSortDropdown(!showSortDropdown)}
-                      className="flex items-center gap-1 md:gap-2 px-2 md:px-4 py-1.5 md:py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-all"
-                    >
-                      <SortAsc className="w-3 h-3 md:w-4 md:h-4" />
-                      <span className="text-xs md:text-sm font-medium hidden sm:inline">
-                        {getSortLabel(activeSort)}
-                      </span>
-                      <span className="text-xs md:text-sm font-medium sm:hidden">
-                        Ordenar
-                      </span>
-                    </button>
-
-                    <AnimatePresence>
-                      {showSortDropdown && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                          transition={{ duration: 0.2 }}
-                          className="absolute right-0 top-full mt-2 w-48 md:w-56 bg-white dark:bg-gray-900 rounded-xl shadow-xl border border-gray-100 dark:border-gray-800 z-50"
-                        >
-                          <div className="p-2">
-                            {[
-                              { value: "default", label: "Relevancia" },
-                              {
-                                value: "price-low",
-                                label: "Precio: Menor a Mayor",
-                              },
-                              {
-                                value: "price-high",
-                                label: "Precio: Mayor a Menor",
-                              },
-                              { value: "newest", label: "Más Recientes" },
-                            ].map((option) => (
-                              <button
-                                key={option.value}
-                                onClick={() => {
-                                  setActiveSort(option.value as SortOption);
-                                  setShowSortDropdown(false);
-                                }}
-                                className={`w-full text-left px-3 py-2 rounded-lg text-xs md:text-sm transition-all ${
-                                  activeSort === option.value
-                                    ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
-                                }`}
-                              >
-                                {option.label}
-                              </button>
-                            ))}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                  <div className="flex items-center gap-4">
+                    {/* Enhanced View Mode Toggle */}
+                    <div className="flex items-center bg-gray-100/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-1.5 border border-gray-200/50 dark:border-gray-600/50">
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setViewMode("grid")}
+                        className={`p-3 rounded-lg transition-all duration-300 ${
+                          viewMode === "grid"
+                            ? "bg-white dark:bg-gray-600 text-blue-600 shadow-lg shadow-blue-600/20"
+                            : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-600/50"
+                        }`}
+                      >
+                        <Grid3X3 className="w-5 h-5" />
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setViewMode("list")}
+                        className={`p-3 rounded-lg transition-all duration-300 ${
+                          viewMode === "list"
+                            ? "bg-white dark:bg-gray-600 text-blue-600 shadow-lg shadow-blue-600/20"
+                            : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-600/50"
+                        }`}
+                      >
+                        <List className="w-5 h-5" />
+                      </motion.button>
+                    </div>
                   </div>
                 </div>
               </div>
 
+              {/* Products Content */}
               {isLoading ? (
-                <Loader />
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex items-center justify-center py-20"
+                >
+                  <Loader />
+                </motion.div>
               ) : error ? (
-                <div className="bg-white dark:bg-gray-800/50 p-6 md:p-8 lg:p-16 text-center rounded-xl md:rounded-2xl border border-gray-100 dark:border-gray-700 shadow-lg backdrop-blur-sm mx-2 md:mx-0">
-                  <div className="flex flex-col items-center justify-center">
-                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center mb-4 md:mb-6">
-                      <AlertTriangle
-                        className="h-8 w-8 md:h-10 md:w-10 text-red-500"
-                        strokeWidth={1.5}
-                      />
-                    </div>
-                    <h3 className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white mb-3 md:mb-4 px-4">
-                      Error al cargar productos
-                    </h3>
-                    <p className="text-gray-500 dark:text-gray-400 mb-6 md:mb-8 lg:mb-10 max-w-md mx-auto text-sm md:text-base px-4">
-                      {error}
-                    </p>
-                    <button
-                      onClick={() => window.location.reload()}
-                      className="px-6 py-2.5 md:px-8 md:py-3 lg:px-10 lg:py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium hover:from-blue-700 hover:to-indigo-700 transition-all rounded-full shadow-lg text-sm md:text-base"
-                    >
-                      Intentar de nuevo
-                    </button>
-                  </div>
-                </div>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl p-12 text-center rounded-2xl border border-white/20 dark:border-gray-700/50 shadow-lg"
+                >
+                  <AlertTriangle className="h-16 w-16 text-red-500 mx-auto mb-6" />
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                    Error al cargar productos
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-md mx-auto">
+                    {error}
+                  </p>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => window.location.reload()}
+                    className="px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl"
+                  >
+                    Intentar de nuevo
+                  </motion.button>
+                </motion.div>
               ) : (
                 <>
-                  <ProductGrid
-                    products={products}
-                    hoveredProduct={hoveredProduct}
-                    setHoveredProduct={setHoveredProduct}
-                    noProductsFound={products.length === 0}
-                    clearAllFilters={clearAllFilters}
-                    viewMode={viewMode}
-                  />
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.4 }}
+                  >
+                    <ProductGrid
+                      products={products}
+                      hoveredProduct={hoveredProduct}
+                      setHoveredProduct={setHoveredProduct}
+                      noProductsFound={products.length === 0}
+                      clearAllFilters={clearAllFilters}
+                      viewMode={viewMode}
+                    />
+                  </motion.div>
 
                   {totalPages > 1 && (
-                    <Pagination
-                      currentPage={currentPage}
-                      totalPages={totalPages}
-                      setCurrentPage={handlePageChange}
-                    />
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.6, delay: 0.5 }}
+                      className="mt-12"
+                    >
+                      <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        setCurrentPage={handlePageChange}
+                      />
+                    </motion.div>
                   )}
                 </>
               )}
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
+
+      {/* Customize Section - Minimal */}
+      {!isLoading && products.length > 0 && (
+        <section className="py-6 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-center">
+              <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center gap-3">
+                  <Paintbrush className="w-5 h-5 text-blue-600" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      ¿Necesitas algo personalizado?
+                    </p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                      Crea tu diseño único
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleCustomize}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  Personalizar
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

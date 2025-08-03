@@ -1,5 +1,4 @@
 "use client";
-
 import type React from "react";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
@@ -66,22 +65,18 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
   clearAllFilters,
 }) => {
   return (
-    <div className="flex flex-wrap gap-2 mb-6">
+    <div className="flex flex-wrap gap-2">
       {searchTerm && (
         <motion.button
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3 }}
           onClick={() => {
             setSearchTerm("");
-            // Actualizar URL al eliminar búsqueda
             const url = new URL(window.location.href);
             url.searchParams.delete("search");
             window.history.pushState({}, "", url.toString());
           }}
-          className="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-3 py-1.5 rounded-full text-sm hover:bg-blue-100 dark:hover:bg-blue-900/50"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          className="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-3 py-2 rounded-lg text-sm hover:bg-blue-100 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-800"
         >
           Búsqueda: {searchTerm}
           <X className="h-4 w-4" />
@@ -92,21 +87,16 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
         <motion.button
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3 }}
           onClick={() => {
             setActiveCategoryId(null);
-            // Actualizar URL al eliminar categoría
             const url = new URL(window.location.href);
             url.searchParams.delete("categoria");
             window.history.pushState({}, "", url.toString());
           }}
-          className="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-3 py-1.5 rounded-full text-sm hover:bg-blue-100 dark:hover:bg-blue-900/50"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          className="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-3 py-2 rounded-lg text-sm hover:bg-blue-100 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-800"
         >
           Categoría:{" "}
-          {(Array.isArray(categories) &&
-            categories.find((c) => c.id === activeCategoryId)?.name) ||
+          {categories.find((c) => c.id === activeCategoryId)?.name ||
             "Desconocida"}
           <X className="h-4 w-4" />
         </motion.button>
@@ -116,22 +106,16 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
         <motion.button
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
           onClick={() => {
             setActiveBrandId(null);
-            // Actualizar URL
             const url = new URL(window.location.href);
             url.searchParams.delete("marca");
             window.history.pushState({}, "", url.toString());
           }}
-          className="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-3 py-1.5 rounded-full text-sm hover:bg-blue-100 dark:hover:bg-blue-900/50"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          className="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-3 py-2 rounded-lg text-sm hover:bg-blue-100 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-800"
         >
           Marca:{" "}
-          {(Array.isArray(brands) &&
-            brands.find((b) => b.id === activeBrandId)?.name) ||
-            "Desconocida"}
+          {brands.find((b) => b.id === activeBrandId)?.name || "Desconocida"}
           <X className="h-4 w-4" />
         </motion.button>
       )}
@@ -140,26 +124,16 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
         <motion.button
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3, delay: 0.2 }}
           onClick={() => {
             setActiveGenderId(null);
-            // Actualizar URL
             const url = new URL(window.location.href);
             url.searchParams.delete("genero");
             window.history.pushState({}, "", url.toString());
           }}
-          className="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-3 py-1.5 rounded-full text-sm hover:bg-blue-100 dark:hover:bg-blue-900/50"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          className="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-3 py-2 rounded-lg text-sm hover:bg-blue-100 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-800"
         >
           Género:{" "}
-          {(() => {
-            // Buscar el género por ID y mostrar su nombre
-            const gender =
-              Array.isArray(genders) &&
-              genders.find((g) => g.id === activeGenderId);
-            return gender ? gender.name : "Desconocido";
-          })()}
+          {genders.find((g) => g.id === activeGenderId)?.name || "Desconocido"}
           <X className="h-4 w-4" />
         </motion.button>
       )}
@@ -168,22 +142,16 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
         <motion.button
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3, delay: 0.3 }}
           onClick={() => {
             setActiveColorId(null);
-            // Actualizar URL
             const url = new URL(window.location.href);
             url.searchParams.delete("color");
             window.history.pushState({}, "", url.toString());
           }}
-          className="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-3 py-1.5 rounded-full text-sm hover:bg-blue-100 dark:hover:bg-blue-900/50"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          className="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-3 py-2 rounded-lg text-sm hover:bg-blue-100 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-800"
         >
           Color:{" "}
-          {(Array.isArray(colors) &&
-            colors.find((c) => c.id === activeColorId)?.name) ||
-            "Desconocido"}
+          {colors.find((c) => c.id === activeColorId)?.name || "Desconocido"}
           <X className="h-4 w-4" />
         </motion.button>
       )}
@@ -192,25 +160,16 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
         <motion.button
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3, delay: 0.4 }}
           onClick={() => {
             setActiveSizeId(null);
-            // Actualizar URL
             const url = new URL(window.location.href);
             url.searchParams.delete("talla");
             window.history.pushState({}, "", url.toString());
           }}
-          className="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-3 py-1.5 rounded-full text-sm hover:bg-blue-100 dark:hover:bg-blue-900/50"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          className="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-3 py-2 rounded-lg text-sm hover:bg-blue-100 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-800"
         >
           Talla:{" "}
-          {(() => {
-            // Buscar la talla por ID y mostrar su nombre
-            const size =
-              Array.isArray(sizes) && sizes.find((s) => s.id === activeSizeId);
-            return size ? size.name : "Desconocida";
-          })()}
+          {sizes.find((s) => s.id === activeSizeId)?.name || "Desconocida"}
           <X className="h-4 w-4" />
         </motion.button>
       )}
@@ -219,22 +178,16 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
         <motion.button
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3, delay: 0.5 }}
           onClick={() => {
             setActiveSleeveId(null);
-            // Actualizar URL
             const url = new URL(window.location.href);
             url.searchParams.delete("manga");
             window.history.pushState({}, "", url.toString());
           }}
-          className="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-3 py-1.5 rounded-full text-sm hover:bg-blue-100 dark:hover:bg-blue-900/50"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          className="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-3 py-2 rounded-lg text-sm hover:bg-blue-100 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-800"
         >
           Tipo de Manga:{" "}
-          {(Array.isArray(sleeves) &&
-            sleeves.find((s) => s.id === activeSleeveId)?.name) ||
-            "Desconocido"}
+          {sleeves.find((s) => s.id === activeSleeveId)?.name || "Desconocido"}
           <X className="h-4 w-4" />
         </motion.button>
       )}
@@ -243,10 +196,8 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
         <motion.button
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3, delay: 0.6 }}
           onClick={() => {
             setPriceRange({ min: null, max: null });
-            // Actualizar URL
             const url = new URL(window.location.href);
             url.searchParams.delete("precioMin");
             url.searchParams.delete("precioMax");
@@ -254,9 +205,7 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
             url.searchParams.delete("priceMax");
             window.history.pushState({}, "", url.toString());
           }}
-          className="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-3 py-1.5 rounded-full text-sm hover:bg-blue-100 dark:hover:bg-blue-900/50"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          className="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-3 py-2 rounded-lg text-sm hover:bg-blue-100 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-800"
         >
           Precio: {priceRange.min !== null ? `$${priceRange.min}` : "$0"} -{" "}
           {priceRange.max !== null ? `$${priceRange.max}` : "Sin límite"}
@@ -277,13 +226,10 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
         <motion.button
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3, delay: 0.7 }}
           onClick={clearAllFilters}
-          className="flex items-center gap-1 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 px-3 py-1.5 rounded-full text-sm hover:bg-red-100 dark:hover:bg-red-900/50"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          className="flex items-center gap-2 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 px-3 py-2 rounded-lg text-sm hover:bg-red-100 dark:hover:bg-red-900/50 border border-red-200 dark:border-red-800"
         >
-          Limpiar todos los filtros
+          Limpiar todos
           <X className="h-4 w-4" />
         </motion.button>
       )}
