@@ -170,7 +170,7 @@ export default function ProductCard({
 
           {/* Add to Cart Button */}
           <div
-            className={`absolute bottom-3 left-3 right-3 transition-opacity ${
+            className={`absolute bottom-3 right-3 transition-opacity ${
               isHovered ? "opacity-100" : "opacity-0"
             }`}
           >
@@ -181,14 +181,13 @@ export default function ProductCard({
                 lowestPriceVariant.stock <= 0 ||
                 isLoading
               }
-              className="w-full py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              className=" w-8 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <ShoppingBag className="w-4 h-4" />
               )}
-              Añadir al Carrito
             </button>
           </div>
 

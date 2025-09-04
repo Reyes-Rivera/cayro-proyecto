@@ -16,35 +16,15 @@ const apiUrl = import.meta.env.VITE_REACT_APP_BASE_URL;
 
 type CheckoutStep = "shipping" | "shipping-details" | "payment";
 
-// Shipping prediction API service
-const ShippingApiService = {
-  async predictShippingCost(data: {
-    subtotalAmount: number;
-    totalAmount: number;
-    num_items: number;
-    total_quantity: number;
-    state: string;
-  }): Promise<number> {
-    try {
-      const response = await fetch("https://envios-8tp4.onrender.com/predict", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      return result.shipping_cost_prediction || 0;
-    } catch (error) {
-      console.error("Error predicting shipping cost:", error);
-      throw error;
-    }
-  },
+const calculateShippingCost = (cart: any[]): number => {
+  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+  if (totalItems <= 5) return 200;
+  if (totalItems <= 10) return 250;
+  if (totalItems <= 15) return 300;
+  if (totalItems <= 20) return 350;
+  if (totalItems <= 25) return 400;
+  const extraGroups = Math.ceil((totalItems - 25) / 5);
+  return 400 + extraGroups * 50;
 };
 
 export default function CheckoutPage() {
@@ -67,9 +47,6 @@ export default function CheckoutPage() {
 
   // Shipping calculation states
   const [shipping, setShipping] = useState(0);
-  const [shippingLoading, setShippingLoading] = useState(false);
-  // Remove these lines:
-  // const [userState, setUserState] = useState("BCS") // Default state
 
   // Calculate total with shipping
   const total = subtotal + shipping;
@@ -84,48 +61,16 @@ export default function CheckoutPage() {
     totalRef.current = total;
   }, [subtotal, shipping, total]);
 
-  // Calculate shipping cost using API
-  const calculateShippingCost = async () => {
+  const calculateShippingCostLocal = () => {
     if (items.length === 0) {
       setShipping(0);
       return;
     }
 
     try {
-      setShippingLoading(true);
-
-      // Calculate num_items (unique products) and total_quantity
-      const num_items = items.length;
-      const total_quantity = items.reduce(
-        (sum, item) => sum + item.quantity,
-        0
-      );
-
-      // In the calculateShippingCost function, update the state detection logic:
-      // Get state from selected address or use default
-      let selectedState = "BCS"; // Default state
-      if (selectedAddressId && addresses.length > 0) {
-        const selectedAddress = addresses.find(
-          (addr) => addr.id.toString() === selectedAddressId
-        );
-        if (selectedAddress && selectedAddress.state) {
-          selectedState = selectedAddress.state;
-        }
-      }
-
-      // Prepare API request data
-      const requestData = {
-        subtotalAmount: subtotal,
-        totalAmount: subtotal, // We'll update this after getting shipping cost
-        num_items,
-        total_quantity,
-        state: selectedState,
-      };
-
-      const predictedShipping = await ShippingApiService.predictShippingCost(
-        requestData
-      );
-      setShipping(predictedShipping);
+      // Calculate shipping cost using the local function
+      const shippingCost = calculateShippingCost(items);
+      setShipping(shippingCost);
     } catch (err) {
       console.error("Failed to calculate shipping:", err);
       AlertHelper.error({
@@ -137,17 +82,14 @@ export default function CheckoutPage() {
       });
       // Fallback to a default shipping cost
       setShipping(200);
-    } finally {
-      setShippingLoading(false);
     }
   };
 
-  // Recalculate shipping when items, addresses, or selected address change
   useEffect(() => {
     if (currentStep === "shipping-details" || currentStep === "payment") {
-      calculateShippingCost();
+      calculateShippingCostLocal();
     }
-  }, [items, selectedAddressId, addresses, subtotal, currentStep]);
+  }, [items, subtotal, currentStep]);
 
   useEffect(() => {
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
@@ -476,9 +418,6 @@ export default function CheckoutPage() {
               items={items}
               itemCount={itemCount}
               subtotal={subtotal}
-              shipping={shipping}
-              total={total}
-              shippingLoading={shippingLoading}
               expanded={orderSummaryExpanded}
               toggleExpanded={toggleOrderSummary}
               currentStep={currentStep}

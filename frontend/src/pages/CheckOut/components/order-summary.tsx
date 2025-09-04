@@ -1,21 +1,13 @@
 "use client";
 import type React from "react";
-import {
-  ChevronUp,
-  ChevronDown,
-  Truck,
-  ArrowRight,
-  Loader2,
-} from "lucide-react";
+import { ChevronUp, ChevronDown, Truck, ArrowRight } from "lucide-react";
 import type { CheckoutStep } from "@/types/checkout";
+import { useCart } from "@/context/CartContext";
 
 interface OrderSummaryProps {
   items: any[];
   itemCount: number;
   subtotal: number;
-  shipping: number;
-  total: number;
-  shippingLoading: boolean;
   expanded: boolean;
   toggleExpanded: () => void;
   currentStep: CheckoutStep;
@@ -27,14 +19,13 @@ export default function OrderSummary({
   items,
   itemCount,
   subtotal,
-  shipping,
-  total,
-  shippingLoading,
   expanded,
   toggleExpanded,
   currentStep,
   onContinue,
 }: OrderSummaryProps) {
+  const { shippingCost, total } = useCart();
+
   const handleImageError = (
     e: React.SyntheticEvent<HTMLImageElement, Event>
   ) => {
@@ -135,34 +126,20 @@ export default function OrderSummary({
                 {itemCount === 1 ? "producto" : "productos"})
               </span>
               <span className="text-gray-900 dark:text-white">
-                ${subtotal.toFixed(2)}
+                ${subtotal.toFixed(2)} MXN
               </span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-500 dark:text-gray-400">Envío</span>
               <span className="text-gray-900 dark:text-white">
-                {shippingLoading ? (
-                  <div className="flex items-center">
-                    <Loader2 className="w-4 h-4 animate-spin mr-1" />
-                    <span className="text-sm text-gray-500">Calculando...</span>
-                  </div>
-                ) : (
-                  `$${shipping.toFixed(2)}`
-                )}
+                ${shippingCost.toFixed(2)} MXN
               </span>
             </div>
             <div className="border-t border-gray-100 dark:border-gray-800 pt-3 mt-3">
               <div className="flex justify-between font-medium">
                 <span className="text-gray-900 dark:text-white">Total</span>
                 <span className="text-gray-900 dark:text-white text-lg">
-                  {shippingLoading ? (
-                    <div className="flex items-center">
-                      <Loader2 className="w-4 h-4 animate-spin mr-1" />
-                      <span className="text-sm">Calculando...</span>
-                    </div>
-                  ) : (
-                    `$${total.toFixed(2)}`
-                  )}
+                  ${total.toFixed(2)} MXN
                 </span>
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -180,9 +157,7 @@ export default function OrderSummary({
                 Información de envío
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                {shippingLoading
-                  ? "Calculando costo de envío con IA..."
-                  : "Costo calculado con inteligencia artificial"}
+                Costo calculado automáticamente según cantidad de productos
               </p>
             </div>
           </div>
@@ -193,21 +168,13 @@ export default function OrderSummary({
         <div>
           <div className="text-xs text-gray-500 dark:text-gray-400">Total</div>
           <div className="text-lg font-medium text-gray-900 dark:text-white">
-            {shippingLoading ? (
-              <div className="flex items-center">
-                <Loader2 className="w-4 h-4 animate-spin mr-1" />
-                <span className="text-sm">Calculando...</span>
-              </div>
-            ) : (
-              `$${total.toFixed(2)}`
-            )}
+            ${total.toFixed(2)} MXN
           </div>
         </div>
         {currentStep === "shipping" && (
           <button
             onClick={onContinue}
-            disabled={shippingLoading}
-            className="py-2.5 px-4 bg-blue-600 dark:bg-blue-500 text-white font-medium rounded-full flex items-center justify-center gap-2 hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors disabled:opacity-70"
+            className="py-2.5 px-4 bg-blue-600 dark:bg-blue-500 text-white font-medium rounded-full flex items-center justify-center gap-2 hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
           >
             Continuar
             <ArrowRight className="ml-1 w-4 h-4" />

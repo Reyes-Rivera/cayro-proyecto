@@ -13,6 +13,7 @@ interface CartContextType {
   clearCart: () => Promise<void>;
   itemCount: number;
   subtotal: number;
+  shippingCost: number;
   total: number;
   loading: boolean;
   error: string | null;
@@ -26,15 +27,27 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
 
-  // Calculate derived values (no shipping in cart)
   const itemCount = items.reduce((total, item) => total + item.quantity, 0);
   const subtotal = items.reduce(
     (total, item) => total + (item.variant.price || 0) * item.quantity,
     0
   );
-  const total = subtotal; // No shipping cost in cart
 
-  // Load cart from localStorage on start
+  const calculateShippingCost = (cart: CartItem[]): number => {
+    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+    if (totalItems === 0) return 0;
+    if (totalItems <= 5) return 200;
+    if (totalItems <= 10) return 250;
+    if (totalItems <= 15) return 300;
+    if (totalItems <= 20) return 350;
+    if (totalItems <= 25) return 400;
+    const extraGroups = Math.ceil((totalItems - 25) / 5);
+    return 400 + extraGroups * 50;
+  };
+
+  const shippingCost = calculateShippingCost(items);
+  const total = subtotal + shippingCost;
+
   useEffect(() => {
     const loadCartFromLocalStorage = () => {
       try {
@@ -51,19 +64,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     loadCartFromLocalStorage();
   }, []);
 
-  // Sync with backend when user changes
   useEffect(() => {
     const syncWithBackend = async () => {
       if (user) {
         try {
           setLoading(true);
-          // 1. Get cart from backend
           const backendCart = await CartApiService.getUserCart(Number(user.id));
-          // 2. Get local cart
           const localCart = JSON.parse(localStorage.getItem("cart") || "[]");
 
           if (backendCart && backendCart.items) {
-            // 3. Combine carts (prioritizing backend)
             const backendItems = backendCart.items.map((item: any) => ({
               id: `db-${item.id}`,
               product: item.productVariant.product,
@@ -74,7 +83,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
               quantity: item.quantity,
             }));
 
-            // Filter local items that are not in backend
             const mergedItems = [
               ...backendItems,
               ...localCart.filter(
@@ -88,10 +96,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             ];
 
             setItems(mergedItems);
-            // 4. Clear localStorage since it's now in backend
             localStorage.removeItem("cart");
 
-            // 5. Update backend with any local items that didn't exist
             for (const localItem of localCart) {
               const existsInBackend = backendItems.some(
                 (backendItem: CartItem) =>
@@ -106,7 +112,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
               }
             }
           } else if (localCart.length > 0) {
-            // If no backend cart but local cart exists, create new one
             const newCart = await CartApiService.createCart(Number(user.id));
             for (const item of localCart) {
               await CartApiService.addItemToCart(
@@ -120,7 +125,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         } catch (err) {
           console.error("Sync error:", err);
           setError("Failed to sync cart with server");
-          // Show error notification
           Swal.fire({
             title: "Error de sincronización",
             text: "No se pudo sincronizar tu carrito con el servidor",
@@ -142,7 +146,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     });
   }, [user]);
 
-  // Save to localStorage when items change and no user
   useEffect(() => {
     if (!user && items.length > 0) {
       try {
@@ -162,7 +165,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     try {
       const cartItemId = `${product.id}-${variant.id}`;
       if (user) {
-        // Authenticated user - work with backend
         setLoading(true);
         let cart = await CartApiService.getUserCart(Number(user.id));
         if (!cart) {
@@ -171,7 +173,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         await CartApiService.addItemToCart(cart.id, variant.id, quantity);
       }
 
-      // Update local state
       setItems((prevItems) => {
         const existingItemIndex = prevItems.findIndex(
           (item) => item.id === cartItemId
@@ -273,7 +274,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }
       setItems([]);
       localStorage.removeItem("cart");
-      // Show success notification
       Swal.fire({
         title: "Carrito vaciado",
         text: "Tu carrito ha sido vaciado correctamente",
@@ -290,7 +290,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } catch (err) {
       console.error("Clear cart error:", err);
       setError("Failed to clear cart");
-      // Show error notification
       Swal.fire({
         title: "Error",
         text: "No se pudo vaciar el carrito. Inténtalo de nuevo.",
@@ -319,6 +318,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         clearCart,
         itemCount,
         subtotal,
+        shippingCost,
         total,
         loading,
         error,

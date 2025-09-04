@@ -5,7 +5,7 @@ import { useCart } from "@/context/CartContext";
 import { useNavigate } from "react-router-dom";
 
 const CartSummary: React.FC = () => {
-  const { itemCount, subtotal, total } = useCart();
+  const { itemCount, subtotal, shippingCost, total } = useCart();
   const navigate = useNavigate();
 
   return (
@@ -18,14 +18,14 @@ const CartSummary: React.FC = () => {
         <div className="flex justify-between text-sm">
           <span className="text-gray-500 dark:text-gray-400">Subtotal</span>
           <span className="text-gray-900 dark:text-white">
-            ${subtotal.toFixed(2)}
+            ${subtotal.toFixed(2)} MXN
           </span>
         </div>
 
         <div className="flex justify-between text-sm">
           <span className="text-gray-500 dark:text-gray-400">Envío</span>
-          <span className="text-gray-500 dark:text-gray-400">
-            Calculado en checkout
+          <span className="text-gray-900 dark:text-white">
+            {itemCount > 0 ? `$${shippingCost.toFixed(2)} MXN` : "Gratis"}
           </span>
         </div>
       </div>
@@ -33,9 +33,9 @@ const CartSummary: React.FC = () => {
       <hr className="my-4 border-gray-200 dark:border-gray-700" />
 
       <div className="flex justify-between text-lg font-semibold">
-        <span className="text-gray-900 dark:text-white">Subtotal</span>
+        <span className="text-gray-900 dark:text-white">Total</span>
         <span className="text-gray-900 dark:text-white">
-          ${total.toFixed(2)}
+          ${total.toFixed(2)} MXN
         </span>
       </div>
 
@@ -50,7 +50,11 @@ const CartSummary: React.FC = () => {
         <div className="flex items-center text-sm">
           <span className="w-2 h-2 rounded-full bg-blue-600 dark:bg-blue-500 mr-2"></span>
           <span className="text-gray-500 dark:text-gray-400">
-            Costo de envío calculado en el checkout
+            {itemCount > 0
+              ? `Envío: $${shippingCost} MXN (${itemCount} ${
+                  itemCount === 1 ? "artículo" : "artículos"
+                })`
+              : "Agrega productos para calcular envío"}
           </span>
         </div>
       </div>

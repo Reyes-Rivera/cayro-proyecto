@@ -3,7 +3,6 @@
 "use client";
 
 import type React from "react";
-
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm, Controller } from "react-hook-form";
@@ -42,6 +41,8 @@ import {
   Camera,
   Eye,
   Upload,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
 import {
   getBrands,
@@ -51,7 +52,6 @@ import {
   getSizes,
   getSleeve,
 } from "@/api/products";
-
 // Import the delete image API function
 import { deleteImg } from "@/api/products";
 import { AlertHelper } from "@/utils/alert.util";
@@ -79,6 +79,20 @@ interface ProductFormProps {
   product?: Product;
   onEdit: (updatedProduct: CreateProductDto, id: number) => Promise<void>;
   onCancel: () => void;
+}
+
+// Interface para la respuesta de la API de predicción de precios
+interface PricePredictionResponse {
+  product_price_prediction: number;
+}
+
+// Interface para el request de predicción de precios
+interface PricePredictionRequest {
+  stock: number;
+  size: string;
+  color: string;
+  brand: string;
+  category: string;
 }
 
 const ProductForm: React.FC<ProductFormProps> = ({
@@ -121,8 +135,13 @@ const ProductForm: React.FC<ProductFormProps> = ({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadingAngle, setUploadingAngle] = useState<ImageAngle | null>(null);
 
-  // Estado para rastrear las variantes originales (para detectar eliminaciones)
+  // Estado para la predicción de precios
+  const [isPredictingPrice, setIsPredictingPrice] = useState(false);
+  const [predictingForSize, setPredictingForSize] = useState<number | null>(
+    null
+  );
 
+  // Estado para rastrear las variantes originales (para detectar eliminaciones)
   // Pagination for variants table
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(3);
@@ -151,7 +170,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
       const hasFront = config.images.some((img) => img.angle === "front");
       const hasSide = config.images.some((img) => img.angle === "side");
       const hasBack = config.images.some((img) => img.angle === "back");
-
       return (
         config.sizes.length > 0 &&
         Object.values(config.prices).every((price) => price > 0) &&
@@ -180,20 +198,94 @@ const ProductForm: React.FC<ProductFormProps> = ({
     },
   };
 
+  // Función para predecir el precio
+  const predictPrice = async (colorId: number, sizeId: number) => {
+    try {
+      setIsPredictingPrice(true);
+      setPredictingForSize(sizeId);
+
+      // Obtener los datos necesarios
+      const selectedColor = colors?.find((c) => c.id === colorId);
+      const selectedSize = sizes?.find((s) => s.id === sizeId);
+      const selectedBrand = brands?.find((b) => b.id === Number(watchBrandId));
+      const selectedCategory = category?.find(
+        (c) => c.id === Number(watchCategoryId)
+      );
+      const currentStock =
+        colorConfigs.find((c) => c.colorId === colorId)?.stocks[sizeId] || 1;
+
+      if (
+        !selectedColor ||
+        !selectedSize ||
+        !selectedBrand ||
+        !selectedCategory
+      ) {
+        AlertHelper.error({
+          title: "Error",
+          message:
+            "No se pudieron obtener todos los datos necesarios para la predicción.",
+          isModal: true,
+        });
+        return;
+      }
+
+      const requestData: PricePredictionRequest = {
+        stock: currentStock > 0 ? currentStock : 1,
+        size: selectedSize.name,
+        color: selectedColor.name,
+        brand: selectedBrand.name,
+        category: selectedCategory.name,
+      };
+      console.log(requestData);
+      const response = await fetch("https://envios-8tp4.onrender.com/predict-price", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestData),
+      });
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+
+      const data: PricePredictionResponse = await response.json();
+      const predictedPrice =
+        Math.round(data.product_price_prediction * 100) / 100; // Redondear a 2 decimales
+
+      // Actualizar el precio en el estado
+      handlePriceChange(colorId, sizeId, predictedPrice.toString());
+
+      AlertHelper.success({
+        title: "¡Precio recomendado!",
+        message: `El precio recomendado para ${selectedColor.name} talla ${selectedSize.name} es $${predictedPrice}`,
+        timer: 3000,
+      });
+    } catch (error: any) {
+      console.error("Error predicting price:", error);
+      AlertHelper.error({
+        title: "Error en la predicción",
+        message:
+          error.message ||
+          "No se pudo obtener la recomendación de precio. Verifique que el servidor esté funcionando.",
+        isModal: true,
+      });
+    } finally {
+      setIsPredictingPrice(false);
+      setPredictingForSize(null);
+    }
+  };
+
   // Cargar las variantes del producto al inicializar el formulario
   useEffect(() => {
     if (product) {
       const originalIds = new Set<number>();
-
       const initialColorConfigs: ColorSizeConfig[] = product.variants.reduce(
         (acc, variant) => {
           // Agregar ID de variante original
           originalIds.add(variant.id);
-
           const existingConfig = acc.find(
             (config) => config.colorId === variant.colorId
           );
-
           if (existingConfig) {
             existingConfig.sizes.push(variant.sizeId);
             existingConfig.prices[variant.sizeId] = variant.price;
@@ -202,7 +294,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
           } else {
             // Convertir las imágenes existentes y asignar ángulos por defecto
             let images: ExtendedImage[] = [];
-
             if (variant.images && variant.images.length > 0) {
               images = variant.images.map((img, index) => ({
                 ...img,
@@ -417,7 +508,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
   const uploadImageToCloudinary = async (file: File) => {
     setIsUploading(true);
-
     const formData = new FormData();
     formData.append("file", file);
     formData.append("upload_preset", "ml_default");
@@ -431,7 +521,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
           body: formData,
         }
       );
-
       const data = await response.json();
       setIsUploading(false);
       return data.secure_url;
@@ -445,7 +534,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
         isModal: true,
         animation: "bounce",
       });
-
       return null;
     }
   };
@@ -454,10 +542,12 @@ const ProductForm: React.FC<ProductFormProps> = ({
   const deleteImageFromCloudinary = async (imageUrl: string) => {
     try {
       await deleteImg(imageUrl);
-    } catch (error:any) {
+    } catch (error: any) {
       AlertHelper.error({
         title: "Error al eliminar imagen",
-        message: error.response?.data?.message || "No se pudo eliminar la imagen de Cloudinary.",
+        message:
+          error.response?.data?.message ||
+          "No se pudo eliminar la imagen de Cloudinary.",
         error,
         isModal: true,
       });
@@ -501,7 +591,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
     const existingImage = config?.images.find((img) => img.angle === angle);
 
     const imageUrl = await uploadImageToCloudinary(file);
-
     if (imageUrl) {
       if (
         existingImage &&
@@ -519,7 +608,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
               (img) => img.angle === angle
             );
             const newImages = [...config.images];
-
             const newImage = {
               id: 0,
               productVariantId: 0,
@@ -540,7 +628,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
         })
       );
     }
-
     setUploadingAngle(null);
   };
 
@@ -567,7 +654,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
           }
         }
       }
-
       onCancel();
     }
   };
@@ -617,9 +703,9 @@ const ProductForm: React.FC<ProductFormProps> = ({
     }
 
     setIsLoading(true);
-
     try {
       const variants: ProductVariantDto[] = [];
+
       colorConfigs.forEach((config) => {
         config.sizes.forEach((sizeId) => {
           const colorName =
@@ -664,9 +750,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
       };
 
       product ? await onEdit(payload, product.id) : await onAdd(payload);
-
       reset();
-
       AlertHelper.success({
         title: `¡Producto ${product ? "actualizado" : "agregado"}!`,
         message: `El producto se ha ${
@@ -675,7 +759,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
         timer: 3000,
         animation: "slideIn",
       });
-
       window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
     } catch (error: any) {
       AlertHelper.error({
@@ -704,7 +787,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
   // Función para avanzar al siguiente paso
   const nextStep = (e: React.MouseEvent) => {
     e.preventDefault();
-
     if (formStep === 0 && !isBasicInfoComplete) {
       AlertHelper.warning({
         title: "Información incompleta",
@@ -713,7 +795,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
       });
       return;
     }
-
     setFormStep((prev) => prev + 1);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -802,7 +883,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
             Paso {formStep + 1} de 3
           </span>
         </div>
-
         <div className="relative pt-1">
           <div className="flex mb-2 items-center justify-between">
             <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
@@ -1226,7 +1306,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
                   <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                     Colores seleccionados
                   </h4>
-
                   <div className="grid grid-cols-1 gap-6">
                     {colorConfigs.length === 0 && (
                       <div className="col-span-full text-sm text-gray-500 dark:text-gray-400 italic bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg text-center">
@@ -1234,7 +1313,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
                         color.
                       </div>
                     )}
-
                     <AnimatePresence>
                       {colorConfigs.map((config) => {
                         const color = colors?.find(
@@ -1328,7 +1406,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
                                         img.angle === angle &&
                                         !isPlaceholderImage(img.url)
                                     );
-
                                     return (
                                       <div key={angle} className="space-y-3">
                                         <div className="flex items-center justify-between">
@@ -1350,11 +1427,9 @@ const ProductForm: React.FC<ProductFormProps> = ({
                                             )}
                                           </div>
                                         </div>
-
                                         <p className="text-xs text-gray-500 dark:text-gray-400">
                                           {description}
                                         </p>
-
                                         {/* Imagen actual */}
                                         <div
                                           className={`relative aspect-square rounded-lg overflow-hidden group border-2 ${
@@ -1373,7 +1448,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
                                             alt={`${color?.name} - ${label}`}
                                             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                                           />
-
                                           {/* Overlay con botón de carga */}
                                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                                             <motion.label
@@ -1417,7 +1491,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
                                               )}
                                             </motion.label>
                                           </div>
-
                                           {/* Indicador de estado */}
                                           <div
                                             className={`absolute top-2 right-2 w-3 h-3 rounded-full ${
@@ -1427,7 +1500,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
                                             }`}
                                           ></div>
                                         </div>
-
                                         {/* Input de archivo oculto */}
                                         <input
                                           id={`image-upload-${config.colorId}-${angle}`}
@@ -1512,7 +1584,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
                     <h4 className="text-base font-semibold text-gray-800 dark:text-white mb-4">
                       Seleccione un color para configurar sus variantes
                     </h4>
-
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                       {colorConfigs.map((config) => {
                         const color = colors?.find(
@@ -1550,10 +1621,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                           >
                             <div className="relative mb-2">
                               <img
-                                src={
-                                  getMainImage(config.colorId) ||
-                                  "/placeholder.svg"
-                                }
+                                src={getMainImage(config.colorId)}
                                 alt={color?.name}
                                 className="w-12 h-12 rounded-lg object-cover border-2 border-white dark:border-gray-600 shadow-sm"
                               />
@@ -1600,10 +1668,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                       <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center">
                           <img
-                            src={
-                              getMainImage(selectedColorId) ||
-                              "/placeholder.svg"
-                            }
+                            src={getMainImage(selectedColorId)}
                             alt={getSelectedColorName()}
                             className="w-8 h-8 rounded-lg object-cover mr-3 border-2 border-white dark:border-gray-600 shadow-sm"
                           />
@@ -1611,7 +1676,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
                             Configuración para {getSelectedColorName()}
                           </h4>
                         </div>
-
                         <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
                           <ImageIcon className="w-4 h-4 mr-1" />
                           {colorConfigs
@@ -1687,7 +1751,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
                         <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                           Tallas seleccionadas
                         </h5>
-
                         {colorConfigs.find((c) => c.colorId === selectedColorId)
                           ?.sizes.length === 0 ? (
                           <div className="text-sm text-gray-500 dark:text-gray-400 italic bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg text-center">
@@ -1743,19 +1806,21 @@ const ProductForm: React.FC<ProductFormProps> = ({
                             <DollarSign className="w-4 h-4 mr-2 text-blue-500 dark:text-blue-400" />
                             Precios y Stock
                           </h5>
-
                           <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-md border border-gray-200 dark:border-gray-700">
                             {/* Encabezado de tabla */}
                             <div className="bg-blue-100/60 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 py-4 px-6">
                               <div className="grid grid-cols-12 gap-4 items-center">
-                                <div className="col-span-3 font-medium">
+                                <div className="col-span-2 font-medium">
                                   Talla
                                 </div>
-                                <div className="col-span-4 font-medium">
+                                <div className="col-span-3 font-medium">
                                   Precio
                                 </div>
-                                <div className="col-span-4 font-medium">
+                                <div className="col-span-3 font-medium">
                                   Stock
+                                </div>
+                                <div className="col-span-3 font-medium">
+                                  Recomendación
                                 </div>
                                 <div className="col-span-1 font-medium text-right">
                                   Acciones
@@ -1788,13 +1853,13 @@ const ProductForm: React.FC<ProductFormProps> = ({
                                       }`}
                                     >
                                       <div className="grid grid-cols-12 gap-4 items-center">
-                                        <div className="col-span-3 font-medium text-gray-900 dark:text-white">
+                                        <div className="col-span-2 font-medium text-gray-900 dark:text-white">
                                           {
                                             sizes?.find((s) => s.id === sizeId)
                                               ?.name
                                           }
                                         </div>
-                                        <div className="col-span-4">
+                                        <div className="col-span-3">
                                           <div className="relative">
                                             <DollarSign className="w-4 h-4 text-gray-500 dark:text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
                                             <input
@@ -1820,7 +1885,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                                             />
                                           </div>
                                         </div>
-                                        <div className="col-span-4">
+                                        <div className="col-span-3">
                                           <input
                                             type="number"
                                             value={
@@ -1840,6 +1905,44 @@ const ProductForm: React.FC<ProductFormProps> = ({
                                             placeholder="0"
                                             min="1"
                                           />
+                                        </div>
+                                        <div className="col-span-3">
+                                          <motion.button
+                                            whileHover={{ scale: 1.05 }}
+                                            whileTap={{ scale: 0.95 }}
+                                            type="button"
+                                            onClick={() =>
+                                              predictPrice(
+                                                selectedColorId,
+                                                sizeId
+                                              )
+                                            }
+                                            disabled={
+                                              isPredictingPrice ||
+                                              !isBasicInfoComplete
+                                            }
+                                            className={`w-full py-2 px-3 rounded-lg font-medium text-sm flex items-center justify-center transition-colors ${
+                                              isPredictingPrice &&
+                                              predictingForSize === sizeId
+                                                ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 cursor-not-allowed"
+                                                : !isBasicInfoComplete
+                                                ? "bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                                                : "bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white shadow-md"
+                                            }`}
+                                          >
+                                            {isPredictingPrice &&
+                                            predictingForSize === sizeId ? (
+                                              <>
+                                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                                Prediciendo...
+                                              </>
+                                            ) : (
+                                              <>
+                                                <Sparkles className="w-4 h-4 mr-2" />
+                                                Recomendar precio
+                                              </>
+                                            )}
+                                          </motion.button>
                                         </div>
                                         <div className="col-span-1 flex justify-end">
                                           <motion.button
@@ -1888,7 +1991,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
                                     por página
                                   </span>
                                 </div>
-
                                 <div className="flex items-center space-x-2">
                                   <button
                                     className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1901,7 +2003,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
                                   >
                                     <ChevronLeft className="w-4 h-4" />
                                   </button>
-
                                   <div className="flex items-center">
                                     <span className="px-3 py-1 bg-gray-200 dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-md text-sm text-gray-700 dark:text-gray-300 font-medium">
                                       {currentPage}
@@ -1913,7 +2014,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
                                       {totalPages || 1}
                                     </span>
                                   </div>
-
                                   <button
                                     className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                                     disabled={
