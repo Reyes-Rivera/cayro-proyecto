@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import {
@@ -11,6 +11,7 @@ import {
   Save,
   Tag,
   X,
+  ChevronDown,
 } from "lucide-react";
 import { AlertHelper } from "@/utils/alert.util";
 
@@ -47,6 +48,59 @@ type FormData = {
   type: DocumentTypeInter;
 };
 
+// Constantes fuera del componente
+const DOCUMENT_TYPE_OPTIONS = [
+  { value: DocumentTypeInter.policy, label: "Aviso de privacidad" },
+  { value: DocumentTypeInter.terms, label: "Términos y Condiciones" },
+  { value: DocumentTypeInter.boundary, label: "Deslinde Legal" },
+] as const;
+
+const MIN_DATE_OFFSET_DAYS = 6;
+const CONTENT_MAX_LENGTH = 5000;
+const TITLE_MAX_LENGTH = 100;
+const TITLE_MIN_LENGTH = 4;
+const CONTENT_MIN_LENGTH = 10;
+
+// Componente de Error Message reutilizable
+const ErrorMessage = ({ message }: { message: string }) => (
+  <motion.p
+    initial={{ opacity: 0, y: -10 }}
+    animate={{ opacity: 1, y: 0 }}
+    className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1 mt-2"
+    role="alert"
+  >
+    <AlertCircle className="h-4 w-4" aria-hidden="true" />
+    {message}
+  </motion.p>
+);
+
+// Componente de Input con icono
+const InputWithIcon = ({
+  icon: Icon,
+  error,
+  children,
+}: {
+  icon: React.ElementType;
+  error?: boolean;
+  children: React.ReactNode;
+  className?: string;
+}) => (
+  <div className="relative">
+    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+      <Icon
+        className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400"
+        aria-hidden="true"
+      />
+    </div>
+    {children}
+    {error && (
+      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+        <AlertCircle className="h-5 w-5 text-red-500" aria-hidden="true" />
+      </div>
+    )}
+  </div>
+);
+
 export default function DocumentDialog({
   isOpen,
   onClose,
@@ -60,8 +114,9 @@ export default function DocumentDialog({
     setValue,
     reset,
     watch,
-    formState: { errors },
+    formState: { errors, isValid },
   } = useForm<FormData>({
+    mode: "onChange",
     defaultValues: {
       title: "",
       content: "",
@@ -75,6 +130,20 @@ export default function DocumentDialog({
   const dialogRef = useRef<HTMLDivElement>(null);
   const selectRef = useRef<HTMLDivElement>(null);
 
+  // Watched values for memoization
+  const watchedType = watch("type");
+  const watchedContent = watch("content") || "";
+  const watchedTitle = watch("title") || "";
+
+  // Memoized document type label
+  const documentTypeLabel = useMemo(() => {
+    const option = DOCUMENT_TYPE_OPTIONS.find(
+      (opt) => opt.value === watchedType
+    );
+    return option?.label || "Seleccione el tipo de documento";
+  }, [watchedType]);
+
+  // Efecto para cargar datos de edición
   useEffect(() => {
     if (documentToEdit) {
       setValue("title", documentToEdit.title);
@@ -89,103 +158,154 @@ export default function DocumentDialog({
     }
   }, [documentToEdit, setValue]);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        selectRef.current &&
-        !selectRef.current.contains(event.target as Node)
-      ) {
-        setIsSelectOpen(false);
-      }
-    };
+  // Handlers optimizados con useCallback
+  const handleClickOutside = useCallback((event: MouseEvent) => {
+    if (
+      selectRef.current &&
+      !selectRef.current.contains(event.target as Node)
+    ) {
+      setIsSelectOpen(false);
+    }
+  }, []);
 
+  const handleEscapeKey = useCallback(
+    (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    },
+    [onClose]
+  );
+
+  const handleSelectOption = useCallback(
+    (type: DocumentTypeInter) => {
+      setValue("type", type);
+      setIsSelectOpen(false);
+    },
+    [setValue]
+  );
+
+  const resetForm = useCallback(() => {
+    reset();
+    setIsLoading(false);
+  }, [reset]);
+
+  // Validación de fecha memoizada
+  const validateEffectiveDate = useCallback((value: string) => {
+    if (!value) return "La fecha de vigencia es obligatoria.";
+
+    const currentDate = new Date();
+    const selectedDate = new Date(value);
+    const diffInDays = Math.floor(
+      (selectedDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    return diffInDays > MIN_DATE_OFFSET_DAYS
+      ? true
+      : "La fecha debe ser al menos 6 días mayor a la actual.";
+  }, []);
+
+  // Submit handler optimizado
+  const onSubmit: SubmitHandler<FormData> = useCallback(
+    async (data) => {
+      setIsLoading(true);
+
+      try {
+        // Validación adicional de fecha
+        const dateValidation = validateEffectiveDate(data.effectiveDate);
+        if (dateValidation !== true) {
+          AlertHelper.error({
+            title: "Fecha inválida",
+            message: dateValidation,
+            animation: "fadeIn",
+          });
+          setIsLoading(false);
+          return;
+        }
+
+        // Simular procesamiento asíncrono
+        await new Promise((resolve) => setTimeout(resolve, 600));
+
+        if (documentToEdit && updateDocument) {
+          const updatedDocument: Document = {
+            ...documentToEdit,
+            ...data,
+          };
+          updateDocument(updatedDocument);
+          AlertHelper.success({
+            title: "Documento actualizado",
+            message: "El documento se actualizó correctamente.",
+            animation: "slideIn",
+          });
+        } else {
+          addDocument(data);
+          AlertHelper.success({
+            title: "Documento creado",
+            message: "El documento se creó correctamente.",
+            animation: "slideIn",
+          });
+        }
+
+        resetForm();
+        onClose();
+      } catch (error: any) {
+        AlertHelper.error({
+          title: "Error",
+          message:
+            error.response.data.message ||
+            "Ha ocurrido un error al procesar el documento.",
+          animation: "fadeIn",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [
+      documentToEdit,
+      updateDocument,
+      addDocument,
+      resetForm,
+      onClose,
+      validateEffectiveDate,
+    ]
+  );
+
+  // Efectos optimizados
+  useEffect(() => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
+  }, [handleClickOutside]);
 
   useEffect(() => {
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onClose();
-      }
-    };
-
     if (isOpen) {
-      document.addEventListener("keydown", handleEscape);
+      document.addEventListener("keydown", handleEscapeKey);
       document.body.style.overflow = "hidden";
     }
 
     return () => {
-      document.removeEventListener("keydown", handleEscape);
+      document.removeEventListener("keydown", handleEscapeKey);
       document.body.style.overflow = "";
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, handleEscapeKey]);
 
-  const onSubmit: SubmitHandler<FormData> = (data) => {
-    setIsLoading(true);
-    const currentDate = new Date();
-    const effectiveDate = new Date(data.effectiveDate);
-    const diffInDays = Math.floor(
-      (effectiveDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)
-    );
-
-    if (diffInDays <= 6) {
-      setIsLoading(false);
-      AlertHelper.error({
-        title: "Fecha inválida",
-        message:
-          "La fecha de vigencia debe ser al menos 6 días mayor a la fecha actual.",
-        animation: "fadeIn",
-      });
-      return;
+  // Reset form cuando se cierra el modal
+  useEffect(() => {
+    if (!isOpen) {
+      resetForm();
     }
-
-    setTimeout(() => {
-      if (documentToEdit && updateDocument) {
-        const updatedDocument: Document = {
-          ...documentToEdit,
-          ...data,
-        };
-        updateDocument(updatedDocument);
-        AlertHelper.success({
-          title: "Documento actualizado",
-          message: "El documento se actualizó correctamente.",
-          animation: "slideIn",
-        });
-      } else {
-        addDocument(data);
-        AlertHelper.success({
-          title: "Documento creado",
-          message: "El documento se creó correctamente.",
-          animation: "slideIn",
-        });
-      }
-
-      setIsLoading(false);
-      reset();
-      onClose();
-    }, 600);
-  };
-
-  const getDocumentTypeLabel = (type: DocumentTypeInter) => {
-    switch (type) {
-      case DocumentTypeInter.policy:
-        return "Aviso de privacidad";
-      case DocumentTypeInter.terms:
-        return "Términos y Condiciones";
-      case DocumentTypeInter.boundary:
-        return "Deslinde Legal";
-      default:
-        return "Seleccione el tipo de documento";
-    }
-  };
+  }, [isOpen, resetForm]);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4 overflow-y-auto">
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4 overflow-y-auto"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="document-dialog-title"
+    >
       <motion.div
         ref={dialogRef}
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -205,10 +325,13 @@ export default function DocumentDialog({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="bg-white/20 p-2.5 rounded-full backdrop-blur-sm">
-                <FileText className="h-5 w-5 text-white" />
+                <FileText className="h-5 w-5 text-white" aria-hidden="true" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">
+                <h2
+                  id="document-dialog-title"
+                  className="text-xl font-bold text-white"
+                >
                   {documentToEdit ? "Editar Documento" : "Nuevo Documento"}
                 </h2>
                 <p className="text-sm text-white/80 mt-1">
@@ -221,17 +344,22 @@ export default function DocumentDialog({
 
             <button
               onClick={onClose}
-              className="text-white/80 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10"
-              aria-label="Cerrar"
+              className="text-white/80 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-500"
+              aria-label="Cerrar diálogo"
+              disabled={isLoading}
             >
-              <X className="h-5 w-5" />
+              <X className="h-5 w-5" aria-hidden="true" />
             </button>
           </div>
         </div>
 
         {/* Form content */}
         <div className="max-h-[calc(100vh-200px)] overflow-y-auto">
-          <form onSubmit={handleSubmit(onSubmit)} className="p-4 sm:p-6">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="p-4 sm:p-6"
+            noValidate
+          >
             <div className="space-y-6">
               {/* Título */}
               <div>
@@ -241,44 +369,35 @@ export default function DocumentDialog({
                 >
                   Título del documento *
                 </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
-                  </div>
+                <InputWithIcon icon={FileText} error={!!errors.title}>
                   <input
                     id="title"
                     {...register("title", {
                       required: "El título es obligatorio.",
                       minLength: {
-                        value: 4,
-                        message: "El título debe tener al menos 4 caracteres.",
+                        value: TITLE_MIN_LENGTH,
+                        message: `El título debe tener al menos ${TITLE_MIN_LENGTH} caracteres.`,
                       },
                       maxLength: {
-                        value: 100,
-                        message:
-                          "El título no puede exceder los 100 caracteres.",
+                        value: TITLE_MAX_LENGTH,
+                        message: `El título no puede exceder los ${TITLE_MAX_LENGTH} caracteres.`,
                       },
                     })}
                     placeholder="Ej: Política de Privacidad v2.0"
-                    className="pl-10 w-full py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors focus:outline-none shadow-sm"
+                    className={`pl-10 pr-10 w-full py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors focus:outline-none shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${
+                      errors.title ? "border-red-500 dark:border-red-400" : ""
+                    }`}
                     disabled={isLoading}
+                    aria-invalid={errors.title ? "true" : "false"}
+                    aria-describedby={errors.title ? "title-error" : undefined}
                   />
-                  {errors.title && (
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                      <AlertCircle className="h-5 w-5 text-red-500" />
-                    </div>
-                  )}
-                </div>
+                </InputWithIcon>
                 {errors.title && (
-                  <motion.p
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1 mt-2"
-                  >
-                    <AlertCircle className="h-4 w-4" />
-                    {errors.title.message}
-                  </motion.p>
+                  <ErrorMessage message={errors.title.message!} />
                 )}
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Caracteres: {watchedTitle.length}/{TITLE_MAX_LENGTH}
+                </p>
               </div>
 
               {/* Tipo de Documento - Custom Select */}
@@ -290,34 +409,29 @@ export default function DocumentDialog({
                   Tipo de Documento *
                 </label>
                 <div className="relative" ref={selectRef}>
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
-                    <Tag className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsSelectOpen(!isSelectOpen)}
-                    className="pl-10 py-3 w-full border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm text-left flex justify-between items-center"
-                    disabled={isLoading}
-                  >
-                    <span>{getDocumentTypeLabel(watch("type"))}</span>
-                    <motion.div
-                      animate={{ rotate: isSelectOpen ? 180 : 0 }}
-                      transition={{ duration: 0.2 }}
+                  <InputWithIcon icon={Tag}>
+                    <button
+                      type="button"
+                      id="type"
+                      onClick={() => setIsSelectOpen(!isSelectOpen)}
+                      className="pl-10 pr-10 py-3 w-full border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm text-left flex justify-between items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={isLoading}
+                      aria-haspopup="listbox"
+                      aria-expanded={isSelectOpen}
+                      aria-labelledby="type-label"
                     >
-                      <svg
-                        className="h-5 w-5 text-gray-400"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
+                      <span>{documentTypeLabel}</span>
+                      <motion.div
+                        animate={{ rotate: isSelectOpen ? 180 : 0 }}
+                        transition={{ duration: 0.2 }}
                       >
-                        <path
-                          fillRule="evenodd"
-                          d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                          clipRule="evenodd"
+                        <ChevronDown
+                          className="h-5 w-5 text-gray-400"
+                          aria-hidden="true"
                         />
-                      </svg>
-                    </motion.div>
-                  </button>
+                      </motion.div>
+                    </button>
+                  </InputWithIcon>
 
                   {isSelectOpen && (
                     <motion.div
@@ -325,44 +439,23 @@ export default function DocumentDialog({
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
                       className="absolute z-20 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg overflow-hidden"
+                      role="listbox"
+                      aria-labelledby="type-label"
                     >
                       <ul className="py-1">
-                        <li>
-                          <button
-                            type="button"
-                            className="w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                            onClick={() => {
-                              setValue("type", DocumentTypeInter.policy);
-                              setIsSelectOpen(false);
-                            }}
-                          >
-                            Aviso de privacidad
-                          </button>
-                        </li>
-                        <li>
-                          <button
-                            type="button"
-                            className="w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                            onClick={() => {
-                              setValue("type", DocumentTypeInter.terms);
-                              setIsSelectOpen(false);
-                            }}
-                          >
-                            Términos y Condiciones
-                          </button>
-                        </li>
-                        <li>
-                          <button
-                            type="button"
-                            className="w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                            onClick={() => {
-                              setValue("type", DocumentTypeInter.boundary);
-                              setIsSelectOpen(false);
-                            }}
-                          >
-                            Deslinde Legal
-                          </button>
-                        </li>
+                        {DOCUMENT_TYPE_OPTIONS.map((option) => (
+                          <li key={option.value}>
+                            <button
+                              type="button"
+                              className="w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-colors focus:outline-none focus:bg-blue-50 dark:focus:bg-blue-900/20"
+                              onClick={() => handleSelectOption(option.value)}
+                              role="option"
+                              aria-selected={watchedType === option.value}
+                            >
+                              {option.label}
+                            </button>
+                          </li>
+                        ))}
                       </ul>
                     </motion.div>
                   )}
@@ -377,49 +470,32 @@ export default function DocumentDialog({
                 >
                   Fecha de Vigencia *
                 </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
-                  </div>
+                <InputWithIcon icon={Calendar} error={!!errors.effectiveDate}>
                   <input
                     id="effectiveDate"
                     type="date"
                     {...register("effectiveDate", {
                       required: "La fecha de vigencia es obligatoria.",
-                      validate: (value) => {
-                        const currentDate = new Date();
-                        const selectedDate = new Date(value);
-                        const diffInDays = Math.floor(
-                          (selectedDate.getTime() - currentDate.getTime()) /
-                            (1000 * 60 * 60 * 24)
-                        );
-                        return (
-                          diffInDays > 6 ||
-                          "La fecha debe ser al menos 6 días mayor a la actual."
-                        );
-                      },
+                      validate: validateEffectiveDate,
                     })}
-                    className="pl-10 py-3 w-full border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
+                    className={`pl-10 pr-10 py-3 w-full border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${
+                      errors.effectiveDate
+                        ? "border-red-500 dark:border-red-400"
+                        : ""
+                    }`}
                     disabled={isLoading}
+                    aria-invalid={errors.effectiveDate ? "true" : "false"}
+                    aria-describedby={
+                      errors.effectiveDate ? "date-error" : undefined
+                    }
                   />
-                  {errors.effectiveDate && (
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                      <AlertCircle className="h-5 w-5 text-red-500" />
-                    </div>
-                  )}
-                </div>
+                </InputWithIcon>
                 {errors.effectiveDate && (
-                  <motion.p
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1 mt-2"
-                  >
-                    <AlertCircle className="h-4 w-4" />
-                    {errors.effectiveDate.message}
-                  </motion.p>
+                  <ErrorMessage message={errors.effectiveDate.message!} />
                 )}
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  La fecha debe ser al menos 6 días posterior a la fecha actual
+                  La fecha debe ser al menos {MIN_DATE_OFFSET_DAYS} días
+                  posterior a la fecha actual
                 </p>
               </div>
 
@@ -437,34 +513,39 @@ export default function DocumentDialog({
                     {...register("content", {
                       required: "El contenido es obligatorio.",
                       minLength: {
-                        value: 10,
-                        message:
-                          "El contenido debe tener al menos 10 caracteres.",
+                        value: CONTENT_MIN_LENGTH,
+                        message: `El contenido debe tener al menos ${CONTENT_MIN_LENGTH} caracteres.`,
+                      },
+                      maxLength: {
+                        value: CONTENT_MAX_LENGTH,
+                        message: `El contenido no puede exceder los ${CONTENT_MAX_LENGTH} caracteres.`,
                       },
                     })}
                     rows={6}
                     placeholder="Ingrese el contenido completo del documento legal..."
-                    className="w-full py-3 px-4 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors focus:outline-none shadow-sm resize-none"
+                    className={`w-full py-3 px-4 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors focus:outline-none shadow-sm resize-none disabled:opacity-50 disabled:cursor-not-allowed ${
+                      errors.content ? "border-red-500 dark:border-red-400" : ""
+                    }`}
                     disabled={isLoading}
+                    aria-invalid={errors.content ? "true" : "false"}
+                    aria-describedby={
+                      errors.content ? "content-error" : undefined
+                    }
                   />
                   {errors.content && (
                     <div className="absolute top-3 right-3 pointer-events-none">
-                      <AlertCircle className="h-5 w-5 text-red-500" />
+                      <AlertCircle
+                        className="h-5 w-5 text-red-500"
+                        aria-hidden="true"
+                      />
                     </div>
                   )}
                 </div>
                 {errors.content && (
-                  <motion.p
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1 mt-2"
-                  >
-                    <AlertCircle className="h-4 w-4" />
-                    {errors.content.message}
-                  </motion.p>
+                  <ErrorMessage message={errors.content.message!} />
                 )}
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Caracteres: {watch("content")?.length || 0}/5000
+                  Caracteres: {watchedContent.length}/{CONTENT_MAX_LENGTH}
                 </p>
               </div>
             </div>
@@ -477,7 +558,7 @@ export default function DocumentDialog({
                 type="button"
                 onClick={onClose}
                 disabled={isLoading}
-                className="px-6 py-2.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-all shadow-sm disabled:opacity-50"
+                className="px-6 py-2.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-all shadow-sm disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
               >
                 Cancelar
               </motion.button>
@@ -485,17 +566,20 @@ export default function DocumentDialog({
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 type="submit"
-                className="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-medium rounded-xl shadow-lg transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                disabled={isLoading}
+                className="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-medium rounded-xl shadow-lg transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                disabled={isLoading || !isValid}
               >
                 {isLoading ? (
                   <>
-                    <Loader2 className="animate-spin h-5 w-5" />
+                    <Loader2
+                      className="animate-spin h-5 w-5"
+                      aria-hidden="true"
+                    />
                     <span>Procesando...</span>
                   </>
                 ) : (
                   <>
-                    <Save className="h-5 w-5" />
+                    <Save className="h-5 w-5" aria-hidden="true" />
                     <span>
                       {documentToEdit
                         ? "Actualizar Documento"

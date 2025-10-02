@@ -1,7 +1,15 @@
 "use client";
 
 import type React from "react";
-import { useEffect, useRef, useState, memo, lazy, Suspense } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  memo,
+  lazy,
+  Suspense,
+  useMemo,
+} from "react";
 import { motion, useInView, useAnimation } from "framer-motion";
 import {
   Phone,
@@ -17,37 +25,38 @@ import type { CompanyProfile } from "@/types/CompanyInfo";
 import { getCompanyInfoApi } from "@/api/company";
 import Breadcrumbs from "@/components/web-components/Breadcrumbs";
 import Loader from "@/components/web-components/Loader";
-import img from "./assets/contact.png";
+import img from "./assets/contact.webp";
 import { AlertHelper } from "@/utils/alert.util";
+
 // Types
 interface AnimatedSectionProps {
   children: React.ReactNode;
   className?: string;
+  id?: string; // <-- añadido para poder scrollear por id
 }
 
-// Animated Section Component - Optimized with reduced animation complexity
+// Animated Section Component
 const AnimatedSection = memo(
-  ({ children, className }: AnimatedSectionProps) => {
+  ({ children, className, id }: AnimatedSectionProps) => {
     const ref = useRef(null);
     const isInView = useInView(ref, { once: true });
     const mainControls = useAnimation();
 
     useEffect(() => {
-      if (isInView) {
-        mainControls.start("visible");
-      }
+      if (isInView) mainControls.start("visible");
     }, [isInView, mainControls]);
 
     return (
       <motion.section
+        id={id}
         ref={ref}
         variants={{
-          hidden: { opacity: 0, y: 50 }, // Reduced distance
+          hidden: { opacity: 0, y: 50 },
           visible: { opacity: 1, y: 0 },
         }}
         initial="hidden"
         animate={mainControls}
-        transition={{ duration: 0.3, ease: "easeOut" }} // Reduced duration
+        transition={{ duration: 0.3, ease: "easeOut" }}
         className={className}
       >
         {children}
@@ -57,66 +66,53 @@ const AnimatedSection = memo(
 );
 AnimatedSection.displayName = "AnimatedSection";
 
-// Lazy load contact form section to reduce initial load
+// Lazy sections
 const ContactFormSection = lazy(
   () => import("./components/ContactFormSection")
 );
-// Lazy load map section to reduce initial load
 const MapSection = lazy(() => import("./components/MapSection"));
 
 export default function ContactPage() {
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [animateHero, setAnimateHero] = useState(false);
-  // Simulamos la carga de la página - Reduced timeout
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsPageLoading(false);
-      // Activamos las animaciones del hero después de que la pantalla de carga desaparezca
-      setTimeout(() => {
-        setAnimateHero(true);
-      }, 100);
-    }, 1000); // Reduced from 1500ms to 1000ms
-
+      setTimeout(() => setAnimateHero(true), 100);
+    }, 1000);
     return () => clearTimeout(timer);
   }, []);
 
-  // Smooth scroll function - Optimized to use requestAnimationFrame
+  // Smooth scroll
   const scrollToContent = () => {
     const contactSection = document.getElementById("contact-cards");
-    if (contactSection) {
-      const startPosition = window.pageYOffset;
-      const targetPosition =
-        contactSection.getBoundingClientRect().top + window.pageYOffset;
-      const distance = targetPosition - startPosition;
-      const duration = 500; // ms
-      let startTime: number | null = null;
+    if (!contactSection) return;
+    const startPosition = window.pageYOffset;
+    const targetPosition =
+      contactSection.getBoundingClientRect().top + window.pageYOffset;
+    const distance = targetPosition - startPosition;
+    const duration = 500;
+    let startTime: number | null = null;
 
-      function animation(currentTime: number) {
-        if (startTime === null) startTime = currentTime;
-        const timeElapsed = currentTime - startTime;
-        const progress = Math.min(timeElapsed / duration, 1);
-        const ease = (t: number) =>
-          t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t; // easeInOutQuad
-
-        window.scrollTo(0, startPosition + distance * ease(progress));
-
-        if (timeElapsed < duration) {
-          requestAnimationFrame(animation);
-        }
-      }
-
-      requestAnimationFrame(animation);
+    function animation(currentTime: number) {
+      if (startTime === null) startTime = currentTime;
+      const timeElapsed = currentTime - startTime;
+      const progress = Math.min(timeElapsed / duration, 1);
+      const ease = (t: number) => (t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t);
+      window.scrollTo(0, startPosition + distance * ease(progress));
+      if (timeElapsed < duration) requestAnimationFrame(animation);
     }
+    requestAnimationFrame(animation);
   };
 
   const [info, setInfo] = useState<CompanyProfile>();
+
   useEffect(() => {
     const getInfo = async () => {
       try {
         const res = await getCompanyInfoApi();
-        if (res) {
-          setInfo(res.data[0]);
-        }
+        if (res) setInfo(res.data[0]);
       } catch (error: any) {
         AlertHelper.error({
           title: "Error al obtener información",
@@ -128,26 +124,31 @@ export default function ContactPage() {
         });
       }
     };
-
     getInfo();
   }, []);
+
+  // Tel sanitizado para href
+  const rawPhone = info?.contactInfo?.[0]?.phone || "+521234567890";
+  const telHref = useMemo(
+    () => `tel:${rawPhone.replace(/[^+\d]/g, "")}`,
+    [rawPhone]
+  );
 
   return (
     <>
       {isPageLoading && <Loader />}
       <div className="min-h-screen mt-5 bg-white dark:bg-gray-900 overflow-x-hidden">
-        {/* Hero Section - Two column layout with content left, image right */}
+        {/* Hero */}
         <div className="relative min-h-screen bg-white dark:bg-gray-900 flex items-center">
-          {/* Background decoration - Enhanced with about page style */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-bl from-blue-50/80 to-transparent dark:from-blue-950/20 dark:to-transparent"></div>
-            <div className="absolute -top-20 -right-20 w-96 h-96 bg-blue-100 dark:bg-blue-900/20 rounded-full opacity-70 blur-3xl"></div>
-            <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-80 h-80 bg-blue-100 dark:bg-blue-900/20 rounded-full opacity-60 blur-3xl"></div>
+            <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-bl from-blue-50/80 to-transparent dark:from-blue-950/20 dark:to-transparent" />
+            <div className="absolute -top-20 -right-20 w-96 h-96 bg-blue-100 dark:bg-blue-900/20 rounded-full opacity-70 blur-3xl" />
+            <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-80 h-80 bg-blue-100 dark:bg-blue-900/20 rounded-full opacity-60 blur-3xl" />
           </div>
 
           <div className="container mx-auto px-6 py-16 relative z-10 max-w-full">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-              {/* Left column - Content */}
+              {/* Left */}
               <motion.div
                 initial={{ opacity: 0, x: -30 }}
                 animate={
@@ -194,7 +195,7 @@ export default function ContactPage() {
                       <span className="relative z-10 text-blue-600">
                         hablar contigo
                       </span>
-                      <span className="absolute bottom-2 left-0 w-full h-3 bg-blue-600/20 -z-10 rounded"></span>
+                      <span className="absolute bottom-2 left-0 w-full h-3 bg-blue-600/20 -z-10 rounded" />
                     </span>
                   </motion.h1>
                 </motion.div>
@@ -221,7 +222,7 @@ export default function ContactPage() {
                       <Phone className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                     </div>
                     <span className="text-gray-700 dark:text-gray-300 text-sm">
-                      {info?.contactInfo[0]?.phone || "+52 123 456 7890"}
+                      {info?.contactInfo?.[0]?.phone || "+52 123 456 7890"}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -229,7 +230,7 @@ export default function ContactPage() {
                       <Mail className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                     </div>
                     <span className="text-gray-700 dark:text-gray-300 text-sm">
-                      {info?.contactInfo[0]?.email || "contacto@empresa.com"}
+                      {info?.contactInfo?.[0]?.email || "contacto@empresa.com"}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -237,7 +238,7 @@ export default function ContactPage() {
                       <MapPin className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                     </div>
                     <span className="text-gray-700 dark:text-gray-300 text-sm">
-                      {info?.contactInfo[0]?.address ||
+                      {info?.contactInfo?.[0]?.address ||
                         "Calle Principal #123, Ciudad"}
                     </span>
                   </div>
@@ -266,9 +267,8 @@ export default function ContactPage() {
                   <motion.a
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    href={`tel:${
-                      info?.contactInfo[0]?.phone || "+521234567890"
-                    }`}
+                    href={telHref}
+                    aria-label="Llamar ahora"
                     className="border border-gray-300 dark:border-gray-700 hover:border-blue-600 dark:hover:border-blue-500 text-gray-900 dark:text-white font-medium py-3 px-6 rounded-full transition-all flex items-center justify-center"
                   >
                     <Phone className="mr-2 h-5 w-5" />
@@ -278,7 +278,7 @@ export default function ContactPage() {
                 <Breadcrumbs />
               </motion.div>
 
-              {/* Right column - Image */}
+              {/* Right - Image */}
               <motion.div
                 initial={{ opacity: 0, x: 30 }}
                 animate={
@@ -299,25 +299,27 @@ export default function ContactPage() {
                     src={img}
                     alt="Contacto y atención al cliente"
                     className="w-full h-[400px] md:h-[500px] object-cover"
+                    loading="lazy"
+                    decoding="async"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
                 </motion.div>
-
-                {/* Decorative elements */}
-                <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-100 dark:bg-blue-900/20 rounded-full filter blur-3xl opacity-50 z-0"></div>
-                <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-blue-100 dark:bg-blue-900/20 rounded-full filter blur-3xl opacity-50 z-0"></div>
+                <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-100 dark:bg-blue-900/20 rounded-full filter blur-3xl opacity-50 z-0" />
+                <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-blue-100 dark:bg-blue-900/20 rounded-full filter blur-3xl opacity-50 z-0" />
               </motion.div>
             </div>
           </div>
         </div>
 
         {/* Contact Info Cards */}
-        <AnimatedSection className="py-24 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 relative overflow-hidden">
-          {/* Background decoration - Enhanced with about page style */}
+        <AnimatedSection
+          id="contact-cards"
+          className="py-24 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 relative overflow-hidden"
+        >
           <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-            <div className="absolute -top-24 -left-24 w-64 h-64 bg-blue-500/5 rounded-full"></div>
-            <div className="absolute top-1/4 right-0 w-96 h-96 bg-blue-500/5 rounded-full"></div>
-            <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-blue-500/5 rounded-full"></div>
+            <div className="absolute -top-24 -left-24 w-64 h-64 bg-blue-500/5 rounded-full" />
+            <div className="absolute top-1/4 right-0 w-96 h-96 bg-blue-500/5 rounded-full" />
+            <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-blue-500/5 rounded-full" />
           </div>
 
           <div className="container mx-auto px-6 relative z-10 max-w-full">
@@ -335,7 +337,7 @@ export default function ContactPage() {
                 Estamos aquí para{" "}
                 <span className="text-blue-600">ayudarte</span>
               </h2>
-              <div className="w-24 h-1 bg-blue-600 mx-auto mt-6"></div>
+              <div className="w-24 h-1 bg-blue-600 mx-auto mt-6" />
             </motion.div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -348,26 +350,18 @@ export default function ContactPage() {
                 whileHover={{ y: -10 }}
                 className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all group relative overflow-hidden"
               >
-                {/* Background decoration */}
-                <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-500/5 rounded-full transition-all duration-300 group-hover:scale-150"></div>
-
-                {/* Icono con fondo dinámico */}
+                <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-500/5 rounded-full transition-all duration-300 group-hover:scale-150" />
                 <div className="mb-6 transform group-hover:scale-110 transition-transform relative z-10">
                   <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:shadow-blue-500/20">
                     <Phone className="w-8 h-8" />
                   </div>
                 </div>
-
-                {/* Título */}
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 relative z-10">
                   Llámanos
                 </h3>
-
-                {/* Descripción */}
                 <p className="text-gray-600 dark:text-gray-300 leading-relaxed relative z-10 font-medium">
-                  {info?.contactInfo[0]?.phone || "+52 123 456 7890"}
+                  {info?.contactInfo?.[0]?.phone || "+52 123 456 7890"}
                 </p>
-
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 flex items-center relative z-10">
                   <Clock className="w-4 h-4 mr-1 inline" />
                   Lunes a Viernes: 9am - 6pm
@@ -383,26 +377,18 @@ export default function ContactPage() {
                 whileHover={{ y: -10 }}
                 className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all group relative overflow-hidden"
               >
-                {/* Background decoration */}
-                <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-500/5 rounded-full transition-all duration-300 group-hover:scale-150"></div>
-
-                {/* Icono con fondo dinámico */}
+                <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-500/5 rounded-full transition-all duration-300 group-hover:scale-150" />
                 <div className="mb-6 transform group-hover:scale-110 transition-transform relative z-10">
                   <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:shadow-blue-500/20">
                     <Mail className="w-8 h-8" />
                   </div>
                 </div>
-
-                {/* Título */}
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 relative z-10">
                   Escríbenos
                 </h3>
-
-                {/* Descripción */}
                 <p className="text-gray-600 dark:text-gray-300 leading-relaxed relative z-10 font-medium">
-                  {info?.contactInfo[0]?.email || "contacto@empresa.com"}
+                  {info?.contactInfo?.[0]?.email || "contacto@empresa.com"}
                 </p>
-
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 flex items-center relative z-10">
                   <CheckCircle className="w-4 h-4 mr-1 inline" />
                   Te respondemos en menos de 24 horas
@@ -418,27 +404,19 @@ export default function ContactPage() {
                 whileHover={{ y: -10 }}
                 className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all group relative overflow-hidden"
               >
-                {/* Background decoration */}
-                <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-500/5 rounded-full transition-all duration-300 group-hover:scale-150"></div>
-
-                {/* Icono con fondo dinámico */}
+                <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-500/5 rounded-full transition-all duration-300 group-hover:scale-150" />
                 <div className="mb-6 transform group-hover:scale-110 transition-transform relative z-10">
                   <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:shadow-blue-500/20">
                     <MapPin className="w-8 h-8" />
                   </div>
                 </div>
-
-                {/* Título */}
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 relative z-10">
                   Visítanos
                 </h3>
-
-                {/* Descripción */}
                 <p className="text-gray-600 dark:text-gray-300 leading-relaxed relative z-10 font-medium">
-                  {info?.contactInfo[0]?.address ||
+                  {info?.contactInfo?.[0]?.address ||
                     "Calle Principal #123, Ciudad"}
                 </p>
-
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 flex items-center relative z-10">
                   <Clock className="w-4 h-4 mr-1 inline" />
                   Horario: 9am - 6pm (Lun-Vie)
@@ -448,31 +426,30 @@ export default function ContactPage() {
           </div>
         </AnimatedSection>
 
-        {/* Contact Form Section - Lazy loaded */}
+        {/* Contact Form Section - Lazy */}
         <Suspense
           fallback={
             <div className="py-24 bg-white dark:bg-gray-900 h-96 flex items-center justify-center">
-              <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+              <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
             </div>
           }
         >
           <ContactFormSection />
         </Suspense>
 
-        {/* Map Section - Lazy loaded */}
+        {/* Map Section - Lazy */}
         <Suspense
           fallback={
             <div className="py-24 bg-gray-50 dark:bg-gray-800 h-96 flex items-center justify-center">
-              <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+              <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
             </div>
           }
         >
           <MapSection info={info} />
         </Suspense>
 
-        {/* CTA Section - Enhanced with about page style */}
+        {/* CTA */}
         <section className="py-20 bg-gradient-to-r from-blue-600 to-blue-800 text-white relative overflow-hidden">
-          {/* Background decoration */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <svg
               className="absolute bottom-0 left-0 w-full h-64 text-white/5"
@@ -483,12 +460,12 @@ export default function ContactPage() {
                 d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z"
                 opacity=".25"
                 fill="currentColor"
-              ></path>
+              />
               <path
                 d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z"
                 opacity=".5"
                 fill="currentColor"
-              ></path>
+              />
             </svg>
           </div>
 
@@ -541,23 +518,24 @@ export default function ContactPage() {
                       <ArrowRight className="ml-2 w-5 h-5" />
                     </motion.span>
                   </span>
-                  <span className="absolute inset-0 bg-blue-50 transform scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300"></span>
+                  <span className="absolute inset-0 bg-blue-50 transform scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300" />
                 </motion.button>
+
                 <motion.a
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  href={`tel:${info?.contactInfo[0]?.phone || "+521234567890"}`}
+                  href={telHref}
+                  aria-label="Llamar ahora"
                   className="group px-8 py-4 bg-transparent text-white font-bold rounded-full hover:bg-white/10 transition-all border-2 border-white flex items-center justify-center relative overflow-hidden"
                 >
                   <span className="relative z-10 flex items-center">
                     <Phone className="mr-2 w-5 h-5" />
                     Llamar ahora
                   </span>
-                  <span className="absolute inset-0 bg-white/10 transform scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300"></span>
+                  <span className="absolute inset-0 bg-white/10 transform scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300" />
                 </motion.a>
               </motion.div>
 
-              {/* Floating badges - Added from about page style */}
               <div className="mt-12 flex flex-wrap justify-center gap-4">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}

@@ -1,82 +1,93 @@
 "use client";
 
-import { useEffect, useState, lazy, Suspense } from "react";
+import type React from "react";
+import { lazy, Suspense, useEffect, useState, memo } from "react";
+
 import Loader from "@/components/web-components/Loader";
 import BenefitsSection from "./components/BenefitsSection";
 import WhyUsSection from "./components/WhyUsSection";
 import PersonalizeSection from "./components/PersonalizeSection";
+import CTASection from "./components/cta-section";
 
-// Lazy load components
+// Lazy load
 const HomeHero = lazy(() => import("./components/HeroPage"));
 const FeaturedProductsCarousel = lazy(
   () => import("./components/featured-products-carousel")
 );
 const CategoriesSection = lazy(() => import("./components/CategoriesSection"));
 
-// Images
-import WhyUs from "./assets/whyus.jpg";
-import CTASection from "./components/cta-section";
+// Assets
+import WhyUs from "./assets/whyus.webp";
 
-export default function Home() {
+/* ---------- Fallbacks / Skeletons ---------- */
+const FullscreenFallback: React.FC<{ label: string }> = ({ label }) => (
+  <div
+    role="status"
+    aria-live="polite"
+    className="h-[60vh] md:h-[70vh] w-full flex items-center justify-center text-gray-500 dark:text-gray-400"
+  >
+    {label}
+  </div>
+);
+
+const SectionFallback: React.FC<{ label: string }> = ({ label }) => (
+  <div
+    role="status"
+    aria-live="polite"
+    className="py-16 w-full flex items-center justify-center text-gray-500 dark:text-gray-400"
+  >
+    {label}
+  </div>
+);
+
+/* ------------------------------------------ */
+
+const Home: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
+  // Pequeño overlay inicial para evitar parpadeos al montar
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
-
-    return () => clearTimeout(timer);
+    const t = setTimeout(() => setIsLoading(false), 500);
+    return () => clearTimeout(t);
   }, []);
 
   return (
     <>
       {isLoading && <Loader />}
-      <main className="min-h-screen mt-5 bg-white dark:bg-gray-900 overflow-x-hidden">
-        {/* Hero Section */}
-        <Suspense
-          fallback={
-            <div className="h-screen flex items-center justify-center">
-              Cargando...
-            </div>
-          }
-        >
+
+      <main
+        className="min-h-screen mt-5 bg-white dark:bg-gray-900 overflow-x-hidden"
+        aria-busy={isLoading}
+      >
+        {/* Hero */}
+        <Suspense fallback={<FullscreenFallback label="Cargando..." />}>
           <HomeHero />
         </Suspense>
 
-        {/* Benefits Section */}
+        {/* Beneficios (no lazy por ser ligero) */}
         <BenefitsSection />
 
-        {/* Categories Section */}
-        <Suspense
-          fallback={
-            <div className="py-16 flex items-center justify-center">
-              Cargando categorías...
-            </div>
-          }
-        >
+        {/* Categorías */}
+        <Suspense fallback={<SectionFallback label="Cargando categorías..." />}>
           <CategoriesSection />
         </Suspense>
 
-        {/* Featured Products Carousel */}
-        <Suspense
-          fallback={
-            <div className="py-16 flex items-center justify-center">
-              Cargando productos...
-            </div>
-          }
-        >
+        {/* Productos Destacados */}
+        <Suspense fallback={<SectionFallback label="Cargando productos..." />}>
           <FeaturedProductsCarousel />
         </Suspense>
 
-        {/* Why Us Section */}
+        {/* ¿Por qué nosotros? */}
         <WhyUsSection imgWhyUs={WhyUs} />
 
-        {/* Personalize Section */}
+        {/* Personaliza */}
         <PersonalizeSection />
 
-        {/* CTA Section */}
+        {/* CTA final */}
         <CTASection />
       </main>
     </>
   );
-}
+};
+
+export default memo(Home);

@@ -374,6 +374,7 @@ export class SalesService {
           status: {
             notIn: [SaleStatus.DELIVERED, SaleStatus.CANCELLED],
           },
+          isTaken: false,
         },
         include: {
           user: {

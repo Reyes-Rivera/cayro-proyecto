@@ -36,6 +36,7 @@ import CheckoutSuccess from "@/pages/CheckOut/CheckoutSuccess";
 import CheckoutFailure from "@/pages/CheckOut/CheckoutFailure";
 import CheckoutPending from "@/pages/CheckOut/CheckoutPending";
 import PersonalizePage from "@/pages/web/personalized-product/PersonalizePage";
+import Prueba from "@/pages/Prueba";
 const AppRoutes = () => {
   const { auth, user } = useAuth();
   const navigate = useNavigate();
@@ -77,6 +78,7 @@ const AppRoutes = () => {
           <Route path="/contacto" element={<ContactPage />} />
           <Route path="/registro" element={<SignUpPage />} />
           <Route path="/personalizar" element={<PersonalizePage />} />
+          <Route path="/prueba" element={<Prueba />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/productos" element={<ProductsSection />} />
           <Route path="/producto/:name" element={<ProductDetails />} />

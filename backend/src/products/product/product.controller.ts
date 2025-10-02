@@ -22,7 +22,96 @@ export class ProductController {
   async create(@Body() createProductDto: CreateProductDto) {
     return await this.productService.create(createProductDto);
   }
+  @Get('current-month')
+  async getCurrentMonthStats() {
+    try {
+      const stats = await this.productService.getCurrentMonthStats();
+      return {
+        success: true,
+        data: stats,
+        message: 'Estadísticas del mes actual obtenidas correctamente',
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Error al obtener las estadísticas',
+        error: error.message,
+      };
+    }
+  }
 
+  @Get('monthly')
+  async getMonthlyStats(
+    @Query('month') month?: string,
+    @Query('year') year?: string,
+  ) {
+    try {
+      const monthNumber = month ? parseInt(month) : undefined;
+      const yearNumber = year ? parseInt(year) : undefined;
+
+      if (monthNumber && (monthNumber < 1 || monthNumber > 12)) {
+        return {
+          success: false,
+          message: 'El mes debe estar entre 1 y 12',
+        };
+      }
+
+      const stats = await this.productService.getMonthlyStats(
+        monthNumber,
+        yearNumber,
+      );
+
+      return {
+        success: true,
+        data: stats,
+        message: 'Estadísticas mensuales obtenidas correctamente',
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Error al obtener las estadísticas mensuales',
+        error: error.message,
+      };
+    }
+  }
+
+  @Get('detailed')
+  async getDetailedStats() {
+    try {
+      const stats = await this.productService.getDetailedStats();
+      return {
+        success: true,
+        data: stats,
+        message: 'Estadísticas detalladas obtenidas correctamente',
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Error al obtener las estadísticas detalladas',
+        error: error.message,
+      };
+    }
+  }
+
+  @Get('top-products')
+  async getTopProducts(@Query('limit') limit: string) {
+    try {
+      const limitNumber = limit ? parseInt(limit) : 5;
+      const topProducts = await this.productService.getTopProducts(limitNumber);
+
+      return {
+        success: true,
+        data: topProducts,
+        message: 'Productos más vendidos obtenidos correctamente',
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Error al obtener los productos más vendidos',
+        error: error.message,
+      };
+    }
+  }
   @Get()
   async findAll(
     @Query('search') search: string,

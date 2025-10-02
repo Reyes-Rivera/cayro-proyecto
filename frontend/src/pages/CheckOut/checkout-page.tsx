@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContextType";
@@ -16,8 +16,10 @@ const apiUrl = import.meta.env.VITE_REACT_APP_BASE_URL;
 
 type CheckoutStep = "shipping" | "shipping-details" | "payment";
 
+// Memoized shipping cost calculation
 const calculateShippingCost = (cart: any[]): number => {
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+  if (totalItems === 0) return 0;
   if (totalItems <= 5) return 200;
   if (totalItems <= 10) return 250;
   if (totalItems <= 15) return 300;
@@ -31,6 +33,7 @@ export default function CheckoutPage() {
   const { items, subtotal, itemCount } = useCart();
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentStep, setCurrentStep] = useState<CheckoutStep>("shipping");
@@ -44,31 +47,31 @@ export default function CheckoutPage() {
     null
   );
   const [addresses, setAddresses] = useState<any[]>([]);
-
-  // Shipping calculation states
   const [shipping, setShipping] = useState(0);
 
-  // Calculate total with shipping
-  const total = subtotal + shipping;
+  // Refs for stable values
+  const itemsRef = useRef(items);
+  const userRef = useRef(user);
+  const shippingDetailsRef = useRef(shippingDetails);
 
-  const subtotalRef = useRef(subtotal);
-  const shippingRef = useRef(shipping);
-  const totalRef = useRef(total);
-
+  // Update refs when dependencies change
   useEffect(() => {
-    subtotalRef.current = subtotal;
-    shippingRef.current = shipping;
-    totalRef.current = total;
-  }, [subtotal, shipping, total]);
+    itemsRef.current = items;
+    userRef.current = user;
+    shippingDetailsRef.current = shippingDetails;
+  }, [items, user, shippingDetails]);
 
-  const calculateShippingCostLocal = () => {
+  // Memoized totals
+  const total = useMemo(() => subtotal + shipping, [subtotal, shipping]);
+
+  // Memoized shipping calculation
+  const calculateShippingCostLocal = useCallback(() => {
     if (items.length === 0) {
       setShipping(0);
       return;
     }
 
     try {
-      // Calculate shipping cost using the local function
       const shippingCost = calculateShippingCost(items);
       setShipping(shippingCost);
     } catch (err) {
@@ -80,17 +83,18 @@ export default function CheckoutPage() {
         timer: 4000,
         animation: "slideIn",
       });
-      // Fallback to a default shipping cost
       setShipping(200);
     }
-  };
+  }, [items]);
 
+  // Effect for shipping calculation
   useEffect(() => {
     if (currentStep === "shipping-details" || currentStep === "payment") {
       calculateShippingCostLocal();
     }
-  }, [items, subtotal, currentStep]);
+  }, [currentStep, calculateShippingCostLocal]);
 
+  // Error boundary for unhandled rejections
   useEffect(() => {
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       AlertHelper.confirm({
@@ -118,57 +122,63 @@ export default function CheckoutPage() {
     };
   }, []);
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        if (!isAuthenticated) {
-          const confirmed = await AlertHelper.confirm({
-            title: "Iniciar sesión",
-            message: "Debes iniciar sesión para continuar con el pago",
-            confirmText: "Iniciar sesión",
-            cancelText: "Cancelar",
-            type: "info",
-            animation: "slideIn",
-          });
-          if (confirmed) {
-            navigate("/login?redirect=/checkout");
-          } else {
-            navigate("/carrito");
-          }
-          return;
-        }
-        if (items.length === 0) {
-          navigate("/carrito");
-          return;
-        }
-        setIsLoading(false);
-      } catch (error: any) {
-        AlertHelper.error({
-          title: "Error",
-          message:
-            error.response.data.message ||
-            "Ocurrió un error al verificar la autenticación",
-          timer: 4000,
+  // Authentication and cart validation
+  const checkAuth = useCallback(async () => {
+    try {
+      if (!isAuthenticated) {
+        const confirmed = await AlertHelper.confirm({
+          title: "Iniciar sesión",
+          message: "Debes iniciar sesión para continuar con el pago",
+          confirmText: "Iniciar sesión",
+          cancelText: "Cancelar",
+          type: "info",
+          animation: "slideIn",
         });
-        setIsLoading(false);
+        if (confirmed) {
+          navigate("/login?redirect=/checkout", { replace: true });
+        } else {
+          navigate("/carrito", { replace: true });
+        }
+        return;
       }
-    };
-
-    const timer = setTimeout(() => {
-      checkAuth();
-    }, 800);
-    return () => clearTimeout(timer);
+      if (items.length === 0) {
+        navigate("/carrito", { replace: true });
+        return;
+      }
+      setIsLoading(false);
+    } catch (error: any) {
+      AlertHelper.error({
+        title: "Error",
+        message:
+          error.response?.data?.message ||
+          "Ocurrió un error al verificar la autenticación",
+        timer: 4000,
+      });
+      setIsLoading(false);
+    }
   }, [isAuthenticated, navigate, items.length]);
 
+  // Initial load effect
   useEffect(() => {
-    window.scrollTo(0, 0);
+    const timer = setTimeout(() => {
+      checkAuth();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [checkAuth]);
+
+  // Scroll to top on step change
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }, [currentStep]);
+
+  // Memoized event handlers
+  const toggleOrderSummary = useCallback(() => {
+    setOrderSummaryExpanded((prev) => !prev);
   }, []);
 
-  const toggleOrderSummary = () => {
-    setOrderSummaryExpanded(!orderSummaryExpanded);
-  };
-
-  const handlePaymentError = (errorMessage: string) => {
+  const handlePaymentError = useCallback((errorMessage: string) => {
     setPaymentError(errorMessage);
     AlertHelper.error({
       title: "Error en el pago",
@@ -178,25 +188,27 @@ export default function CheckoutPage() {
       timer: 6000,
       animation: "slideIn",
     });
-  };
+  }, []);
 
-  const handleShippingSubmit = (details: ShippingDetailsFormData) => {
-    try {
-      setShippingDetails(details);
-      setCurrentStep("payment");
-      window.scrollTo(0, 0);
-    } catch (error: any) {
-      AlertHelper.error({
-        title: "Error",
-        message:
-          "Ocurrió un error al procesar la información de envío" +
-          error.data.message,
-        timer: 4000,
-      });
-    }
-  };
+  const handleShippingSubmit = useCallback(
+    (details: ShippingDetailsFormData) => {
+      try {
+        setShippingDetails(details);
+        setCurrentStep("payment");
+      } catch (error: any) {
+        AlertHelper.error({
+          title: "Error",
+          message:
+            "Ocurrió un error al procesar la información de envío" +
+            error.data?.message,
+          timer: 4000,
+        });
+      }
+    },
+    []
+  );
 
-  const handleContinueToShippingDetails = () => {
+  const handleContinueToShippingDetails = useCallback(() => {
     if (!selectedAddressId && addresses?.length > 0) {
       AlertHelper.warning({
         title: "Selecciona una dirección",
@@ -216,215 +228,296 @@ export default function CheckoutPage() {
       return;
     }
     setCurrentStep("shipping-details");
-    window.scrollTo(0, 0);
-  };
+  }, [selectedAddressId, addresses.length]);
 
-  useEffect(() => {
-    const createMercadoPagoPreference = async () => {
-      if (
-        currentStep === "payment" &&
-        items.length > 0 &&
-        user &&
-        shippingDetails
-      ) {
-        try {
-          setIsLoadingPayment(true);
-          setPaymentError("");
-          setPreferenceId("");
-          const cart = items.map((item: any) => ({
-            productId: item.product?.id || item.productId,
-            variantId: item.variant?.id || item.variantId,
-            name:
-              item.product?.name || item.name || `Producto ${item.productId}`,
-            price: Number(item.variant?.price || item.price),
-            quantity: Number(item.quantity),
-          }));
+  const handleBackToShipping = useCallback(() => {
+    setCurrentStep("shipping");
+  }, []);
 
-          const userData = {
-            id: user.id?.toString() || "unknown",
-            email: user.email || "test@test.com",
-            name: `${user.name || "Usuario"} ${user.surname || ""}`.trim(),
-          };
+  // Memoized MercadoPago preference creation
+  const createMercadoPagoPreference = useCallback(async () => {
+    const currentItems = itemsRef.current;
+    const currentUser = userRef.current;
+    const currentShippingDetails = shippingDetailsRef.current;
 
-          const requestData = {
-            cart,
-            total: Number(total),
-            subtotal: Number(subtotal),
-            shippingCost: Number(shipping),
-            user: userData,
-            shippingDetails,
-          };
+    if (!currentItems.length || !currentUser || !currentShippingDetails) {
+      return;
+    }
 
-          if (!requestData.cart || requestData.cart.length === 0) {
-            throw new Error("El carrito está vacío");
-          }
+    try {
+      setIsLoadingPayment(true);
+      setPaymentError("");
+      setPreferenceId("");
 
-          if (!requestData.total || requestData.total <= 0) {
-            throw new Error("El total debe ser mayor a 0");
-          }
+      const cart = currentItems.map((item: any) => ({
+        productId: item.product?.id || item.productId,
+        variantId: item.variant?.id || item.variantId,
+        name: item.product?.name || item.name || `Producto ${item.productId}`,
+        price: Number(item.variant?.price || item.price),
+        quantity: Number(item.quantity),
+      }));
 
-          if (!requestData.user.email) {
-            throw new Error("Email del usuario requerido");
-          }
+      const userData = {
+        id: currentUser.id?.toString() || "unknown",
+        email: currentUser.email || "test@test.com",
+        name: `${currentUser.name || "Usuario"} ${
+          currentUser.surname || ""
+        }`.trim(),
+      };
 
-          if (!requestData.shippingDetails) {
-            throw new Error("Detalles de envío requeridos");
-          }
+      const requestData = {
+        cart,
+        total: Number(total),
+        subtotal: Number(subtotal),
+        shippingCost: Number(shipping),
+        user: userData,
+        shippingDetails: currentShippingDetails,
+      };
 
-          const response = await axios.post(
-            `${apiUrl}/mercadopago/create-preference`,
-            requestData,
-            {
-              headers: {
-                "Content-Type": "application/json",
-              },
-              timeout: 15000,
-            }
-          );
-
-          if (response.data.success && response.data.preferenceId) {
-            setPreferenceId(response.data.preferenceId);
-            setPaymentError("");
-            AlertHelper.success({
-              title: "Pago listo",
-              message: "Redirigiendo a Mercado Pago...",
-              timer: 2000,
-            });
-          } else {
-            throw new Error(
-              response.data.message || "No se pudo crear la preferencia de pago"
-            );
-          }
-        } catch (error) {
-          let errorMessage =
-            "No se pudo inicializar el pago. Por favor, intenta de nuevo.";
-          if (axios.isAxiosError(error)) {
-            if (error.code === "ECONNABORTED") {
-              errorMessage =
-                "Timeout: El servidor tardó demasiado en responder. Intenta de nuevo.";
-            } else if (error.response?.data?.message) {
-              errorMessage = error.response.data.message;
-            } else if (error.response?.status === 400) {
-              errorMessage =
-                "Datos inválidos. Verifica la información del carrito.";
-            } else if (error.response?.status === 404) {
-              errorMessage =
-                "Endpoint no encontrado. Verifica que el servidor esté corriendo.";
-            } else if (error.response && error.response.status >= 500) {
-              errorMessage =
-                "Error del servidor. Por favor, intenta más tarde.";
-            } else if (error.message) {
-              errorMessage = `Error de conexión: ${error.message}`;
-            }
-          } else if (error instanceof Error) {
-            errorMessage = error.message;
-          }
-
-          setPaymentError(errorMessage);
-          AlertHelper.error({
-            title: "Error al inicializar el pago",
-            message: errorMessage,
-            timer: 6000,
-            animation: "slideIn",
-          });
-        } finally {
-          setIsLoadingPayment(false);
-        }
+      // Validation
+      if (!requestData.cart.length) {
+        throw new Error("El carrito está vacío");
       }
-    };
+      if (!requestData.total || requestData.total <= 0) {
+        throw new Error("El total debe ser mayor a 0");
+      }
+      if (!requestData.user.email) {
+        throw new Error("Email del usuario requerido");
+      }
+      if (!requestData.shippingDetails) {
+        throw new Error("Detalles de envío requeridos");
+      }
 
-    createMercadoPagoPreference().catch(() => {
+      const response = await axios.post(
+        `${apiUrl}/mercadopago/create-preference`,
+        requestData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          timeout: 15000,
+        }
+      );
+
+      if (response.data.success && response.data.preferenceId) {
+        setPreferenceId(response.data.preferenceId);
+        setPaymentError("");
+      } else {
+        throw new Error(
+          response.data.message || "No se pudo crear la preferencia de pago"
+        );
+      }
+    } catch (error) {
+      let errorMessage =
+        "No se pudo inicializar el pago. Por favor, intenta de nuevo.";
+
+      if (axios.isAxiosError(error)) {
+        // Handle timeout and connection errors
+        if (error.code === "ECONNABORTED" || error.code === "TIMEOUT") {
+          errorMessage =
+            "Timeout: El servidor tardó demasiado en responder. Intenta de nuevo.";
+        }
+        // Handle response errors with proper null checking
+        else if (error.response) {
+          const status = error.response.status;
+          const data = error.response.data;
+
+          if (data?.message) {
+            errorMessage = data.message;
+          } else if (status === 400) {
+            errorMessage =
+              "Datos inválidos. Verifica la información del carrito.";
+          } else if (status === 404) {
+            errorMessage =
+              "Endpoint no encontrado. Verifica que el servidor esté corriendo.";
+          } else if (status >= 500) {
+            errorMessage = "Error del servidor. Por favor, intenta más tarde.";
+          } else {
+            errorMessage = `Error del servidor (${status}). Por favor, intenta de nuevo.`;
+          }
+        }
+        // Handle network errors without response
+        else if (error.message) {
+          errorMessage = `Error de conexión: ${error.message}`;
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      setPaymentError(errorMessage);
+    } finally {
       setIsLoadingPayment(false);
-      setPaymentError("Error inesperado al inicializar el pago.");
-      AlertHelper.error({
-        title: "Error inesperado",
-        message:
-          "Error inesperado al inicializar el pago. Por favor, intenta de nuevo.",
-        timer: 5000,
-        animation: "slideIn",
-      });
-    });
-  }, [currentStep, items, total, subtotal, shipping, user, shippingDetails]);
+    }
+  }, [total, subtotal, shipping]);
+
+  // Effect for MercadoPago preference creation
+  useEffect(() => {
+    if (
+      currentStep === "payment" &&
+      items.length > 0 &&
+      user &&
+      shippingDetails
+    ) {
+      createMercadoPagoPreference();
+    }
+  }, [
+    currentStep,
+    items.length,
+    user,
+    shippingDetails,
+    createMercadoPagoPreference,
+  ]);
+
+  // Memoized loading component
+  const LoadingComponent = useMemo(
+    () => (
+      <div
+        className="fixed inset-0 bg-white dark:bg-gray-950 z-50 flex items-center justify-center"
+        role="status"
+        aria-label="Cargando checkout"
+      >
+        <div className="w-16 h-16 relative">
+          <div
+            className="absolute inset-0 rounded-full border-4 border-gray-200 dark:border-gray-800 opacity-25"
+            aria-hidden="true"
+          ></div>
+          <div
+            className="absolute inset-0 rounded-full border-4 border-t-blue-600 dark:border-t-blue-500 border-gray-200 dark:border-gray-800 animate-spin"
+            aria-hidden="true"
+          ></div>
+        </div>
+        <span className="sr-only">Cargando página de checkout...</span>
+      </div>
+    ),
+    []
+  );
+
+  // Memoized header section
+  const HeaderSection = useMemo(
+    () => (
+      <div className="flex items-center mb-8">
+        <Link
+          to="/carrito"
+          className="flex items-center text-gray-500 hover:text-blue-600 dark:hover:text-blue-500 mr-4 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-lg p-1"
+          aria-label="Volver al carrito de compras"
+        >
+          <ArrowLeft className="w-4 h-4 mr-1" aria-hidden="true" />
+          <span className="text-sm">Volver al carrito</span>
+        </Link>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
+          Finalizar compra
+        </h1>
+      </div>
+    ),
+    []
+  );
+
+  // Memoized main content based on current step
+  const MainContent = useMemo(() => {
+    const commonCardClasses =
+      "bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden";
+
+    if (currentStep === "shipping" || currentStep === "shipping-details") {
+      return (
+        <div className={commonCardClasses}>
+          <div className="p-6">
+            <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-6">
+              Información de envío
+            </h2>
+            <AddressSection
+              user={user}
+              onAddressSelected={handleShippingSubmit}
+              selectedAddressId={selectedAddressId}
+              setSelectedAddressId={setSelectedAddressId}
+              addresses={addresses}
+              setAddresses={setAddresses}
+            />
+          </div>
+        </div>
+      );
+    }
+
+    if (currentStep === "payment") {
+      return (
+        <div className={commonCardClasses}>
+          <div className="p-6">
+            <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-6">
+              Información de pago
+            </h2>
+            <PaymentSection
+              preferenceId={preferenceId}
+              isLoadingPayment={isLoadingPayment}
+              paymentError={paymentError}
+              onPaymentError={handlePaymentError}
+              isProcessing={isProcessing}
+              setIsProcessing={setIsProcessing}
+              total={total}
+              onBack={handleBackToShipping}
+            />
+          </div>
+        </div>
+      );
+    }
+
+    return null;
+  }, [
+    currentStep,
+    user,
+    selectedAddressId,
+    addresses,
+    preferenceId,
+    isLoadingPayment,
+    paymentError,
+    isProcessing,
+    total,
+    handleShippingSubmit,
+    handlePaymentError,
+    handleBackToShipping,
+  ]);
+
+  // Memoized order summary
+  const OrderSummarySection = useMemo(
+    () => (
+      <OrderSummary
+        items={items}
+        itemCount={itemCount}
+        subtotal={subtotal}
+        expanded={orderSummaryExpanded}
+        toggleExpanded={toggleOrderSummary}
+        currentStep={currentStep}
+        onContinue={handleContinueToShippingDetails}
+        isProcessing={isProcessing}
+      />
+    ),
+    [
+      items,
+      itemCount,
+      subtotal,
+      orderSummaryExpanded,
+      currentStep,
+      isProcessing,
+      toggleOrderSummary,
+      handleContinueToShippingDetails,
+    ]
+  );
 
   if (isLoading) {
-    return (
-      <div className="fixed inset-0 bg-white dark:bg-gray-950 z-50 flex items-center justify-center">
-        <div className="w-16 h-16 relative">
-          <div className="absolute inset-0 rounded-full border-4 border-gray-200 dark:border-gray-800 opacity-25"></div>
-          <div className="absolute inset-0 rounded-full border-4 border-t-blue-600 dark:border-t-blue-500 border-gray-200 dark:border-gray-800 animate-spin"></div>
-        </div>
-      </div>
-    );
+    return LoadingComponent;
   }
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950 pt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center mb-8">
-          <Link
-            to="/carrito"
-            className="flex items-center text-gray-500 hover:text-blue-600 dark:hover:text-blue-500 mr-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-1" />
-            <span className="text-sm">Volver al carrito</span>
-          </Link>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
-            Finalizar compra
-          </h1>
-        </div>
+        {HeaderSection}
+
         <CheckoutProgress currentStep={currentStep} />
+
         <div className="flex flex-col lg:flex-row gap-8">
-          <div className="w-full lg:w-2/3">
-            {(currentStep === "shipping" ||
-              currentStep === "shipping-details") && (
-              <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
-                <div className="p-6">
-                  <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-6">
-                    Información de envío
-                  </h2>
-                  <AddressSection
-                    user={user}
-                    onAddressSelected={handleShippingSubmit}
-                    selectedAddressId={selectedAddressId}
-                    setSelectedAddressId={setSelectedAddressId}
-                    addresses={addresses}
-                    setAddresses={setAddresses}
-                  />
-                </div>
-              </div>
-            )}
-            {currentStep === "payment" && (
-              <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
-                <div className="p-6">
-                  <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-6">
-                    Información de pago
-                  </h2>
-                  <PaymentSection
-                    preferenceId={preferenceId}
-                    isLoadingPayment={isLoadingPayment}
-                    paymentError={paymentError}
-                    onPaymentError={handlePaymentError}
-                    isProcessing={isProcessing}
-                    setIsProcessing={setIsProcessing}
-                    total={total}
-                    onBack={() => setCurrentStep("shipping")}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-          <div className="w-full lg:w-1/3">
-            <OrderSummary
-              items={items}
-              itemCount={itemCount}
-              subtotal={subtotal}
-              expanded={orderSummaryExpanded}
-              toggleExpanded={toggleOrderSummary}
-              currentStep={currentStep}
-              onContinue={handleContinueToShippingDetails}
-              isProcessing={isProcessing}
-            />
-          </div>
+          {/* Main Content */}
+          <div className="w-full lg:w-2/3">{MainContent}</div>
+
+          {/* Order Summary */}
+          <div className="w-full lg:w-1/3">{OrderSummarySection}</div>
         </div>
       </div>
     </div>

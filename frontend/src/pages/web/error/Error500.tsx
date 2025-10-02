@@ -1,13 +1,19 @@
 "use client";
+import type React from "react";
 import { ArrowRight } from "lucide-react";
 import { Link, Navigate, useLocation } from "react-router-dom";
+import type { Location } from "react-router-dom";
 import img from "@/assets/error500.png";
 import { motion } from "framer-motion";
 
-const Error500 = () => {
-  const location = useLocation();
+type Error500State = { fromError?: boolean } | null;
 
-  if (!location.state || !location.state.fromError) {
+const Error500: React.FC = () => {
+  // Tipado explícito del state
+  const location = useLocation() as Location & { state: Error500State };
+  const fromError = Boolean(location.state?.fromError);
+
+  if (!fromError) {
     return <Navigate to="/" replace />;
   }
 
@@ -15,7 +21,10 @@ const Error500 = () => {
     <div className="min-h-screen bg-white dark:bg-gray-900 mt-4">
       <section className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900 p-4 sm:p-6 relative overflow-hidden">
         {/* Elementos decorativos de fondo */}
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+        <div
+          className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none"
+          aria-hidden="true"
+        >
           <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/5 rounded-full"></div>
           <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-500/5 rounded-full"></div>
           <div className="absolute top-10 left-10 w-64 h-64 bg-blue-100 dark:bg-blue-900/20 rounded-full mix-blend-multiply dark:mix-blend-overlay filter blur-3xl opacity-70 animate-blob"></div>
@@ -38,7 +47,10 @@ const Error500 = () => {
           >
             <div className="w-72 h-72 sm:w-80 sm:h-80 lg:w-96 lg:h-96 flex items-center relative">
               {/* Círculo decorativo detrás de la imagen */}
-              <div className="absolute inset-0 bg-blue-50 dark:bg-blue-900/20 rounded-full transform -translate-x-4 -translate-y-4 z-0"></div>
+              <div
+                className="absolute inset-0 bg-blue-50 dark:bg-blue-900/20 rounded-full transform -translate-x-4 -translate-y-4 z-0"
+                aria-hidden="true"
+              ></div>
 
               <motion.img
                 initial={{ rotate: -5 }}
@@ -50,7 +62,9 @@ const Error500 = () => {
                   ease: "easeInOut",
                 }}
                 src={img}
-                alt="500 Ilustración"
+                alt="Error 500 — Error del servidor"
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-contain relative z-10 drop-shadow-2xl"
               />
             </div>
@@ -107,23 +121,25 @@ const Error500 = () => {
               más tarde.
             </motion.p>
 
-            {/* Botón para ir al inicio */}
+            {/* Botón para ir al inicio (Link estilizado, no anidar dentro de button) */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 1.2 }}
               className="pt-6 flex justify-center lg:justify-start"
             >
-              <motion.button
+              <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium rounded-full shadow-lg hover:shadow-xl transform transition-all duration-300 hover:-translate-y-1 group"
               >
-                <Link to="/" className="flex items-center">
+                <Link
+                  to="/"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium rounded-full shadow-lg hover:shadow-xl transform transition-all duration-300 hover:-translate-y-1 group focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+                >
                   <span>Ir al Inicio</span>
                   <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Link>
-              </motion.button>
+              </motion.div>
             </motion.div>
 
             {/* Mensaje adicional */}

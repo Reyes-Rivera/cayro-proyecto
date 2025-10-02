@@ -13,6 +13,7 @@ async function bootstrap() {
         'https://alexa.amazon.com',
         'https://developer.amazon.com',
         'https://cayro.netlify.app',
+        'http://10.0.2.2:3000',
       ];
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);

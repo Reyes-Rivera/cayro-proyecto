@@ -26,19 +26,16 @@ import { MercadoPagoModule } from './mercado-pago/mercado-pago.module';
 import { NotificationModule } from './notification/notification.module';
 import { SalesModule } from './sales/sales.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
-import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { SalesReportModule } from './reports/sales-report.module';
 import { DashboardEmployeeModule } from './dashboard-employee/dashboard-employee.module';
 import { DashboardAdminModule } from './dashboard-admin/dashboard-admin.module';
 import { RecommendationModule } from './recommendation/recommendation.module';
+import { InventoryModule } from './inventory/inventory.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-    }),
-     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'public'), 
     }),
     UsersModule,
     AuthModule,
@@ -68,7 +65,8 @@ import { RecommendationModule } from './recommendation/recommendation.module';
     SalesReportModule,
     DashboardEmployeeModule,
     DashboardAdminModule,
-    RecommendationModule
+    RecommendationModule,
+    InventoryModule,
   ],
   controllers: [],
   providers: [AppService],

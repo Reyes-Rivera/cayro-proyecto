@@ -13,8 +13,9 @@ import {
   FileText,
 } from "lucide-react";
 import Breadcrumbs from "@/components/web-components/Breadcrumbs";
-import img from "./assets/personalize.jpg";
+import img from "./assets/personalize.webp";
 import { AlertHelper } from "@/utils/alert.util";
+
 interface FormData {
   productType: string;
   gender: string;
@@ -48,8 +49,8 @@ export default function PersonalizePage() {
     mode: "onChange",
     defaultValues: {
       productType: "",
-      gender: "", // Change from [] to ""
-      size: "", // Change from [] to ""
+      gender: "",
+      size: "",
       quantity: 1,
       specialRequests: "",
       contactInfo: {
@@ -87,11 +88,11 @@ export default function PersonalizePage() {
   ];
 
   const handleGenderSelect = (genderId: string) => {
-    setValue("gender", genderId);
+    setValue("gender", genderId, { shouldValidate: true, shouldDirty: true });
   };
 
   const handleSizeSelect = (sizeId: string) => {
-    setValue("size", sizeId);
+    setValue("size", sizeId, { shouldValidate: true, shouldDirty: true });
   };
 
   // Scroll animations
@@ -106,10 +107,7 @@ export default function PersonalizePage() {
       { threshold: 0.1, rootMargin: "50px" }
     );
 
-    if (headerRef.current) {
-      observer.observe(headerRef.current);
-    }
-
+    if (headerRef.current) observer.observe(headerRef.current);
     return () => observer.disconnect();
   }, []);
 
@@ -124,10 +122,7 @@ export default function PersonalizePage() {
       { threshold: 0.1, rootMargin: "30px" }
     );
 
-    if (formRef.current) {
-      observer.observe(formRef.current);
-    }
-
+    if (formRef.current) observer.observe(formRef.current);
     return () => observer.disconnect();
   }, []);
 
@@ -168,18 +163,17 @@ Por favor, envía las imágenes de referencia del diseño que quieres personaliz
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
 
-    // Simulate processing time
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    // Simulación de procesamiento (para UX)
+    await new Promise((resolve) => setTimeout(resolve, 1200));
 
     const message = generateWhatsAppMessage(data);
     const whatsappUrl = `https://wa.me/527717759293?text=${message}`;
 
-    // Open WhatsApp
-    window.open(whatsappUrl, "_blank");
+    // Abrir WhatsApp en nueva pestaña
+    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
 
     setIsSubmitting(false);
 
-    // Show success message with SweetAlert
     AlertHelper.success({
       title: "Solicitud enviada",
       message:
@@ -194,9 +188,13 @@ Por favor, envía las imágenes de referencia del diseño que quieres personaliz
       case 1:
         return await trigger(["productType", "gender", "size", "quantity"]);
       case 2:
-        return await trigger(["specialRequests"]);
+        return await trigger(["specialRequests"]); // opcional, pero permite validar si agregas reglas luego
       case 3:
-        return await trigger(["contactInfo.name", "contactInfo.phone"]);
+        return await trigger([
+          "contactInfo.name",
+          "contactInfo.phone",
+          "contactInfo.email",
+        ]);
       default:
         return false;
     }
@@ -207,7 +205,6 @@ Por favor, envía las imágenes de referencia del diseño que quieres personaliz
     if (valid) {
       setCurrentStep((prev) => prev + 1);
     } else {
-      // Show validation error with SweetAlert
       AlertHelper.error({
         title: "Error",
         message: "Por favor, completa todos los campos requeridos.",
@@ -219,14 +216,11 @@ Por favor, envía las imágenes de referencia del diseño que quieres personaliz
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 overflow-x-hidden">
-      {/* Hero Section - Simplified design */}
+      {/* Hero */}
       <section className="relative min-h-[50vh] md:min-h-[60vh] bg-white dark:bg-gray-900 flex items-center overflow-hidden">
-        {/* Background elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-20 -right-20 w-64 h-64 md:w-96 md:h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-blue-50/50 dark:from-blue-900/10 to-transparent"></div>
-
-          {/* Dots pattern */}
           <div className="absolute top-0 left-0 w-full h-full">
             <div className="absolute top-20 left-20 w-2 h-2 bg-blue-500/30 rounded-full"></div>
             <div className="absolute top-40 left-40 w-3 h-3 bg-blue-500/20 rounded-full"></div>
@@ -236,9 +230,9 @@ Por favor, envía las imágenes de referencia del diseño que quieres personaliz
           </div>
         </div>
 
-        <div className=" mx-auto  py-12 md:py-16 lg:py-24 relative z-10">
+        <div className="mx-auto py-12 md:py-16 lg:py-24 relative z-10 w-full">
           <div
-            className={` container px-4 mx-auto transition-all duration-700 ease-out ${
+            className={`container px-4 mx-auto transition-all duration-700 ease-out ${
               isHeaderVisible
                 ? "opacity-100 translate-y-0"
                 : "opacity-0 translate-y-6"
@@ -248,7 +242,6 @@ Por favor, envía las imágenes de referencia del diseño que quieres personaliz
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
               {/* Left Content */}
               <div className="text-center lg:text-left">
-                {/* Badge Component */}
                 <div className="flex items-center justify-center lg:justify-start mb-6 md:mb-8">
                   <div className="inline-flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-4 py-1.5">
                     <Shirt className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
@@ -258,7 +251,6 @@ Por favor, envía las imágenes de referencia del diseño que quieres personaliz
                   </div>
                 </div>
 
-                {/* Main Title */}
                 <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 dark:text-white mb-4 md:mb-6 leading-tight">
                   Crea tu{" "}
                   <span className="relative inline-block">
@@ -270,14 +262,12 @@ Por favor, envía las imágenes de referencia del diseño que quieres personaliz
                   único
                 </h1>
 
-                {/* Subtitle */}
                 <p className="text-base md:text-lg lg:text-xl text-gray-600 dark:text-gray-400 mb-6 md:mb-8">
                   Personaliza tu ropa con nuestro servicio especializado.
                   Completa el formulario y envía tus imágenes de referencia por
                   WhatsApp.
                 </p>
 
-                {/* Features */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto lg:mx-0">
                   <div className="flex items-center justify-center lg:justify-start gap-3 p-4 bg-white/50 dark:bg-gray-800/50 rounded-xl backdrop-blur-sm border border-gray-100 dark:border-gray-700">
                     <Package className="w-5 h-5 text-blue-600 flex-shrink-0" />
@@ -299,7 +289,6 @@ Por favor, envía las imágenes de referencia del diseño que quieres personaliz
                   </div>
                 </div>
 
-                {/* Breadcrumbs at bottom */}
                 <div className="mt-8">
                   <Breadcrumbs />
                 </div>
@@ -312,10 +301,14 @@ Por favor, envía las imágenes de referencia del diseño que quieres personaliz
                     src={img}
                     alt="Personalización de ropa"
                     className="w-full h-[400px] md:h-[500px] object-cover"
+                    loading="eager"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src =
+                        "/placeholder.svg?height=500&width=800&text=Personaliza";
+                    }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                 </div>
-                {/* Floating elements */}
                 <div className="absolute -top-4 -right-4 w-20 h-20 bg-blue-500/20 rounded-full blur-xl"></div>
                 <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-purple-500/20 rounded-full blur-xl"></div>
               </div>
@@ -324,7 +317,7 @@ Por favor, envía las imágenes de referencia del diseño que quieres personaliz
         </div>
       </section>
 
-      {/* Main Form Section */}
+      {/* Formulario principal */}
       <section className="py-16 md:py-24 bg-gradient-to-br from-gray-50 via-blue-50/20 to-indigo-50/10 dark:from-gray-900 dark:via-blue-950/20 dark:to-indigo-950/10">
         <div className="container mx-auto px-4 sm:px-6 max-w-4xl">
           <div
@@ -335,8 +328,8 @@ Por favor, envía las imágenes de referencia del diseño que quieres personaliz
                 : "opacity-0 translate-y-6"
             }`}
           >
-            {/* Progress Steps */}
-            <div className="mb-8 md:mb-12">
+            {/* Progreso */}
+            <div className="mb-8 md:mb-12" aria-live="polite">
               <div className="flex items-center justify-between max-w-lg mx-auto">
                 {[1, 2, 3].map((step) => (
                   <div key={step} className="flex items-center">
@@ -346,6 +339,8 @@ Por favor, envía las imágenes de referencia del diseño que quieres personaliz
                           ? "bg-blue-600 text-white"
                           : "bg-gray-200 dark:bg-gray-700 text-gray-500"
                       }`}
+                      aria-current={currentStep === step ? "step" : undefined}
+                      aria-label={`Paso ${step}`}
                     >
                       {currentStep > step ? (
                         <CheckCircle className="w-4 h-4" />
@@ -360,6 +355,7 @@ Por favor, envía las imágenes de referencia del diseño que quieres personaliz
                             ? "bg-blue-600"
                             : "bg-gray-200 dark:bg-gray-700"
                         }`}
+                        aria-hidden
                       />
                     )}
                   </div>
@@ -374,10 +370,10 @@ Por favor, envía las imágenes de referencia del diseño que quieres personaliz
               </div>
             </div>
 
-            {/* Form Content */}
-            <form onSubmit={handleSubmit(onSubmit)}>
+            {/* Form */}
+            <form onSubmit={handleSubmit(onSubmit)} noValidate>
               <div className="bg-white dark:bg-gray-900 rounded-2xl md:rounded-3xl shadow-xl border border-gray-100 dark:border-gray-800 p-6 md:p-8">
-                {/* Step 1: Product Details */}
+                {/* Paso 1 */}
                 {currentStep === 1 && (
                   <div className="space-y-6">
                     <div className="text-center mb-8">
@@ -390,7 +386,7 @@ Por favor, envía las imágenes de referencia del diseño que quieres personaliz
                       </p>
                     </div>
 
-                    {/* Product Type */}
+                    {/* Tipo */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                         Tipo de Producto *
@@ -400,12 +396,18 @@ Por favor, envía las imágenes de referencia del diseño que quieres personaliz
                           <button
                             key={type.id}
                             type="button"
-                            onClick={() => setValue("productType", type.id)}
+                            onClick={() =>
+                              setValue("productType", type.id, {
+                                shouldValidate: true,
+                                shouldDirty: true,
+                              })
+                            }
                             className={`p-4 rounded-xl border-2 transition-all text-center ${
                               watchedValues.productType === type.id
                                 ? "border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-600"
                                 : "border-gray-200 dark:border-gray-700 hover:border-blue-300 text-gray-700 dark:text-gray-300"
                             }`}
+                            aria-pressed={watchedValues.productType === type.id}
                           >
                             <div className="text-2xl mb-2">{type.icon}</div>
                             <div className="font-medium">{type.name}</div>
@@ -413,7 +415,7 @@ Por favor, envía las imágenes de referencia del diseño que quieres personaliz
                         ))}
                       </div>
                       {errors.productType && (
-                        <p className="text-red-500 text-sm mt-1">
+                        <p className="text-red-500 text-sm mt-1" role="alert">
                           Selecciona un tipo de producto
                         </p>
                       )}
@@ -425,7 +427,7 @@ Por favor, envía las imágenes de referencia del diseño que quieres personaliz
                       />
                     </div>
 
-                    {/* Gender */}
+                    {/* Género */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                         Género *
@@ -441,13 +443,14 @@ Por favor, envía las imágenes de referencia del diseño que quieres personaliz
                                 ? "border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-600"
                                 : "border-gray-200 dark:border-gray-700 hover:border-blue-300 text-gray-700 dark:text-gray-300"
                             }`}
+                            aria-pressed={watchedValues.gender === gender.id}
                           >
                             {gender.name}
                           </button>
                         ))}
                       </div>
                       {errors.gender && (
-                        <p className="text-red-500 text-sm mt-1">
+                        <p className="text-red-500 text-sm mt-1" role="alert">
                           Selecciona un género
                         </p>
                       )}
@@ -459,9 +462,8 @@ Por favor, envía las imágenes de referencia del diseño que quieres personaliz
                       />
                     </div>
 
-                    {/* Size and Quantity */}
+                    {/* Talla & Cantidad */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* Size */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                           Talla *
@@ -477,13 +479,14 @@ Por favor, envía las imágenes de referencia del diseño que quieres personaliz
                                   ? "border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-600"
                                   : "border-gray-200 dark:border-gray-700 hover:border-blue-300 text-gray-700 dark:text-gray-300"
                               }`}
+                              aria-pressed={watchedValues.size === size.id}
                             >
                               {size.name}
                             </button>
                           ))}
                         </div>
                         {errors.size && (
-                          <p className="text-red-500 text-sm mt-1">
+                          <p className="text-red-500 text-sm mt-1" role="alert">
                             Selecciona una talla
                           </p>
                         )}
@@ -495,7 +498,6 @@ Por favor, envía las imágenes de referencia del diseño que quieres personaliz
                         />
                       </div>
 
-                      {/* Quantity */}
                       <div>
                         <label
                           htmlFor="quantity"
@@ -508,10 +510,11 @@ Por favor, envía las imágenes de referencia del diseño que quieres personaliz
                           <input
                             id="quantity"
                             type="number"
-                            min="1"
-                            max="100"
+                            min={1}
+                            max={100}
                             {...register("quantity", {
                               required: "La cantidad es requerida",
+                              valueAsNumber: true,
                               min: {
                                 value: 1,
                                 message: "La cantidad mínima es 1",
@@ -523,10 +526,11 @@ Por favor, envía las imágenes de referencia del diseño que quieres personaliz
                             })}
                             className="flex-1 p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                             placeholder="1"
+                            aria-invalid={!!errors.quantity}
                           />
                         </div>
                         {errors.quantity && (
-                          <p className="text-red-500 text-sm mt-1">
+                          <p className="text-red-500 text-sm mt-1" role="alert">
                             {errors.quantity.message}
                           </p>
                         )}
@@ -535,7 +539,7 @@ Por favor, envía las imágenes de referencia del diseño que quieres personaliz
                   </div>
                 )}
 
-                {/* Step 2: Description and Special Requests */}
+                {/* Paso 2 */}
                 {currentStep === 2 && (
                   <div className="space-y-6">
                     <div className="text-center mb-8">
@@ -549,7 +553,6 @@ Por favor, envía las imágenes de referencia del diseño que quieres personaliz
                       </p>
                     </div>
 
-                    {/* Special Requests */}
                     <div>
                       <label
                         htmlFor="specialRequests"
@@ -589,7 +592,7 @@ Por favor, envía las imágenes de referencia del diseño que quieres personaliz
                   </div>
                 )}
 
-                {/* Step 3: Contact Information */}
+                {/* Paso 3 */}
                 {currentStep === 3 && (
                   <div className="space-y-6">
                     <div className="text-center mb-8">
@@ -623,9 +626,10 @@ Por favor, envía las imágenes de referencia del diseño que quieres personaliz
                           })}
                           placeholder="Tu nombre completo"
                           className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                          aria-invalid={!!errors.contactInfo?.name}
                         />
                         {errors.contactInfo?.name && (
-                          <p className="text-red-500 text-sm mt-1">
+                          <p className="text-red-500 text-sm mt-1" role="alert">
                             {errors.contactInfo.name.message}
                           </p>
                         )}
@@ -655,9 +659,10 @@ Por favor, envía las imágenes de referencia del diseño que quieres personaliz
                           })}
                           placeholder="Tu número de teléfono"
                           className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                          aria-invalid={!!errors.contactInfo?.phone}
                         />
                         {errors.contactInfo?.phone && (
-                          <p className="text-red-500 text-sm mt-1">
+                          <p className="text-red-500 text-sm mt-1" role="alert">
                             {errors.contactInfo.phone.message}
                           </p>
                         )}
@@ -682,9 +687,10 @@ Por favor, envía las imágenes de referencia del diseño que quieres personaliz
                         })}
                         placeholder="tu@email.com"
                         className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                        aria-invalid={!!errors.contactInfo?.email}
                       />
                       {errors.contactInfo?.email && (
-                        <p className="text-red-500 text-sm mt-1">
+                        <p className="text-red-500 text-sm mt-1" role="alert">
                           {errors.contactInfo.email.message}
                         </p>
                       )}
@@ -712,7 +718,7 @@ Por favor, envía las imágenes de referencia del diseño que quieres personaliz
                   </div>
                 )}
 
-                {/* Navigation Buttons */}
+                {/* Navegación */}
                 <div className="flex justify-between pt-8 border-t border-gray-200 dark:border-gray-700">
                   <button
                     type="button"

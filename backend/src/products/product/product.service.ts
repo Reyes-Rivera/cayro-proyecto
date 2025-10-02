@@ -10,6 +10,7 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import axios from 'axios';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
+import { SaleStatus } from '@prisma/client';
 @Injectable()
 export class ProductService {
   constructor(
@@ -296,7 +297,6 @@ export class ProductService {
     }
   }
 
-  // Función para eliminar imagen de Cloudinary
   private async deleteImageFromCloudinary(imageUrl: string): Promise<void> {
     try {
       const publicId = this.extractPublicIdFromUrl(imageUrl);
@@ -717,5 +717,338 @@ export class ProductService {
       where: { id },
       data: { active: true },
     });
+  }
+  async getCurrentMonthStats() {
+    // Obtener la fecha actual y calcular el inicio del mes
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      0,
+      23,
+      59,
+      59,
+      999,
+    );
+
+    // Obtener cantidad de TODOS los productos existentes
+    const totalProducts = await this.prismaService.product.count({
+      where: {
+        active: true, // Solo productos activos
+      },
+    });
+
+    // Obtener cantidad de ventas del mes actual
+    const monthlySales = await this.prismaService.sale.count({
+      where: {
+        createdAt: {
+          gte: startOfMonth,
+          lte: endOfMonth,
+        },
+      },
+    });
+
+    // Obtener ventas por estado del mes actual
+    const salesByStatus = await this.prismaService.sale.groupBy({
+      by: ['status'],
+      where: {
+        createdAt: {
+          gte: startOfMonth,
+          lte: endOfMonth,
+        },
+      },
+      _count: {
+        id: true,
+      },
+    });
+
+    // Convertir el array a un objeto más fácil de usar
+    const statusCounts = this.mapStatusCounts(salesByStatus);
+
+    // Obtener total de ventas del mes actual (suma de totalAmount)
+    const monthlyRevenue = await this.prismaService.sale.aggregate({
+      where: {
+        createdAt: {
+          gte: startOfMonth,
+          lte: endOfMonth,
+        },
+        status: {
+          not: SaleStatus.CANCELLED,
+        },
+      },
+      _sum: {
+        totalAmount: true,
+      },
+    });
+
+    return {
+      totalProducts,
+      monthlySales, // Cambiado de monthlyOrders a monthlySales
+      monthlyRevenue: monthlyRevenue._sum.totalAmount
+        ? parseFloat(monthlyRevenue._sum.totalAmount.toString())
+        : 0,
+      statusCounts,
+      month: now.getMonth() + 1,
+      year: now.getFullYear(),
+      period: {
+        start: startOfMonth,
+        end: endOfMonth,
+      },
+    };
+  }
+
+  // Versión para mes específico
+  async getMonthlyStats(month?: number, year?: number) {
+    const now = new Date();
+    const targetMonth = month !== undefined ? month : now.getMonth() + 1;
+    const targetYear = year !== undefined ? year : now.getFullYear();
+
+    const startOfMonth = new Date(targetYear, targetMonth - 1, 1);
+    const endOfMonth = new Date(targetYear, targetMonth, 0, 23, 59, 59, 999);
+
+    const [totalProducts, monthlySales, salesByStatus, monthlyRevenue] =
+      await Promise.all([
+        this.prismaService.product.count({
+          where: {
+            active: true,
+          },
+        }),
+
+        this.prismaService.sale.count({
+          where: {
+            createdAt: {
+              gte: startOfMonth,
+              lte: endOfMonth,
+            },
+          },
+        }),
+
+        this.prismaService.sale.groupBy({
+          by: ['status'],
+          where: {
+            createdAt: {
+              gte: startOfMonth,
+              lte: endOfMonth,
+            },
+          },
+          _count: {
+            id: true,
+          },
+        }),
+
+        this.prismaService.sale.aggregate({
+          where: {
+            createdAt: {
+              gte: startOfMonth,
+              lte: endOfMonth,
+            },
+            status: {
+              not: SaleStatus.CANCELLED,
+            },
+          },
+          _sum: {
+            totalAmount: true,
+          },
+        }),
+      ]);
+
+    const statusCounts = this.mapStatusCounts(salesByStatus);
+
+    return {
+      totalProducts,
+      monthlySales,
+      monthlyRevenue: monthlyRevenue._sum.totalAmount
+        ? parseFloat(monthlyRevenue._sum.totalAmount.toString())
+        : 0,
+      statusCounts,
+      month: targetMonth,
+      year: targetYear,
+    };
+  }
+
+  // Función para mapear los conteos por estado
+  private mapStatusCounts(salesByStatus: any[]) {
+    // Inicializar todos los estados en 0
+    const statusCounts = {
+      PENDING: 0,
+      PROCESSING: 0,
+      PACKED: 0,
+      SHIPPED: 0,
+      DELIVERED: 0,
+      CANCELLED: 0,
+    };
+
+    // Llenar con los valores reales de la base de datos
+    salesByStatus.forEach((item) => {
+      statusCounts[item.status] = item._count.id;
+    });
+
+    return statusCounts;
+  }
+
+  // Función adicional para estadísticas detalladas
+  async getDetailedStats() {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      0,
+      23,
+      59,
+      59,
+      999,
+    );
+
+    const [
+      totalProducts,
+      monthlyProducts,
+      monthlySales,
+      salesByStatus,
+      monthlyRevenue,
+    ] = await Promise.all([
+      this.prismaService.product.count({
+        where: {
+          active: true,
+        },
+      }),
+
+      this.prismaService.product.count({
+        where: {
+          createdAt: {
+            gte: startOfMonth,
+            lte: endOfMonth,
+          },
+          active: true,
+        },
+      }),
+
+      this.prismaService.sale.count({
+        where: {
+          createdAt: {
+            gte: startOfMonth,
+            lte: endOfMonth,
+          },
+        },
+      }),
+
+      this.prismaService.sale.groupBy({
+        by: ['status'],
+        where: {
+          createdAt: {
+            gte: startOfMonth,
+            lte: endOfMonth,
+          },
+        },
+        _count: {
+          id: true,
+        },
+      }),
+
+      this.prismaService.sale.aggregate({
+        where: {
+          createdAt: {
+            gte: startOfMonth,
+            lte: endOfMonth,
+          },
+          status: {
+            not: SaleStatus.CANCELLED,
+          },
+        },
+        _sum: {
+          totalAmount: true,
+        },
+      }),
+    ]);
+
+    const statusCounts = this.mapStatusCounts(salesByStatus);
+
+    return {
+      totalProducts,
+      monthlyProducts,
+      monthlySales,
+      monthlyRevenue: monthlyRevenue._sum.totalAmount
+        ? parseFloat(monthlyRevenue._sum.totalAmount.toString())
+        : 0,
+      statusCounts,
+      month: now.getMonth() + 1,
+      year: now.getFullYear(),
+    };
+  }
+
+  // Función adicional: Obtener estadísticas de productos más vendidos
+  async getTopProducts(limit: number = 5) {
+    const startOfMonth = new Date(
+      new Date().getFullYear(),
+      new Date().getMonth(),
+      1,
+    );
+    const endOfMonth = new Date(
+      new Date().getFullYear(),
+      new Date().getMonth() + 1,
+      0,
+      23,
+      59,
+      59,
+      999,
+    );
+
+    const topProducts = await this.prismaService.saleDetail.groupBy({
+      by: ['productVariantId'],
+      where: {
+        sale: {
+          createdAt: {
+            gte: startOfMonth,
+            lte: endOfMonth,
+          },
+          status: {
+            not: SaleStatus.CANCELLED,
+          },
+        },
+      },
+      _sum: {
+        quantity: true,
+        totalPrice: true,
+      },
+      orderBy: {
+        _sum: {
+          quantity: 'desc',
+        },
+      },
+      take: limit,
+    });
+
+    // Obtener información completa de los productos
+    const productsWithDetails = await Promise.all(
+      topProducts.map(async (item) => {
+        const variant = await this.prismaService.productVariant.findUnique({
+          where: { id: item.productVariantId },
+          include: {
+            product: {
+              include: {
+                brand: true,
+                category: true,
+              },
+            },
+            color: true,
+            size: true,
+          },
+        });
+
+        return {
+          productVariantId: item.productVariantId,
+          productName: variant?.product.name,
+          brand: variant?.product.brand.name,
+          category: variant?.product.category.name,
+          color: variant?.color.name,
+          size: variant?.size.name,
+          totalQuantity: item._sum.quantity || 0,
+          totalRevenue: item._sum.totalPrice || 0,
+        };
+      }),
+    );
+
+    return productsWithDetails;
   }
 }

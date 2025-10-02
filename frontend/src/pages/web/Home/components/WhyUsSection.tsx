@@ -1,17 +1,27 @@
 "use client";
 
-import { Sparkles } from "lucide-react";
+import type React from "react";
 import { memo, useEffect, useRef, useState } from "react";
+import { Sparkles } from "lucide-react";
 
 interface WhyUsSectionProps {
-  imgWhyUs: string;
+  imgWhyUs?: string;
+  title?: string;
+  className?: string;
 }
 
-const WhyUsSection = ({ imgWhyUs }: WhyUsSectionProps) => {
+const WhyUsSection: React.FC<WhyUsSectionProps> = ({
+  imgWhyUs,
+  title = "¿Por Qué Elegirnos?",
+  className = "",
+}) => {
   const [isVisible, setIsVisible] = useState(false);
-  const sectionRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    const node = sectionRef.current;
+    if (!node) return;
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -19,17 +29,14 @@ const WhyUsSection = ({ imgWhyUs }: WhyUsSectionProps) => {
           observer.disconnect();
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 } as IntersectionObserverInit
     );
 
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
-
+    observer.observe(node);
     return () => observer.disconnect();
   }, []);
 
-  const benefits = [
+  const benefits: Array<{ title: string; description: string }> = [
     {
       title: "Calidad Premium",
       description:
@@ -53,16 +60,20 @@ const WhyUsSection = ({ imgWhyUs }: WhyUsSectionProps) => {
   ];
 
   return (
-    <section className="py-24 bg-white dark:bg-gray-900 relative overflow-hidden">
-      {/* Background decoration - Simplified */}
+    <section
+      role="region"
+      aria-labelledby="whyus-heading"
+      className={`py-24 bg-white dark:bg-gray-900 relative overflow-hidden ${className}`}
+    >
+      {/* Decoración de fondo */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/5 rounded-full"></div>
-        <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-blue-500/5 rounded-full"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/5 rounded-full" />
+        <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-blue-500/5 rounded-full" />
       </div>
 
       <div
-        className="container mx-auto px-6 relative z-10 max-w-full"
         ref={sectionRef}
+        className="container mx-auto px-6 relative z-10 max-w-full"
       >
         <div className="text-center mb-16">
           <span
@@ -74,7 +85,9 @@ const WhyUsSection = ({ imgWhyUs }: WhyUsSectionProps) => {
           >
             NUESTRA DIFERENCIA
           </span>
+
           <h2
+            id="whyus-heading"
             className={`text-3xl md:text-5xl font-bold text-gray-900 dark:text-white transition-all duration-500 ${
               isVisible
                 ? "opacity-100 translate-y-0"
@@ -82,18 +95,19 @@ const WhyUsSection = ({ imgWhyUs }: WhyUsSectionProps) => {
             }`}
             style={{ transitionDelay: "100ms" }}
           >
-            ¿Por Qué Elegirnos?
+            {title}
           </h2>
+
           <div
             className={`h-1 bg-blue-600 mx-auto mt-6 transition-all duration-700 ${
               isVisible ? "w-24" : "w-0"
             }`}
             style={{ transitionDelay: "300ms" }}
-          ></div>
+          />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          {/* Contenedor de la imagen */}
+          {/* Imagen */}
           <div
             className={`flex justify-center transition-all duration-700 ${
               isVisible
@@ -102,20 +116,29 @@ const WhyUsSection = ({ imgWhyUs }: WhyUsSectionProps) => {
             }`}
           >
             <div className="relative">
-              <div className="absolute -top-4 -left-4 w-24 h-24 bg-blue-600/10 rounded-full z-0"></div>
-              <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-blue-600/10 rounded-full z-0"></div>
+              <div className="absolute -top-4 -left-4 w-24 h-24 bg-blue-600/10 rounded-full z-0" />
+              <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-blue-600/10 rounded-full z-0" />
+
               <img
-                src={imgWhyUs || "/placeholder.svg"}
+                src={
+                  imgWhyUs ||
+                  "/placeholder.svg?height=500&width=500&text=Equipo"
+                }
                 alt="Nuestro equipo"
                 width={500}
                 height={500}
-                className="rounded-lg shadow-xl relative z-10"
                 loading="lazy"
+                decoding="async"
+                className="rounded-lg shadow-xl relative z-10 will-change-transform"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src =
+                    "/placeholder.svg?height=500&width=500&text=Equipo";
+                }}
               />
 
-              {/* Floating badge */}
+              {/* Insignia flotante */}
               <div
-                className={`absolute -bottom-6 left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 px-6 py-3 rounded-full shadow-lg z-20 flex items-center gap-2 transition-all duration-700 ${
+                className={`absolute -bottom-6 left-1/2 -translate-x-1/2 bg-white dark:bg-gray-800 px-6 py-3 rounded-full shadow-lg z-20 flex items-center gap-2 transition-all duration-700 ${
                   isVisible
                     ? "opacity-100 translate-y-0"
                     : "opacity-0 translate-y-5"
@@ -130,7 +153,7 @@ const WhyUsSection = ({ imgWhyUs }: WhyUsSectionProps) => {
             </div>
           </div>
 
-          {/* Contenedor de los beneficios */}
+          {/* Beneficios */}
           <div
             className={`space-y-6 transition-all duration-700 ${
               isVisible
@@ -141,7 +164,11 @@ const WhyUsSection = ({ imgWhyUs }: WhyUsSectionProps) => {
             {benefits.map((benefit, index) => (
               <div
                 key={benefit.title}
-                className="border-l-4 border-blue-600 pl-6 hover:bg-gray-50 dark:hover:bg-gray-800 hover:shadow-md p-4 rounded-r-lg transition-all"
+                className={`border-l-4 border-blue-600 pl-6 rounded-r-lg p-4 transition-all hover:bg-gray-50 dark:hover:bg-gray-800 hover:shadow-md ${
+                  isVisible
+                    ? "opacity-100 translate-y-0"
+                    : "opacity-0 translate-y-2"
+                }`}
                 style={{ transitionDelay: `${(index + 1) * 100}ms` }}
               >
                 <h3 className="text-2xl font-bold mb-3 text-blue-700 dark:text-blue-400">

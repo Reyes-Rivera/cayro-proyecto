@@ -54,18 +54,32 @@ const ContactFormSection: React.FC = () => {
   });
 
   useEffect(() => {
+    let mounted = true;
     const getInfo = async () => {
-      const res = await getCompanyInfoApi();
-      if (res) {
-        setInfo(res.data[0]);
+      try {
+        const res = await getCompanyInfoApi();
+        if (!mounted) return;
+        const first = Array.isArray(res?.data) ? res.data[0] : undefined;
+        if (first) setInfo(first as CompanyProfile);
+      } catch (err: any) {
+        AlertHelper.error({
+          title: "No se pudo cargar la información de contacto",
+          message: err?.response?.data?.message || "Inténtalo más tarde.",
+          animation: "slideIn",
+          timer: 4000,
+        });
       }
     };
     getInfo();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const onSubmit = async (data: FormValues) => {
     setIsLoading(true);
     try {
+      // TODO: sustituir por tu API real de contacto
       await new Promise((resolve) => setTimeout(resolve, 1500));
       console.log("Form submitted:", data);
       setIsSubmitted(true);
@@ -80,7 +94,7 @@ const ContactFormSection: React.FC = () => {
       AlertHelper.error({
         title: "Error al enviar el formulario",
         message:
-          error.response?.data?.message ||
+          error?.response?.data?.message ||
           "No se pudo enviar el formulario. Intenta nuevamente.",
         animation: "slideIn",
         timer: 4000,
@@ -118,7 +132,7 @@ const ContactFormSection: React.FC = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.3 }}
             className="h-1 bg-blue-600 mx-auto mt-6"
-          ></motion.div>
+          />
         </div>
 
         <motion.div
@@ -129,11 +143,12 @@ const ContactFormSection: React.FC = () => {
           className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden relative"
         >
           <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-30">
-            <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/5 rounded-full"></div>
-            <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-blue-500/5 rounded-full"></div>
+            <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/5 rounded-full" />
+            <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-blue-500/5 rounded-full" />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-5 relative z-10">
+            {/* Columna info empresa */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -142,8 +157,8 @@ const ContactFormSection: React.FC = () => {
               className="lg:col-span-2 p-10 bg-gradient-to-br from-blue-600 to-blue-800 text-white relative overflow-hidden"
             >
               <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
-                <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/5 rounded-full"></div>
-                <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-blue-500/5 rounded-full"></div>
+                <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/5 rounded-full" />
+                <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-blue-500/5 rounded-full" />
               </div>
 
               <div className="h-full flex flex-col relative z-10">
@@ -184,7 +199,9 @@ const ContactFormSection: React.FC = () => {
                     <div className="bg-white/10 p-3 rounded-full mr-4 group-hover:bg-white/20 transition-all duration-300">
                       <Phone className="h-5 w-5" />
                     </div>
-                    <span>{info?.contactInfo[0].phone || "771 178 3587"} </span>
+                    <span>
+                      {info?.contactInfo?.[0]?.phone ?? "771 178 3587"}
+                    </span>
                   </div>
 
                   <div className="flex items-center group">
@@ -192,7 +209,7 @@ const ContactFormSection: React.FC = () => {
                       <Mail className="h-5 w-5" />
                     </div>
                     <span>
-                      {info?.contactInfo[0].email ||
+                      {info?.contactInfo?.[0]?.email ??
                         "cayrohuejutla@hotmail.com"}
                     </span>
                   </div>
@@ -202,7 +219,7 @@ const ContactFormSection: React.FC = () => {
                       <MapPin className="h-5 w-5" />
                     </div>
                     <span>
-                      {info?.contactInfo[0].address ||
+                      {info?.contactInfo?.[0]?.address ??
                         "Calle 16 de Enero #4-4 Col. Centro, Huejutla de Reyes, Mexico"}
                     </span>
                   </div>
@@ -211,14 +228,20 @@ const ContactFormSection: React.FC = () => {
                 <div className="mt-10 flex space-x-4 justify-start">
                   <a
                     href="#"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="p-3 rounded-full bg-white/10 transition-all hover:bg-white/20"
+                    aria-label="Facebook"
                   >
                     <Facebook className="w-5 h-5" />
                   </a>
 
                   <a
                     href="#"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="p-3 rounded-full bg-white/10 transition-all hover:bg-white/20"
+                    aria-label="Instagram"
                   >
                     <Instagram className="w-5 h-5" />
                   </a>
@@ -226,6 +249,7 @@ const ContactFormSection: React.FC = () => {
               </div>
             </motion.div>
 
+            {/* Columna formulario */}
             <motion.div
               className="lg:col-span-3 p-8 lg:p-12 relative z-10"
               initial={{ opacity: 0, x: 20 }}
@@ -254,10 +278,18 @@ const ContactFormSection: React.FC = () => {
                     Gracias por contactarnos. Te responderemos a la brevedad
                     posible.
                   </p>
+                  <button
+                    type="button"
+                    onClick={() => setIsSubmitted(false)}
+                    className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
+                  >
+                    Enviar otro mensaje
+                  </button>
                 </motion.div>
               ) : (
                 <form
                   onSubmit={handleSubmit(onSubmit)}
+                  noValidate
                   className="grid grid-cols-1 md:grid-cols-2 gap-6"
                 >
                   <div className="col-span-1 space-y-2">
@@ -270,6 +302,7 @@ const ContactFormSection: React.FC = () => {
                     </label>
                     <input
                       id="firstName"
+                      autoComplete="given-name"
                       {...register("firstName", {
                         required: ERROR_MESSAGES.required,
                         minLength: {
@@ -284,6 +317,8 @@ const ContactFormSection: React.FC = () => {
                           value: REGEX.NAME,
                           message: ERROR_MESSAGES.pattern,
                         },
+                        setValueAs: (v) =>
+                          typeof v === "string" ? v.trim() : v,
                       })}
                       placeholder="Tu nombre"
                       className={`w-full rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-100 border ${
@@ -306,6 +341,7 @@ const ContactFormSection: React.FC = () => {
                     </label>
                     <input
                       id="lastName"
+                      autoComplete="family-name"
                       {...register("lastName", {
                         required: ERROR_MESSAGES.required,
                         minLength: {
@@ -320,6 +356,8 @@ const ContactFormSection: React.FC = () => {
                           value: REGEX.NAME,
                           message: ERROR_MESSAGES.pattern,
                         },
+                        setValueAs: (v) =>
+                          typeof v === "string" ? v.trim() : v,
                       })}
                       placeholder="Tu apellido"
                       className={`w-full rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-100 border ${
@@ -342,18 +380,19 @@ const ContactFormSection: React.FC = () => {
                     </label>
                     <input
                       id="email"
+                      type="email"
+                      autoComplete="email"
                       {...register("email", {
                         required: ERROR_MESSAGES.required,
                         pattern: {
                           value: REGEX.EMAIL,
                           message: ERROR_MESSAGES.email,
                         },
-                        validate: (value) => {
-                          if (!REGEX.NO_SQL_INJECTION.test(value)) {
-                            return ERROR_MESSAGES.sqlInjection;
-                          }
-                          return true;
-                        },
+                        validate: (value) =>
+                          REGEX.NO_SQL_INJECTION.test(value) ||
+                          ERROR_MESSAGES.sqlInjection,
+                        setValueAs: (v) =>
+                          typeof v === "string" ? v.trim() : v,
                       })}
                       placeholder="tu@correo.com"
                       className={`w-full rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-100 border ${
@@ -376,14 +415,14 @@ const ContactFormSection: React.FC = () => {
                     </label>
                     <input
                       id="service"
+                      autoComplete="off"
                       {...register("service", {
                         required: ERROR_MESSAGES.required,
-                        validate: (value) => {
-                          if (!REGEX.NO_SQL_INJECTION.test(value)) {
-                            return ERROR_MESSAGES.sqlInjection;
-                          }
-                          return true;
-                        },
+                        validate: (value) =>
+                          REGEX.NO_SQL_INJECTION.test(value) ||
+                          ERROR_MESSAGES.sqlInjection,
+                        setValueAs: (v) =>
+                          typeof v === "string" ? v.trim() : v,
                       })}
                       placeholder="Ej: Uniformes, Playeras, etc."
                       className={`w-full rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-100 border ${
@@ -406,14 +445,14 @@ const ContactFormSection: React.FC = () => {
                     </label>
                     <input
                       id="subject"
+                      autoComplete="off"
                       {...register("subject", {
                         required: ERROR_MESSAGES.required,
-                        validate: (value) => {
-                          if (!REGEX.NO_SQL_INJECTION.test(value)) {
-                            return ERROR_MESSAGES.sqlInjection;
-                          }
-                          return true;
-                        },
+                        validate: (value) =>
+                          REGEX.NO_SQL_INJECTION.test(value) ||
+                          ERROR_MESSAGES.sqlInjection,
+                        setValueAs: (v) =>
+                          typeof v === "string" ? v.trim() : v,
                       })}
                       placeholder="Asunto de tu mensaje"
                       className={`w-full rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-100 border ${
@@ -436,21 +475,20 @@ const ContactFormSection: React.FC = () => {
                     </label>
                     <textarea
                       id="message"
+                      rows={5}
                       {...register("message", {
                         required: ERROR_MESSAGES.required,
                         minLength: {
                           value: 10,
                           message: ERROR_MESSAGES.minLength(10),
                         },
-                        validate: (value) => {
-                          if (!REGEX.NO_SQL_INJECTION.test(value)) {
-                            return ERROR_MESSAGES.sqlInjection;
-                          }
-                          return true;
-                        },
+                        validate: (value) =>
+                          REGEX.NO_SQL_INJECTION.test(value) ||
+                          ERROR_MESSAGES.sqlInjection,
+                        setValueAs: (v) =>
+                          typeof v === "string" ? v.trim() : v,
                       })}
                       placeholder="Cuéntanos sobre tu proyecto o consulta..."
-                      rows={5}
                       className={`w-full rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-gray-100 border ${
                         errors.message
                           ? "border-red-500 focus:ring-red-500 focus:border-red-500"

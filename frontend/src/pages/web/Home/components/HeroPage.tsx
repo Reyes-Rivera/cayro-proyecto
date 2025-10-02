@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState, useEffect, useRef, memo } from "react";
+import { useState, useEffect, useRef, memo, useCallback } from "react";
 import {
   Sparkles,
   ArrowRight,
@@ -12,19 +12,21 @@ import {
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
-// Importaciones de imágenes
-import Playeras from "../assets/playeras.jpg";
-import Camisas from "../assets/camisas.jpg";
-import Polos from "../assets/polos.jpg";
-import Pantalones from "../assets/pantalones.jpg";
-import Deportivos from "../assets/deportivos.jpg";
+// Imágenes
+import Playeras from "../assets/playeras.webp";
+import Camisas from "../assets/camisas.webp";
+import Polos from "../assets/polos.webp";
+import Pantalones from "../assets/pantalones.webp";
+import Deportivos from "../assets/deportivos.webp";
 
 interface Category {
   title: string;
   image: string;
 }
 
-// TypewriterText component for animated text - optimized
+/* =========================
+ * TypewriterText
+ * =======================*/
 const TypewriterText = memo(({ texts }: { texts: string[] }) => {
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
   const [currentText, setCurrentText] = useState("");
@@ -37,7 +39,6 @@ const TypewriterText = memo(({ texts }: { texts: string[] }) => {
     const timer = setTimeout(() => {
       if (!isDeleting) {
         setCurrentText(text.substring(0, currentText.length + 1));
-
         if (currentText.length === text.length) {
           setTypingSpeed(2000);
           setIsDeleting(true);
@@ -46,7 +47,6 @@ const TypewriterText = memo(({ texts }: { texts: string[] }) => {
         }
       } else {
         setCurrentText(text.substring(0, currentText.length - 1));
-
         if (currentText.length === 0) {
           setIsDeleting(false);
           setCurrentTextIndex((currentTextIndex + 1) % texts.length);
@@ -62,95 +62,84 @@ const TypewriterText = memo(({ texts }: { texts: string[] }) => {
 
   return <span>{currentText}</span>;
 });
-
 TypewriterText.displayName = "TypewriterText";
 
-// Carousel component for categories - optimized
+/* =========================
+ * CategoryCarousel
+ * =======================*/
 const CategoryCarousel = memo(({ categories }: { categories: Category[] }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [userInteracted, setUserInteracted] = useState(false);
-  const autoRotateTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const userInteractionTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Function to handle auto-rotation
-  const startAutoRotation = () => {
+  // Timers seguros para navegador
+  const autoRotateTimerRef = useRef<ReturnType<typeof setInterval> | null>(
+    null
+  );
+  const userInteractionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
+
+  const clearAuto = useCallback(() => {
     if (autoRotateTimerRef.current) {
       clearInterval(autoRotateTimerRef.current);
+      autoRotateTimerRef.current = null;
     }
+  }, []);
 
+  const startAutoRotation = useCallback(() => {
+    clearAuto();
     autoRotateTimerRef.current = setInterval(() => {
       if (!isPaused && !userInteracted) {
-        setCurrentIndex((prevIndex) =>
-          prevIndex === categories.length - 1 ? 0 : prevIndex + 1
+        setCurrentIndex((prev) =>
+          prev === categories.length - 1 ? 0 : prev + 1
         );
       }
     }, 6000);
-  };
+  }, [categories.length, clearAuto, isPaused, userInteracted]);
 
-  // Start auto-rotation on component mount
   useEffect(() => {
     startAutoRotation();
+    return clearAuto;
+  }, [startAutoRotation, clearAuto]);
 
-    return () => {
-      if (autoRotateTimerRef.current) {
-        clearInterval(autoRotateTimerRef.current);
-      }
-      if (userInteractionTimerRef.current) {
-        clearTimeout(userInteractionTimerRef.current);
-      }
-    };
-  }, [isPaused, userInteracted]);
-
-  // Reset user interaction after a delay
-  const resetUserInteraction = () => {
+  // Restablecer “interacción de usuario” tras un tiempo
+  const resetUserInteraction = useCallback(() => {
     if (userInteractionTimerRef.current) {
       clearTimeout(userInteractionTimerRef.current);
     }
-
     setUserInteracted(true);
     userInteractionTimerRef.current = setTimeout(() => {
       setUserInteracted(false);
     }, 10000);
-  };
+  }, []);
 
-  const handlePrev = () => {
-    setCurrentIndex((prevIndex) =>
-      prevIndex === 0 ? categories.length - 1 : prevIndex - 1
-    );
+  const handlePrev = useCallback(() => {
+    setCurrentIndex((prev) => (prev === 0 ? categories.length - 1 : prev - 1));
     resetUserInteraction();
-  };
+  }, [categories.length, resetUserInteraction]);
 
-  const handleNext = () => {
-    setCurrentIndex((prevIndex) =>
-      prevIndex === categories.length - 1 ? 0 : prevIndex + 1
-    );
+  const handleNext = useCallback(() => {
+    setCurrentIndex((prev) => (prev === categories.length - 1 ? 0 : prev + 1));
     resetUserInteraction();
-  };
+  }, [categories.length, resetUserInteraction]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStart(e.targetTouches[0].clientX);
     resetUserInteraction();
   };
-
   const handleTouchMove = (e: React.TouchEvent) => {
     setTouchEnd(e.targetTouches[0].clientX);
   };
-
   const handleTouchEnd = () => {
-    if (touchStart - touchEnd > 50) {
-      handleNext();
-    }
-
-    if (touchStart - touchEnd < -50) {
-      handlePrev();
-    }
+    if (touchStart - touchEnd > 50) handleNext();
+    if (touchStart - touchEnd < -50) handlePrev();
   };
 
   const togglePause = () => {
-    setIsPaused(!isPaused);
+    setIsPaused((p) => !p);
     resetUserInteraction();
   };
 
@@ -164,7 +153,6 @@ const CategoryCarousel = memo(({ categories }: { categories: Category[] }) => {
         onTouchEnd={handleTouchEnd}
       >
         <div className="relative aspect-[16/9] w-full">
-          {/* Display only the current category with simple transition */}
           <div
             key={currentIndex}
             className="absolute inset-0 transition-opacity duration-500"
@@ -176,9 +164,13 @@ const CategoryCarousel = memo(({ categories }: { categories: Category[] }) => {
               }
               alt={categories[currentIndex].title}
               className="w-full h-full object-cover"
-              loading="lazy"
+              loading="eager"
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).src =
+                  "/placeholder.svg?height=500&width=800";
+              }}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-70"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-70" />
             <div className="absolute bottom-8 left-8 text-white">
               <h3 className="text-3xl font-bold drop-shadow-md">
                 {categories[currentIndex].title}
@@ -196,7 +188,7 @@ const CategoryCarousel = memo(({ categories }: { categories: Category[] }) => {
         </div>
       </div>
 
-      {/* Navigation buttons */}
+      {/* Controls */}
       <button
         onClick={handlePrev}
         className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 dark:bg-gray-800/80 rounded-full p-3 shadow-lg z-20 hover:bg-white hover:scale-110 transition-all"
@@ -213,7 +205,7 @@ const CategoryCarousel = memo(({ categories }: { categories: Category[] }) => {
         <ChevronRight className="w-6 h-6 text-gray-700 dark:text-gray-300" />
       </button>
 
-      {/* Play/Pause button */}
+      {/* Play/Pause */}
       <button
         onClick={togglePause}
         className="absolute top-4 right-4 bg-white/80 dark:bg-gray-800/80 rounded-full p-2 shadow-lg z-20 hover:bg-white transition-all"
@@ -247,14 +239,15 @@ const CategoryCarousel = memo(({ categories }: { categories: Category[] }) => {
     </div>
   );
 });
-
 CategoryCarousel.displayName = "CategoryCarousel";
 
+/* =========================
+ * HomeHero
+ * =======================*/
 const HomeHero = () => {
   const [animateHero, setAnimateHero] = useState(false);
 
-  // Categories data con las imágenes importadas
-  const categories = [
+  const categories: Category[] = [
     { title: "Playeras", image: Playeras },
     { title: "Camisas", image: Camisas },
     { title: "Polos", image: Polos },
@@ -263,33 +256,28 @@ const HomeHero = () => {
   ];
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setAnimateHero(true);
-    }, 100);
-
+    const timer = setTimeout(() => setAnimateHero(true), 100);
     return () => clearTimeout(timer);
   }, []);
 
   return (
     <div className="relative min-h-[90vh] bg-white dark:bg-gray-900 flex items-center overflow-hidden">
-      {/* Creative background elements - simplified */}
+      {/* Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-20 -right-20 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-blue-50/50 dark:from-blue-900/10 to-transparent"></div>
-
-        {/* Simplified dots pattern */}
         <div className="absolute top-0 left-0 w-full h-full">
-          <div className="absolute top-20 left-20 w-2 h-2 bg-blue-500/30 rounded-full"></div>
-          <div className="absolute top-40 left-40 w-3 h-3 bg-blue-500/20 rounded-full"></div>
-          <div className="absolute top-60 left-60 w-2 h-2 bg-blue-500/30 rounded-full"></div>
-          <div className="absolute top-20 right-40 w-3 h-3 bg-blue-500/20 rounded-full"></div>
-          <div className="absolute top-60 right-60 w-2 h-2 bg-blue-500/30 rounded-full"></div>
+          <div className="absolute top-20 left-20 w-2 h-2 bg-blue-500/30 rounded-full" />
+          <div className="absolute top-40 left-40 w-3 h-3 bg-blue-500/20 rounded-full" />
+          <div className="absolute top-60 left-60 w-2 h-2 bg-blue-500/30 rounded-full" />
+          <div className="absolute top-20 right-40 w-3 h-3 bg-blue-500/20 rounded-full" />
+          <div className="absolute top-60 right-60 w-2 h-2 bg-blue-500/30 rounded-full" />
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-16 md:py-24 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
-          {/* Left column - Text content */}
+          {/* Left: text */}
           <div
             className={`md:col-span-5 transition-all duration-700 ${
               animateHero
@@ -353,7 +341,7 @@ const HomeHero = () => {
             </div>
           </div>
 
-          {/* Right column - Category Carousel */}
+          {/* Right: carousel */}
           <div
             className={`md:col-span-7 transition-all duration-700 ${
               animateHero

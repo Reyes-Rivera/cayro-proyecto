@@ -307,9 +307,10 @@ model Sale {
   userId           Int
   addressId        Int
   employeeId       Int
-  subtotalAmount   Decimal    @db.Decimal(10, 2) // Solo productos
-  shippingCost     Decimal    @db.Decimal(10, 2) // Costo de envío
-  totalAmount      Decimal    @db.Decimal(10, 2) // Subtotal + envío
+  isTaken          Boolean    @default(false)
+  subtotalAmount   Decimal    @db.Decimal(10, 2) 
+  shippingCost     Decimal    @db.Decimal(10, 2)
+  totalAmount      Decimal    @db.Decimal(10, 2)
   saleReference    String     @unique @db.VarChar(255)
   references       String?    @db.VarChar(255)
   betweenStreetOne String?    @db.VarChar(255)

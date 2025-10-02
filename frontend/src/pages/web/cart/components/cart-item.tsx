@@ -1,168 +1,173 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import { Trash2, Minus, Plus, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/context/CartContext";
 import { Link } from "react-router-dom";
 import { AlertHelper } from "@/utils/alert.util";
 
+type CartItemModel = {
+  id: string | number;
+  quantity: number;
+  product?: {
+    id?: string | number;
+    slug?: string;
+    name?: string;
+    brand?: { name?: string };
+  };
+  variant?: {
+    id?: string | number;
+    price?: number;
+    stock?: number;
+    imageUrl?: string;
+    images?: { url?: string }[];
+    color?: { name?: string; hexValue?: string };
+    size?: { name?: string };
+  };
+};
+
 interface CartItemProps {
-  item: any;
+  item: CartItemModel | null | undefined;
+  currency?: string; // por defecto MXN
+  locale?: string; // por defecto es-MX
 }
 
-export default function CartItem({ item }: CartItemProps) {
-  const { updateQuantity, removeItem, loading } = useCart();
+export default function CartItem({
+  item,
+  currency = "MXN",
+  locale = "es-MX",
+}: CartItemProps) {
+  const { updateQuantity, removeItem, loading: cartBusy } = useCart();
+
   const [isRemoving, setIsRemoving] = useState(false);
-  const [showStockWarning, setShowStockWarning] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  // Safe image URL getter with fallbacks
-  const getImageUrl = () => {
-    // Check if variant exists and has images array
-    if (
-      item?.variant?.images &&
-      Array.isArray(item.variant.images) &&
-      item.variant.images.length > 0
-    ) {
-      // Check if first image exists and has url
-      if (item.variant.images[0]?.url) {
-        return item.variant.images[0].url;
-      }
-    }
+  const [showStockWarning, setShowStockWarning] = useState(false);
+  const [localQty, setLocalQty] = useState<number>(() => item?.quantity ?? 1);
 
-    // Check if variant has a single imageUrl property (alternative structure)
-    if (item?.variant?.imageUrl) {
-      return item.variant.imageUrl;
-    }
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-    // Fallback to placeholder
-    return "/placeholder.svg?height=200&width=200";
+  // ----- Guards -----
+  if (!item) return null;
+
+  // ----- Getters seguros -----
+  const productName = item.product?.name || "Producto sin nombre";
+  const productId = item.product?.id ?? item.product?.slug ?? "#";
+  const price = Number(item.variant?.price ?? 0);
+  const stock = Number(item.variant?.stock ?? 0);
+  const brand = item.product?.brand?.name || null;
+
+  const colorName = item.variant?.color?.name || "Color no especificado";
+  const colorHex = item.variant?.color?.hexValue || "#6B7280";
+  const sizeName = item.variant?.size?.name || "Talla no especificada";
+
+  const imageUrl = useMemo(() => {
+    const first = item.variant?.images?.[0]?.url;
+    return (
+      first || item.variant?.imageUrl || "/placeholder.svg?height=200&width=200"
+    );
+  }, [item]);
+
+  const formatter = useMemo(
+    () => new Intl.NumberFormat(locale, { style: "currency", currency }),
+    [locale, currency]
+  );
+
+  // Mantener localQty sincronizado si el item cambia externamente
+  useEffect(() => {
+    if (typeof item.quantity === "number") setLocalQty(item.quantity);
+  }, [item.quantity]);
+
+  // ----- Helpers -----
+  const clamped = (q: number) => {
+    const min = 1;
+    const max = Math.max(1, stock || 1);
+    return Math.min(Math.max(q, min), max);
   };
 
-  // Safe property getters with fallbacks
-  const getProductName = () => {
-    return item?.product?.name || "Producto sin nombre";
-  };
+  const isBusy = cartBusy || isUpdating;
+  const totalPrice = price * (item.quantity || 1);
 
-  const getColorName = () => {
-    return item?.variant?.color?.name || "Color no especificado";
-  };
-
-  const getColorHex = () => {
-    return item?.variant?.color?.hexValue || "#6B7280";
-  };
-
-  const getSizeName = () => {
-    return item?.variant?.size?.name || "Talla no especificada";
-  };
-
-  const getBrandName = () => {
-    return item?.product?.brand?.name || null;
-  };
-
-  const getPrice = () => {
-    return item?.variant?.price || 0;
-  };
-
-  const getStock = () => {
-    return item?.variant?.stock || 0;
-  };
-
-  const getQuantity = () => {
-    return item?.quantity || 1;
-  };
-
-  const getProductId = () => {
-    return item?.product?.id || "#";
-  };
-
-  const handleRemove = async () => {
-    const isConfirmed = await AlertHelper.confirm({
+  // ----- Acciones -----
+  const confirmRemove = async () => {
+    const ok = await AlertHelper.confirm({
       title: "¿Eliminar producto?",
-      message: `¿Estás seguro de eliminar ${getProductName()} de tu carrito?`,
+      message: `¿Quieres eliminar "${productName}" de tu carrito?`,
       confirmText: "Sí, eliminar",
       cancelText: "Cancelar",
       type: "question",
       animation: "bounce",
     });
+    if (!ok) return;
 
-    if (isConfirmed) {
-      setIsRemoving(true);
-
-      try {
-        await removeItem(item.id);
-
-        AlertHelper.success({
-          message: "Producto eliminado del carrito",
-          title: "Producto eliminado",
-          animation: "slideIn",
-          timer: 3000,
-        });
-      } catch (error: any) {
-        const errorMessage =
-          error.response?.data?.message || "Error al eliminar.";
-        AlertHelper.error({
-          message: errorMessage,
-          title: "Error al eliminar",
-          animation: "slideIn",
-          timer: 3000,
-        });
-        setIsRemoving(false);
-      }
+    setIsRemoving(true);
+    try {
+      await removeItem(item.id.toString());
+      AlertHelper.success({
+        message: "Producto eliminado del carrito",
+        title: "Producto eliminado",
+        animation: "slideIn",
+        timer: 3000,
+      });
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || "Error al eliminar.";
+      setIsRemoving(false);
+      AlertHelper.error({
+        message: msg,
+        title: "Error al eliminar",
+        animation: "slideIn",
+        timer: 3000,
+      });
     }
   };
 
-  const handleQuantityChange = async (newQuantity: number) => {
-    const currentStock = getStock();
-
-    if (newQuantity >= 1) {
-      if (newQuantity <= currentStock) {
-        setIsUpdating(true);
-
-        try {
-          await updateQuantity(item.id, newQuantity);
-          setShowStockWarning(false);
-        } catch (error: any) {
-          const errorMessage =
-            error.response?.data?.message ||
-            "No se pudo actualizar la cantidad.";
-          AlertHelper.error({
-            title: "Error",
-            message: errorMessage,
-            animation: "slideIn",
-            position: "bottom-end",
-            timer: 3000,
-          });
-        } finally {
-          setIsUpdating(false);
-        }
-      } else {
-        setShowStockWarning(true);
-
-        // Alerta de stock limitado
-        AlertHelper.warning({
-          title: "Stock limitado",
-          message: `Solo hay ${currentStock} unidades disponibles`,
+  const pushUpdate = (nextQty: number) => {
+    // debounce para no saturar backend
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    setIsUpdating(true);
+    debounceRef.current = setTimeout(async () => {
+      try {
+        await updateQuantity(item.id.toString(), nextQty);
+        setShowStockWarning(false);
+      } catch (err: any) {
+        const msg =
+          err?.response?.data?.message || "No se pudo actualizar la cantidad.";
+        AlertHelper.error({
+          title: "Error",
+          message: msg,
           animation: "slideIn",
           position: "bottom-end",
           timer: 3000,
         });
-
-        setTimeout(() => setShowStockWarning(false), 3000);
+        // revertir visualmente
+        setLocalQty(item.quantity);
+      } finally {
+        setIsUpdating(false);
       }
-    }
+    }, 250);
   };
 
-  // Determine if any loading state is active
-  const isLoading = loading || isUpdating;
-  const currentQuantity = getQuantity();
-  const currentStock = getStock();
-  const currentPrice = getPrice();
+  const handleChangeQty = (next: number) => {
+    const safe = clamped(next);
+    setLocalQty(safe);
 
-  // If item is null or undefined, don't render anything
-  if (!item) {
-    return null;
-  }
+    if (safe !== next || (stock && next > stock)) {
+      setShowStockWarning(true);
+      AlertHelper.warning({
+        title: "Stock limitado",
+        message: `Solo hay ${stock} unidades disponibles`,
+        animation: "slideIn",
+        position: "bottom-end",
+        timer: 2500,
+      });
+      setTimeout(() => setShowStockWarning(false), 2500);
+    }
+
+    if (safe !== item.quantity) pushUpdate(safe);
+  };
+
+  const dec = () => !isBusy && handleChangeQty(localQty - 1);
+  const inc = () => !isBusy && handleChangeQty(localQty + 1);
 
   return (
     <motion.div
@@ -175,8 +180,9 @@ export default function CartItem({ item }: CartItemProps) {
       }}
       transition={{ duration: 0.3 }}
       className="p-4 relative"
+      aria-live="polite"
     >
-      {/* Stock Warning */}
+      {/* Aviso de stock */}
       <AnimatePresence>
         {showStockWarning && (
           <motion.div
@@ -184,21 +190,23 @@ export default function CartItem({ item }: CartItemProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             className="absolute top-0 right-0 left-0 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 text-xs p-2 flex items-center"
+            role="status"
           >
             <AlertCircle className="w-3 h-3 mr-1" />
-            Solo hay {currentStock} unidades disponibles
+            Solo hay {stock} unidades disponibles
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Loading Overlay */}
+      {/* Overlay de carga */}
       <AnimatePresence>
-        {isLoading && (
+        {isBusy && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="absolute inset-0 bg-white/70 dark:bg-gray-900/70 flex items-center justify-center z-10"
+            aria-busy="true"
           >
             <div className="flex items-center space-x-2">
               <svg
@@ -206,6 +214,7 @@ export default function CartItem({ item }: CartItemProps) {
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
+                aria-hidden="true"
               >
                 <circle
                   className="opacity-25"
@@ -214,12 +223,12 @@ export default function CartItem({ item }: CartItemProps) {
                   r="10"
                   stroke="currentColor"
                   strokeWidth="4"
-                ></circle>
+                />
                 <path
                   className="opacity-75"
                   fill="currentColor"
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
+                />
               </svg>
               <span className="text-sm text-blue-600 dark:text-blue-500 font-medium">
                 Actualizando...
@@ -229,54 +238,54 @@ export default function CartItem({ item }: CartItemProps) {
         )}
       </AnimatePresence>
 
-      {/* Consistent horizontal layout for all screen sizes */}
+      {/* Layout */}
       <div className="flex gap-4">
-        {/* Product image - same size on all devices */}
+        {/* Imagen */}
         <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden flex-shrink-0">
           <Link
-            to={`/producto/${getProductName()}`}
+            to={`/producto/${productId}`}
             className="block w-full h-full"
+            aria-label={productName}
           >
             <img
-              src={getImageUrl() || "/placeholder.svg"}
-              alt={getProductName()}
+              src={imageUrl}
+              alt={productName}
               className="w-full h-full object-cover"
               onError={(e) => {
-                // Fallback if image fails to load
                 e.currentTarget.src = "/placeholder.svg?height=200&width=200";
               }}
             />
           </Link>
         </div>
 
-        {/* Product details */}
-        <div className="flex-1">
+        {/* Detalles */}
+        <div className="flex-1 min-w-0">
           <div className="flex flex-col sm:flex-row sm:justify-between">
-            <div>
+            <div className="min-w-0">
               <Link
-                to={`/producto/${getProductId()}`}
+                to={`/producto/${productId}`}
                 className="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-500 transition-colors line-clamp-1"
+                title={productName}
               >
-                {getProductName()}
+                {productName}
               </Link>
               <div className="mt-1 text-sm text-gray-500 dark:text-gray-400 flex flex-wrap gap-2">
                 <span className="inline-flex items-center">
                   <span
                     className="w-3 h-3 rounded-full mr-1"
-                    style={{
-                      backgroundColor: getColorHex(),
-                    }}
-                  ></span>
-                  {getColorName()}
+                    style={{ backgroundColor: colorHex }}
+                    aria-label={`Color ${colorName}`}
+                  />
+                  {colorName}
                 </span>
                 <span className="inline-flex items-center">
                   <span className="text-gray-400 mx-1">•</span>
-                  Talla: {getSizeName()}
+                  Talla: {sizeName}
                 </span>
-                {getBrandName() && (
+                {brand && (
                   <span className="inline-flex items-center">
                     <span className="text-gray-400 mx-1">•</span>
-                    {getBrandName()}
+                    {brand}
                   </span>
                 )}
               </div>
@@ -284,62 +293,79 @@ export default function CartItem({ item }: CartItemProps) {
 
             <div className="mt-2 sm:mt-0 text-right">
               <p className="font-medium text-gray-900 dark:text-white">
-                ${currentPrice.toFixed(2)}
+                {formatter.format(price)}
               </p>
-              {currentQuantity > 1 && (
+              {(item.quantity || 1) > 1 && (
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  ${currentPrice.toFixed(2)} x {currentQuantity}
+                  {formatter.format(price)} × {item.quantity} ={" "}
+                  <span className="font-medium">
+                    {formatter.format(totalPrice)}
+                  </span>
                 </p>
               )}
             </div>
           </div>
 
+          {/* Controles */}
           <div className="flex flex-wrap justify-between items-center mt-4 gap-2">
             <div className="flex items-center">
               <button
-                onClick={() => handleQuantityChange(currentQuantity - 1)}
-                disabled={currentQuantity <= 1 || isLoading}
-                className="p-1.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 disabled:opacity-50 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                aria-label="Decrease quantity"
+                type="button"
+                onClick={dec}
+                disabled={localQty <= 1 || isBusy}
+                className="p-1.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 disabled:opacity-50 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                aria-label="Disminuir cantidad"
               >
-                <Minus className="w-3 h-3" />
+                <Minus className="w-3.5 h-3.5" />
               </button>
 
-              <span className="mx-3 text-sm font-medium text-gray-900 dark:text-white">
-                {currentQuantity}
+              <span
+                className="mx-3 text-sm font-medium text-gray-900 dark:text-white min-w-[1.5rem] text-center"
+                aria-live="polite"
+              >
+                {localQty}
               </span>
 
               <button
-                onClick={() => handleQuantityChange(currentQuantity + 1)}
-                disabled={currentQuantity >= currentStock || isLoading}
-                className="p-1.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 disabled:opacity-50 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                aria-label="Increase quantity"
+                type="button"
+                onClick={inc}
+                disabled={localQty >= stock || isBusy || stock <= 0}
+                className="p-1.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 disabled:opacity-50 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                aria-label="Aumentar cantidad"
               >
-                <Plus className="w-3 h-3" />
+                <Plus className="w-3.5 h-3.5" />
               </button>
 
-              {currentQuantity >= currentStock && (
-                <span className="ml-2 text-xs text-amber-600 dark:text-amber-400">
+              {stock > 0 && localQty >= stock && (
+                <span
+                  className="ml-2 text-xs text-amber-600 dark:text-amber-400"
+                  role="status"
+                >
                   Máx.
+                </span>
+              )}
+              {stock === 0 && (
+                <span
+                  className="ml-2 text-xs text-red-600 dark:text-red-400"
+                  role="status"
+                >
+                  Sin stock
                 </span>
               )}
             </div>
 
-            <div className="flex items-center gap-3">
-             
-
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleRemove}
-                disabled={isLoading}
-                className="text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors flex items-center text-xs disabled:opacity-50"
-                aria-label="Remove item"
-              >
-                <Trash2 className="w-4 h-4 mr-1" />
-                Eliminar
-              </motion.button>
-            </div>
+            <motion.button
+              type="button"
+              whileHover={{ scale: isBusy ? 1 : 1.05 }}
+              whileTap={{ scale: isBusy ? 1 : 0.95 }}
+              onClick={confirmRemove}
+              disabled={isBusy}
+              className="text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors flex items-center text-xs disabled:opacity-50"
+              aria-label={`Eliminar ${productName}`}
+            >
+              <Trash2 className="w-4 h-4 mr-1" />
+              Eliminar
+            </motion.button>
           </div>
         </div>
       </div>

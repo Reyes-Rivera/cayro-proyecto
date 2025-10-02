@@ -3,6 +3,8 @@ import React, {
   useContext,
   useState,
   useEffect,
+  useCallback,
+  useRef,
   ReactNode,
 } from "react";
 import axios from "@/api/axios";
@@ -33,15 +35,21 @@ interface AuthContextType {
     birthdate: Date,
     password: string,
     gender: string
-  ) => Promise<User | unknown>;
-  verifyCode: (email: string, code: string) => Promise<unknown>;
+  ) => Promise<{ success: boolean; data?: any; message?: string }>;
+  verifyCode: (
+    email: string,
+    code: string
+  ) => Promise<{ status: number; data?: any; message?: string }>;
   error: string;
   emailToVerify: string | null;
   isVerificationPending: boolean;
   setEmailToVerify: (email: string | null) => void;
   setIsVerificationPending: (pending: boolean) => void;
   errorTimer: string;
-  verifyCodeAuth: (email: string, code: string) => Promise<unknown>;
+  verifyCodeAuth: (
+    email: string,
+    code: string
+  ) => Promise<{ status: number; data?: any; message?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -58,20 +66,55 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+// Helper functions for localStorage with error handling
+const getStoredItem = <T,>(key: string, defaultValue: T): T => {
+  if (typeof window === "undefined") return defaultValue;
+  try {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : defaultValue;
+  } catch (error) {
+    console.warn(`Error reading ${key} from localStorage:`, error);
+    return defaultValue;
+  }
+};
+
+const setStoredItem = <T,>(key: string, value: T): void => {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (error) {
+    console.warn(`Error setting ${key} in localStorage:`, error);
+  }
+};
+
+const removeStoredItem = (key: string): void => {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(key);
+  } catch (error) {
+    console.warn(`Error removing ${key} from localStorage:`, error);
+  }
+};
+
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [auth, setAuth] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [errorTimer, setErrorTimer] = useState("");
-  const [emailToVerify, setEmailToVerify] = useState<string | null>(() => {
-    return localStorage.getItem("emailToVerify") || null;
-  });
+  const [emailToVerify, setEmailToVerify] = useState<string | null>(() =>
+    getStoredItem("emailToVerify", null)
+  );
   const [isVerificationPending, setIsVerificationPending] = useState<boolean>(
-    () => localStorage.getItem("isVerificationPending") === "true"
+    () => getStoredItem("isVerificationPending", false)
   );
   const [accessToken, setAccessToken] = useState<string | null>(null);
+  const isRefreshing = useRef(false);
+  const failedQueue = useRef<
+    Array<{ resolve: (value: any) => void; reject: (error: any) => void }>
+  >([]);
 
+  // Optimized effect for setting axios headers
   useEffect(() => {
     if (accessToken) {
       axios.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
@@ -80,142 +123,189 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [accessToken]);
 
-  const login = async (identifier: string, password: string) => {
-    try {
-      const res = await loginApi({ identifier, password });
-      if (res?.data?.user && res?.data?.accessToken) {
-        setAuth(true);
-        setUser(res.data.user);
-        setAccessToken(res.data.accessToken);
-        setLoading(true);
-        setTimeout(() => setLoading(false), 2000);
-        return res.data.user;
-      }
-    } catch (error: any) {
-      if (
-        error.response?.data?.message.includes("Cuenta bloqueada temporalmente")
-      ) {
-        setErrorTimer(error.response?.data?.message);
-      } else {
-        setError(
+  // Memoized login function
+  const login = useCallback(
+    async (identifier: string, password: string): Promise<User | null> => {
+      try {
+        const res = await loginApi({ identifier, password });
+        if (res?.data?.user && res?.data?.accessToken) {
+          setAuth(true);
+          setUser(res.data.user);
+          setAccessToken(res.data.accessToken);
+          setLoading(true);
+
+          // Use requestAnimationFrame for better performance
+          requestAnimationFrame(() => {
+            setLoading(false);
+          });
+
+          return res.data.user;
+        }
+      } catch (error: any) {
+        const errorMessage =
           error.response?.data?.message ||
-            "Error desconocido al iniciar sesión."
-        );
-      }
-      throw error;
-    }
-    return null;
-  };
+          "Error desconocido al iniciar sesión.";
 
-  const SignUp = async (
-    name: string,
-    surname: string,
-    email: string,
-    phone: string,
-    birthdate: Date,
-    password: string,
-    gender: string
-  ) => {
+        if (errorMessage.includes("Cuenta bloqueada temporalmente")) {
+          setErrorTimer(errorMessage);
+        } else {
+          setError(errorMessage);
+        }
+        throw error;
+      }
+      return null;
+    },
+    []
+  );
+
+  // Memoized signup function
+  const SignUp = useCallback(
+    async (
+      name: string,
+      surname: string,
+      email: string,
+      phone: string,
+      birthdate: Date,
+      password: string,
+      gender: string
+    ): Promise<{ success: boolean; data?: any; message?: string }> => {
+      try {
+        const res = await signUpApi({
+          name,
+          surname,
+          email,
+          phone,
+          birthdate,
+          password,
+          gender,
+        });
+
+        if (res) {
+          setEmailToVerify(email);
+          setIsVerificationPending(true);
+          setStoredItem("emailToVerify", email);
+          setStoredItem("isVerificationPending", true);
+          return { success: true, data: res?.data };
+        }
+        return { success: false, message: "No response from server" };
+      } catch (error: unknown) {
+        let errorMessage = "Error desconocido al registrar.";
+
+        if (error instanceof Error) {
+          const axiosError = error as {
+            response?: { data?: { message?: string } };
+          };
+          errorMessage = axiosError.response?.data?.message || errorMessage;
+        }
+
+        setError(errorMessage);
+        // Use setTimeout with clear timeout for better memory management
+        setTimeout(() => {
+          setError("");
+        }, 2000);
+
+        return { success: false, message: errorMessage };
+      }
+    },
+    []
+  );
+
+  // Memoized verifyCode function
+  const verifyCode = useCallback(
+    async (
+      email: string,
+      code: string
+    ): Promise<{ status: number; data?: any; message?: string }> => {
+      try {
+        const res = await verifyCodeApi(email, code);
+        if (res.status === 201) {
+          setIsVerificationPending(false);
+          setEmailToVerify(null);
+          removeStoredItem("emailToVerify");
+          removeStoredItem("isVerificationPending");
+        }
+        return { status: res.status, data: res.data };
+      } catch (error) {
+        let errorMessage = "Error desconocido al verificar el código.";
+        if (error instanceof Error && "response" in error) {
+          const axiosError = error as {
+            response?: { data?: { message?: string } };
+          };
+          errorMessage = axiosError.response?.data?.message || errorMessage;
+        }
+        setError(errorMessage);
+        return { status: 500, message: errorMessage };
+      }
+    },
+    []
+  );
+
+  // Memoized verifyCodeAuth function
+  const verifyCodeAuth = useCallback(
+    async (
+      email: string,
+      code: string
+    ): Promise<{ status: number; data?: any; message?: string }> => {
+      try {
+        const res = await verifyCodeApiAuth(email, code);
+        if (res.status === 201 && res.data.accessToken) {
+          setEmailToVerify(null);
+          setUser({ ...res.data.user, birthdate: res.data.birthday });
+          setAuth(true);
+          setAccessToken(res.data.accessToken);
+          setLoading(true);
+
+          requestAnimationFrame(() => {
+            setLoading(false);
+          });
+        }
+        return { status: res.status, data: res.data };
+      } catch (error) {
+        let errorMessage = "Error desconocido al verificar el código.";
+        if (error instanceof Error && "response" in error) {
+          const axiosError = error as {
+            response?: { data?: { message?: string } };
+          };
+          errorMessage = axiosError.response?.data?.message || errorMessage;
+        }
+        setError(errorMessage);
+
+        setTimeout(() => setError(""), 2000);
+        return { status: 500, message: errorMessage };
+      }
+    },
+    []
+  );
+
+  // Memoized signOut function
+  const signOut = useCallback(async (): Promise<boolean> => {
     try {
-      const res = await signUpApi({
-        name,
-        surname,
-        email,
-        phone,
-        birthdate,
-        password,
-        gender,
-      });
+      const res = await logOutApi();
       if (res) {
-        setEmailToVerify(email);
-        setIsVerificationPending(true);
-        localStorage.setItem("emailToVerify", email);
-        localStorage.setItem("isVerificationPending", "true");
-        return { success: true, data: res?.data };
+        setUser(null);
+        setAuth(false);
+        setAccessToken(null);
+        return true;
       }
-    } catch (error: unknown) {
-      let errorMessage = "Error desconocido al registrar.";
-      if (error instanceof Error) {
-        const axiosError = error as {
-          response?: { data?: { message?: string } };
-        };
-        errorMessage = axiosError.response?.data?.message || errorMessage;
-      }
-
-      setError(errorMessage);
-      setTimeout(() => {
-        setError("");
-      }, 2000);
-      return { success: false, message: errorMessage };
-    }
-  };
-
-  const verifyCode = async (email: string, code: string) => {
-    try {
-      const res = await verifyCodeApi(email, code);
-      if (res.status === 201) {
-        setIsVerificationPending(false);
-        setEmailToVerify(null);
-        localStorage.removeItem("emailToVerify");
-        localStorage.removeItem("isVerificationPending");
-      }
-      return { status: res.status, data: res.data };
+      return false;
     } catch (error) {
-      let errorMessage = "Error desconocido al verificar el código.";
-      if (error instanceof Error && "response" in error) {
-        const axiosError = error as {
-          response?: { data?: { message?: string } };
-        };
-        errorMessage = axiosError.response?.data?.message || errorMessage;
-      }
-      setError(errorMessage);
-      return { status: 500, message: errorMessage };
-    }
-  };
-
-  const verifyCodeAuth = async (email: string, code: string) => {
-    try {
-      const res = await verifyCodeApiAuth(email, code);
-      if (res.status === 201 && res.data.accessToken) {
-        setEmailToVerify(null);
-        setUser({ ...res.data.user, birthdate: res.data.birthday });
-        setAuth(true);
-        setAccessToken(res.data.accessToken);
-        setLoading(true);
-        setTimeout(() => setLoading(false), 2000);
-      }
-      return { status: res.status, data: res.data };
-    } catch (error) {
-      let errorMessage = "Error desconocido al verificar el código.";
-      if (error instanceof Error && "response" in error) {
-        const axiosError = error as {
-          response?: { data?: { message?: string } };
-        };
-        errorMessage = axiosError.response?.data?.message || errorMessage;
-      }
-      setError(errorMessage);
-      setTimeout(() => setError(""), 2000);
-      return { status: 500, message: errorMessage };
-    }
-  };
-
-  const signOut = async () => {
-    const res = await logOutApi();
-    if (res) {
+      console.warn("Error during sign out:", error);
+      // Clear state even if API call fails
       setUser(null);
       setAuth(false);
       setAccessToken(null);
       return true;
     }
-    return false;
-  };
+  }, []);
 
-  const verifyUser = async (): Promise<User | null> => {
+  // Memoized verifyUser function
+  const verifyUser = useCallback(async (): Promise<User | null> => {
     await verifyAuth();
     return user;
-  };
+  }, [user]);
 
-  const verifyAuth = async () => {
+  // Optimized verifyAuth function
+  const verifyAuth = useCallback(async () => {
     setLoading(true);
     try {
       const res = await verifyToken();
@@ -236,23 +326,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setAccessToken(null);
       setError(error.response?.data?.message || "Sesión expirada");
     } finally {
-      setLoading(false);
+      requestAnimationFrame(() => {
+        setLoading(false);
+      });
     }
-  };
+  }, []);
 
+  // Optimized token refresh interceptor
   useEffect(() => {
-    let isRefreshing = false;
-    let failedQueue: any[] = [];
-
     const processQueue = (error: any, token: string | null = null) => {
-      failedQueue.forEach((prom) => {
+      failedQueue.current.forEach((prom) => {
         if (error) {
           prom.reject(error);
         } else {
           prom.resolve(token);
         }
       });
-      failedQueue = [];
+      failedQueue.current = [];
     };
 
     const interceptor = axios.interceptors.response.use(
@@ -263,14 +353,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const isAuthError =
           error.response?.status === 401 &&
           !originalRequest._retry &&
-          !originalRequest.url.includes("/auth/login") &&
-          !originalRequest.url.includes("/auth/refresh");
+          !originalRequest.url?.includes("/auth/login") &&
+          !originalRequest.url?.includes("/auth/refresh");
 
         if (!isAuthError) return Promise.reject(error);
 
-        if (isRefreshing) {
+        if (isRefreshing.current) {
           return new Promise((resolve, reject) => {
-            failedQueue.push({ resolve, reject });
+            failedQueue.current.push({ resolve, reject });
           })
             .then((token: unknown) => {
               if (typeof token !== "string") throw new Error("Token inválido");
@@ -281,7 +371,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
 
         originalRequest._retry = true;
-        isRefreshing = true;
+        isRefreshing.current = true;
 
         try {
           const refreshResponse = await refreshTokenApi();
@@ -305,7 +395,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setError("Tu sesión expiró. Por favor inicia sesión nuevamente.");
           return Promise.reject(refreshError);
         } finally {
-          isRefreshing = false;
+          isRefreshing.current = false;
         }
       }
     );
@@ -315,28 +405,66 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
   }, []);
 
+  // Initial auth verification
   useEffect(() => {
     verifyAuth();
+  }, [verifyAuth]);
+
+  // Memoized setters for better performance
+  const setEmailToVerifyMemoized = useCallback((email: string | null) => {
+    setEmailToVerify(email);
+    if (email === null) {
+      removeStoredItem("emailToVerify");
+    } else {
+      setStoredItem("emailToVerify", email);
+    }
   }, []);
 
-  const value: AuthContextType = {
-    setIsVerificationPending,
-    user,
-    login,
-    signOut,
-    isAuthenticated: user !== null,
-    auth,
-    loading,
-    SignUp,
-    verifyCode,
-    error,
-    emailToVerify,
-    setEmailToVerify,
-    isVerificationPending,
-    errorTimer,
-    verifyCodeAuth,
-    verifyUser,
-  };
+  const setIsVerificationPendingMemoized = useCallback((pending: boolean) => {
+    setIsVerificationPending(pending);
+    setStoredItem("isVerificationPending", pending);
+  }, []);
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  // Memoized context value to prevent unnecessary re-renders
+  const contextValue = React.useMemo(
+    (): AuthContextType => ({
+      user,
+      login,
+      signOut,
+      verifyUser,
+      isAuthenticated: user !== null,
+      auth,
+      loading,
+      SignUp,
+      verifyCode,
+      error,
+      emailToVerify,
+      setEmailToVerify: setEmailToVerifyMemoized,
+      isVerificationPending,
+      setIsVerificationPending: setIsVerificationPendingMemoized,
+      errorTimer,
+      verifyCodeAuth,
+    }),
+    [
+      user,
+      login,
+      signOut,
+      verifyUser,
+      auth,
+      loading,
+      SignUp,
+      verifyCode,
+      error,
+      emailToVerify,
+      setEmailToVerifyMemoized,
+      isVerificationPending,
+      setIsVerificationPendingMemoized,
+      errorTimer,
+      verifyCodeAuth,
+    ]
+  );
+
+  return (
+    <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
+  );
 };

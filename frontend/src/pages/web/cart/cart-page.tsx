@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
+
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ShoppingBag,
@@ -22,38 +23,43 @@ import { AlertHelper } from "@/utils/alert.util";
 
 export default function CartPage() {
   const { items, clearCart, itemCount } = useCart();
-  const [estimatedDelivery, setEstimatedDelivery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [showSummary, setShowSummary] = useState(false);
+  const [clearing, setClearing] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  useEffect(() => {
+  // Fecha estimada memoizada (5 días)
+  const estimatedDelivery = useMemo(() => {
     const today = new Date();
-    const deliveryDate = new Date(today);
-    deliveryDate.setDate(today.getDate() + 5); // Add 5 days
-    // Format date to locale string (e.g., "15 de marzo")
-    const formattedDate = deliveryDate.toLocaleDateString("es-ES", {
+    const delivery = new Date(today);
+    delivery.setDate(today.getDate() + 5);
+    return delivery.toLocaleDateString("es-ES", {
       day: "numeric",
       month: "long",
     });
-    setEstimatedDelivery(formattedDate);
   }, []);
 
-  // Simulate loading
+  // Simular carga inicial
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 600);
-    return () => clearTimeout(timer);
+    const t = setTimeout(() => setIsLoading(false), 600);
+    return () => clearTimeout(t);
   }, []);
 
-  // Scroll to top on page load
+  // Scroll al top al cargar
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  // Handle clear cart with confirmation
+  // Cerrar resumen móvil si el viewport sube a lg (>=1024px)
+  useEffect(() => {
+    const onResize = () => {
+      if (window.innerWidth >= 1024 && showSummary) setShowSummary(false);
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [showSummary]);
+
   const handleClearCart = async () => {
     try {
       const isConfirmed = await AlertHelper.confirm({
@@ -65,6 +71,8 @@ export default function CartPage() {
         animation: "bounce",
       });
       if (!isConfirmed) return;
+
+      setClearing(true);
       await clearCart();
       AlertHelper.success({
         message: "Carrito vaciado.",
@@ -74,24 +82,23 @@ export default function CartPage() {
       });
     } catch (error: any) {
       const errorMessage =
-        error.response?.data?.message || "Error vaciando el carrito.";
+        error?.response?.data?.message || "Error vaciando el carrito.";
       AlertHelper.error({
         message: errorMessage,
         title: "Error al vaciar el carrito",
         timer: 5000,
         animation: "slideIn",
       });
+    } finally {
+      setClearing(false);
     }
   };
 
-  // Toggle mobile summary view
-  const toggleSummary = () => {
-    setShowSummary(!showSummary);
-  };
+  const toggleSummary = () => setShowSummary((s) => !s);
 
   const handleCheckout = async () => {
     if (!user) {
-      const isConfirmed = await AlertHelper.confirm({
+      const ok = await AlertHelper.confirm({
         title: "Iniciar sesión",
         message: "Debes iniciar sesión para continuar con el pago",
         confirmText: "Iniciar sesión",
@@ -99,16 +106,13 @@ export default function CartPage() {
         type: "info",
         animation: "bounce",
       });
-      if (isConfirmed) {
-        navigate("/login?redirect=/cart");
-      }
-    } else {
-      // Proceed to checkout
-      navigate("/checkout");
+      if (ok) navigate("/login?redirect=/cart");
+      return;
     }
+    navigate("/checkout");
   };
 
-  if (items.length === 0) {
+  if (!items || items.length === 0) {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-900 pt-16">
         {isLoading ? (
@@ -158,10 +162,14 @@ export default function CartPage() {
             </div>
             <div className="flex items-center gap-4">
               <button
+                type="button"
                 onClick={handleClearCart}
-                className="text-sm text-gray-500 hover:text-blue-600 dark:hover:text-blue-500"
+                disabled={clearing}
+                className="text-sm text-gray-500 hover:text-blue-600 dark:hover:text-blue-500 disabled:opacity-60"
+                aria-disabled={clearing}
+                aria-label="Vaciar carrito"
               >
-                Vaciar carrito
+                {clearing ? "Vaciando..." : "Vaciar carrito"}
               </button>
               <Link
                 to="/productos"
@@ -174,7 +182,7 @@ export default function CartPage() {
 
           {/* Cart content */}
           <div className="flex flex-col lg:flex-row gap-8">
-            {/* Cart items */}
+            {/* Items */}
             <div className="w-full lg:w-2/3">
               <div className="bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800">
                 <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
@@ -182,14 +190,17 @@ export default function CartPage() {
                     {itemCount} {itemCount === 1 ? "producto" : "productos"} en
                     tu carrito
                   </h2>
-                  {/* Mobile: Show summary button */}
                   <button
+                    type="button"
                     className="lg:hidden flex items-center text-sm font-medium text-blue-600 dark:text-blue-500"
                     onClick={toggleSummary}
+                    aria-expanded={showSummary}
+                    aria-controls="cart-summary-sheet"
                   >
                     Ver resumen <ChevronRight className="w-4 h-4 ml-1" />
                   </button>
                 </div>
+
                 <AnimatePresence>
                   <div className="divide-y divide-gray-100 dark:divide-gray-800">
                     {items.map((item: any) => (
@@ -197,7 +208,8 @@ export default function CartPage() {
                     ))}
                   </div>
                 </AnimatePresence>
-                {/* Estimated Delivery */}
+
+                {/* Entrega estimada */}
                 <div className="p-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 flex items-start">
                   <Clock className="w-5 h-5 text-blue-600 dark:text-blue-500 mt-0.5 mr-3 flex-shrink-0" />
                   <div>
@@ -215,10 +227,10 @@ export default function CartPage() {
               </div>
             </div>
 
-            {/* Cart summary - Desktop */}
+            {/* Resumen (Desktop) */}
             <div className="hidden lg:block w-full lg:w-1/3">
               <CartSummary />
-              {/* Shipping info */}
+              {/* Envío */}
               <div className="mt-6 bg-white dark:bg-gray-900 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-800">
                 <div className="flex items-start">
                   <Truck className="w-5 h-5 text-blue-600 dark:text-blue-500 mt-0.5 mr-3 flex-shrink-0" />
@@ -237,7 +249,7 @@ export default function CartPage() {
                   </div>
                 </div>
               </div>
-              {/* Payment methods */}
+              {/* Métodos de pago */}
               <div className="mt-6 bg-white dark:bg-gray-900 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-800">
                 <div className="flex items-start">
                   <CreditCard className="w-5 h-5 text-blue-600 dark:text-blue-500 mt-0.5 mr-3 flex-shrink-0" />
@@ -246,7 +258,9 @@ export default function CartPage() {
                       Métodos de pago aceptados
                     </h3>
                     <div className="flex flex-wrap gap-3 mt-2">
+                      {/* Stripe */}
                       <div className="flex items-center justify-center h-8 px-3 bg-gray-100 dark:bg-gray-800 rounded-md">
+                        {/* (SVG stripe) */}
                         <svg
                           className="h-5"
                           viewBox="0 0 60 25"
@@ -262,7 +276,9 @@ export default function CartPage() {
                           />
                         </svg>
                       </div>
+                      {/* MasterCard */}
                       <div className="flex items-center justify-center h-8 px-3 bg-gray-100 dark:bg-gray-800 rounded-md">
+                        {/* (SVG mastercard) */}
                         <svg
                           className="h-4"
                           viewBox="0 0 780 500"
@@ -302,7 +318,9 @@ export default function CartPage() {
                           />
                         </svg>
                       </div>
+                      {/* Visa */}
                       <div className="flex items-center justify-center h-8 px-3 bg-gray-100 dark:bg-gray-800 rounded-md">
+                        {/* (SVG visa) */}
                         <svg
                           className="h-3"
                           viewBox="0 0 780 500"
@@ -334,42 +352,6 @@ export default function CartPage() {
                           />
                         </svg>
                       </div>
-                      <div className="flex items-center justify-center h-8 px-3 bg-gray-100 dark:bg-gray-800 rounded-md">
-                        <svg
-                          className="h-4"
-                          viewBox="0 0 780 500"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M40,0h700c22.1,0,40,17.9,40,40v420c0,22.1-17.9,40-40,40H40c-22.1,0-40-17.9-40-40V40C0,17.9,17.9,0,40,0z"
-                            fill="#4D4D4D"
-                          />
-                          <path
-                            d="M415.1,158.1c-27.2,0-48.3,21.2-48.3,48.3c0,27.2,21.2,48.3,48.3,48.3c27.2,0,48.3-21.2,48.3-48.3C463.4,179.3,442.3,158.1,415.1,158.1z"
-                            fill="#5F6368"
-                          />
-                          <path
-                            d="M415.1,228.4c-12.4,0-22.1-9.7-22.1-22.1c0-12.4,9.7-22.1,22.1-22.1c12.4,0,22.1,9.7,22.1,22.1C437.2,218.7,427.5,228.4,415.1,228.4z"
-                            fill="#EB001B"
-                          />
-                          <path
-                            d="M550.9,228.4c-12.4,0-22.1-9.7-22.1-22.1c0-12.4,9.7-22.1,22.1-22.1c12.4,0,22.1,9.7,22.1,22.1C573,218.7,563.3,228.4,550.9,228.4z"
-                            fill="#F79E1B"
-                          />
-                          <path
-                            d="M483,206.3c0-12.4,5.5-23.5,14.2-31c-7.9-6.3-18-10.1-29-10.1c-25.6,0-46.3,20.7-46.3,46.3c0,25.6,20.7,46.3,46.3,46.3c11,0,21.1-3.8,29-10.1C488.5,229.8,483,218.7,483,206.3z"
-                            fill="#EB001B"
-                          />
-                          <path
-                            d="M529.4,206.3c0,25.6-20.7,46.3-46.3,46.3c-11,0-21.1-3.8-29-10.1c8.7-7.5,14.2-18.6,14.2-31c0-12.4-5.5-23.5-14.2-31c7.9-6.3,18-10.1,29-10.1C508.7,160,529.4,180.7,529.4,206.3z"
-                            fill="#F79E1B"
-                          />
-                          <path
-                            d="M550.9,160c-27.2,0-48.3,21.2-48.3,48.3c0,27.2,21.2,48.3,48.3,48.3c27.2,0,48.3-21.2,48.3-48.3C599.2,179.3,578.1,160,550.9,160z"
-                            fill="#5F6368"
-                          />
-                        </svg>
-                      </div>
                     </div>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                       Procesado de forma segura por Stripe
@@ -379,7 +361,7 @@ export default function CartPage() {
               </div>
             </div>
 
-            {/* Mobile summary overlay */}
+            {/* Overlay resumen móvil */}
             <AnimatePresence>
               {showSummary && (
                 <motion.div
@@ -390,6 +372,9 @@ export default function CartPage() {
                   onClick={() => setShowSummary(false)}
                 >
                   <motion.div
+                    id="cart-summary-sheet"
+                    role="dialog"
+                    aria-modal="true"
                     className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-900 rounded-t-xl max-h-[80vh] overflow-auto"
                     initial={{ y: "100%" }}
                     animate={{ y: 0 }}
@@ -401,7 +386,11 @@ export default function CartPage() {
                       <h2 className="font-medium text-gray-900 dark:text-white">
                         Resumen de compra
                       </h2>
-                      <button onClick={() => setShowSummary(false)}>
+                      <button
+                        type="button"
+                        onClick={() => setShowSummary(false)}
+                        aria-label="Cerrar resumen"
+                      >
                         <X className="w-5 h-5 text-gray-500" />
                       </button>
                     </div>
@@ -413,9 +402,10 @@ export default function CartPage() {
               )}
             </AnimatePresence>
 
-            {/* Mobile: Fixed checkout button */}
+            {/* Botón fijo móvil */}
             <div className="fixed bottom-0 left-0 right-0 p-4 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 lg:hidden z-40">
               <button
+                type="button"
                 onClick={handleCheckout}
                 className="w-full py-3 px-4 bg-blue-600 dark:bg-blue-500 text-white font-medium rounded-full flex items-center justify-center"
               >
@@ -424,7 +414,7 @@ export default function CartPage() {
             </div>
           </div>
 
-          {/* Cart Recommendations Carousel */}
+          {/* Recomendaciones */}
           <CartRecommendationsCarousel cartItems={items} />
         </div>
       )}

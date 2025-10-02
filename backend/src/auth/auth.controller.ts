@@ -36,7 +36,7 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const result = await this.authService.login(loginDto);
-
+    console.log('Hola');
     // Guardar refreshToken en cookie segura
     res.setHeader(
       'Set-Cookie',
@@ -79,7 +79,7 @@ export class AuthController {
       throw new UnauthorizedException('Refresh token inválido o expirado');
     }
 
-    const result = await this.authService.refresh(userId, refreshToken,email);
+    const result = await this.authService.refresh(userId, refreshToken, email);
 
     // Renovar la cookie con nuevo refreshToken
     // res.setHeader(

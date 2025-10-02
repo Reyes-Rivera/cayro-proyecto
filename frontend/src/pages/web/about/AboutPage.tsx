@@ -1,8 +1,7 @@
 "use client";
 
 import type React from "react";
-
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { motion, useAnimation, useInView } from "framer-motion";
 import {
   Leaf,
@@ -21,9 +20,9 @@ import { getCompanyInfoApi } from "@/api/company";
 import type { CompanyProfile } from "@/types/CompanyInfo";
 
 // Import your images
-import mission from "./assets/mission.jpg";
-import vision from "./assets/vision.jpg";
-import about from "./assets/about.jpg";
+import mission from "./assets/mission.webp";
+import vision from "./assets/vision.webp";
+import about from "./assets/about.webp";
 import Breadcrumbs from "@/components/web-components/Breadcrumbs";
 
 // Types
@@ -66,52 +65,86 @@ const AnimatedSection: React.FC<AnimatedSectionProps> = ({
 
 export default function AboutPage() {
   const [info, setInfo] = useState<CompanyProfile>();
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Smooth scroll function
-  const scrollToAbout = () => {
+  const scrollToAbout = useCallback(() => {
     const aboutSection = document.getElementById("about-section");
     if (aboutSection) {
       aboutSection.scrollIntoView({ behavior: "smooth" });
     }
-  };
+  }, []);
 
+  // Memoized data fetching
   useEffect(() => {
     const getInfo = async () => {
-      const res = await getCompanyInfoApi();
-      if (res) {
-        setInfo(res.data[0]);
+      try {
+        const res = await getCompanyInfoApi();
+        if (res?.data?.[0]) {
+          setInfo(res.data[0]);
+        }
+      } catch (error) {
+        console.error("Error fetching company info:", error);
       }
     };
     getInfo();
   }, []);
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.2,
+  // Memoized animation variants
+  const containerVariants = useMemo(
+    () => ({
+      hidden: { opacity: 0 },
+      visible: {
+        opacity: 1,
+        transition: {
+          staggerChildren: 0.2,
+        },
       },
-    },
-  };
+    }),
+    []
+  );
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.5,
+  const itemVariants = useMemo(
+    () => ({
+      hidden: { opacity: 0, y: 20 },
+      visible: {
+        opacity: 1,
+        y: 0,
+        transition: {
+          duration: 0.5,
+        },
       },
-    },
-  };
+    }),
+    []
+  );
+
+  // Memoized company data
+  const companyData = useMemo(
+    () => ({
+      mission:
+        info?.mission ||
+        "Nuestra misión es proporcionar prendas de vestir de la más alta calidad, combinando diseño innovador, materiales premium y técnicas de fabricación avanzadas para satisfacer las necesidades de nuestros clientes.",
+      vision:
+        info?.vision ||
+        "Ser reconocidos como líderes en la industria textil, destacándonos por la innovación, calidad y servicio excepcional, mientras expandimos nuestra presencia a nivel nacional e internacional.",
+    }),
+    [info?.mission, info?.vision]
+  );
 
   return (
-    <div className="bg-white mt-5 dark:bg-gray-900 overflow-x-hidden">
+    <div
+      ref={containerRef}
+      className="bg-white mt-5 dark:bg-gray-900 overflow-x-hidden"
+      role="main"
+      aria-label="Página sobre nosotros"
+    >
       {/* Hero Section - Two column layout with content left, images right */}
-      <div className="relative min-h-[90vh] bg-white dark:bg-gray-900 flex items-center">
+      <section className="relative min-h-[90vh] bg-white dark:bg-gray-900 flex items-center">
         {/* Background elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div
+          className="absolute inset-0 overflow-hidden pointer-events-none"
+          aria-hidden="true"
+        >
           <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-bl from-blue-50/80 to-transparent dark:from-blue-950/20 dark:to-transparent"></div>
           <div className="absolute -top-20 -right-20 w-96 h-96 bg-blue-100 dark:bg-blue-900/20 rounded-full opacity-70 blur-3xl"></div>
           <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-80 h-80 bg-blue-100 dark:bg-blue-900/20 rounded-full opacity-60 blur-3xl"></div>
@@ -137,7 +170,10 @@ export default function AboutPage() {
                   transition={{ duration: 0.5 }}
                   className="mb-6 inline-flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-4 py-1.5"
                 >
-                  <Users className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
+                  <Users
+                    className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400"
+                    aria-hidden="true"
+                  />
                   <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
                     NUESTRA EMPRESA
                   </span>
@@ -154,7 +190,10 @@ export default function AboutPage() {
                     <span className="relative z-10 text-blue-600">
                       historia
                     </span>
-                    <span className="absolute bottom-2 left-0 w-full h-3 bg-blue-600/20 -z-10 rounded"></span>
+                    <span
+                      className="absolute bottom-2 left-0 w-full h-3 bg-blue-600/20 -z-10 rounded"
+                      aria-hidden="true"
+                    ></span>
                   </span>{" "}
                   y valores
                 </motion.h1>
@@ -177,26 +216,37 @@ export default function AboutPage() {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.6 }}
                 className="flex flex-wrap gap-6 mt-8"
+                role="list"
+                aria-label="Características de la empresa"
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2" role="listitem">
                   <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                    <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    <Clock
+                      className="w-5 h-5 text-blue-600 dark:text-blue-400"
+                      aria-hidden="true"
+                    />
                   </div>
                   <span className="text-gray-700 dark:text-gray-300 text-sm">
                     +25 años de experiencia
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2" role="listitem">
                   <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                    <Award className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    <Award
+                      className="w-5 h-5 text-blue-600 dark:text-blue-400"
+                      aria-hidden="true"
+                    />
                   </div>
                   <span className="text-gray-700 dark:text-gray-300 text-sm">
                     Calidad garantizada
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2" role="listitem">
                   <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                    <Target className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    <Target
+                      className="w-5 h-5 text-blue-600 dark:text-blue-400"
+                      aria-hidden="true"
+                    />
                   </div>
                   <span className="text-gray-700 dark:text-gray-300 text-sm">
                     Compromiso con clientes
@@ -213,21 +263,24 @@ export default function AboutPage() {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-full transition-all flex items-center justify-center shadow-lg shadow-blue-600/20"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-full transition-all flex items-center justify-center shadow-lg shadow-blue-600/20 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                   onClick={scrollToAbout}
+                  aria-label="Desplazarse para descubrir más sobre nosotros"
                 >
                   <span className="flex items-center">
                     Descubrir más
-                    <ArrowRight className="ml-2 w-4 h-4" />
+                    <ArrowRight className="ml-2 w-4 h-4" aria-hidden="true" />
                   </span>
                 </motion.button>
 
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="border border-gray-300 dark:border-gray-700 hover:border-blue-600 dark:hover:border-blue-500 text-gray-900 dark:text-white font-medium py-3 px-6 rounded-full transition-all"
+                  className="border border-gray-300 dark:border-gray-700 hover:border-blue-600 dark:hover:border-blue-500 text-gray-900 dark:text-white font-medium py-3 px-6 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 >
-                  <NavLink to="/contacto">Contactar</NavLink>
+                  <NavLink to="/contacto" className="flex items-center">
+                    Contactar
+                  </NavLink>
                 </motion.button>
               </motion.div>
               <Breadcrumbs />
@@ -249,10 +302,16 @@ export default function AboutPage() {
               >
                 <img
                   src={about || "/placeholder.svg?height=400&width=600"}
-                  alt="Nuestra empresa"
+                  alt="Nuestra empresa - equipo de trabajo en la industria textil"
                   className="w-full h-auto object-cover max-w-full"
+                  loading="lazy"
+                  width={600}
+                  height={400}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                <div
+                  className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"
+                  aria-hidden="true"
+                ></div>
                 <div className="absolute bottom-4 left-4 text-white">
                   <span className="text-sm font-medium bg-blue-600 px-3 py-1 rounded-full">
                     Desde 1995
@@ -277,10 +336,16 @@ export default function AboutPage() {
                 >
                   <img
                     src={mission || "/placeholder.svg?height=150&width=150"}
-                    alt="Misión"
+                    alt="Nuestra misión - compromiso con la calidad y servicio"
                     className="w-full h-32 object-cover transition-transform duration-500 group-hover:scale-110 max-w-full"
+                    loading="lazy"
+                    width={150}
+                    height={150}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                  <div
+                    className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"
+                    aria-hidden="true"
+                  ></div>
                   <div className="absolute bottom-2 left-3 text-white font-medium text-sm">
                     Misión
                   </div>
@@ -295,10 +360,16 @@ export default function AboutPage() {
                 >
                   <img
                     src={vision || "/placeholder.svg?height=150&width=150"}
-                    alt="Visión"
+                    alt="Nuestra visión - liderazgo en la industria textil"
                     className="w-full h-32 object-cover transition-transform duration-500 group-hover:scale-110 max-w-full"
+                    loading="lazy"
+                    width={150}
+                    height={150}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                  <div
+                    className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"
+                    aria-hidden="true"
+                  ></div>
                   <div className="absolute bottom-2 left-3 text-white font-medium text-sm">
                     Visión
                   </div>
@@ -311,9 +382,13 @@ export default function AboutPage() {
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.8 }}
                 className="absolute top-4 -right-4 bg-white dark:bg-gray-800 shadow-lg rounded-full px-4 py-2 z-30"
+                aria-label="Certificación de calidad premium"
               >
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-yellow-500" />
+                  <Sparkles
+                    className="w-4 h-4 text-yellow-500"
+                    aria-hidden="true"
+                  />
                   <span className="font-bold text-gray-900 dark:text-white text-sm">
                     Calidad Premium
                   </span>
@@ -330,6 +405,15 @@ export default function AboutPage() {
           transition={{ delay: 1.5, duration: 1 }}
           className="absolute bottom-6 left-1/2 transform -translate-x-1/2 cursor-pointer z-20"
           onClick={scrollToAbout}
+          role="button"
+          tabIndex={0}
+          aria-label="Desplazarse hacia abajo para más contenido"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              scrollToAbout();
+            }
+          }}
         >
           <motion.div
             animate={{ y: [0, 10, 0] }}
@@ -349,19 +433,24 @@ export default function AboutPage() {
               }}
               transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
               className="w-8 h-8 rounded-full flex items-center justify-center border border-gray-300 dark:border-gray-700"
+              aria-hidden="true"
             >
-              <ChevronDown className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              <ChevronDown
+                className="w-5 h-5 text-gray-500 dark:text-gray-400"
+                aria-hidden="true"
+              />
             </motion.div>
           </motion.div>
         </motion.div>
-      </div>
+      </section>
 
       {/* About Section */}
-      <AnimatedSection
-        className="py-24 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 relative overflow-hidden"
-      >
+      <AnimatedSection className="py-24 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 relative overflow-hidden">
         {/* Background decoration */}
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+        <div
+          className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none"
+          aria-hidden="true"
+        >
           <div className="absolute -top-24 -left-24 w-64 h-64 bg-blue-500/5 rounded-full"></div>
           <div className="absolute top-1/4 right-0 w-96 h-96 bg-blue-500/5 rounded-full"></div>
           <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-blue-500/5 rounded-full"></div>
@@ -381,7 +470,10 @@ export default function AboutPage() {
             <h2 className="text-3xl md:text-5xl font-bold text-gray-900 dark:text-white">
               Creando calidad desde 1995
             </h2>
-            <div className="w-24 h-1 bg-blue-600 mx-auto mt-6"></div>
+            <div
+              className="w-24 h-1 bg-blue-600 mx-auto mt-6"
+              aria-hidden="true"
+            ></div>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
@@ -403,10 +495,17 @@ export default function AboutPage() {
                 y duraderos, adaptándonos a las necesidades de cada cliente.
               </p>
 
-              <div className="grid grid-cols-2 gap-6 pt-4">
-                <div className="flex items-start space-x-3">
+              <div
+                className="grid grid-cols-2 gap-6 pt-4"
+                role="list"
+                aria-label="Estadísticas de la empresa"
+              >
+                <div className="flex items-start space-x-3" role="listitem">
                   <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-full">
-                    <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    <Clock
+                      className="w-5 h-5 text-blue-600 dark:text-blue-400"
+                      aria-hidden="true"
+                    />
                   </div>
                   <div>
                     <h3 className="font-bold text-gray-900 dark:text-white">
@@ -418,9 +517,12 @@ export default function AboutPage() {
                   </div>
                 </div>
 
-                <div className="flex items-start space-x-3">
+                <div className="flex items-start space-x-3" role="listitem">
                   <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-full">
-                    <Award className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    <Award
+                      className="w-5 h-5 text-blue-600 dark:text-blue-400"
+                      aria-hidden="true"
+                    />
                   </div>
                   <div>
                     <h3 className="font-bold text-gray-900 dark:text-white">
@@ -451,6 +553,7 @@ export default function AboutPage() {
                   repeat: Number.POSITIVE_INFINITY,
                 }}
                 className="absolute -top-4 -left-4 w-24 h-24 bg-blue-600/10 rounded-full z-0"
+                aria-hidden="true"
               ></motion.div>
               <motion.div
                 animate={{
@@ -459,11 +562,15 @@ export default function AboutPage() {
                 }}
                 transition={{ duration: 8, repeat: Number.POSITIVE_INFINITY }}
                 className="absolute -bottom-4 -right-4 w-32 h-32 bg-blue-600/10 rounded-full z-0"
+                aria-hidden="true"
               ></motion.div>
               <img
                 src={about || "/placeholder.svg?height=600&width=600"}
-                alt="Quienes-somos"
+                alt="Quienes-somos - equipo y instalaciones de nuestra empresa"
                 className="rounded-lg shadow-2xl w-full relative z-10 transform transition-transform duration-500 hover:scale-105 max-w-full"
+                loading="lazy"
+                width={600}
+                height={600}
               />
 
               {/* Floating badge */}
@@ -474,8 +581,12 @@ export default function AboutPage() {
                 transition={{ duration: 0.6, delay: 0.3 }}
                 animate={{ y: [0, -10, 0] }}
                 className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 px-6 py-3 rounded-full shadow-lg z-20 flex items-center gap-2"
+                aria-label="Garantía de calidad"
               >
-                <Sparkles className="w-5 h-5 text-yellow-500" />
+                <Sparkles
+                  className="w-5 h-5 text-yellow-500"
+                  aria-hidden="true"
+                />
                 <span className="font-bold text-gray-900 dark:text-white">
                   Calidad Garantizada
                 </span>
@@ -488,7 +599,10 @@ export default function AboutPage() {
       {/* Misión y Visión Section */}
       <AnimatedSection className="py-24 bg-white dark:bg-gray-900 relative overflow-hidden">
         {/* Background decoration */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div
+          className="absolute inset-0 overflow-hidden pointer-events-none"
+          aria-hidden="true"
+        >
           <svg
             className="absolute top-0 left-0 w-full h-full text-blue-500/5"
             xmlns="http://www.w3.org/2000/svg"
@@ -538,6 +652,7 @@ export default function AboutPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.3 }}
               className="h-1 bg-blue-600 mx-auto mt-6"
+              aria-hidden="true"
             ></motion.div>
           </div>
 
@@ -551,12 +666,15 @@ export default function AboutPage() {
               className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all group relative overflow-hidden"
             >
               {/* Background decoration */}
-              <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-500/5 rounded-full transition-all duration-300 group-hover:scale-150"></div>
+              <div
+                className="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-500/5 rounded-full transition-all duration-300 group-hover:scale-150"
+                aria-hidden="true"
+              ></div>
 
               {/* Icono con fondo dinámico */}
               <div className="mb-6 transform group-hover:scale-110 transition-transform relative z-10">
                 <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:shadow-blue-500/20">
-                  <Target className="w-8 h-8" />
+                  <Target className="w-8 h-8" aria-hidden="true" />
                 </div>
               </div>
 
@@ -568,15 +686,15 @@ export default function AboutPage() {
               {/* Descripción */}
               <div className="bg-gray-50 dark:bg-gray-700/50 p-6 rounded-lg border-l-4 border-blue-600 mb-6 relative z-10">
                 <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-lg italic">
-                  "
-                  {info?.mission ||
-                    "Nuestra misión es proporcionar prendas de vestir de la más alta calidad, combinando diseño innovador, materiales premium y técnicas de fabricación avanzadas para satisfacer las necesidades de nuestros clientes."}
-                  "
+                  "{companyData.mission}"
                 </p>
               </div>
 
               <div className="flex items-center relative z-10">
-                <ChevronRight className="w-5 h-5 text-blue-600 mr-2 flex-shrink-0" />
+                <ChevronRight
+                  className="w-5 h-5 text-blue-600 mr-2 flex-shrink-0"
+                  aria-hidden="true"
+                />
                 <span className="text-gray-600 dark:text-gray-400">
                   Comprometidos con la excelencia en cada prenda
                 </span>
@@ -592,12 +710,15 @@ export default function AboutPage() {
               className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all group relative overflow-hidden"
             >
               {/* Background decoration */}
-              <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-500/5 rounded-full transition-all duration-300 group-hover:scale-150"></div>
+              <div
+                className="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-500/5 rounded-full transition-all duration-300 group-hover:scale-150"
+                aria-hidden="true"
+              ></div>
 
               {/* Icono con fondo dinámico */}
               <div className="mb-6 transform group-hover:scale-110 transition-transform relative z-10">
                 <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:shadow-blue-500/20">
-                  <Sparkles className="w-8 h-8" />
+                  <Sparkles className="w-8 h-8" aria-hidden="true" />
                 </div>
               </div>
 
@@ -609,15 +730,15 @@ export default function AboutPage() {
               {/* Descripción */}
               <div className="bg-gray-50 dark:bg-gray-700/50 p-6 rounded-lg border-l-4 border-blue-600 mb-6 relative z-10">
                 <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-lg italic">
-                  "
-                  {info?.vision ||
-                    "Ser reconocidos como líderes en la industria textil, destacándonos por la innovación, calidad y servicio excepcional, mientras expandimos nuestra presencia a nivel nacional e internacional."}
-                  "
+                  "{companyData.vision}"
                 </p>
               </div>
 
               <div className="flex items-center relative z-10">
-                <ChevronRight className="w-5 h-5 text-blue-600 mr-2 flex-shrink-0" />
+                <ChevronRight
+                  className="w-5 h-5 text-blue-600 mr-2 flex-shrink-0"
+                  aria-hidden="true"
+                />
                 <span className="text-gray-600 dark:text-gray-400">
                   Innovando constantemente en diseños y materiales
                 </span>
@@ -630,7 +751,10 @@ export default function AboutPage() {
       {/* Valores Section */}
       <AnimatedSection className="py-24 bg-gray-50 dark:bg-gray-800 relative overflow-hidden">
         {/* Background decoration */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div
+          className="absolute inset-0 overflow-hidden pointer-events-none"
+          aria-hidden="true"
+        >
           <div className="absolute top-0 right-0 w-1/3 h-1/3 bg-gradient-to-b from-blue-500/5 to-transparent rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 left-0 w-1/3 h-1/3 bg-gradient-to-t from-blue-500/5 to-transparent rounded-full blur-3xl"></div>
         </div>
@@ -661,6 +785,7 @@ export default function AboutPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.3 }}
               className="h-1 bg-blue-600 mx-auto mt-6"
+              aria-hidden="true"
             ></motion.div>
             <motion.p
               initial={{ opacity: 0 }}
@@ -689,12 +814,15 @@ export default function AboutPage() {
               className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all group relative overflow-hidden"
             >
               {/* Background decoration */}
-              <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-500/5 rounded-full transition-all duration-300 group-hover:scale-150"></div>
+              <div
+                className="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-500/5 rounded-full transition-all duration-300 group-hover:scale-150"
+                aria-hidden="true"
+              ></div>
 
               {/* Icono con fondo dinámico */}
               <div className="mb-6 transform group-hover:scale-110 transition-transform relative z-10">
                 <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:shadow-blue-500/20">
-                  <Users className="w-8 h-8" />
+                  <Users className="w-8 h-8" aria-hidden="true" />
                 </div>
               </div>
 
@@ -710,7 +838,10 @@ export default function AboutPage() {
               </p>
 
               {/* Número decorativo */}
-              <div className="absolute -right-2 -top-2 text-8xl font-bold text-blue-500/5 dark:text-blue-500/10 select-none">
+              <div
+                className="absolute -right-2 -top-2 text-8xl font-bold text-blue-500/5 dark:text-blue-500/10 select-none"
+                aria-hidden="true"
+              >
                 1
               </div>
             </motion.div>
@@ -722,12 +853,15 @@ export default function AboutPage() {
               className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all group relative overflow-hidden"
             >
               {/* Background decoration */}
-              <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-green-500/5 rounded-full transition-all duration-300 group-hover:scale-150"></div>
+              <div
+                className="absolute -right-6 -bottom-6 w-24 h-24 bg-green-500/5 rounded-full transition-all duration-300 group-hover:scale-150"
+                aria-hidden="true"
+              ></div>
 
               {/* Icono con fondo dinámico */}
               <div className="mb-6 transform group-hover:scale-110 transition-transform relative z-10">
                 <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-700 rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:shadow-green-500/20">
-                  <Leaf className="w-8 h-8" />
+                  <Leaf className="w-8 h-8" aria-hidden="true" />
                 </div>
               </div>
 
@@ -744,7 +878,10 @@ export default function AboutPage() {
               </p>
 
               {/* Número decorativo */}
-              <div className="absolute -right-2 -top-2 text-8xl font-bold text-green-500/5 dark:text-green-500/10 select-none">
+              <div
+                className="absolute -right-2 -top-2 text-8xl font-bold text-green-500/5 dark:text-green-500/10 select-none"
+                aria-hidden="true"
+              >
                 2
               </div>
             </motion.div>
@@ -756,12 +893,15 @@ export default function AboutPage() {
               className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-all group relative overflow-hidden"
             >
               {/* Background decoration */}
-              <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-amber-500/5 rounded-full transition-all duration-300 group-hover:scale-150"></div>
+              <div
+                className="absolute -right-6 -bottom-6 w-24 h-24 bg-amber-500/5 rounded-full transition-all duration-300 group-hover:scale-150"
+                aria-hidden="true"
+              ></div>
 
               {/* Icono con fondo dinámico */}
               <div className="mb-6 transform group-hover:scale-110 transition-transform relative z-10">
                 <div className="w-16 h-16 bg-gradient-to-br from-amber-500 to-amber-700 rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:shadow-amber-500/20">
-                  <Shield className="w-8 h-8" />
+                  <Shield className="w-8 h-8" aria-hidden="true" />
                 </div>
               </div>
 
@@ -777,7 +917,10 @@ export default function AboutPage() {
               </p>
 
               {/* Número decorativo */}
-              <div className="absolute -right-2 -top-2 text-8xl font-bold text-amber-500/5 dark:text-amber-500/10 select-none">
+              <div
+                className="absolute -right-2 -top-2 text-8xl font-bold text-amber-500/5 dark:text-amber-500/10 select-none"
+                aria-hidden="true"
+              >
                 3
               </div>
             </motion.div>
@@ -788,7 +931,10 @@ export default function AboutPage() {
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-blue-600 to-blue-800 text-white relative overflow-hidden">
         {/* Background decoration */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div
+          className="absolute inset-0 overflow-hidden pointer-events-none"
+          aria-hidden="true"
+        >
           <svg
             className="absolute bottom-0 left-0 w-full h-64 text-white/5"
             viewBox="0 0 1200 120"
@@ -846,7 +992,7 @@ export default function AboutPage() {
             >
               <NavLink
                 to="/productos"
-                className="group px-8 py-4 bg-white text-blue-700 font-bold rounded-full hover:bg-blue-50 transition-all transform hover:scale-105 shadow-lg flex items-center justify-center relative overflow-hidden"
+                className="group px-8 py-4 bg-white text-blue-700 font-bold rounded-full hover:bg-blue-50 transition-all transform hover:scale-105 shadow-lg flex items-center justify-center relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600"
               >
                 <span className="relative z-10 flex items-center">
                   Ver catálogo
@@ -855,17 +1001,23 @@ export default function AboutPage() {
                     whileHover={{ x: 5 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <ArrowRight className="ml-2 w-5 h-5" />
+                    <ArrowRight className="ml-2 w-5 h-5" aria-hidden="true" />
                   </motion.span>
                 </span>
-                <span className="absolute inset-0 bg-blue-50 transform scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300"></span>
+                <span
+                  className="absolute inset-0 bg-blue-50 transform scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300"
+                  aria-hidden="true"
+                ></span>
               </NavLink>
               <NavLink
                 to="/contacto"
-                className="group px-8 py-4 bg-transparent text-white font-bold rounded-full hover:bg-white/10 transition-all border-2 border-white flex items-center justify-center relative overflow-hidden"
+                className="group px-8 py-4 bg-transparent text-white font-bold rounded-full hover:bg-white/10 transition-all border-2 border-white flex items-center justify-center relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600"
               >
                 <span className="relative z-10">Contáctanos</span>
-                <span className="absolute inset-0 bg-white/10 transform scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300"></span>
+                <span
+                  className="absolute inset-0 bg-white/10 transform scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300"
+                  aria-hidden="true"
+                ></span>
               </NavLink>
             </motion.div>
 
@@ -879,7 +1031,7 @@ export default function AboutPage() {
                 animate={{ y: [0, -10, 0] }}
                 className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 flex items-center gap-2"
               >
-                <Award className="w-5 h-5 text-yellow-300" />
+                <Award className="w-5 h-5 text-yellow-300" aria-hidden="true" />
                 <span className="text-sm font-medium">Calidad Premium</span>
               </motion.div>
               <motion.div
@@ -890,7 +1042,7 @@ export default function AboutPage() {
                 animate={{ y: [0, -10, 0] }}
                 className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 flex items-center gap-2"
               >
-                <Users className="w-5 h-5 text-blue-300" />
+                <Users className="w-5 h-5 text-blue-300" aria-hidden="true" />
                 <span className="text-sm font-medium">Equipo Profesional</span>
               </motion.div>
               <motion.div
@@ -901,7 +1053,7 @@ export default function AboutPage() {
                 animate={{ y: [0, -10, 0] }}
                 className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 flex items-center gap-2"
               >
-                <Target className="w-5 h-5 text-green-300" />
+                <Target className="w-5 h-5 text-green-300" aria-hidden="true" />
                 <span className="text-sm font-medium">Compromiso Total</span>
               </motion.div>
             </div>

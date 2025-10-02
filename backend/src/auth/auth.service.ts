@@ -755,7 +755,7 @@ export class AuthService {
           tokenExpiry = '30d';
           break;
         case Role.EMPLOYEE:
-          tokenExpiry = '4h';
+          tokenExpiry = '2d';
           break;
       }
 
