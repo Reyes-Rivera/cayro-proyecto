@@ -16,10 +16,11 @@ import {
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { NavLink, Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContextType";
-import { getCompanyInfoApi } from "@/api/company";
 import { getCategories } from "@/api/products";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/context/CartContext";
+
+import LOGO_SRC from "@/assets/logo-163x57.webp";
 
 interface Category {
   id: string;
@@ -29,7 +30,6 @@ interface Category {
   icon: string;
 }
 
-// Constantes fuera del componente para mejor performance
 const CATEGORY_COLORS = [
   {
     bg: "bg-blue-100 dark:bg-blue-900/30",
@@ -53,11 +53,10 @@ const CATEGORY_COLORS = [
   },
 ] as const;
 
-const NavBarUser = () => {
+const NavBarUser: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { auth, user } = useAuth();
   const [darkMode, setDarkMode] = useState(false);
-  const [logo, setLogo] = useState<string>("");
   const [scrolled, setScrolled] = useState(false);
   const [visible, setVisible] = useState(true);
   const lastScrollY = useRef(0);
@@ -70,12 +69,10 @@ const NavBarUser = () => {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const navRef = useRef<HTMLDivElement>(null);
 
-  // Memoizar datos del usuario para evitar re-renderizados
   const userInitial = useMemo(
     () => (user?.name ? user.name.charAt(0).toUpperCase() : ""),
     [user?.name]
   );
-
   const userName = useMemo(() => user?.name?.split(" ")[0] || "", [user?.name]);
 
   const userProfileLink = useMemo(() => {
@@ -87,7 +84,6 @@ const NavBarUser = () => {
       : "/perfil-usuario";
   }, [user?.role]);
 
-  // Fetch optimizado con useCallback
   const fetchCategories = useCallback(async () => {
     try {
       const response = await getCategories();
@@ -100,99 +96,61 @@ const NavBarUser = () => {
     }
   }, []);
 
-  const fetchCompanyInfo = useCallback(async () => {
-    try {
-      const res = await getCompanyInfoApi();
-      if (res?.data?.[0]?.logoUrl) {
-        setLogo(res.data[0].logoUrl);
-      }
-    } catch (error) {
-      console.warn("Error fetching company info:", error);
-    }
-  }, []);
-
-  // Efectos optimizados
   useEffect(() => {
     fetchCategories();
-    fetchCompanyInfo();
-
     const savedTheme = localStorage.getItem("theme") || "light";
     if (savedTheme === "dark") {
       document.documentElement.classList.add("dark");
       setDarkMode(true);
     }
-  }, [fetchCategories, fetchCompanyInfo]);
+  }, [fetchCategories]);
 
-  // Scroll handler throttled con requestAnimationFrame
   const handleScroll = useCallback(() => {
     const currentScrollY = window.scrollY;
     setScrolled(currentScrollY > 5);
-
-    if (currentScrollY > lastScrollY.current && currentScrollY > 80) {
-      setVisible(false);
-    } else {
-      setVisible(true);
-    }
+    setVisible(!(currentScrollY > lastScrollY.current && currentScrollY > 80));
     lastScrollY.current = currentScrollY;
   }, []);
 
   useEffect(() => {
-    const throttledScroll = () => {
-      requestAnimationFrame(handleScroll);
-    };
-
+    const throttledScroll = () => requestAnimationFrame(handleScroll);
     window.addEventListener("scroll", throttledScroll, { passive: true });
     return () => window.removeEventListener("scroll", throttledScroll);
   }, [handleScroll]);
 
-  // Optimizar menu height check
   useEffect(() => {
     if (isMenuOpen && menuRef.current) {
       const checkMenuHeight = () => {
         if (menuRef.current) {
           const menuHeight = menuRef.current.scrollHeight;
-          const viewportHeight = window.innerHeight;
-          setMenuNeedsScroll(menuHeight > viewportHeight);
+          setMenuNeedsScroll(menuHeight > window.innerHeight);
         }
       };
-
-      const resizeObserver = new ResizeObserver(checkMenuHeight);
-      resizeObserver.observe(menuRef.current);
-
+      const ro = new ResizeObserver(checkMenuHeight);
+      ro.observe(menuRef.current);
       checkMenuHeight();
-      return () => resizeObserver.disconnect();
+      return () => ro.disconnect();
     }
   }, [isMenuOpen]);
 
-  // Body scroll lock optimizado
   useEffect(() => {
     if (isMenuOpen) {
       const scrollY = window.scrollY;
-      document.body.style.cssText = `
-        position: fixed;
-        top: -${scrollY}px;
-        width: 100%;
-        overflow: hidden;
-      `;
-
+      document.body.style.cssText = `position:fixed;top:-${scrollY}px;width:100%;overflow:hidden;`;
       return () => {
-        const scrollY = document.body.style.top;
+        const y = document.body.style.top;
         document.body.style.cssText = "";
-        window.scrollTo(0, parseInt(scrollY || "0") * -1);
+        window.scrollTo(0, parseInt(y || "0") * -1);
       };
     }
   }, [isMenuOpen]);
 
-  // Focus management para search
   useEffect(() => {
     if (isSearchOpen && searchInputRef.current) {
-      requestAnimationFrame(() => {
-        searchInputRef.current?.focus();
-      });
+      requestAnimationFrame(() => searchInputRef.current?.focus());
     }
   }, [isSearchOpen]);
 
-  // Handlers optimizados con useCallback
   const toggleTheme = useCallback(() => {
     const isDark = !document.documentElement.classList.contains("dark");
     document.documentElement.classList.toggle("dark");
@@ -200,18 +158,15 @@ const NavBarUser = () => {
     localStorage.setItem("theme", isDark ? "dark" : "light");
   }, []);
 
-  const closeMenu = useCallback(() => {
-    setIsMenuOpen(false);
-  }, []);
-
-  const getCategoryColor = useCallback((index: number) => {
-    return CATEGORY_COLORS[index % CATEGORY_COLORS.length];
-  }, []);
+  const closeMenu = useCallback(() => setIsMenuOpen(false), []);
+  const getCategoryColor = useCallback(
+    (i: number) => CATEGORY_COLORS[i % CATEGORY_COLORS.length],
+    []
+  );
 
   const handleSearchSubmit = useCallback(
     (e?: React.FormEvent) => {
       if (e) e.preventDefault();
-
       if (searchQuery.trim()) {
         window.location.href = `/productos?search=${encodeURIComponent(
           searchQuery.trim()
@@ -230,7 +185,6 @@ const NavBarUser = () => {
     }
   }, []);
 
-  // Memoizar elementos de navegación para desktop
   const desktopNavigation = useMemo(
     () => (
       <motion.div
@@ -245,7 +199,7 @@ const NavBarUser = () => {
           to="/"
           onClick={() => localStorage.removeItem("breadcrumbs")}
           className={({ isActive }) =>
-            `text-sm font-medium transition-all duration-200 relative group px-3 py-2 rounded-full ${
+            `text-sm font-medium transition-colors duration-200 relative group px-3 py-2 rounded-full ${
               isActive
                 ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
                 : "text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100/70 dark:hover:bg-gray-800/70"
@@ -254,33 +208,24 @@ const NavBarUser = () => {
         >
           <Home className="w-4 h-4 flex-shrink-0" />
           <span>Inicio</span>
-          <span
-            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-blue-600 dark:bg-blue-400 transition-all duration-200 group-hover:w-1/2"
-            aria-hidden="true"
-          ></span>
+          <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-blue-600 dark:bg-blue-400 transition-all duration-200 group-hover:w-1/2" />
         </NavLink>
 
-        {/* Productos dropdown optimizado */}
         <div className="relative group">
           <button
-            className="text-sm font-medium transition-all duration-200 flex items-center gap-1.5 group px-3 py-2 rounded-full text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100/70 dark:hover:bg-gray-800/70"
+            className="text-sm font-medium transition-colors duration-200 flex items-center gap-1.5 group px-3 py-2 rounded-full text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100/70 dark:hover:bg-gray-800/70"
             aria-haspopup="true"
             aria-expanded="false"
           >
             <ShoppingBag className="w-4 h-4 flex-shrink-0" />
             <span>Productos</span>
             <ChevronDown className="w-3.5 h-3.5 transition-transform duration-300 group-hover:rotate-180 flex-shrink-0" />
-            <span
-              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-blue-600 dark:bg-blue-400 transition-all duration-200 group-hover:w-1/2"
-              aria-hidden="true"
-            ></span>
+            <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-blue-600 dark:bg-blue-400 transition-all duration-200 group-hover:w-1/2" />
           </button>
-          <div className="absolute left-0 mt-2 w-64 origin-top-left z-50 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-300">
+
+          <div className="absolute left-0 mt-2 w-64 origin-top-left z-50 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 p-2 overflow-hidden">
-              <div
-                className="absolute inset-0 bg-gradient-to-br from-blue-50 to-white dark:from-blue-900/20 dark:to-gray-800 opacity-50"
-                aria-hidden="true"
-              ></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-white dark:from-blue-900/20 dark:to-gray-800 opacity-50" />
               <div className="relative">
                 <Link
                   to="/productos"
@@ -296,27 +241,26 @@ const NavBarUser = () => {
                     </p>
                   </div>
                 </Link>
-                {categories.map((category, index) => (
+
+                {categories.map((c, i) => (
                   <Link
-                    key={category.id}
-                    to={`/productos?categoria=${encodeURIComponent(
-                      category.name
-                    )}`}
+                    key={c.id}
+                    to={`/productos?categoria=${encodeURIComponent(c.name)}`}
                     className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors mt-1"
                   >
                     <div
                       className={`w-8 h-8 rounded-full ${
-                        getCategoryColor(index).bg
+                        getCategoryColor(i).bg
                       } flex items-center justify-center flex-shrink-0`}
                     >
                       <ShoppingBag
-                        className={`w-4 h-4 ${getCategoryColor(index).text}`}
+                        className={`w-4 h-4 ${getCategoryColor(i).text}`}
                       />
                     </div>
                     <div>
-                      <span className="font-medium">{category.name}</span>
+                      <span className="font-medium">{c.name}</span>
                       <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1">
-                        {category.description}
+                        {c.description}
                       </p>
                     </div>
                   </Link>
@@ -329,7 +273,7 @@ const NavBarUser = () => {
         <NavLink
           to="/contacto"
           className={({ isActive }) =>
-            `text-sm font-medium transition-all duration-200 relative group px-3 py-2 rounded-full ${
+            `text-sm font-medium transition-colors duration-200 relative group px-3 py-2 rounded-full ${
               isActive
                 ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
                 : "text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100/70 dark:hover:bg-gray-800/70"
@@ -338,30 +282,28 @@ const NavBarUser = () => {
         >
           <Phone className="w-4 h-4 flex-shrink-0" />
           <span>Contacto</span>
-          <span
-            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-blue-600 dark:bg-blue-400 transition-all duration-200 group-hover:w-1/2"
-            aria-hidden="true"
-          ></span>
+          <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-blue-600 dark:bg-blue-400 transition-all duration-200 group-hover:w-1/2" />
         </NavLink>
       </motion.div>
     ),
     [categories, getCategoryColor]
   );
 
-  // Search component memoizado
+  // Search con ancho fijo (sin animar width → evita CLS)
   const searchComponent = useMemo(
     () => (
       <motion.div
         key="search"
-        initial={{ opacity: 0, width: 0 }}
-        animate={{ opacity: 1, width: "auto" }}
-        exit={{ opacity: 0, width: 0 }}
-        transition={{ duration: 0.2 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.18 }}
         className="flex items-center"
       >
         <form
           onSubmit={handleSearchSubmit}
           className="flex items-center bg-white dark:bg-gray-800 rounded-full shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden"
+          style={{ width: "16rem" }} // w-64 fijo
         >
           <input
             ref={searchInputRef}
@@ -369,7 +311,7 @@ const NavBarUser = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar productos..."
-            className="w-64 pl-4 pr-2 py-2 bg-transparent border-0 focus:outline-none text-gray-900 dark:text-white"
+            className="w-full pl-4 pr-2 py-2 bg-transparent border-0 focus:outline-none text-gray-900 dark:text-white"
             onKeyDown={handleSearchKeyDown}
             aria-label="Buscar productos"
           />
@@ -399,20 +341,20 @@ const NavBarUser = () => {
     [searchQuery, handleSearchSubmit, handleSearchKeyDown]
   );
 
-  // Mobile search component
   const mobileSearchComponent = useMemo(
     () => (
       <motion.div
         key="search-mobile"
-        initial={{ opacity: 0, width: 0 }}
-        animate={{ opacity: 1, width: "auto" }}
-        exit={{ opacity: 0, width: 0 }}
-        transition={{ duration: 0.2 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.18 }}
         className="flex items-center"
       >
         <form
           onSubmit={handleSearchSubmit}
           className="flex items-center bg-white dark:bg-gray-800 rounded-full shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden"
+          style={{ width: "10rem" }} // w-40 fijo
         >
           <input
             ref={searchInputRef}
@@ -420,7 +362,7 @@ const NavBarUser = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar..."
-            className="w-36 pl-3 pr-1 py-1.5 bg-transparent border-0 focus:outline-none text-gray-900 dark:text-white text-sm"
+            className="w-full pl-3 pr-1 py-1.5 bg-transparent border-0 focus:outline-none text-gray-900 dark:text-white text-sm"
             onKeyDown={handleSearchKeyDown}
             aria-label="Buscar productos"
           />
@@ -450,18 +392,16 @@ const NavBarUser = () => {
     [searchQuery, handleSearchSubmit, handleSearchKeyDown]
   );
 
-  // Ocultar navbar para admin/employee
-  if (auth && (user?.role === "ADMIN" || user?.role === "EMPLOYEE")) {
+  if (auth && (user?.role === "ADMIN" || user?.role === "EMPLOYEE"))
     return null;
-  }
 
   return (
     <>
       <div className="h-20" aria-hidden="true" />
       <div
         ref={navRef}
-        className={`fixed w-full top-0 z-50 transition-all duration-300 bg-white dark:bg-gray-900 shadow-sm ${
-          scrolled ? "shadow-lg" : ""
+        className={`fixed w-full top-0 z-50 transition-transform duration-300 bg-white dark:bg-gray-900 ${
+          scrolled ? "shadow-lg" : "shadow-sm"
         } ${visible ? "translate-y-0" : "-translate-y-full"}`}
         role="banner"
       >
@@ -469,25 +409,23 @@ const NavBarUser = () => {
 
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="flex justify-between items-center h-20">
-            {/* Logo optimizado */}
-            <div className="flex items-center h-16 overflow-hidden">
+            {/* Logo con dimensiones fijas → sin CLS */}
+            <div className="flex items-center h-16">
               <NavLink
                 to="/"
-                className="flex-shrink-0 transition-transform duration-300 relative group h-full flex items-center"
+                className="flex-shrink-0 relative group h-full flex items-center"
                 onClick={() => localStorage.removeItem("breadcrumbs")}
                 aria-label="Ir al inicio"
               >
-                <div
-                  className="absolute inset-0 bg-blue-100/50 dark:bg-blue-900/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                  aria-hidden="true"
-                />
                 <img
-                  src={logo || "/placeholder.svg?height=80&width=120"}
-                  alt="Logo"
-                  className="h-32 w-auto object-contain transition-all duration-300 relative"
+                  src={LOGO_SRC}
+                  alt="Cayro"
+                  width={163}
+                  height={57}
+                  className="w-[163px] h-[57px] object-contain"
                   loading="eager"
-                  width={120}
-                  height={80}
+                  decoding="async"
+                  fetchPriority="high"
                 />
               </NavLink>
             </div>
@@ -546,7 +484,7 @@ const NavBarUser = () => {
                   className="flex items-center gap-2 transition-colors duration-200 group ml-1 px-2 py-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
                   aria-label="Mi perfil"
                 >
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold shadow-md group-hover:shadow-blue-500/20 group-hover:scale-105 transition-all duration-200 flex-shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold shadow-md group-hover:shadow-blue-500/20 group-hover:scale-105 transition-transform duration-200 flex-shrink-0">
                     {userInitial}
                   </div>
                   <span className="font-medium text-sm text-gray-800 dark:text-gray-200 hidden lg:block">
@@ -565,7 +503,7 @@ const NavBarUser = () => {
               )}
             </div>
 
-            {/* Mobile Menu */}
+            {/* Mobile */}
             <div className="flex items-center sm:hidden gap-2">
               <AnimatePresence mode="wait">
                 {isSearchOpen ? (
@@ -576,7 +514,7 @@ const NavBarUser = () => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
+                    transition={{ duration: 0.18 }}
                     onClick={() => setIsSearchOpen(true)}
                     className="p-2 rounded-full transition-colors text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
                     aria-label="Buscar productos"
@@ -623,7 +561,7 @@ const NavBarUser = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
+                  transition={{ duration: 0.18 }}
                   className="sm:hidden fixed inset-0 bg-black/50 z-40"
                   onClick={closeMenu}
                   style={{ top: "0", height: "100vh" }}

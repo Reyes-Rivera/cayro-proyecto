@@ -11,10 +11,6 @@ import CTASection from "./components/cta-section";
 
 // Lazy load
 const HomeHero = lazy(() => import("./components/HeroPage"));
-const FeaturedProductsCarousel = lazy(
-  () => import("./components/featured-products-carousel")
-);
-const CategoriesSection = lazy(() => import("./components/CategoriesSection"));
 
 // Assets
 import WhyUs from "./assets/whyus.webp";
@@ -25,16 +21,6 @@ const FullscreenFallback: React.FC<{ label: string }> = ({ label }) => (
     role="status"
     aria-live="polite"
     className="h-[60vh] md:h-[70vh] w-full flex items-center justify-center text-gray-500 dark:text-gray-400"
-  >
-    {label}
-  </div>
-);
-
-const SectionFallback: React.FC<{ label: string }> = ({ label }) => (
-  <div
-    role="status"
-    aria-live="polite"
-    className="py-16 w-full flex items-center justify-center text-gray-500 dark:text-gray-400"
   >
     {label}
   </div>
@@ -66,16 +52,6 @@ const Home: React.FC = () => {
 
         {/* Beneficios (no lazy por ser ligero) */}
         <BenefitsSection />
-
-        {/* Categorías */}
-        <Suspense fallback={<SectionFallback label="Cargando categorías..." />}>
-          <CategoriesSection />
-        </Suspense>
-
-        {/* Productos Destacados */}
-        <Suspense fallback={<SectionFallback label="Cargando productos..." />}>
-          <FeaturedProductsCarousel />
-        </Suspense>
 
         {/* ¿Por qué nosotros? */}
         <WhyUsSection imgWhyUs={WhyUs} />

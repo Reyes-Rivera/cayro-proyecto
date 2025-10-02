@@ -4,9 +4,9 @@ import App from "./App.tsx";
 import "./index.css";
 import { AuthProvider } from "./context/AuthContextType.tsx";
 import { CartProvider } from "./context/CartContext.tsx";
-import { ErrorBoundary } from "./components/ErrorBoundary.tsx"; // 👈 importa el componente
+import { ErrorBoundary } from "./components/ErrorBoundary.tsx";
+import "./sw-update";
 
-// Activar captura global
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
