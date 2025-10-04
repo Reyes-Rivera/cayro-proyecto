@@ -1,37 +1,55 @@
-import { User, UserLogin } from "@/types/User";
 import axios from "./axios";
+import type { User, UserLogin } from "@/types/User";
 
-export const verifyToken = async () => {
-  return axios.get("/auth/verifyToken", {
+
+export type AuthLoginResponse = {
+  user: User;
+  accessToken: string;
+};
+
+export type VerifyTokenResponse = {
+  user: User;
+  accessToken?: string;
+};
+
+export type RefreshTokenResponse = {
+  accessToken: string;
+};
+
+export const verifyToken = (opts?: { signal?: AbortSignal }) => {
+  return axios.get<VerifyTokenResponse>("/auth/verifyToken", {
+    withCredentials: true,
+    signal: opts?.signal,
+  });
+};
+
+export const loginApi = (data: UserLogin) => {
+  return axios.post<AuthLoginResponse>("/auth/login", data, {
     withCredentials: true,
   });
 };
 
-export const loginApi = async (data: UserLogin) => {
-  return axios.post("/auth/login", data, {
+export const refreshTokenApi = (opts?: { signal?: AbortSignal }) => {
+  return axios.post<RefreshTokenResponse>("/auth/refresh", null, {
     withCredentials: true,
+    signal: opts?.signal,
   });
 };
 
-export const refreshTokenApi = () =>
-  axios.post("/auth/refresh", {
-    withCredentials: true,
-  });
-
-
-export const logOutApi = async () => {
+export const logOutApi = () => {
   return axios.post("/auth/logout", null, {
     withCredentials: true,
   });
 };
 
-export const signUpApi = async (data: User) => {
+
+export const signUpApi = (data: User) => {
   return axios.post("/users", data, {
     withCredentials: true,
   });
 };
 
-export const verifyCodeApi = async (email: string, code: string) => {
+export const verifyCodeApi = (email: string, code: string) => {
   return axios.post(
     "/users/verify-code",
     { email, code },
@@ -39,7 +57,7 @@ export const verifyCodeApi = async (email: string, code: string) => {
   );
 };
 
-export const verifyCodeApiAuth = async (email: string, code: string) => {
+export const verifyCodeApiAuth = (email: string, code: string) => {
   return axios.post(
     "/auth/verify-code",
     { email, code },
@@ -47,30 +65,31 @@ export const verifyCodeApiAuth = async (email: string, code: string) => {
   );
 };
 
-export const resendCodeApi = async (email: object) => {
-  return axios.post("/users/resend-code", email, {
+export const resendCodeApi = (payload: { email: string }) => {
+  return axios.post("/users/resend-code", payload, {
     withCredentials: true,
   });
 };
 
-export const resendCodeApiAuth = async (email: object) => {
-  return axios.post("/auth/resend-code", email, {
+export const resendCodeApiAuth = (payload: { email: string }) => {
+  return axios.post("/auth/resend-code", payload, {
     withCredentials: true,
   });
 };
 
-export const recoverPassword = async (email: object) => {
-  return axios.post("/users/recover-password", email);
+export const recoverPassword = (payload: { email: string }) => {
+  return axios.post("/users/recover-password", payload);
 };
 
-export const restorePassword = async (
+export const restorePassword = (
   token: string | undefined,
-  password: object
+  payload: { password: string }
 ) => {
-  return axios.post(`/users/reset-password/${token}`, password);
+  return axios.post(`/users/reset-password/${token}`, payload);
 };
+
 
 export const getQuestions = () => axios.get("/securityquestion");
 
-export const compareQuestion = async (data: object) =>
-  axios.post("/users/compare-answer", data);
+export const compareQuestion = (payload: Record<string, unknown>) =>
+  axios.post("/users/compare-answer", payload);

@@ -11,24 +11,28 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="theme-color" content="#0ea5e9" />
 
-    <!-- Favicon (sirve desde /public) -->
+    <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="32x32" href="/cayro-icon.png" />
 
-    <!-- Fonts (si usas Google Fonts) -->
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-    <!-- Preload LCP image (Hero) -->
+    <!-- Preconnect/dns-prefetch a tu API para acortar TTFB en primeras solicitudes -->
+    <link rel="preconnect" href="https://backend-sooty-three-35.vercel.app" crossorigin />
+    <link rel="dns-prefetch" href="https://backend-sooty-three-35.vercel.app" />
+
+    <!-- Preload LCP image (AVIF con srcset) -->
     <link
       rel="preload"
       as="image"
-      href="/playeras-1280.webp"
-      imagesrcset="/playeras-640.webp 640w, /playeras-960.webp 960w, /playeras-1280.webp 1280w"
+      href="/playeras-720.avif"
+      imagesrcset="/playeras-480.avif 480w, /playeras-720.avif 720w, /playeras-1080.avif 1080w"
       imagesizes="(min-width: 1024px) 720px, 92vw"
       fetchpriority="high"
     />
 
-    <!-- CSP más estricta (ajusta dominios según tu proyecto) -->
+    <!-- CSP (ajusta dominios si hace falta) -->
     <meta
       http-equiv="Content-Security-Policy"
       content="
@@ -50,7 +54,6 @@
   </head>
   <body>
     <div id="root"></div>
-    <!-- Vite inyecta CSS y de-ferea este módulo automáticamente -->
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

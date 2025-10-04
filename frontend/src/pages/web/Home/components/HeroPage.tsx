@@ -4,7 +4,6 @@ import { memo, useEffect, useState } from "react";
 import { Sparkles, ArrowRight } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
-/* ---------- Typewriter ligero ---------- */
 const TypewriterText = memo(({ texts }: { texts: string[] }) => {
   const [i, setI] = useState(0);
   const [txt, setTxt] = useState("");
@@ -36,18 +35,15 @@ const TypewriterText = memo(({ texts }: { texts: string[] }) => {
 });
 TypewriterText.displayName = "TypewriterText";
 
-/* ---------- Hero ---------- */
 const HomeHero = () => {
   return (
     <div className="relative min-h-[80vh] bg-white dark:bg-gray-900 flex items-center overflow-hidden">
-      {/* Fondo sutil */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-blue-50/50 dark:from-blue-900/10 to-transparent" />
       </div>
 
       <div className="container mx-auto px-4 py-12 md:py-20 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
-          {/* Texto */}
           <div className="md:col-span-5">
             <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-medium mb-6">
               <Sparkles className="w-4 h-4 mr-2" />
@@ -105,7 +101,6 @@ const HomeHero = () => {
             </div>
           </div>
 
-          {/* Imagen LCP */}
           <div className="md:col-span-7">
             <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 md:p-6 shadow-xl border border-gray-100 dark:border-gray-700">
               <div className="relative overflow-hidden rounded-xl">
@@ -116,7 +111,7 @@ const HomeHero = () => {
                     sizes="(min-width: 1024px) 720px, 92vw"
                   />
                   <img
-                    src="/playeras-1280.webp"
+                    src="/playeras-1080.jpg"
                     alt="Colección de Playeras"
                     width={1280}
                     height={720}
@@ -124,7 +119,7 @@ const HomeHero = () => {
                     loading="eager"
                     decoding="async"
                     fetchPriority="high"
-                    style={{ containIntrinsicSize: "720px 1280px" }}
+                    style={{ containIntrinsicSize: "1280px 720px" }}
                   />
                 </picture>
 
@@ -140,7 +135,6 @@ const HomeHero = () => {
                 </div>
               </div>
             </div>
-            {/* sin animaciones pesadas para LCP */}
           </div>
         </div>
       </div>

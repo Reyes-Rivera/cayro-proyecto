@@ -5,6 +5,7 @@ import { memo } from "react";
 import { Sparkles } from "lucide-react";
 
 interface WhyUsSectionProps {
+  /** Si envías esta prop, se usa tal cual (sin srcset). */
   imgWhyUs?: string;
   title?: string;
   className?: string;
@@ -43,6 +44,9 @@ const WhyUsSection: React.FC<WhyUsSectionProps> = ({
       role="region"
       aria-labelledby="whyus-heading"
       className={`py-24 bg-white dark:bg-gray-900 relative overflow-hidden ${className}`}
+      style={{
+        contentVisibility: "auto",
+      }} /* ayuda a FCP si va por debajo del fold */
     >
       {/* Fondo simple, sin animaciones */}
       <div
@@ -54,7 +58,7 @@ const WhyUsSection: React.FC<WhyUsSectionProps> = ({
       </div>
 
       <div className="container mx-auto px-6 relative z-10 max-w-full">
-        {/* Encabezado sin animaciones de entrada */}
+        {/* Encabezado */}
         <div className="text-center mb-16">
           <span className="inline-flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-4 py-1.5 text-sm font-medium text-blue-800 dark:text-blue-300 mb-4">
             NUESTRA DIFERENCIA
@@ -71,7 +75,7 @@ const WhyUsSection: React.FC<WhyUsSectionProps> = ({
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          {/* Imagen (lazy) */}
+          {/* Imagen (picture + srcset si no hay imgWhyUs prop) */}
           <div className="flex justify-center">
             <div className="relative">
               <div
@@ -83,22 +87,58 @@ const WhyUsSection: React.FC<WhyUsSectionProps> = ({
                 aria-hidden="true"
               />
 
-              <img
-                src={
-                  imgWhyUs ||
-                  "/placeholder.svg?height=500&width=500&text=Equipo"
-                }
-                alt="Nuestro equipo"
-                width={500}
-                height={500}
-                loading="lazy"
-                decoding="async"
-                className="rounded-lg shadow-xl relative z-10"
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).src =
-                    "/placeholder.svg?height=500&width=500&text=Equipo";
-                }}
-              />
+              {imgWhyUs ? (
+                <img
+                  src={imgWhyUs}
+                  alt="Nuestro equipo"
+                  width={720}
+                  height={1080}
+                  loading="lazy"
+                  decoding="async"
+                  className="rounded-lg shadow-xl relative z-10"
+                  style={{ containIntrinsicSize: "720px 1080px" }}
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src =
+                      "/placeholder.svg?height=1080&width=720&text=Equipo";
+                  }}
+                />
+              ) : (
+                <picture>
+                  {/* AVIF */}
+                  <source
+                    type="image/avif"
+                    srcSet="
+                      /images/whyus/whyus-480.avif 480w,
+                      /images/whyus/whyus-720.avif 720w,
+                      /images/whyus/whyus-1080.avif 1080w"
+                    sizes="(min-width:1024px) 500px, 90vw"
+                  />
+                  {/* WEBP */}
+                  <source
+                    type="image/webp"
+                    srcSet="
+                      /images/whyus/whyus-480.webp 480w,
+                      /images/whyus/whyus-720.webp 720w,
+                      /images/whyus/whyus-1080.webp 1080w"
+                    sizes="(min-width:1024px) 500px, 90vw"
+                  />
+                  {/* Fallback */}
+                  <img
+                    src="/images/whyus/whyus-720.webp"
+                    alt="Nuestro equipo"
+                    width={720}
+                    height={1080}
+                    loading="lazy"
+                    decoding="async"
+                    className="rounded-lg shadow-xl relative z-10"
+                    style={{ containIntrinsicSize: "720px 1080px" }}
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src =
+                        "/placeholder.svg?height=1080&width=720&text=Equipo";
+                    }}
+                  />
+                </picture>
+              )}
 
               {/* Insignia estática */}
               <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-white dark:bg-gray-800 px-6 py-3 rounded-full shadow-lg z-20 flex items-center gap-2">

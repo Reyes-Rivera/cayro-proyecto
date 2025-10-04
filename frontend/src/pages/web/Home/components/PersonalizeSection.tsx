@@ -4,15 +4,10 @@ import type React from "react";
 import { memo, useId } from "react";
 import { Sparkles, Shirt, ArrowRight } from "lucide-react";
 import { NavLink } from "react-router-dom";
-import img from "../assets/personalizar.webp";
 
-/**
- * PersonalizeSection (versión optimizada)
- * - Sin IntersectionObserver ni estados de animación.
- * - Imagen en lazy + decoding async.
- * - Transiciones reducidas a hovers (transition-colors únicamente).
- * - Mantiene el SVG decorativo con id único para evitar colisiones.
- */
+const IMG_WEBP_480 = "/personalizar-480.webp";
+const IMG_WEBP_720 = "/personalizar-720.webp";
+
 const PersonalizeSection: React.FC = () => {
   const patternId = useId();
 
@@ -32,8 +27,12 @@ const PersonalizeSection: React.FC = () => {
   ];
 
   return (
-    <section className="py-24 bg-gradient-to-b from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 relative overflow-hidden">
-      {/* Decoración de fondo (ligera, sin animaciones) */}
+    <section
+      className="py-24 bg-gradient-to-b from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 relative overflow-hidden"
+      style={{
+        contentVisibility: "auto",
+      }}
+    >
       <div
         className="absolute inset-0 overflow-hidden pointer-events-none opacity-30"
         aria-hidden="true"
@@ -58,7 +57,6 @@ const PersonalizeSection: React.FC = () => {
 
       <div className="container mx-auto px-6 relative z-10 max-w-full">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-          {/* Columna izquierda: contenido */}
           <div className="order-2 lg:order-1 space-y-6">
             <span className="inline-flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-4 py-1.5 text-sm font-medium text-blue-800 dark:text-blue-300 mb-2">
               <Sparkles className="w-4 h-4 mr-2" />
@@ -106,28 +104,36 @@ const PersonalizeSection: React.FC = () => {
             </div>
           </div>
 
-          {/* Columna derecha: imagen */}
           <div className="order-1 lg:order-2">
             <div className="relative">
               <div
                 className="absolute inset-0 border-2 border-blue-600 rounded-lg translate-x-4 translate-y-4 z-0"
                 aria-hidden="true"
               />
-              <img
-                src={img}
-                alt="Personalización de ropa"
-                width={600}
-                height={600}
-                loading="lazy"
-                decoding="async"
-                className="rounded-lg shadow-xl relative z-10"
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).src =
-                    "/placeholder.svg?height=600&width=600&text=Personalizar";
-                }}
-              />
 
-              {/* Insignia fija (sin animaciones) */}
+              <picture>
+                <source
+                  type="image/webp"
+                  srcSet={`${IMG_WEBP_480} 480w, ${IMG_WEBP_720} 720w`}
+                  sizes="(min-width:1024px) 600px, 92vw"
+                />
+                <img
+                  src={IMG_WEBP_720}
+                  alt="Personalización de ropa"
+                  width={720}
+                  height={480}
+                  loading="lazy"
+                  fetchPriority="low"
+                  decoding="async"
+                  className="rounded-lg shadow-xl relative z-10"
+                  style={{ backgroundColor: "#f3f4f6" }}
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src =
+                      "/placeholder.svg?height=480&width=720&text=Personalizar";
+                  }}
+                />
+              </picture>
+
               <div className="absolute top-4 -right-4 bg-white dark:bg-gray-800 px-4 py-2 rounded-full shadow-lg z-20 flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-yellow-500" />
                 <span className="font-bold text-gray-900 dark:text-white">
